@@ -1,0 +1,16 @@
+project_id = "twilightgarden"
+
+# Each handler validates the user JWT or internal webhook credential itself.
+# The platform's legacy JWT gateway cannot validate the internal Vault secret.
+[functions.ai-generate]
+verify_jwt = false
+[functions.push-notifications]
+verify_jwt = false
+[functions.push-notifications-]
+verify_jwt = false
+[functions.check-reminders]
+verify_jwt = false
+[functions.check-remainders]
+verify_jwt = false
+[functions.health-check]
+verify_jwt = false

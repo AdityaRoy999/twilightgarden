@@ -86,7 +86,7 @@ const SongLyrics: React.FC = () => {
     const [loading, setLoading] = useState(true);
     const channelRef = useRef<ReturnType<typeof supabase.channel> | null>(null);
     const [ringCooldown, setRingCooldown] = useState(false);
-    const ringCooldownRef = useRef<ReturnType<typeof setTimeout>>();
+    const ringCooldownRef = useRef<ReturnType<typeof setTimeout>>(undefined);
     const [choices, setChoices] = useState<string[]>([]);
     const [localSelected, setLocalSelected] = useState<string | null>(null);
 
@@ -169,8 +169,8 @@ const SongLyrics: React.FC = () => {
     useEffect(() => {
         if (!session?.id) return;
 
-        const ch = supabase.channel(`game_sl_${session.id}`)
-            .on('postgres_changes', { event: '*', schema: 'public', table: 'game_sessions', filter: `id=eq.${session.id}` }, 
+        const ch = supabase.channel(`game_sl_${session.id}`, { config: { private: true } })
+            .on('postgres_changes', { event: '*', schema: 'public', table: 'game_sessions', filter: `id=eq.${session.id}` },
             (payload) => {
                 const newSess = payload.new as GameSession;
                 if (newSess && newSess.game_type === 'song_lyrics') {
@@ -179,7 +179,7 @@ const SongLyrics: React.FC = () => {
             })
             .subscribe();
 
-        return () => { 
+        return () => {
             supabase.removeChannel(ch);
             clearTimeout(ringCooldownRef.current);
         };

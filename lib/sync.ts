@@ -1,5 +1,5 @@
 import { supabase } from './supabase';
-import { generateKeyPair, encryptWithEphemeralKey, decryptWithEphemeralKey } from './encryption';
+import { generateKeyPair, encryptWithEphemeralKey, derivePublicKeyFromPrivate } from './encryption';
 
 export interface SyncSession {
     id: string;
@@ -13,7 +13,8 @@ export interface SyncSession {
  * Initiates a sync session on the NEW device
  */
 export async function createSyncSession(userId: string): Promise<{ session: any, ephemeralPrivate: string }> {
-    const token = Math.random().toString(36).substring(2, 10).toUpperCase();
+    const alphabet = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
+    const token = Array.from(crypto.getRandomValues(new Uint8Array(8)), byte => alphabet[byte & 31]).join('');
     const { publicKey, privateKey } = await generateKeyPair();
 
     const { data, error } = await supabase
@@ -35,7 +36,7 @@ export async function createSyncSession(userId: string): Promise<{ session: any,
  * Completes a sync session from the EXISTING device
  */
 export async function sendSyncPayload(
-    token: string, 
+    token: string,
     identityPrivateKey: string,
     ownPrivateKey: string
 ): Promise<void> {
@@ -60,10 +61,10 @@ export async function sendSyncPayload(
     const { error: updateError } = await (supabase
         .from('sync_sessions' as any)
         .update({
-            encrypted_payload: encryptedPayload,
+            encrypted_payload: JSON.stringify({ version: 1, senderPublicKey: derivePublicKeyFromPrivate(ownPrivateKey), ciphertext: encryptedPayload }),
             status: 'completed'
         } as any)
-        .eq('id', session.id) as any);
+        .eq('id', session.id).eq('status','pending').select('id').single() as any);
 
     if (updateError) throw updateError;
 }

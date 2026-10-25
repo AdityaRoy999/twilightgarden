@@ -1,3 +1,23 @@
+// Register before the SDK so notification clicks preserve HashRouter routes.
+self.addEventListener('notificationclick', function(event) {
+  event.stopImmediatePropagation();
+  event.notification.close();
+  const raw = event.notification.data?.url || event.notification.data?.FCM_MSG?.data?.url || '/dashboard';
+  let path = typeof raw === 'string' ? raw : '/dashboard';
+  try {
+    const parsed = new URL(path, self.location.origin);
+    if (parsed.origin !== self.location.origin) path = '/dashboard';
+    else path = parsed.hash ? parsed.hash.slice(1) : parsed.pathname;
+  } catch { path = '/dashboard'; }
+  if (!path.startsWith('/') || path.startsWith('//')) path = '/dashboard';
+  const target = self.location.origin + '/#' + path;
+  event.waitUntil(clients.matchAll({type:'window',includeUncontrolled:true}).then(async list => {
+    const existing = list.find(client => new URL(client.url).origin === self.location.origin);
+    if (existing) { await existing.navigate(target); return existing.focus(); }
+    return clients.openWindow(target);
+  }));
+});
+
 // Firebase Messaging Service Worker
 // This file MUST be named firebase-messaging-sw.js and live at the root
 
@@ -18,7 +38,8 @@ const messaging = firebase.messaging();
 
 // Handle background messages (when app is not in focus)
 messaging.onBackgroundMessage(function(payload) {
-  console.log('[SW] Background message received:', payload);
+  // Notification payloads are displayed by FCM itself.
+  if (payload.notification) return;
 
   const notificationTitle = payload.notification?.title || payload.data?.title || 'Twilight Garden';
   const notificationOptions = {
@@ -31,24 +52,4 @@ messaging.onBackgroundMessage(function(payload) {
   };
 
   return self.registration.showNotification(notificationTitle, notificationOptions);
-});
-
-// Handle notification click
-self.addEventListener('notificationclick', function(event) {
-  console.log('[SW] Notification click:', event.notification.data);
-  event.notification.close();
-
-  const url = event.notification.data?.url || '/';
-
-  event.waitUntil(
-    clients.matchAll({ type: 'window', includeUncontrolled: true }).then(function(clientList) {
-      // Try to focus an existing tab
-      for (var i = 0; i < clientList.length; i++) {
-        var client = clientList[i];
-        if ('focus' in client) return client.focus();
-      }
-      // Open new window if no tab found
-      if (clients.openWindow) return clients.openWindow(url);
-    })
-  );
 });

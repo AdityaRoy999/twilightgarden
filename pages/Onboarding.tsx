@@ -1,3 +1,4 @@
+import { localDateKey } from '../lib/dates';
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -12,18 +13,19 @@ const Onboarding: React.FC = () => {
 
   // Safety net: partners should never see onboarding (they don't track periods)
   React.useEffect(() => {
-    if (user?.role === 'partner' || user?.user_metadata?.is_partner === true) {
+    if (user?.role === 'partner') {
       navigate('/partner/dashboard', { replace: true });
     }
   }, [user, navigate]);
 
   const [step, setStep] = useState(0);
-  
+
   // Data State
   const [lastPeriodDate, setLastPeriodDate] = useState<Date | null>(null);
   const [cycleLength, setCycleLength] = useState(28);
   const [periodLength, setPeriodLength] = useState(5);
   const [loading, setLoading] = useState(false);
+  const [saveError, setSaveError] = useState<string | null>(null);
 
   // Calendar State
   const [viewDate, setViewDate] = useState(new Date());
@@ -39,12 +41,9 @@ const Onboarding: React.FC = () => {
   const handleFinish = async () => {
     if (!lastPeriodDate) return;
     setLoading(true);
+    setSaveError(null);
     try {
-        // Adjust for timezone - ensure we send YYYY-MM-DD
-        // Using local date string part to avoid UTC shifts affecting the day
-        const offset = lastPeriodDate.getTimezoneOffset();
-        const localDate = new Date(lastPeriodDate.getTime() - (offset*60*1000));
-        const dateStr = localDate.toISOString().split('T')[0];
+        const dateStr = localDateKey(lastPeriodDate);
 
         await updateSettings({
             avgCycleLength: cycleLength,
@@ -54,7 +53,7 @@ const Onboarding: React.FC = () => {
         });
         navigate('/');
     } catch (error) {
-        console.error("Onboarding logic error", error);
+        setSaveError(error instanceof Error ? error.message : 'Could not save your settings. Please retry.');
     } finally {
         setLoading(false);
     }
@@ -75,8 +74,8 @@ const Onboarding: React.FC = () => {
 
   const isSelected = (day: number) => {
       if (!lastPeriodDate) return false;
-      return lastPeriodDate.getDate() === day && 
-             lastPeriodDate.getMonth() === viewDate.getMonth() && 
+      return lastPeriodDate.getDate() === day &&
+             lastPeriodDate.getMonth() === viewDate.getMonth() &&
              viewDate.getFullYear() === lastPeriodDate.getFullYear();
   };
 
@@ -97,11 +96,12 @@ const Onboarding: React.FC = () => {
       </header>
 
       <main className="flex-1 flex flex-col items-center justify-center p-6 z-10 w-full max-w-lg mx-auto">
+        {saveError && <p role="alert" className="mb-4 rounded-xl bg-red-950 p-3 text-white">{saveError}</p>}
         <AnimatePresence mode="wait">
-          
+
           {/* STEP 0: WELCOME */}
           {step === 0 && (
-            <motion.div 
+            <motion.div
                key="step0"
                initial={{ opacity: 0, y: 20 }}
                animate={{ opacity: 1, y: 0 }}
@@ -116,7 +116,7 @@ const Onboarding: React.FC = () => {
                 <p className="text-gray-400 text-lg leading-relaxed mb-12">
                     To give you accurate predictions, we need to know a little bit about your cycle history.
                 </p>
-                <button 
+                <button
                   onClick={handleNext}
                   className="w-full bg-white text-black font-bold py-4 rounded-2xl shadow-lg hover:bg-gray-100 transition-all active:scale-[0.98]"
                 >
@@ -129,7 +129,7 @@ const Onboarding: React.FC = () => {
 
           {/* REGULAR STEP 1: LAST PERIOD */}
           {step === 1 && (
-            <motion.div 
+            <motion.div
                key="step1"
                initial={{ opacity: 0, x: 20 }}
                animate={{ opacity: 1, x: 0 }}
@@ -156,7 +156,7 @@ const Onboarding: React.FC = () => {
                         {days.map(day => {
                             const selected = isSelected(day);
                             return (
-                                <button 
+                                <button
                                     key={day}
                                     onClick={() => handleDayClick(day)}
                                     className={`h-10 w-10 mx-auto rounded-full flex items-center justify-center text-sm font-bold transition-all ${selected ? 'bg-primary text-white shadow-lg shadow-primary/40 scale-110' : 'text-gray-300 hover:bg-white/5'}`}
@@ -169,7 +169,7 @@ const Onboarding: React.FC = () => {
                 </div>
 
                 <div className="mt-8">
-                     <button 
+                     <button
                         onClick={handleNext}
                         disabled={!lastPeriodDate}
                         className={`w-full py-4 rounded-2xl font-bold transition-all ${lastPeriodDate ? 'bg-primary text-white shadow-lg shadow-primary/20' : 'bg-white/5 text-gray-500 cursor-not-allowed'}`}
@@ -182,7 +182,7 @@ const Onboarding: React.FC = () => {
 
           {/* STEP 2: CYCLE LENGTH */}
           {step === 2 && (
-            <motion.div 
+            <motion.div
                key="step2"
                initial={{ opacity: 0, x: 20 }}
                animate={{ opacity: 1, x: 0 }}
@@ -198,16 +198,16 @@ const Onboarding: React.FC = () => {
                 </div>
 
                 <div className="bg-surface-dark rounded-3xl p-8 border border-white/5 mb-8">
-                     <ModernSlider 
+                     <ModernSlider
                         value={cycleLength}
-                        min={20} 
-                        max={45} 
+                        min={20}
+                        max={45}
                         onChange={setCycleLength}
                         unit="Days"
                      />
                 </div>
 
-                <button 
+                <button
                     onClick={handleNext}
                     className="w-full bg-primary text-white font-bold py-4 rounded-2xl shadow-lg shadow-primary/20 transition-all hover:bg-primary/90"
                 >
@@ -218,7 +218,7 @@ const Onboarding: React.FC = () => {
 
           {/* STEP 3: PERIOD LENGTH */}
           {step === 3 && (
-            <motion.div 
+            <motion.div
                key="step3"
                initial={{ opacity: 0, x: 20 }}
                animate={{ opacity: 1, x: 0 }}
@@ -234,16 +234,16 @@ const Onboarding: React.FC = () => {
                 </div>
 
                 <div className="bg-surface-dark rounded-3xl p-8 border border-white/5 mb-8">
-                     <ModernSlider 
+                     <ModernSlider
                         value={periodLength}
-                        min={2} 
-                        max={10} 
+                        min={2}
+                        max={10}
                         onChange={setPeriodLength}
                         unit="Days"
                      />
                 </div>
 
-                <button 
+                <button
                     onClick={handleFinish}
                     disabled={loading}
                     className="w-full bg-white text-black font-bold py-4 rounded-2xl shadow-lg hover:bg-gray-100 transition-all flex items-center justify-center gap-2"

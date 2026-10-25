@@ -78,7 +78,7 @@ const NeverHaveIEver: React.FC = () => {
     const [loading, setLoading] = useState(true);
     const channelRef = useRef<ReturnType<typeof supabase.channel> | null>(null);
     const [ringCooldown, setRingCooldown] = useState(false);
-    const ringCooldownRef = useRef<ReturnType<typeof setTimeout>>();
+    const ringCooldownRef = useRef<ReturnType<typeof setTimeout>>(undefined);
     const [showResult, setShowResult] = useState(false);
 
     useEffect(() => {
@@ -161,7 +161,7 @@ const NeverHaveIEver: React.FC = () => {
     useEffect(() => {
         if (!session?.id) return;
 
-        const ch = supabase.channel(`game_nhie_${session.id}`)
+        const ch = supabase.channel(`game_nhie_${session.id}`, { config: { private: true } })
             .on('postgres_changes', { event: '*', schema: 'public', table: 'game_sessions', filter: `id=eq.${session.id}` },
             (payload) => {
                 const newSess = payload.new as GameSession;
@@ -171,7 +171,7 @@ const NeverHaveIEver: React.FC = () => {
             })
             .subscribe();
 
-        return () => { 
+        return () => {
             supabase.removeChannel(ch);
             clearTimeout(ringCooldownRef.current);
         };

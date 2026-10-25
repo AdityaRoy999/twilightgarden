@@ -3,7 +3,7 @@ import { Preferences } from '@capacitor/preferences';
 /**
  * End-to-End Encryption (E2EE) Utility
  * Uses Web Crypto API (ECDH P-256 for key exchange, AES-GCM for encryption)
- * 
+ *
  * Architecture: Simple, reliable ECDH + AES-GCM
  * - Each user has one stable ECDH key pair (P-256)
  * - Private key stored locally via Capacitor Preferences
@@ -59,17 +59,29 @@ export async function generateKeyPair(): Promise<{ publicKey: string; privateKey
  */
 let cachedPrivateKey: string | null = null;
 let sharedKeyCache = new Map<string, CryptoKey>();
+let identityRevision = 0;
+const keyInitializations = new Map<string, Promise<string>>();
 
 export async function initializeEncryptionKeys(userId: string): Promise<string> {
+    const existing = keyInitializations.get(userId);
+    if (existing) return existing;
+    const pending = initializeIdentity(userId, identityRevision);
+    keyInitializations.set(userId, pending);
+    try { return await pending; }
+    finally { if (keyInitializations.get(userId) === pending) keyInitializations.delete(userId); }
+}
+
+async function initializeIdentity(userId: string, revision: number): Promise<string> {
     const pubKeyName = `${userId}_public_key`;
     const privKeyName = `${userId}_private_key`;
 
     const { value: existingPubKey } = await Preferences.get({ key: pubKeyName });
     const { value: existingPrivKey } = await Preferences.get({ key: privKeyName });
+    if (revision !== identityRevision) throw new Error('Identity initialization was cancelled.');
 
     if (existingPubKey && existingPrivKey) {
         console.log(`[E2EE] Keys already exist locally for user: ${userId}`);
-        cachedPrivateKey = existingPrivKey;
+        setCachedPrivateKey(existingPrivKey);
         return existingPubKey;
     }
 
@@ -78,12 +90,15 @@ export async function initializeEncryptionKeys(userId: string): Promise<string> 
 
     await Preferences.set({ key: pubKeyName, value: publicKey });
     await Preferences.set({ key: privKeyName, value: privateKey });
+    if (revision !== identityRevision) throw new Error('Identity initialization was cancelled.');
 
-    cachedPrivateKey = privateKey;
+    setCachedPrivateKey(privateKey);
     return publicKey;
 }
 
 export function clearEncryptionCache() {
+    identityRevision++;
+    keyInitializations.clear();
     cachedPrivateKey = null;
     sharedKeyCache.clear();
 }
@@ -94,6 +109,7 @@ export function clearSharedKeyCache() {
 }
 
 export function setCachedPrivateKey(key: string) {
+    if (cachedPrivateKey !== key) sharedKeyCache.clear();
     cachedPrivateKey = key;
 }
 
@@ -134,7 +150,9 @@ export function derivePublicKeyFromPrivate(privateKeyB64: string): string {
  * Derives a shared secret between the current user and their partner
  */
 async function deriveSharedSecret(ownPrivateKeyB64: string, partnerPublicKeyB64: string): Promise<CryptoKey> {
-    const cacheKey = `${ownPrivateKeyB64.slice(-20)}:${partnerPublicKeyB64.slice(-20)}`;
+    // JWK suffixes contain common metadata, not a unique key identifier.
+    const keyMaterial = new TextEncoder().encode(JSON.stringify([ownPrivateKeyB64, partnerPublicKeyB64]));
+    const cacheKey = arrayBufferToBase64(await window.crypto.subtle.digest('SHA-256', keyMaterial));
     const cached = sharedKeyCache.get(cacheKey);
     if (cached) return cached;
 
@@ -185,7 +203,7 @@ export async function encryptMessage(text: string, partnerPublicKeyB64: string):
     }
 
     const sharedKey = await deriveSharedSecret(ownPrivateKeyB64, partnerPublicKeyB64);
-    
+
     const iv = window.crypto.getRandomValues(new Uint8Array(12));
     const encoded = new TextEncoder().encode(text);
 
@@ -217,14 +235,7 @@ export async function decryptMessage(encryptedB64: string, partnerPublicKeyB64: 
                 const privKeyName = `${userId}_private_key`;
                 const { value } = await Preferences.get({ key: privKeyName });
                 cachedPrivateKey = value;
-            } else {
-                console.warn('[E2EE] userId missing in decryptMessage, searching for any key...');
-                const allKeys = await Preferences.keys();
-                const privKey = allKeys.keys.find(k => k.endsWith('_private_key'));
-                if (privKey) {
-                    const { value } = await Preferences.get({ key: privKey });
-                    cachedPrivateKey = value;
-                }
+
             }
         }
 
@@ -232,7 +243,7 @@ export async function decryptMessage(encryptedB64: string, partnerPublicKeyB64: 
         if (!ownPrivateKeyB64) throw new Error('Private key missing');
 
         const sharedKey = await deriveSharedSecret(ownPrivateKeyB64, partnerPublicKeyB64);
-        
+
         const combined = new Uint8Array(base64ToArrayBuffer(encryptedB64));
         const iv = combined.slice(0, 12);
         const ciphertext = combined.slice(12);
@@ -255,7 +266,7 @@ export async function decryptMessage(encryptedB64: string, partnerPublicKeyB64: 
         if (encryptedB64.length > 30 && noSpaces && onlyBase64Chars) {
             return "🔐 Message locked (Key changed — restore identity via PIN)";
         }
-        return encryptedB64; 
+        return encryptedB64;
     }
 }
 
@@ -292,7 +303,7 @@ export async function encryptBlob(data: ArrayBuffer, partnerPublicKeyB64: string
     }
 
     const sharedKey = await deriveSharedSecret(ownPrivateKeyB64, partnerPublicKeyB64);
-    
+
     const iv = window.crypto.getRandomValues(new Uint8Array(12));
 
     const ciphertext = await window.crypto.subtle.encrypt(
@@ -321,7 +332,7 @@ export async function decryptBlob(encryptedData: ArrayBuffer, partnerPublicKeyB6
     }
 
     const sharedKey = await deriveSharedSecret(ownPrivateKeyB64, partnerPublicKeyB64);
-    
+
     const combined = new Uint8Array(encryptedData);
     const iv = combined.slice(0, 12);
     const ciphertext = combined.slice(12);
@@ -344,10 +355,10 @@ export async function generateVerificationFingerprint(ownPubKey: string, partner
     const combined = sortedKeys.join('');
     const encoder = new TextEncoder();
     const data = encoder.encode(combined);
-    
+
     const hashBuffer = await window.crypto.subtle.digest('SHA-256', data);
     const hashArray = new Uint8Array(hashBuffer);
-    
+
     // Convert hash bytes to a 60-digit numeric string (12 groups of 5 digits)
     let digits = "";
     for (let i = 0; i < 24; i += 2) {
@@ -365,7 +376,7 @@ export async function generateVerificationFingerprint(ownPubKey: string, partner
 async function derivePinKey(pin: string, salt: Uint8Array): Promise<CryptoKey> {
     const encoder = new TextEncoder();
     const pinData = encoder.encode(pin);
-    
+
     const baseKey = await window.crypto.subtle.importKey(
         'raw', pinData, 'PBKDF2', false, ['deriveKey']
     );
@@ -387,7 +398,7 @@ async function derivePinKey(pin: string, salt: Uint8Array): Promise<CryptoKey> {
 export async function encryptIdentityWithPin(privateKeyB64: string, pin: string): Promise<{ ciphertext: string, salt: string }> {
     const salt = window.crypto.getRandomValues(new Uint8Array(16));
     const sharedKey = await derivePinKey(pin, salt);
-    
+
     const iv = window.crypto.getRandomValues(new Uint8Array(12));
     const encoded = new TextEncoder().encode(privateKeyB64);
 
@@ -410,7 +421,7 @@ export async function encryptIdentityWithPin(privateKeyB64: string, pin: string)
 export async function decryptIdentityWithPin(encryptedB64: string, pin: string, saltB64: string): Promise<string> {
     const salt = new Uint8Array(base64ToArrayBuffer(saltB64));
     const sharedKey = await derivePinKey(pin, salt);
-    
+
     const combined = new Uint8Array(base64ToArrayBuffer(encryptedB64));
     const iv = combined.slice(0, 12);
     const ciphertext = combined.slice(12);
@@ -431,7 +442,7 @@ export async function decryptIdentityWithPin(encryptedB64: string, pin: string, 
 
 export async function encryptWithEphemeralKey(payload: string, ephemeralPublicKeyB64: string, ownPrivateKeyB64: string): Promise<string> {
     const sharedKey = await deriveSharedSecret(ownPrivateKeyB64, ephemeralPublicKeyB64);
-    
+
     const iv = window.crypto.getRandomValues(new Uint8Array(12));
     const encoded = new TextEncoder().encode(payload);
 
@@ -450,7 +461,7 @@ export async function encryptWithEphemeralKey(payload: string, ephemeralPublicKe
 
 export async function decryptWithEphemeralKey(encryptedB64: string, originalEphemeralPrivateKeyB64: string, senderPublicKeyB64: string): Promise<string> {
     const sharedKey = await deriveSharedSecret(originalEphemeralPrivateKeyB64, senderPublicKeyB64);
-    
+
     const combined = new Uint8Array(base64ToArrayBuffer(encryptedB64));
     const iv = combined.slice(0, 12);
     const ciphertext = combined.slice(12);

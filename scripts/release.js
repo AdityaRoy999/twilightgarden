@@ -13,7 +13,7 @@ const __dirname = path.dirname(__filename);
 dotenv.config({ path: path.resolve(__dirname, '../.env') });
 
 const supabaseUrl = process.env.VITE_SUPABASE_URL;
-const supabaseServiceKey = process.env.VITE_SUPABASE_SERVICE_ROLE_KEY; 
+const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
 
 if (!supabaseUrl || !supabaseServiceKey) {
   console.error("❌ Missing Supabase URL or Service Role Key in .env");
@@ -62,7 +62,7 @@ async function runRelease() {
     changelogEntries.push(line);
   }
   const fullChangelog = changelogEntries.map(e => `• ${e}`).join('\n');
-  
+
   rl.close();
 
   if (changelogEntries.length === 0) {
@@ -74,13 +74,13 @@ async function runRelease() {
   // Replace version codes in gradle
   gradleContent = gradleContent.replace(/versionCode\s+(\d+)/, `versionCode ${newVersionCode}`);
   gradleContent = gradleContent.replace(/versionName\s+"([^"]+)"/, `versionName "${newVersionName}"`);
-  
+
   fs.writeFileSync(gradlePath, gradleContent, 'utf8');
 
   // 4. Update changelog.md
   const dateStr = new Date().toLocaleDateString();
   const mdEntry = `\n## [${newVersionName}] - ${dateStr}\n${fullChangelog || '• General improvements and bug fixes.'}\n`;
-  
+
   if (!fs.existsSync(changelogPath)) {
     fs.writeFileSync(changelogPath, `# Changelog\n\nAll notable changes to Twilight Garden will be documented in this file.\n${mdEntry}`, 'utf8');
   } else {
@@ -105,22 +105,22 @@ async function runRelease() {
   const androidDir = path.resolve(__dirname, '../android');
   try {
     const buildEnv = { ...process.env };
-    
+
     if (process.platform === 'win32') {
       // Use Android Studio's bundled JRE if JAVA_HOME isn't already perfectly configured for Gradle
       const asJbrPath = 'C:\\Program Files\\Android\\Android Studio\\jbr';
       if (fs.existsSync(asJbrPath)) {
         buildEnv.JAVA_HOME = asJbrPath;
       }
-      
-      execSync(`powershell.exe -Command ".\\gradlew.bat assembleDebug"`, { 
-        cwd: androidDir, 
+
+      execSync(`powershell.exe -Command ".\\gradlew.bat assembleDebug"`, {
+        cwd: androidDir,
         stdio: 'inherit',
         env: buildEnv
       });
     } else {
-      execSync(`./gradlew assembleDebug`, { 
-        cwd: androidDir, 
+      execSync(`./gradlew assembleDebug`, {
+        cwd: androidDir,
         stdio: 'inherit',
         env: buildEnv
       });
@@ -161,7 +161,7 @@ async function runRelease() {
     .storage
     .from('app-updates')
     .getPublicUrl(storagePath);
-  
+
   const apk_url = publicUrlData.publicUrl;
   console.log(`✅ Upload successful: ${apk_url}`);
 
@@ -196,7 +196,7 @@ async function runRelease() {
     // Delete files from storage
     const filesToDelete = oldUpdates.map(update => `updates/twilight-v${update.version_code}.apk`);
     const { error: stError } = await supabase.storage.from('app-updates').remove(filesToDelete);
-    
+
     if (stError) {
       console.error("⚠️ Error deleting old APKs from storage:", stError);
     } else {
@@ -206,7 +206,7 @@ async function runRelease() {
     // Delete rows from DB
     const idsToDelete = oldUpdates.map(u => u.id);
     const { error: dbDelError } = await supabase.from('app_updates').delete().in('id', idsToDelete);
-    
+
     if (dbDelError) {
       console.error("⚠️ Error deleting old DB records:", dbDelError);
     } else {

@@ -1,0 +1,11 @@
+ALTER PUBLICATION supabase_realtime ADD TABLE profiles;
+ALTER PUBLICATION supabase_realtime ADD TABLE user_settings;
+ALTER PUBLICATION supabase_realtime ADD TABLE daily_logs;
+ALTER PUBLICATION supabase_realtime ADD TABLE push_subscriptions;
+ALTER PUBLICATION supabase_realtime ADD TABLE shared_cards;
+ALTER PUBLICATION supabase_realtime ADD TABLE user_fcm_tokens;
+ALTER PUBLICATION supabase_realtime ADD TABLE app_updates;
+ALTER PUBLICATION supabase_realtime ADD TABLE note_keys;
+ALTER PUBLICATION supabase_realtime ADD TABLE sync_sessions;
+ALTER PUBLICATION supabase_realtime ADD TABLE identity_backups;
+ALTER PUBLICATION supabase_realtime ADD TABLE desktop_updates;;

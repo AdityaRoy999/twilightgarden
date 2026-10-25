@@ -1,3 +1,4 @@
+import { localDateKey } from '../lib/dates';
 import React, { useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
@@ -15,23 +16,23 @@ const Dashboard: React.FC = () => {
   const { getCyclePhase, cycleSettings, getLog } = useData();
   const { primaryColor } = useTheme();
   const { partnerProfile } = useCouples();
-  
+
   // Use AuthContext user directly — refreshUser keeps it in sync after profile edits
   const displayName = user?.name || user?.email?.split('@')[0] || 'User';
   const avatarUrl = user?.avatar_url || AVATAR_PLACEHOLDER;
 
   const today = new Date();
-  const dateStr = today.toISOString().split('T')[0];
+  const dateStr = localDateKey(today);
   const cycleData = useMemo(() => getCyclePhase(dateStr), [dateStr, getCyclePhase]);
-  
+
   // Memoize progress calculation
   const radius = 130;
   const circumference = 2 * Math.PI * radius;
   const progressPercent = useMemo(
-    () => (cycleData.currentDay / cycleSettings.avgCycleLength) * 100,
+    () => Math.min(100, (cycleData.currentDay / cycleSettings.avgCycleLength) * 100),
     [cycleData.currentDay, cycleSettings.avgCycleLength]
   );
-  
+
   const strokeOffset = circumference - (circumference * (progressPercent / 100));
 
   // Memoize next period date
@@ -48,7 +49,7 @@ const Dashboard: React.FC = () => {
   const yesterdayItems = useMemo(() => {
     const yesterday = new Date();
     yesterday.setDate(yesterday.getDate() - 1);
-    const yesterdayStr = yesterday.toISOString().split('T')[0];
+    const yesterdayStr = localDateKey(yesterday);
     const yesterdayLog = getLog(yesterdayStr);
     const result: { emoji?: string; icon?: string; label: string; color: string; bgColor: string }[] = [];
     if (!yesterdayLog) return result;
@@ -78,7 +79,7 @@ const Dashboard: React.FC = () => {
       <header className="flex items-center justify-between px-6 py-6 sticky top-0 z-20 bg-[#FDFCF8]/95 dark:bg-[#121014]/95 backdrop-blur-sm transition-colors duration-300">
         <div className="flex items-center gap-3">
           <div className="relative">
-            <img 
+            <img
               src={avatarUrl}
               alt="My Profile"
               className="w-12 h-12 rounded-full object-cover border-2 border-white dark:border-white/10 shadow-sm"
@@ -130,17 +131,17 @@ const Dashboard: React.FC = () => {
                     transition={{ duration: 1.5, ease: "easeOut" }}
                 />
                 </svg>
-                
+
                 {/* Inner Content - Perfectly centered */}
                 <div className="absolute inset-0 flex flex-col items-center justify-center text-center px-8">
                 <span className="text-[11px] font-bold tracking-[0.2em] uppercase mb-1" style={{ color: primaryColor || '#984369' }}>Cycle Day</span>
                 <span className="text-[5.5rem] md:text-[6.5rem] leading-none font-bold text-[#121014] dark:text-white tracking-tighter mb-3">{cycleData.currentDay}</span>
                 {/* Divider Pill */}
                 <div className="w-8 h-1.5 bg-gray-200 dark:bg-white/10 rounded-full mb-4 md:mb-6"></div>
-                
+
                 <span className="text-[17px] md:text-xl font-bold text-[#121014] dark:text-white mb-1">{cycleData.phase} Phase</span>
                 <span className="text-xs md:text-sm font-medium text-gray-400 dark:text-gray-400 max-w-[140px] md:max-w-xs leading-relaxed">
-                    {cycleData.phase === 'Follicular' ? 'Estrogen rising, energy levels up' : 
+                    {cycleData.phase === 'Follicular' ? 'Estrogen rising, energy levels up' :
                     cycleData.phase === 'Ovulation' ? 'Peak fertility, high energy' :
                     cycleData.phase === 'Luteal' ? 'Progesterone rising, wind down' :
                     'Rest and recharge'}
@@ -168,7 +169,7 @@ const Dashboard: React.FC = () => {
                             ) : (
                             <>
                                 <span className="text-2xl font-bold text-[#121014] dark:text-white mb-0.5">{nextPeriodStr}</span>
-                                <span className="text-xs font-medium text-gray-400">in {cycleData.nextPeriodIn} Days</span>
+                                <span className="text-xs font-medium text-gray-400">{cycleData.nextPeriodIn < 0 ? `${Math.abs(cycleData.nextPeriodIn)} days past estimate` : `in ${cycleData.nextPeriodIn} days`}</span>
                             </>
                             )}
                         </div>
@@ -195,16 +196,16 @@ const Dashboard: React.FC = () => {
                                 {(() => {
                                     const ovulationDate = new Date(nextPeriodDate);
                                     ovulationDate.setDate(nextPeriodDate.getDate() - 14);
-                                    
+
                                     const fertileStart = new Date(ovulationDate);
                                     fertileStart.setDate(ovulationDate.getDate() - 5);
-                                    
+
                                     const fertileEnd = new Date(ovulationDate);
                                     fertileEnd.setDate(ovulationDate.getDate() + 1);
 
                                     const startStr = fertileStart.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
                                     const endStr = fertileEnd.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
-                                    
+
                                     return (
                                         <span className="text-lg font-bold text-[#121014] dark:text-white mb-1.5 leading-tight">
                                             {startStr} - {endStr}
@@ -224,7 +225,7 @@ const Dashboard: React.FC = () => {
                 </div>
 
                 {/* Symptom Banner */}
-                <button 
+                <button
                     onClick={() => navigate('/log/details')}
                     className="w-full bg-[#FF5A78] hover:bg-[#E04F6B] text-white p-6 rounded-[24px] shadow-lg shadow-[#FF5A78]/20 flex items-center justify-between group transition-all active:scale-[0.98]"
                 >
@@ -249,7 +250,7 @@ const Dashboard: React.FC = () => {
                 <div className="bg-white dark:bg-transparent md:border md:border-gray-100 md:dark:border-white/5 md:p-5 md:rounded-[24px] md:shadow-soft dark:shadow-none h-full">
                     <div className="flex items-center justify-between mb-4 md:mb-5 px-1 md:px-0">
                         <h3 className="text-sm md:text-base font-bold text-[#121014] dark:text-white">Yesterday's Logs</h3>
-                        <button 
+                        <button
                             onClick={() => navigate('/calendar')}
                             className="text-xs md:text-sm font-semibold text-[#984369] hover:text-[#984369]/80 transition-colors"
                         >
@@ -278,7 +279,7 @@ const Dashboard: React.FC = () => {
             <div className="relative w-full h-full rounded-3xl overflow-hidden bg-orange-50/50 dark:bg-[#18181b] border border-orange-100 dark:border-white/5 shadow-sm transition-colors mb-2 md:mb-0 mt-6 md:mt-0 group hover:shadow-md">
                 {/* Yellow accent bar */}
                 <div className="absolute left-0 top-0 bottom-0 w-1.5 bg-yellow-400 dark:bg-[#FDE047] z-10 shadow-[0_0_8px_rgba(253,224,71,0.2)]"></div>
-                
+
                 <div className="relative z-10 p-5 pl-7 md:p-6 md:pl-8 flex flex-col gap-3 h-full justify-center">
                     <div className="flex items-center gap-3">
                         <div className="flex items-center justify-center size-9 rounded-full bg-white dark:bg-[#2A272E] border border-orange-100 dark:border-white/5 shadow-sm transition-colors">
@@ -287,7 +288,7 @@ const Dashboard: React.FC = () => {
                         <span className="text-[11px] font-bold text-yellow-600 dark:text-[#FDE047] uppercase tracking-widest transition-colors">Daily Insight</span>
                     </div>
                     <p className="text-gray-700 dark:text-gray-300 text-[15px] md:text-base leading-relaxed font-medium transition-colors">
-                        {cycleData.phase === 'Follicular' 
+                        {cycleData.phase === 'Follicular'
                           ? 'During the follicular phase, your metabolism slows down slightly. Consider complex carbs for sustained energy.'
                           : cycleData.phase === 'Ovulation'
                           ? 'Ovulation brings peak energy. Great time for social activities and high-intensity workouts.'

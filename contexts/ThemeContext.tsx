@@ -91,17 +91,20 @@ export const ThemeProvider: React.FC<{ children: React.ReactNode }> = ({ childre
   useEffect(() => {
     const root = document.documentElement;
     root.style.setProperty('--color-primary', primaryColor);
-    
+    const rgb = (hex: string) => { let value=hex.slice(1); if(value.length===3)value=value.split('').map(c=>c+c).join(''); return [0,2,4].map(i=>parseInt(value.slice(i,i+2),16)).join(' '); };
+    root.style.setProperty('--primary-rgb', rgb(primaryColor));
+
     // Generate shades
     // Note: Simple darkening/lightening logic
     // We can assume primaryColor is a hex
     try {
         const dark = adjustColor(primaryColor, -40);
         const light = adjustColor(primaryColor, 130); // Significantly lighter
-        
+
         root.style.setProperty('--color-primary-dark', dark);
-        root.style.setProperty('--color-primary-light', light); 
-        
+        root.style.setProperty('--color-primary-light', light);
+        root.style.setProperty('--primary-light-rgb', rgb(light));
+
         // Also potential RGB vars if needed for opacity
         // Currently sticking with hex values for CSS custom properties.
         // If opacity support is needed, switch to RGB channel variables.
@@ -143,7 +146,7 @@ export const ThemeProvider: React.FC<{ children: React.ReactNode }> = ({ childre
       theme, toggleTheme, primaryColor, updatePrimaryColor, resetTheme,
       animationsEnabled, updateAnimationsEnabled, solidNavBg, updateSolidNavBg
     }}>
-      <MotionConfig reducedMotion={animationsEnabled ? "never" : "always"}>
+      <MotionConfig reducedMotion={animationsEnabled ? "user" : "always"}>
         {children}
       </MotionConfig>
     </ThemeContext.Provider>

@@ -1,3 +1,4 @@
+import { uploadAvatar } from '../lib/media';
 import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
@@ -6,21 +7,21 @@ import { supabase } from '../lib/supabase';
 const EditProfile: React.FC = () => {
   const navigate = useNavigate();
   const { user, refreshUser } = useAuth();
-  
+
   const [fullName, setFullName] = useState('');
   const [email, setEmail] = useState('');
   const [bio, setBio] = useState('');
-  const [status, setStatus] = useState(''); // "Status" not explicitly in UI mock but user asked for it. 
-  // Wait, user asked for "bio and status". The mock has "Bio & Status" as one box. 
-  // I will check the mock logic. The mock had one textarea for "Bio & Status". 
-  // I will assume "Bio" is the main text. I'll add a separate small input for "Status" or keep them combined? 
+  const [status, setStatus] = useState(''); // "Status" not explicitly in UI mock but user asked for it.
+  // Wait, user asked for "bio and status". The mock has "Bio & Status" as one box.
+  // I will check the mock logic. The mock had one textarea for "Bio & Status".
+  // I will assume "Bio" is the main text. I'll add a separate small input for "Status" or keep them combined?
   // "only the name and the bio and status can be changed in the profile table I want also the bio status"
   // Let's add a separate Status field to be precise.
-  
+
   const [avatarUrl, setAvatarUrl] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [uploading, setUploading] = useState(false);
-  
+
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
@@ -33,7 +34,7 @@ const EditProfile: React.FC = () => {
   const fetchProfile = async () => {
     try {
       if (!user) return;
-      
+
       const { data, error } = await supabase
         .from('profiles')
         .select('*')
@@ -41,7 +42,7 @@ const EditProfile: React.FC = () => {
         .single();
 
       if (error) throw error;
-      
+
       if (data) {
         const profileData = data as any;
         setFullName(profileData.full_name || '');
@@ -65,34 +66,9 @@ const EditProfile: React.FC = () => {
         throw new Error('You must select an image to upload.');
       }
 
-      const file = event.target.files[0];
-      const fileExt = file.name.split('.').pop();
-      const fileName = `${user?.id}/${Math.random()}.${fileExt}`;
-      const filePath = `${fileName}`;
-
-      // Delete old avatar file to prevent orphaned storage objects
-      if (avatarUrl) {
-        try {
-          const url = new URL(avatarUrl);
-          const pathSegments = url.pathname.split('/avatars/');
-          if (pathSegments[1]) {
-            await supabase.storage.from('avatars').remove([decodeURIComponent(pathSegments[1])]);
-          }
-        } catch {
-          // Old URL parsing failed — not critical, continue with upload
-        }
-      }
-
-      const { error: uploadError } = await supabase.storage
-        .from('avatars')
-        .upload(filePath, file);
-
-      if (uploadError) {
-        throw uploadError;
-      }
-
-      const { data } = supabase.storage.from('avatars').getPublicUrl(filePath);
-      setAvatarUrl(data.publicUrl); // Update local state immediately
+      if (!user) throw new Error('Please sign in.');
+      const url = await uploadAvatar(event.target.files[0], user.id);
+      setAvatarUrl(url);
 
     } catch (error: any) {
       alert(error.message);
@@ -137,8 +113,8 @@ const EditProfile: React.FC = () => {
     <div className="animate-slideIn font-display flex flex-col min-h-screen bg-[#FDFCF8] dark:bg-background-dark transition-colors duration-300 pb-6 relative overflow-x-hidden">
       {/* Header */}
       <header className="sticky top-0 z-20 flex items-center justify-between px-6 py-4 bg-[#FDFCF8]/95 dark:bg-[#121014]/95 backdrop-blur-sm transition-colors duration-300">
-        <button 
-          onClick={() => navigate(-1)} 
+        <button
+          onClick={() => navigate(-1)}
           className="flex items-center justify-center p-2 -ml-2 rounded-full hover:bg-black/5 dark:hover:bg-white/10 transition-colors"
         >
           <span className="material-symbols-outlined text-[#121014] dark:text-white text-2xl">arrow_back</span>
@@ -151,8 +127,8 @@ const EditProfile: React.FC = () => {
         {/* Avatar Section */}
         <div className="relative mb-10 group">
           <div className="relative w-32 h-32 rounded-full p-1 border-2 border-dashed border-gray-300 dark:border-white/20">
-             <img 
-               src={avatarUrl || "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100' fill='%23ccc'%3E%3Ccircle cx='50' cy='40' r='20'/%3E%3Cellipse cx='50' cy='85' rx='30' ry='22'/%3E%3C/svg%3E"} 
+             <img
+               src={avatarUrl || "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100' fill='%23ccc'%3E%3Ccircle cx='50' cy='40' r='20'/%3E%3Cellipse cx='50' cy='85' rx='30' ry='22'/%3E%3C/svg%3E"}
                alt="Profile"
                className="w-full h-full rounded-full object-cover shadow-lg"
              />
@@ -162,7 +138,7 @@ const EditProfile: React.FC = () => {
                  </div>
              )}
           </div>
-          <button 
+          <button
             onClick={handleAvatarClick}
             disabled={uploading}
             className="absolute bottom-1 right-1 flex items-center justify-center bg-primary text-white p-2.5 rounded-full shadow-lg border-[3px] border-[#FDFCF8] dark:border-background-dark active:scale-95 transition-all cursor-pointer hover:scale-105"
@@ -184,7 +160,7 @@ const EditProfile: React.FC = () => {
            <div className="flex flex-col gap-2">
               <label className="text-xs font-bold text-gray-500 dark:text-gray-400 ml-1 uppercase tracking-wider">Full Name</label>
               <div className="relative group">
-                 <input 
+                 <input
                     type="text"
                     value={fullName}
                     onChange={(e) => setFullName(e.target.value)}
@@ -199,7 +175,7 @@ const EditProfile: React.FC = () => {
            <div className="flex flex-col gap-2">
               <label className="text-xs font-bold text-gray-500 dark:text-gray-400 ml-1 uppercase tracking-wider">Email Address</label>
               <div className="relative group">
-                 <input 
+                 <input
                     type="email"
                     value={email}
                     disabled
@@ -214,7 +190,7 @@ const EditProfile: React.FC = () => {
            <div className="flex flex-col gap-2">
               <label className="text-xs font-bold text-gray-500 dark:text-gray-400 ml-1 uppercase tracking-wider">Bio</label>
               <div className="relative group">
-                 <textarea 
+                 <textarea
                     value={bio}
                     onChange={(e) => setBio(e.target.value)}
                     className="w-full h-32 pl-4 pr-4 py-4 rounded-2xl bg-white dark:bg-surface-dark border border-gray-200 dark:border-white/10 text-[#121014] dark:text-white font-medium focus:ring-1 focus:ring-primary focus:border-primary transition-all shadow-sm outline-none resize-none leading-relaxed"
@@ -228,7 +204,7 @@ const EditProfile: React.FC = () => {
 
       {/* Footer Action */}
       <div className="px-6 pb-8 mt-auto pt-6">
-        <button 
+        <button
           onClick={handleSave}
           disabled={isLoading || uploading}
           className="w-full h-14 bg-primary hover:bg-[#86375a] text-white font-bold rounded-2xl shadow-lg shadow-primary/20 transition-all active:scale-[0.98] flex items-center justify-center gap-2 disabled:opacity-70 disabled:pointer-events-none"

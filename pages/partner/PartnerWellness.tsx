@@ -1,3 +1,4 @@
+import { localDateKey } from '../../lib/dates';
 import React, { useState, useEffect, useMemo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useCouples } from '../../contexts/CouplesContext';
@@ -67,7 +68,7 @@ const PartnerWellness: React.FC = () => {
         if (!partnerSettings?.lastPeriodStart) return null;
         try {
             return calculateCyclePhase(
-                new Date().toISOString().split('T')[0],
+                localDateKey(),
                 {
                     avgCycleLength: partnerSettings.avgCycleLength || 28,
                     avgPeriodLength: partnerSettings.avgPeriodLength || 5,
@@ -82,7 +83,7 @@ const PartnerWellness: React.FC = () => {
     }, [partnerSettings]);
 
     // Build context
-    const todayStr = new Date().toISOString().split('T')[0];
+    const todayStr = localDateKey();
     const todayLog = partnerLogs?.find((l: any) => l.date === todayStr);
     const partnerName = partnerProfile?.full_name || 'Your Partner';
 
@@ -115,7 +116,7 @@ const PartnerWellness: React.FC = () => {
             } else {
                 const terms = result.text.split(',').map(t => t.trim()).filter(Boolean);
                 console.log('AI Search Terms:', terms);
-                
+
                 // Fetch products for each term in parallel (now 5 platforms)
                 const productPromises = terms.slice(0, 5).map(term => searchShoppingProducts(term));
                 const productGroups = await Promise.all(productPromises);
@@ -149,7 +150,7 @@ const PartnerWellness: React.FC = () => {
     const filteredGifts = useMemo(() => {
         return gifts.filter(p => {
             const platformMatch = platformFilter === 'All' || p.source === platformFilter;
-            
+
             // Simple category heuristic based on title/link keywords
             let categoryMatch = true;
             if (categoryFilter !== 'All') {
@@ -162,7 +163,7 @@ const PartnerWellness: React.FC = () => {
                     'Food': ['chocolate', 'tea', 'coffee', 'snack', 'gift box', 'sweet', 'fruit', 'amul', 'cadbury', 'ferrer'],
                     'Self-care': ['journal', 'bath', 'skincare', 'mask', 'serum', 'lotion', 'spa', 'beauty', 'face']
                 };
-                
+
                 // Use regex with word boundaries to avoid partial matches (e.g., 'tea' in 'Tear')
                 const filterKeywords = keywords[categoryFilter] || [];
                 categoryMatch = filterKeywords.some(k => {
@@ -266,12 +267,12 @@ const PartnerWellness: React.FC = () => {
                  <p className={`text-sm mt-2 ${isDark ? 'text-white/50' : 'text-gray-500'}`}>Finding nearby pharmacies and medical stores.</p>
             </div>
         );
-        
+
         if (error) return <ErrorCard message={error} onRetry={initShops} isDark={isDark} />;
 
         return (
             <div className="flex flex-col md:grid md:grid-cols-[1fr_2fr] gap-6 max-w-6xl mx-auto w-full">
-                
+
                 {/* Left side: Cards List */}
                 <div className="flex flex-col gap-4 h-[500px] overflow-y-auto no-scrollbar pr-2">
                     <div className={`rounded-2xl p-4 sticky top-0 z-10 ${isDark ? 'bg-gradient-to-br from-primary/20 to-pink-500/10 border border-primary/20 backdrop-blur-xl' : 'bg-gradient-to-br from-primary/10 to-pink-50 border border-primary/20 backdrop-blur-xl'}`}>
@@ -285,10 +286,10 @@ const PartnerWellness: React.FC = () => {
                     </div>
 
                     {shops.map((shop) => (
-                        <div 
+                        <div
                             key={shop.id}
                             onClick={() => handleShopSelect(shop)}
-                            className={`shrink-0 rounded-2xl overflow-hidden border cursor-pointer transition-all duration-300 ${selectedShop?.id === shop.id 
+                            className={`shrink-0 rounded-2xl overflow-hidden border cursor-pointer transition-all duration-300 ${selectedShop?.id === shop.id
                                 ? 'border-primary shadow-lg scale-[1.02] ring-2 ring-primary/20 ' + (isDark ? 'bg-primary/10' : 'bg-primary/5')
                                 : isDark ? 'bg-surface-dark border-white/5 hover:bg-white/5' : 'bg-white border-gray-100 hover:bg-gray-50 hover:shadow-md'
                             }`}
@@ -310,7 +311,7 @@ const PartnerWellness: React.FC = () => {
                                         <p className={`text-xs font-semibold ${isDark ? 'text-green-400' : 'text-green-600'}`}>{shop.phoneNumber}</p>
                                     </div>
                                 )}
-                                
+
                                 {selectedShop?.id === shop.id && route && (
                                     <div className={`mt-2 p-2 rounded-lg flex items-center justify-between ${isDark ? 'bg-black/50' : 'bg-primary/10'}`}>
                                         <div className="flex items-center gap-1.5">
@@ -335,9 +336,9 @@ const PartnerWellness: React.FC = () => {
                 {/* Right side: Map */}
                 {userLocation && (
                     <div className={`rounded-2xl overflow-hidden h-[400px] md:h-[500px] border relative sticky top-24 ${isDark ? 'border-white/5' : 'border-gray-100'} shadow-soft z-0`}>
-                        <MapContainer 
-                            center={userLocation} 
-                            zoom={14} 
+                        <MapContainer
+                            center={userLocation}
+                            zoom={14}
                             className="w-full h-full"
                             zoomControl={false}
                         >
@@ -347,7 +348,7 @@ const PartnerWellness: React.FC = () => {
                                 url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
                                 className={isDark ? 'map-tiles-dark' : ''}
                             />
-                            
+
                             {/* User Marker */}
                             <Marker position={userLocation} icon={userIcon}>
                                 <Popup>You are here</Popup>
@@ -355,8 +356,8 @@ const PartnerWellness: React.FC = () => {
 
                             {/* Pharmacy Markers */}
                             {shops.map(shop => (
-                                <Marker 
-                                    key={shop.id} 
+                                <Marker
+                                    key={shop.id}
                                     position={[shop.lat, shop.lon]}
                                     eventHandlers={{
                                         click: () => handleShopSelect(shop),
@@ -365,9 +366,9 @@ const PartnerWellness: React.FC = () => {
                                     <Popup className="custom-popup">
                                         <div className="flex flex-col gap-1 p-1">
                                             <strong className="text-sm font-bold">{shop.name}</strong>
-                                            <a 
+                                            <a
                                                 href={`https://www.google.com/maps/dir/?api=1&destination=${shop.lat},${shop.lon}`}
-                                                target="_blank" 
+                                                target="_blank"
                                                 rel="noopener noreferrer"
                                                 className="bg-primary text-white text-xs text-center font-bold py-1.5 mt-2 rounded-lg no-underline"
                                             >
@@ -380,9 +381,9 @@ const PartnerWellness: React.FC = () => {
 
                             {/* Routing Polyline */}
                             {route && (
-                                <Polyline 
+                                <Polyline
                                     positions={route.coordinates.map(c => [c[1], c[0]])} // OSRM is [lon,lat], Leaflet needs [lat,lon]
-                                    pathOptions={{ color: 'var(--color-primary)', weight: 5, opacity: 0.8 }} 
+                                    pathOptions={{ color: 'var(--color-primary)', weight: 5, opacity: 0.8 }}
                                 />
                             )}
 
@@ -502,8 +503,8 @@ const PartnerWellness: React.FC = () => {
                                                         key={p}
                                                         onClick={() => setPlatformFilter(p as any)}
                                                         className={`px-3 py-1.5 rounded-lg text-[11px] font-bold md:w-full md:text-left transition-all border ${
-                                                            platformFilter === p 
-                                                            ? 'bg-primary border-primary text-white shadow-sm' 
+                                                            platformFilter === p
+                                                            ? 'bg-primary border-primary text-white shadow-sm'
                                                             : isDark ? 'bg-white/5 border-white/5 text-gray-400 hover:bg-white/10' : 'bg-white border-gray-100 text-gray-600 hover:bg-gray-50'
                                                         }`}
                                                     >
@@ -522,8 +523,8 @@ const PartnerWellness: React.FC = () => {
                                                         key={c}
                                                         onClick={() => setCategoryFilter(c as any)}
                                                         className={`px-3 py-1.5 rounded-lg text-[11px] font-bold md:w-full md:text-left transition-all border ${
-                                                            categoryFilter === c 
-                                                            ? 'bg-amber-500 border-amber-500 text-white shadow-sm' 
+                                                            categoryFilter === c
+                                                            ? 'bg-amber-500 border-amber-500 text-white shadow-sm'
                                                             : isDark ? 'bg-white/5 border-white/5 text-gray-400 hover:bg-white/10' : 'bg-white border-gray-100 text-gray-600 hover:bg-gray-50'
                                                         }`}
                                                     >
@@ -566,7 +567,7 @@ const PartnerWellness: React.FC = () => {
                                 </div>
                             </div>
                         )}
-                        
+
                         {activeTab === 'shops' && renderShopsContent()}
                     </motion.div>
                 </AnimatePresence>

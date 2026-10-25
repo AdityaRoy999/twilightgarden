@@ -9,6 +9,8 @@ import { useTutorial } from '../../contexts/TutorialContext';
 import { sendGameNotification } from '../../lib/notifications';
 import GameEndedScreen from '../../components/GameEndedScreen';
 import { endSession } from '../../lib/gameSessions';
+import { toJson } from '../../lib/json';
+import type { Database } from '../../lib/database.types';
 
 interface LTItem {
     id: number;
@@ -31,10 +33,18 @@ interface GameSession {
     couple_id: string;
     game_type: 'love_trivia';
     board_state: LTState;
-    updated_at: string;
+    created_at: string;
     status: 'waiting' | 'active' | 'ended';
     player_x: string;
     player_o: string | null;
+}
+
+function parseSession(row: Database['public']['Tables']['game_sessions']['Row']): GameSession {
+    const state = row.board_state;
+    if (!state || typeof state !== 'object' || Array.isArray(state) || !Array.isArray(state.history) ||
+        !state.history.every(id => typeof id === 'number') || row.game_type !== 'love_trivia' ||
+        !['waiting', 'active', 'ended'].includes(row.status || '')) throw new Error('Invalid trivia session');
+    return { ...row, game_type: 'love_trivia', status: row.status as GameSession['status'], board_state: state as unknown as LTState };
 }
 
 const loadData = async (): Promise<LTItem[]> => {
@@ -59,14 +69,14 @@ const LoveTrivia: React.FC = () => {
     const { theme, primaryColor } = useTheme();
     const { openTutorial } = useTutorial();
     const isDark = theme === 'dark';
-    
+
     const [items, setItems] = useState<LTItem[]>([]);
     const [session, setSession] = useState<GameSession | null>(null);
     const [loading, setLoading] = useState(true);
     const [ringCooldown, setRingCooldown] = useState(false);
-    const ringCooldownRef = useRef<ReturnType<typeof setTimeout>>();
-    const countdownIvRef = useRef<ReturnType<typeof setInterval>>();
-    const advanceTimerRef = useRef<ReturnType<typeof setTimeout>>();
+    const ringCooldownRef = useRef<ReturnType<typeof setTimeout>>(undefined);
+    const countdownIvRef = useRef<ReturnType<typeof setInterval>>(undefined);
+    const advanceTimerRef = useRef<ReturnType<typeof setTimeout>>(undefined);
     const [myAnswer, setMyAnswer] = useState('');
     const [countdown, setCountdown] = useState<number | null>(null);
 
@@ -103,9 +113,9 @@ const LoveTrivia: React.FC = () => {
                             .eq('id', data.id)
                             .select()
                             .single();
-                        if (!cancelled && updated) setSession(updated);
+                        if (!cancelled && updated) setSession(parseSession(updated));
                     } else {
-                        if (!cancelled) setSession(data);
+                        if (!cancelled) setSession(parseSession(data));
                     }
                 } else {
                     const newState = emptyState();
@@ -113,7 +123,7 @@ const LoveTrivia: React.FC = () => {
                         .insert({
                             couple_id: couple.id,
                             game_type: 'love_trivia',
-                            board_state: newState,
+                            board_state: toJson(newState),
                             player_x: user.id,
                             player_o: null,
                             status: 'waiting'
@@ -123,7 +133,7 @@ const LoveTrivia: React.FC = () => {
 
                     if (insErr) throw insErr;
                     if (!cancelled && newSession) {
-                        setSession(newSession);
+                        setSession(parseSession(newSession));
                         sendGameNotification(couple, user.id, 'Love Trivia', '/games/trivia', 'invite');
                         // Do not auto-pick a card here. The creator must choose rounds
                         // via `startGameRounds` so we avoid starting the game unexpectedly.
@@ -144,8 +154,8 @@ const LoveTrivia: React.FC = () => {
     useEffect(() => {
         if (!session?.id) return;
 
-        const ch = supabase.channel(`game_lt_${session.id}`)
-            .on('postgres_changes', { event: '*', schema: 'public', table: 'game_sessions', filter: `id=eq.${session.id}` }, 
+        const ch = supabase.channel(`game_lt_${session.id}`, { config: { private: true } })
+            .on('postgres_changes', { event: '*', schema: 'public', table: 'game_sessions', filter: `id=eq.${session.id}` },
             (payload) => {
                 const newSess = payload.new as GameSession;
                 if (newSess && newSess.game_type === 'love_trivia') {
@@ -153,8 +163,8 @@ const LoveTrivia: React.FC = () => {
                 }
             })
             .subscribe();
-            
-        return () => { 
+
+        return () => {
             supabase.removeChannel(ch);
             clearTimeout(ringCooldownRef.current);
             clearInterval(countdownIvRef.current);
@@ -495,7 +505,7 @@ const LoveTrivia: React.FC = () => {
                                 )}
 
                                 <AnimatePresence mode="wait">
-                                    <motion.div 
+                                    <motion.div
                                         key={currentCard.id}
                                         initial={{ rotateY: 90, opacity: 0 }}
                                         animate={{ rotateY: 0, opacity: 1 }}

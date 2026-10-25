@@ -3,46 +3,42 @@ import { Preferences } from '@capacitor/preferences';
 import { useAuth } from '../contexts/AuthContext';
 import { useData } from '../contexts/DataContext';
 import { useCouples } from '../contexts/CouplesContext';
-import { differenceInDays, startOfDay } from 'date-fns';
+import { calculateCyclePhase } from '../lib/cycleUtils';
+import { localDateKey } from '../lib/dates';
+import { Capacitor } from '@capacitor/core';
 
 export const useWidgetSync = () => {
     const { user } = useAuth();
     const { logs, cycleSettings } = useData();
-    const { partnerProfile, partnerData } = useCouples();
+    const { partnerProfile, partnerData, notes } = useCouples();
 
     useEffect(() => {
-        if (!user) return;
+        if (!user || !Capacitor.isNativePlatform()) return;
 
         const syncData = async () => {
             try {
                 // Calculate cycle day
-                let cycleDay = 1;
-                let phase = 'Follicular';
-                if (cycleSettings?.lastPeriodStart) {
-                    const start = new Date(cycleSettings.lastPeriodStart);
-                    cycleDay = differenceInDays(startOfDay(new Date()), startOfDay(start)) + 1;
-                    
-                    if (cycleDay > 14) phase = 'Luteal';
-                    if (cycleDay > 28) cycleDay = cycleDay % 28 || 28;
-                }
+                const { currentDay: cycleDay, phase } = calculateCyclePhase(localDateKey(), cycleSettings);
+                const lastNote = notes.at(-1);
+                const partnerLog = partnerData.logs.find(log => log.date === localDateKey());
 
                 const payload = {
                     partner: {
                         name: partnerProfile?.full_name || 'Partner',
-                        mood: partnerData?.current_mood?.emoji || '🤩',
-                        online: partnerData?.status === 'online'
+                        mood: partnerLog?.moods?.[0] || null,
+                        online: partnerProfile?.status === 'online'
                     },
                     cycle: {
                         day: cycleDay,
                         phase: phase,
-                        maxDays: cycleSettings?.cycleLength || 28
+                        maxDays: cycleSettings.avgCycleLength
                     },
                     note: {
-                        content: partnerData?.last_note?.content || 'No new notes.',
-                        time: partnerData?.last_note?.timestamp ? 'Recently' : 'Just now'
+                        content: lastNote?.content || 'No new notes.',
+                        time: lastNote?.created_at || null
                     },
                     activity: {
-                        streak: partnerData?.activity_streak || 7
+                        streak: null
                     },
                     updatedAt: new Date().toISOString()
                 };
@@ -61,5 +57,5 @@ export const useWidgetSync = () => {
         };
 
         syncData();
-    }, [user, logs, cycleSettings, partnerProfile, partnerData]);
+    }, [user, logs, cycleSettings, partnerProfile, partnerData, notes]);
 };

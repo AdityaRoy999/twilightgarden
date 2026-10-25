@@ -1,0 +1,54 @@
+[
+  {
+    "table": "daily_logs",
+    "status": 200,
+    "returnedRows": 0
+  },
+  {
+    "table": "logs",
+    "status": 404,
+    "code": "PGRST205",
+    "message": "Could not find the table 'public.logs' in the schema cache"
+  },
+  {
+    "table": "cycles",
+    "status": 404,
+    "code": "PGRST205",
+    "message": "Could not find the table 'public.cycles' in the schema cache"
+  },
+  {
+    "table": "user_settings",
+    "status": 200,
+    "returnedRows": 0
+  },
+  {
+    "table": "user_keys",
+    "status": 200,
+    "returnedRows": 0
+  },
+  {
+    "table": "identity_backups",
+    "status": 200,
+    "returnedRows": 0
+  },
+  {
+    "table": "sync_sessions",
+    "status": 200,
+    "returnedRows": 0
+  },
+  {
+    "table": "game_sessions",
+    "status": 200,
+    "returnedRows": 0
+  },
+  {
+    "table": "notifications",
+    "status": 200,
+    "returnedRows": 0
+  },
+  {
+    "table": "shared_cards",
+    "status": 200,
+    "returnedRows": 0
+  }
+]

@@ -27,32 +27,10 @@ const PartnerLogin: React.FC = () => {
       if (error) throw error;
 
       if (data.user) {
-        // Check metadata first
-        const isPartner = data.user.user_metadata?.is_partner;
-        
-        if (!isPartner) {
-          // Metadata might be missing on new device — check DB profile
-          const { data: profile } = await supabase
-            .from('profiles')
-            .select('role')
-            .eq('id', data.user.id)
-            .single();
-          
-          if ((profile as any)?.role === 'partner') {
-            // Ensure metadata is set for future sessions so role detection is instant
-            await supabase.auth.updateUser({
-              data: { is_partner: true }
-            });
-            navigate('/partner');
-            return;
-          }
-        }
-        
-        if (isPartner) {
-            navigate('/partner');
-        } else {
-            navigate('/dashboard'); 
-        }
+        const { data: profile, error: profileError } = await supabase.from('profiles').select('role').eq('id', data.user.id).single();
+        if (profileError) throw profileError;
+        navigate(profile.role === 'admin' ? '/admin/users' : profile.role === 'partner' ? '/partner' : '/dashboard');
+
       }
     } catch (err: any) {
       setError(err.message);
@@ -93,7 +71,7 @@ const PartnerLogin: React.FC = () => {
           <div className="relative z-10">
             <form onSubmit={handleLogin} className="space-y-6">
           {error && <div className="p-3 rounded-lg bg-red-500/10 border border-red-500/20 text-red-400 text-sm text-center">{error}</div>}
-          
+
             <div className="flex flex-col gap-2">
               <label className="text-white/80 text-sm font-medium ml-1">Email Address</label>
               <div className="relative">

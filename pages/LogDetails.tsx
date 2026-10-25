@@ -1,4 +1,5 @@
-import React, { useState, useEffect } from 'react';
+import { localDateKey, parseDateKey } from '../lib/dates';
+import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { useData } from '../contexts/DataContext';
 import { FlowIntensity } from '../types';
@@ -20,7 +21,7 @@ const LogDetails: React.FC = () => {
 
 
   const [searchParams] = useSearchParams();
-  const today = new Date().toISOString().split('T')[0];
+  const today = localDateKey();
   const dateParam = searchParams.get('date');
   const targetDate = dateParam || today;
 
@@ -32,7 +33,7 @@ const LogDetails: React.FC = () => {
   const { currentDay } = getCyclePhase(targetDate);
 
   // Format Date for Header
-  const dateObj = new Date(targetDate);
+  const dateObj = parseDateKey(targetDate);
   const formattedDate = dateObj.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
   const isToday = targetDate === today;
   const headerDateString = isToday ? `Today, ${formattedDate}` : dateObj.toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' });
@@ -50,8 +51,12 @@ const LogDetails: React.FC = () => {
   const [sleepQuality, setSleepQuality] = useState<"good" | "fair" | "poor" | undefined>(existingLog?.sleepQuality);
   const [sleepHours, setSleepHours] = useState<number | undefined>(existingLog?.sleepHours);
 
+  const dirty = useRef(false);
+  const formDate = useRef(targetDate);
   // Reset form state when navigating to a different date
   useEffect(() => {
+    if (formDate.current !== targetDate) { dirty.current = false; formDate.current = targetDate; }
+    if (dirty.current) return;
     setFlow(existingLog?.flow);
     setMoods(existingLog?.moods || []);
     setPhysical(existingLog?.symptoms?.filter(s => physicalOptions.map(o => o.toLowerCase()).includes(s)) || []);
@@ -60,9 +65,15 @@ const LogDetails: React.FC = () => {
     setEnergyLevel(existingLog?.energyLevel);
     setSleepQuality(existingLog?.sleepQuality);
     setSleepHours(existingLog?.sleepHours);
-  }, [targetDate]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [targetDate, existingLog]);
 
-  const handleSave = () => {
+  const [saving, setSaving] = useState(false);
+  const [saveError, setSaveError] = useState<string | null>(null);
+  const handleSave = async () => {
+    if (saving) return;
+    setSaving(true);
+    setSaveError(null);
+    try {
     // Derive sleep quality from hours if not manually set
     let derivedQuality: "good" | "fair" | "poor" | undefined = sleepQuality;
     if (sleepHours !== undefined) {
@@ -71,23 +82,28 @@ const LogDetails: React.FC = () => {
       else derivedQuality = "poor";
     }
 
-    addLog({
+    await addLog({
       date: targetDate,
       flow,
       moods: moods as any,
-      symptoms: [...physical, ...digestion],
+      symptoms: [...new Set([...physical, ...digestion])],
       notes,
       energyLevel,
       sleepQuality: derivedQuality,
       sleepHours
     });
     navigate(-1);
+    } catch (err) {
+      setSaveError(err instanceof Error ? err.message : 'Your log could not be saved. Please retry.');
+    } finally {
+      setSaving(false);
+    }
   };
 
   const handleDateChange = (daysToAdd: number) => {
-    const d = new Date(targetDate);
+    const d = parseDateKey(targetDate);
     d.setDate(d.getDate() + daysToAdd);
-    const newDateStr = d.toISOString().split('T')[0];
+    const newDateStr = localDateKey(d);
     navigate(`/log/details?date=${newDateStr}`, { replace: true });
   };
 
@@ -144,7 +160,7 @@ const LogDetails: React.FC = () => {
           <span className="material-symbols-outlined text-2xl">arrow_back</span>
         </button>
         <h2 className="text-[17px] font-bold text-white tracking-tight">Log Details</h2>
-        <button className="text-[13px] font-medium text-gray-400 hover:text-white transition-colors px-2">
+        <button onClick={() => { setFlow(undefined); setMoods([]); setPhysical([]); setDigestion([]); setNotes(''); setEnergyLevel(undefined); setSleepQuality(undefined); setSleepHours(undefined); }} disabled={saving} className="text-[13px] font-medium text-gray-400 hover:text-white transition-colors px-2">
           Reset
         </button>
       </header>
@@ -169,7 +185,7 @@ const LogDetails: React.FC = () => {
         </button>
       </div>
 
-      <main className="flex-1 px-5 flex flex-col gap-5 pb-32">
+      <main onChangeCapture={() => { dirty.current = true; }} onClickCapture={() => { dirty.current = true; }} className="flex-1 px-5 flex flex-col gap-5 pb-32">
         {/* Flow Intensity */}
         <div className="bg-surface-dark rounded-[24px] p-5 shadow-sm border border-white/5">
           <div className="flex items-center gap-2.5 mb-5">
@@ -327,6 +343,8 @@ const LogDetails: React.FC = () => {
           </div>
           <div className="relative bg-[#27272a]/50 rounded-[18px] border border-white/5 focus-within:border-white/10 transition-colors">
             <textarea
+              aria-label="Daily notes"
+              maxLength={500}
               value={notes}
               onChange={(e) => setNotes(e.target.value)}
               className="w-full bg-transparent border-none rounded-[18px] p-4 text-[14px] text-white placeholder-gray-500/80 focus:ring-0 min-h-[120px] resize-none leading-relaxed"
@@ -341,14 +359,16 @@ const LogDetails: React.FC = () => {
 
       {/* Save Button */}
       <div className="fixed bottom-0 left-0 right-0 z-40 p-6 bg-gradient-to-t from-background-dark via-background-dark to-transparent max-w-md mx-auto pointer-events-none">
+        {saveError && <p role="alert" className="pointer-events-auto mb-3 rounded-xl bg-red-950 p-3 text-sm text-white">{saveError}</p>}
         <button
           onClick={handleSave}
+          disabled={saving}
           className="pointer-events-auto w-full bg-[#B04E75] hover:bg-[#9c4266] text-white font-bold text-[16px] py-4 rounded-[20px] shadow-xl shadow-[#B04E75]/20 active:scale-[0.98] transition-all flex items-center justify-center gap-2"
         >
           <div className="w-5 h-5 rounded-full bg-white text-[#B04E75] flex items-center justify-center">
             <span className="material-symbols-outlined text-[16px] font-bold">check</span>
           </div>
-          Save Log
+          {saving ? 'Saving…' : 'Save Log'}
         </button>
       </div>
     </div>

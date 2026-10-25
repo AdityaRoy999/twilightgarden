@@ -69,7 +69,7 @@ const TwoTruthsOneLie: React.FC = () => {
     const [toast, setToast] = useState<{ isVisible: boolean; message: string; subMessage?: string; type: 'success' | 'error' }>({ isVisible: false, message: '', type: 'success' });
     const channelRef = useRef<ReturnType<typeof supabase.channel> | null>(null);
     const [ringCooldown, setRingCooldown] = useState(false);
-    const ringCooldownRef = useRef<ReturnType<typeof setTimeout>>();
+    const ringCooldownRef = useRef<ReturnType<typeof setTimeout>>(undefined);
 
     const showToast = (m: string, s?: string, t: 'success' | 'error' = 'success') => setToast({ isVisible: true, message: m, subMessage: s, type: t });
 
@@ -116,7 +116,7 @@ const TwoTruthsOneLie: React.FC = () => {
     /* ─── realtime ─── */
     useEffect(() => {
         if (!game?.id || !user?.id) return;
-        const ch = supabase.channel(`game_rt_${game.id}`, { config: { broadcast: { self: false } } });
+        const ch = supabase.channel(`game_rt_${game.id}`, { config: { private: true, broadcast: { self: false } } });
         ch.on('broadcast', { event: 'game_update' }, ({ payload }) => setGame(payload as GameSession));
         ch.on('postgres_changes', { event: 'UPDATE', schema: 'public', table: 'game_sessions', filter: `id=eq.${game.id}` },
             (p) => setGame(p.new as GameSession));
@@ -137,11 +137,11 @@ const TwoTruthsOneLie: React.FC = () => {
         if (!game || !state || !user || lieIndex === null) return;
         const filled = statements.filter(s => s.trim());
         if (filled.length < 3) { showToast('Fill all 3', 'All statements required', 'error'); return; }
-        
+
         const stmts: Statement[] = statements.map((text, i) => ({ text: text.trim(), isLie: i === lieIndex }));
         // Shuffle so the lie isn't always in the same position
         const shuffled = [...stmts].sort(() => Math.random() - 0.5);
-        
+
         const round: Round = { writerId: user.id, statements: shuffled, guess: null, revealed: false };
         const newRounds = [...state.rounds, round];
         const newState: TwoTruthsState = { ...state, rounds: newRounds, phase: 'guessing' };
@@ -153,18 +153,18 @@ const TwoTruthsOneLie: React.FC = () => {
     /* ─── guesser picks the lie ─── */
     const handleGuess = (idx: number) => {
         if (!game || !state || !amGuesser || state.phase !== 'guessing') return;
-        
+
         const currentRound = state.rounds[state.rounds.length - 1];
         if (!currentRound) return;
-        
+
         const updatedRound: Round = { ...currentRound, guess: idx, revealed: true };
         const newRounds = [...state.rounds.slice(0, -1), updatedRound];
-        
+
         const isCorrect = currentRound.statements[idx].isLie;
         const newScores = { ...state.scores };
         if (isCorrect) newScores[state.currentGuesser] = (newScores[state.currentGuesser] || 0) + 1;
         else newScores[state.currentWriter] = (newScores[state.currentWriter] || 0) + 1;
-        
+
         const newState: TwoTruthsState = { ...state, rounds: newRounds, phase: 'revealed', scores: newScores };
         broadcast({ ...game, board_state: newState } as GameSession);
     };
@@ -173,14 +173,14 @@ const TwoTruthsOneLie: React.FC = () => {
     const handleNextRound = () => {
         if (!game || !state) return;
         const nextRoundNum = state.currentRound + 1;
-        
+
         if (nextRoundNum >= state.totalRounds) {
             // Game over
             const newState: TwoTruthsState = { ...state, phase: 'finished', currentRound: nextRoundNum };
             broadcast({ ...game, board_state: newState } as GameSession);
             return;
         }
-        
+
         // Swap writer/guesser
         const newState: TwoTruthsState = {
             ...state,

@@ -7,9 +7,9 @@ import { useTheme } from '../contexts/ThemeContext';
 import { BellIcon, BellIconHandle } from './ui/AnimatedIcons';
 
 const NotificationBell: React.FC = () => {
-    // Hooks cannot be conditionally called. 
+    // Hooks cannot be conditionally called.
     // If useNotifications is undefined (outside provider), handle gracefully inside the hook or here.
-    const { notifications, unreadCount, markAsRead, markAllAsRead } = useNotifications();
+    const { notifications, unreadCount, markAsRead, markAllAsRead, error } = useNotifications();
     const [isOpen, setIsOpen] = useState(false);
     const dropdownRef = useRef<HTMLDivElement>(null);
     const navigate = useNavigate();
@@ -36,12 +36,12 @@ const NotificationBell: React.FC = () => {
     const handleNotificationClick = (notification: { id: string; type: string; is_read: boolean; message: string; created_at: string }) => {
         markAsRead(notification.id);
         setIsOpen(false);
-        
+
         if (notification.type.startsWith('game_invite|')) {
             // Legacy format: route embedded in type
             const route = notification.type.split('|')[1];
             if (route) navigate(route);
-        } else if (notification.type === 'game_invite') {
+        } else if (['game','game_invite'].includes(notification.type)) {
             const data = (notification as any).data;
             if (data?.url) navigate(data.url);
             else navigate('/partner/games');
@@ -54,7 +54,7 @@ const NotificationBell: React.FC = () => {
 
     return (
         <div ref={dropdownRef} className="relative z-50">
-            <button 
+            <button
                 onClick={() => {
                     setIsOpen(!isOpen);
                     bellRef.current?.startAnimation();
@@ -63,7 +63,7 @@ const NotificationBell: React.FC = () => {
                     isDark ? 'hover:bg-white/10 text-white' : 'hover:bg-gray-100 text-gray-700'
                 }`}
             >
-                <BellIcon 
+                <BellIcon
                     ref={bellRef}
                     size={24}
                     isAnimated={true}
@@ -101,7 +101,7 @@ const NotificationBell: React.FC = () => {
                         <div className={`p-4 border-b flex justify-between items-center ${isDark ? 'border-white/5' : 'border-gray-100'}`}>
                             <h3 className={`font-bold text-sm ${isDark ? 'text-white' : 'text-gray-900'}`}>Notifications</h3>
                             {unreadCount > 0 && (
-                                <button 
+                                <button
                                     onClick={() => markAllAsRead()}
                                     className="text-xs text-[#984369] font-semibold hover:underline"
                                 >
@@ -110,6 +110,7 @@ const NotificationBell: React.FC = () => {
                             )}
                         </div>
 
+                        {error && <p role="alert" className="p-3 text-sm text-red-500">{error}</p>}
                         {/* List */}
                         <div className="overflow-y-auto flex-1 custom-scrollbar">
                             {notifications.length === 0 ? (
@@ -120,7 +121,7 @@ const NotificationBell: React.FC = () => {
                             ) : (
                                 <div>
                                     {notifications.map((notification) => (
-                                        <div 
+                                        <div
                                             key={notification.id}
                                             onClick={() => handleNotificationClick(notification)}
                                             className={`p-4 border-b last:border-0 relative hover:bg-black/5 dark:hover:bg-white/5 transition-colors cursor-pointer ${

@@ -1,3 +1,4 @@
+import { localDateKey } from '../lib/dates';
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '../contexts/AuthContext';
 import { useTheme } from '../contexts/ThemeContext';
@@ -23,7 +24,7 @@ const Settings: React.FC = () => {
   const { hasCloudBackup } = useCouples();
 
 
-  
+
   // Initialize from cache for instant load, with AuthContext fallback
   const [profile, setProfile] = useState<any>(() => {
     try {
@@ -34,7 +35,7 @@ const Settings: React.FC = () => {
     if (user) return { full_name: user.name, avatar_url: user.avatar_url, email: user.email };
     return null;
   });
-  
+
   const [showTodayReport, setShowTodayReport] = useState(false);
   const [unlinkDeviceId, setUnlinkDeviceId] = useState<string | null>(null);
   const [toast, setToast] = useState<{ message: string; subMessage?: string; type: 'success' | 'error'; isVisible: boolean }>({
@@ -42,9 +43,9 @@ const Settings: React.FC = () => {
     type: 'success',
     isVisible: false
   });
-  
+
   // Get today's log
-  const todayStr = new Date().toISOString().split('T')[0];
+  const todayStr = localDateKey();
   const todayLog = logs.find(l => l.date === todayStr) || null;
 
   useEffect(() => {
@@ -62,7 +63,7 @@ const Settings: React.FC = () => {
         } catch {}
 
         if (shouldFetch) fetchProfile();
-        
+
         // Initial sync from Supabase metadata if available
         if (user.user_metadata) {
             if (user.user_metadata.animationsEnabled !== undefined && user.user_metadata.animationsEnabled !== animationsEnabled) {
@@ -83,7 +84,7 @@ const Settings: React.FC = () => {
             .select('full_name, avatar_url, bio, status, email, partner_nickname')
             .eq('id', user?.id)
             .single();
-          
+
           if (data) {
               setProfile(data);
               localStorage.setItem('twilight_profile', JSON.stringify({ ...data, _cachedAt: Date.now() }));
@@ -122,17 +123,22 @@ const Settings: React.FC = () => {
       .delete()
       .eq('user_id', user.id)
       .eq('device_id', dId) as any);
-    
+
     if (!error) {
-      showToast('Device Unlinked', 'Session removed successfully');
+      showToast('Device key removed', 'This removes its key registration. Existing sessions and cached keys remain valid.');
       fetchDevices();
+    } else {
+      showToast('Could not remove device key', 'Please retry.', 'error');
     }
   };
 
-  const handleLogout = () => {
-    signOut();
-    localStorage.removeItem('twilight_profile'); // Clear cache on logout
-    navigate('/welcome');
+  const handleLogout = async () => {
+    try {
+      await signOut();
+      navigate('/welcome');
+    } catch {
+      showToast('Could not sign out', 'Check your connection and retry.', 'error');
+    }
   };
 
   const showToast = (message: string, subMessage?: string, type: 'success' | 'error' = 'success') => {
@@ -150,9 +156,9 @@ const Settings: React.FC = () => {
         logs,
       });
       // Success feedback is handled inside exportHealthDataToPDF for now, but ideally should return success
-      // For now, we assume if no error, it triggered the save. 
+      // For now, we assume if no error, it triggered the save.
       // Note: exportHealthDataToPDF uses window.alert currently. We should update that too.
-      // Ideally pass a callback or refactor to return status. 
+      // Ideally pass a callback or refactor to return status.
       // For this step, we'll let the user know process started.
       showToast('Export Started', 'Generating your health report...');
     } catch (error) {
@@ -181,7 +187,7 @@ const Settings: React.FC = () => {
   const handleToggleAnimations = async () => {
       const newValue = !animationsEnabled;
       updateAnimationsEnabled(newValue);
-      
+
       const { error } = await supabase.auth.updateUser({
           data: { animationsEnabled: newValue }
       });
@@ -194,7 +200,7 @@ const Settings: React.FC = () => {
   const handleToggleSolidNav = async () => {
       const newValue = !solidNavBg;
       updateSolidNavBg(newValue);
-      
+
       const { error } = await supabase.auth.updateUser({
           data: { solidNavBg: newValue }
       });
@@ -207,7 +213,7 @@ const Settings: React.FC = () => {
   return (
     <div className="animate-slideIn font-display flex flex-col pb-24 bg-[#FDFCF8] dark:bg-background-dark min-h-screen transition-colors duration-300">
       {/* Global Toast */}
-      <Toast 
+      <Toast
         message={toast.message}
         subMessage={toast.subMessage}
         type={toast.type}
@@ -219,11 +225,11 @@ const Settings: React.FC = () => {
       {unlinkDeviceId && (
         <div className="fixed inset-0 z-[200] flex items-center justify-center bg-black/60 p-6" onClick={() => setUnlinkDeviceId(null)}>
           <div className="bg-white dark:bg-gray-800 rounded-2xl p-6 max-w-sm w-full shadow-xl" onClick={e => e.stopPropagation()}>
-            <h3 className="text-lg font-semibold mb-2 dark:text-white">Unlink Device</h3>
-            <p className="text-sm text-gray-600 dark:text-gray-300 mb-5">Are you sure you want to unlink this device? It will no longer be able to receive new messages.</p>
+            <h3 className="text-lg font-semibold mb-2 dark:text-white">Remove device key</h3>
+            <p className="text-sm text-gray-600 dark:text-gray-300 mb-5">Remove this device's public-key registration? This does not sign the device out or erase its cached keys. It can register again while signed in.</p>
             <div className="flex gap-3">
               <button onClick={() => setUnlinkDeviceId(null)} className="flex-1 py-2.5 rounded-xl bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-200 text-sm font-medium">Cancel</button>
-              <button onClick={confirmUnlinkDevice} className="flex-1 py-2.5 rounded-xl bg-red-500 text-white text-sm font-medium">Unlink</button>
+              <button onClick={confirmUnlinkDevice} className="flex-1 py-2.5 rounded-xl bg-red-500 text-white text-sm font-medium">Remove key</button>
             </div>
           </div>
         </div>
@@ -250,7 +256,7 @@ const Settings: React.FC = () => {
           <div className="text-center md:text-left flex-grow flex flex-col justify-center">
             <h3 className="text-xl md:text-2xl font-bold text-[#121014] dark:text-white mb-1">{profile?.full_name || 'User'}</h3>
             <p className="text-sm md:text-base text-gray-500 dark:text-gray-400 mb-4">{user?.email}</p>
-            <button 
+            <button
               onClick={() => navigate('/settings/profile')}
               className="w-full md:w-auto py-2.5 px-6 rounded-xl bg-primary/10 hover:bg-primary/20 text-primary font-semibold text-sm transition-colors"
             >
@@ -262,7 +268,7 @@ const Settings: React.FC = () => {
 
       <div className="px-6 mb-8 max-w-6xl mx-auto w-full">
         <div className="flex flex-col md:grid md:grid-cols-2 gap-6 md:gap-8">
-          
+
           {/* Left Column Settings */}
           <div className="flex flex-col gap-6">
             <div>
@@ -284,7 +290,7 @@ const Settings: React.FC = () => {
                     <div className="w-11 h-6 bg-gray-200 dark:bg-gray-700 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-primary"></div>
                   </label>
                 </div>
-                
+
                 {/* Animations Toggle */}
                 <div className="flex items-center justify-between p-4 border-b border-gray-100 dark:border-white/5 hover:bg-gray-50 dark:hover:bg-white/5 transition-colors cursor-pointer group" onClick={handleToggleAnimations}>
                   <div className="flex items-center gap-3">
@@ -322,12 +328,12 @@ const Settings: React.FC = () => {
 
               {/* Color Theme Customization Link */}
               <div className="bg-white dark:bg-surface-dark rounded-2xl border border-gray-100 dark:border-white/5 p-1 shadow-soft transition-colors mt-4">
-                  <div 
+                  <div
                       className="flex items-center justify-between p-4 hover:bg-gray-50 dark:hover:bg-white/5 transition-colors cursor-pointer rounded-xl group"
                       onClick={() => navigate('/settings/theme')}
                   >
                       <div className="flex items-center gap-3">
-                          <div 
+                          <div
                               className="w-10 h-10 rounded-xl shadow-sm border border-black/5 dark:border-white/10 flex items-center justify-center transition-transform group-hover:scale-105"
                               style={{ backgroundColor: primaryColor }}
                           >
@@ -346,7 +352,7 @@ const Settings: React.FC = () => {
             <div>
               <h3 className="text-[#121014] dark:text-white text-lg font-bold mb-3 px-1">App Settings</h3>
               <div className="bg-white dark:bg-surface-dark rounded-2xl border border-gray-100 dark:border-white/5 overflow-hidden shadow-soft transition-colors">
-                  <div 
+                  <div
                       className="flex items-center justify-between p-4 border-b border-gray-100 dark:border-white/5 hover:bg-gray-50 dark:hover:bg-white/5 transition-colors cursor-pointer group"
                       onClick={() => navigate('/notes')}
                   >
@@ -361,7 +367,7 @@ const Settings: React.FC = () => {
                       </div>
                       <span className="material-symbols-outlined text-gray-400 dark:text-gray-600 text-sm">arrow_forward_ios</span>
                   </div>
-                  <div 
+                  <div
                       className="flex items-center justify-between p-4 hover:bg-gray-50 dark:hover:bg-white/5 transition-colors cursor-pointer group"
                       onClick={() => navigate('/settings/notifications')}
                   >
@@ -385,8 +391,8 @@ const Settings: React.FC = () => {
                   <div className="flex flex-col gap-2">
                       <label className="text-sm font-medium text-gray-700 dark:text-gray-300">Partner Nickname</label>
                       <div className="relative">
-                          <input 
-                              type="text" 
+                          <input
+                              type="text"
                               placeholder="e.g. Puchii, Tutii"
                               defaultValue={profile?.partner_nickname || ''}
                               onBlur={async (e) => {
@@ -422,8 +428,8 @@ const Settings: React.FC = () => {
                   { icon: 'cached', label: 'Cycle Length', value: `${cycleSettings.avgCycleLength} days`, color: 'text-primary', link: '/settings/cycle-length' },
                   { icon: 'water_drop', label: 'Period Length', value: `${cycleSettings.avgPeriodLength} days`, color: 'text-purple-400', link: '/settings/period-length' },
                 ].map((item, i) => (
-                  <div 
-                      key={i} 
+                  <div
+                      key={i}
                       className="flex items-center justify-between p-4 border-b border-gray-100 dark:border-white/5 hover:bg-gray-50 dark:hover:bg-white/5 transition-colors cursor-pointer group"
                       onClick={() => navigate(item.link)}
                   >
@@ -450,11 +456,11 @@ const Settings: React.FC = () => {
                     </div>
                   </div>
                   <label className="relative inline-flex items-center cursor-pointer">
-                    <input 
-                      className="sr-only peer" 
-                      type="checkbox" 
+                    <input
+                      className="sr-only peer"
+                      type="checkbox"
                       checked={cycleSettings.irregularCycle}
-                      onChange={() => updateSettings({ irregularCycle: !cycleSettings.irregularCycle })}
+                      onChange={() => { void updateSettings({ irregularCycle: !cycleSettings.irregularCycle }).catch(err => showToast('Could not save settings', err.message, 'error')); }}
                     />
                     <div className="w-11 h-6 bg-gray-200 dark:bg-gray-700 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-primary"></div>
                   </label>
@@ -465,7 +471,7 @@ const Settings: React.FC = () => {
             <div>
               <h3 className="text-[#121014] dark:text-white text-lg font-bold mb-3 px-1">My Data</h3>
               <div className="bg-white dark:bg-surface-dark rounded-2xl border border-gray-100 dark:border-white/5 overflow-hidden shadow-soft transition-colors">
-                  <div 
+                  <div
                       className="flex items-center justify-between p-4 border-b border-gray-100 dark:border-white/5 hover:bg-gray-50 dark:hover:bg-white/5 transition-colors cursor-pointer group"
                       onClick={() => navigate('/settings/history')}
                   >
@@ -478,7 +484,7 @@ const Settings: React.FC = () => {
                     <span className="material-symbols-outlined text-gray-400 dark:text-gray-600 text-sm">arrow_forward_ios</span>
                   </div>
 
-                  <div 
+                  <div
                       className="flex items-center justify-between p-4 border-b border-gray-100 dark:border-white/5 hover:bg-gray-50 dark:hover:bg-white/5 transition-colors cursor-pointer group"
                       onClick={() => setShowSyncModal(true)}
                   >
@@ -506,7 +512,7 @@ const Settings: React.FC = () => {
             <div>
               <h3 className="text-[#121014] dark:text-white text-lg font-bold mb-3 px-1">Support & Data</h3>
               <div className="bg-white dark:bg-surface-dark rounded-2xl border border-gray-100 dark:border-white/5 overflow-hidden flex flex-col shadow-soft transition-colors">
-                <button 
+                <button
                   onClick={handleExportPDF}
                   className="flex items-center justify-between p-4 border-b border-gray-100 dark:border-white/5 hover:bg-gray-50 dark:hover:bg-white/5 transition-colors w-full text-left"
                 >
@@ -521,7 +527,7 @@ const Settings: React.FC = () => {
                   </div>
                   <span className="material-symbols-outlined text-gray-400 dark:text-gray-600">chevron_right</span>
                 </button>
-                <button 
+                <button
                   onClick={handleDoctorsReport}
                   className="flex items-center justify-between p-4 border-b border-gray-100 dark:border-white/5 hover:bg-gray-50 dark:hover:bg-white/5 transition-colors w-full text-left"
                 >
@@ -536,7 +542,7 @@ const Settings: React.FC = () => {
                   </div>
                   <span className="material-symbols-outlined text-gray-400 dark:text-gray-600">chevron_right</span>
                 </button>
-                <button 
+                <button
                   onClick={() => setShowTodayReport(true)}
                   className="flex items-center justify-between p-4 border-b border-gray-100 dark:border-white/5 hover:bg-gray-50 dark:hover:bg-white/5 transition-colors w-full text-left"
                 >
@@ -562,7 +568,7 @@ const Settings: React.FC = () => {
                 <p className="text-xs text-gray-500 dark:text-gray-600">Version 2.4.0</p>
               </div>
             </div>
-            
+
             <div>
               <h3 className="text-[#121014] dark:text-white text-lg font-bold mb-3 px-1">Linked Devices</h3>
               <p className="text-xs text-gray-500 mb-4 px-1">These devices can read your encrypted messages.</p>
@@ -587,7 +593,7 @@ const Settings: React.FC = () => {
                         </div>
                      </div>
                      {device.device_id !== deviceId && (
-                       <button 
+                       <button
                         onClick={() => unlinkDevice(device.device_id)}
                         className="p-2 text-gray-400 hover:text-red-500 transition-colors"
                        >
@@ -604,7 +610,7 @@ const Settings: React.FC = () => {
           </div>
         </div>
       </div>
-      
+
       {/* Today's Report Modal */}
       <TodayReportModal
         isOpen={showTodayReport}
@@ -613,8 +619,8 @@ const Settings: React.FC = () => {
         cycleSettings={cycleSettings}
         profile={profile || {}}
       />
-      
-      <SyncHistoryModal 
+
+      <SyncHistoryModal
         isOpen={showSyncModal}
         onClose={() => setShowSyncModal(false)}
       />

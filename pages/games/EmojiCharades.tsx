@@ -58,14 +58,14 @@ const EmojiCharades: React.FC = () => {
     const { theme, primaryColor } = useTheme();
     const { openTutorial } = useTutorial();
     const isDark = theme === 'dark';
-    
+
     const [items, setItems] = useState<ECItem[]>([]);
     const [session, setSession] = useState<GameSession | null>(null);
     const [loading, setLoading] = useState(true);
     const [ringCooldown, setRingCooldown] = useState(false);
-    const ringCooldownRef = useRef<ReturnType<typeof setTimeout>>();
-    const countdownIvRef = useRef<ReturnType<typeof setInterval>>();
-    const advanceTimerRef = useRef<ReturnType<typeof setTimeout>>();
+    const ringCooldownRef = useRef<ReturnType<typeof setTimeout>>(undefined);
+    const countdownIvRef = useRef<ReturnType<typeof setInterval>>(undefined);
+    const advanceTimerRef = useRef<ReturnType<typeof setTimeout>>(undefined);
     const [myGuess, setMyGuess] = useState('');
     const [countdown, setCountdown] = useState<number | null>(null);
 
@@ -169,7 +169,7 @@ const EmojiCharades: React.FC = () => {
     useEffect(() => {
         if (!session?.id) return;
 
-        const ch = supabase.channel(`game_ec_${session.id}`)
+        const ch = supabase.channel(`game_ec_${session.id}`, { config: { private: true } })
             .on('postgres_changes', { event: '*', schema: 'public', table: 'game_sessions', filter: `id=eq.${session.id}` },
             (payload) => {
                 const newSess = payload.new as GameSession;
@@ -257,7 +257,7 @@ const EmojiCharades: React.FC = () => {
                 .eq('id', sessionId || session?.id);
             return null;
         }
-        
+
         const newState: ECState = {
             ...currentState,
             currentCard: nextCard,
@@ -267,7 +267,7 @@ const EmojiCharades: React.FC = () => {
             revealRequestedAt: null,
             roundNumber: nextRoundNum,
         };
-        
+
         const { data: updatedRows, error } = await (supabase.from('game_sessions') as any)
             .update({ board_state: newState, status: 'active' })
             .eq(sessionId ? 'id' : 'couple_id', sessionId ?? couple?.id)
@@ -405,7 +405,7 @@ const EmojiCharades: React.FC = () => {
     const isCreator = session.player_x === user?.id;
     const myRole = user && session ? (session.player_x === user.id ? 'player_x' : 'player_o') : null;
 
-    
+
 
     if (session?.status === 'ended') return <GameEndedScreen />;
 

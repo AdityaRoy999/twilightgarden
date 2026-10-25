@@ -1,3 +1,4 @@
+import { localDateKey } from '../lib/dates';
 import React, { useState, useEffect, useMemo, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -27,24 +28,7 @@ import NotificationBell from '../components/NotificationBell';
 import TodayReportModal from '../components/TodayReportModal';
 import { ShareIcon, ShareIconHandle } from '../components/ui/AnimatedIcons';
 
-const RECHARTS_SUPPRESS_STYLES = `
-  .recharts-wrapper, .recharts-surface, .recharts-cartesian-container {
-    outline: none !important;
-    -webkit-tap-highlight-color: transparent;
-  }
-  .recharts-wrapper:focus, .recharts-surface:focus, .recharts-wrapper:active {
-    outline: none !important;
-  }
-  path.recharts-rectangle, .recharts-pie-sector {
-    outline: none !important;
-  }
-  svg:focus, svg:active {
-    outline: none !important;
-  }
-  .recharts-wrapper * {
-    outline: none !important;
-  }
-`;
+const RECHARTS_SUPPRESS_STYLES = `.recharts-wrapper:focus-visible, .recharts-surface:focus-visible { outline: 2px solid var(--color-primary); outline-offset: 3px; }`;
 
 const Insights: React.FC = () => {
   useEffect(() => {
@@ -72,7 +56,7 @@ const Insights: React.FC = () => {
       boxShadow: '0 20px 25px -5px rgba(0, 0, 0, 0.2)',
       padding: '12px 16px',
     },
-    itemStyle: { 
+    itemStyle: {
       color: theme === 'dark' ? '#fff' : '#121014',
       fontSize: '14px',
       fontWeight: '600',
@@ -93,7 +77,7 @@ const Insights: React.FC = () => {
   const [activeTab, setActiveTab] = useState<'history' | 'trends'>('history');
   const [trendsSubTab, setTrendsSubTab] = useState<'sleep' | 'energy'>('sleep');
   const shareIconRef = useRef<ShareIconHandle>(null);
-  
+
   const [profile, setProfile] = useState<any>(() => {
     try {
       const cached = localStorage.getItem('twilight_profile');
@@ -102,7 +86,7 @@ const Insights: React.FC = () => {
   });
 
   // Get today's log for the report card
-  const todayStr = new Date().toISOString().split('T')[0];
+  const todayStr = localDateKey();
   const todayLog = logs.find(l => l.date === todayStr) || null;
 
   // Share modal state
@@ -122,14 +106,7 @@ const Insights: React.FC = () => {
     setIsSharing(true);
     setCopied(false);
     try {
-      const { data: existingCard } = await supabase
-        .from('shared_cards')
-        .select('share_code')
-        .eq('user_id', user.id)
-        .maybeSingle();
-
-      let shareCode: string;
-
+      const shareCode = crypto.randomUUID().replaceAll('-', '');
       const cardData = {
         userName: profile?.full_name || 'Anonymous',
         avatarUrl: profile?.avatar_url || '',
@@ -142,28 +119,12 @@ const Insights: React.FC = () => {
         date: todayStr
       };
 
-      if (existingCard && (existingCard as any).share_code) {
-        shareCode = (existingCard as any).share_code;
-        await supabase
-          .from('shared_cards')
-          .update({ card_data: cardData as any })
-          .eq('user_id', user.id);
-      } else {
-        const arr = new Uint8Array(10);
-        crypto.getRandomValues(arr);
-        shareCode = Array.from(arr, b => b.toString(36).padStart(2, '0')).join('').slice(0, 12) + Date.now().toString(36);
-        const { error } = await supabase.from('shared_cards').insert({
-          user_id: user.id,
-          share_code: shareCode,
-          card_data: cardData
-        } as any);
-        if (error) throw error;
-      }
-
-      const baseUrl = window.location.origin.includes('localhost')
-        ? 'https://twilight-mocha.vercel.app'
-        : window.location.origin;
-      const url = `${baseUrl}/#/share/${shareCode}`;
+      const { error } = await supabase.from('shared_cards').upsert({
+        user_id: user.id, share_code: shareCode, card_data: cardData,
+        expires_at: new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString()
+      }, { onConflict: 'user_id' });
+      if (error) throw error;
+      const url = window.location.origin + '/#/share/' + shareCode;
       setShareUrl(url);
       setShowShareModal(true);
     } catch (err: any) {
@@ -280,8 +241,8 @@ const Insights: React.FC = () => {
     const energyMap: Record<string, number> = { 'high': 3, 'medium': 2, 'low': 1 };
 
     return last30Logs.map(log => {
-      const sleepRaw = log.sleepQuality || log.sleep_quality;
-      const energyRaw = log.energyLevel || log.energy_level;
+      const sleepRaw = log.sleepQuality;
+      const energyRaw = log.energyLevel;
       return {
         date: new Date(log.date).toLocaleDateString('default', { month: 'short', day: 'numeric' }),
         sleep: sleepMap[sleepRaw as string] || null,
@@ -298,17 +259,17 @@ const Insights: React.FC = () => {
 
   // 4. Calculate Sub-tab specific stats
   const sleepStats = React.useMemo(() => {
-    const sleepLogs = logs.filter(l => l.sleepQuality || l.sleep_quality);
+    const sleepLogs = logs.filter(l => l.sleepQuality);
     if (!sleepLogs.length) return null;
 
     const distribution = [
-      { name: 'Good', value: sleepLogs.filter(l => (l.sleepQuality || l.sleep_quality) === 'good').length, color: '#6366f1' },
-      { name: 'Fair', value: sleepLogs.filter(l => (l.sleepQuality || l.sleep_quality) === 'fair').length, color: '#a5b4fc' },
-      { name: 'Poor', value: sleepLogs.filter(l => (l.sleepQuality || l.sleep_quality) === 'poor').length, color: '#e0e7ff' }
+      { name: 'Good', value: sleepLogs.filter(l => (l.sleepQuality) === 'good').length, color: '#6366f1' },
+      { name: 'Fair', value: sleepLogs.filter(l => (l.sleepQuality) === 'fair').length, color: '#a5b4fc' },
+      { name: 'Poor', value: sleepLogs.filter(l => (l.sleepQuality) === 'poor').length, color: '#e0e7ff' }
     ].filter(d => d.value > 0);
 
     const scores = sleepLogs.map(l => {
-      const q = l.sleepQuality || l.sleep_quality;
+      const q = l.sleepQuality;
       return q === 'good' ? 3 : q === 'fair' ? 2 : 1;
     });
     const avgScore = scores.reduce((a, b) => a + b, 0) / scores.length;
@@ -318,17 +279,17 @@ const Insights: React.FC = () => {
   }, [logs]);
 
   const energyStats = React.useMemo(() => {
-    const energyLogs = logs.filter(l => l.energyLevel || l.energy_level);
+    const energyLogs = logs.filter(l => l.energyLevel);
     if (!energyLogs.length) return null;
 
     const distribution = [
-      { name: 'High', value: energyLogs.filter(l => (l.energyLevel || l.energy_level) === 'high').length, color: '#f59e0b' },
-      { name: 'Medium', value: energyLogs.filter(l => (l.energyLevel || l.energy_level) === 'medium').length, color: '#fbbf24' },
-      { name: 'Low', value: energyLogs.filter(l => (l.energyLevel || l.energy_level) === 'low').length, color: '#fef3c7' }
+      { name: 'High', value: energyLogs.filter(l => (l.energyLevel) === 'high').length, color: '#f59e0b' },
+      { name: 'Medium', value: energyLogs.filter(l => (l.energyLevel) === 'medium').length, color: '#fbbf24' },
+      { name: 'Low', value: energyLogs.filter(l => (l.energyLevel) === 'low').length, color: '#fef3c7' }
     ].filter(d => d.value > 0);
 
     const scores = energyLogs.map(l => {
-      const e = l.energyLevel || l.energy_level;
+      const e = l.energyLevel;
       return e === 'high' ? 3 : e === 'medium' ? 2 : 1;
     });
     const avgScore = scores.reduce((a, b) => a + b, 0) / scores.length;
@@ -360,11 +321,11 @@ const Insights: React.FC = () => {
       {/* Tabs */}
       <div className="w-full overflow-x-auto no-scrollbar py-2 px-6 bg-[#FDFCF8] dark:bg-background-dark mb-4 transition-colors">
         <div className="flex gap-3 min-w-max relative">
-          <button 
+          <button
             onClick={() => setActiveTab('history')}
             className={`relative z-10 flex h-10 items-center justify-center px-6 rounded-full text-sm font-semibold transition-all ${
-              activeTab === 'history' 
-                ? 'text-white' 
+              activeTab === 'history'
+                ? 'text-white'
                 : 'bg-white/5 dark:bg-white/5 text-gray-400 hover:bg-white/10'
             }`}
           >
@@ -377,11 +338,11 @@ const Insights: React.FC = () => {
             )}
             <span className="relative z-20">History</span>
           </button>
-          <button 
+          <button
             onClick={() => setActiveTab('trends')}
             className={`relative z-10 flex h-10 items-center justify-center px-6 rounded-full text-sm font-semibold transition-all ${
-              activeTab === 'trends' 
-                ? 'text-white' 
+              activeTab === 'trends'
+                ? 'text-white'
                 : 'bg-white/5 dark:bg-white/5 text-gray-400 hover:bg-white/10'
             }`}
           >
@@ -405,7 +366,7 @@ const Insights: React.FC = () => {
 
       <AnimatePresence mode="wait">
         {activeTab === 'history' ? (
-          <motion.main 
+          <motion.main
             key="history"
             initial={{ opacity: 0, x: -20 }}
             animate={{ opacity: 1, x: 0 }}
@@ -416,7 +377,7 @@ const Insights: React.FC = () => {
               <div className="flex justify-between items-start mb-6">
                 <div>
                   <p className="text-sm font-medium text-gray-500 dark:text-gray-400 mb-1">Prediction</p>
-                  <h2 className="text-2xl font-bold text-[#121014] dark:text-white mb-1">Period in {cycleData.nextPeriodIn} days</h2>
+                  <h2 className="text-2xl font-bold text-[#121014] dark:text-white mb-1">{cycleData.nextPeriodIn < 0 ? `Period estimate passed by ${Math.abs(cycleData.nextPeriodIn)} days` : `Period in ${cycleData.nextPeriodIn} days`}</h2>
                   <p className="text-sm text-gray-400">based on {cycleSettings.avgCycleLength}d cycle</p>
                 </div>
                 <div className="flex h-12 w-12 items-center justify-center rounded-full bg-pink-100 dark:bg-pink-500/20 text-primary">
@@ -477,8 +438,8 @@ const Insights: React.FC = () => {
                     <BarChart data={historyData} margin={{ top: 20, right: 0, left: -20, bottom: 0 }} barCategoryGap="20%">
                       <YAxis hide domain={['dataMin - 5', 'dataMax + 5']} />
                       <ReferenceLine y={stats.avgCycle} stroke={theme === 'dark' ? 'rgba(255,255,255,0.2)' : '#E5E7EB'} strokeDasharray="3 3" />
-                      <Tooltip 
-                        cursor={{ fill: theme === 'dark' ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.05)' }} 
+                      <Tooltip
+                        cursor={{ fill: theme === 'dark' ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.05)' }}
                         contentStyle={tooltipStyles.contentStyle}
                         itemStyle={tooltipStyles.itemStyle}
                         labelStyle={tooltipStyles.labelStyle}
@@ -495,7 +456,7 @@ const Insights: React.FC = () => {
                         <linearGradient id="colorHistory" x1="0" y1="0" x2="0" y2="1"><stop offset="5%" stopColor="#984369" stopOpacity={0.6} /><stop offset="95%" stopColor="#984369" stopOpacity={0} /></linearGradient>
                       </defs>
                       <YAxis hide domain={['dataMin - 5', 'dataMax + 5']} />
-                      <Tooltip 
+                      <Tooltip
                         contentStyle={tooltipStyles.contentStyle}
                         itemStyle={tooltipStyles.itemStyle}
                         labelStyle={tooltipStyles.labelStyle}
@@ -537,7 +498,7 @@ const Insights: React.FC = () => {
                   <p className="text-sm text-gray-600 dark:text-gray-300 leading-relaxed mb-3">
                     Your cycle tends to be <span className="font-bold text-primary">2 days shorter</span> when you report higher sleep quality during the luteal phase.
                   </p>
-                  <button 
+                  <button
                     onClick={() => {
                       setActiveTab('trends');
                       setTrendsSubTab('sleep');
@@ -564,7 +525,7 @@ const Insights: React.FC = () => {
             </div>
           </motion.main>
         ) : (
-          <motion.main 
+          <motion.main
             key="trends"
             initial={{ opacity: 0, x: 20 }}
             animate={{ opacity: 1, x: 0 }}
@@ -573,7 +534,7 @@ const Insights: React.FC = () => {
           >
             {/* Trends Sub-navigation */}
             <div className="flex bg-gray-100/50 dark:bg-white/5 p-1 rounded-2xl self-center mb-2 relative">
-              <button 
+              <button
                 onClick={() => setTrendsSubTab('sleep')}
                 className={`relative z-10 flex h-9 items-center justify-center px-6 rounded-xl text-xs font-bold transition-all ${
                   trendsSubTab === 'sleep' ? 'text-[#121014] dark:text-white' : 'text-gray-400 hover:text-gray-600 dark:hover:text-gray-200'
@@ -588,7 +549,7 @@ const Insights: React.FC = () => {
                 )}
                 <span className="relative z-20">Sleep</span>
               </button>
-              <button 
+              <button
                 onClick={() => setTrendsSubTab('energy')}
                 className={`relative z-10 flex h-9 items-center justify-center px-6 rounded-xl text-xs font-bold transition-all ${
                   trendsSubTab === 'energy' ? 'text-[#121014] dark:text-white' : 'text-gray-400 hover:text-gray-600 dark:hover:text-gray-200'
@@ -607,7 +568,7 @@ const Insights: React.FC = () => {
 
             <AnimatePresence mode="wait">
               {trendsSubTab === 'sleep' ? (
-                <motion.div 
+                <motion.div
                   key="sleep-trends"
                   initial={{ opacity: 0, y: 10 }}
                   animate={{ opacity: 1, y: 0 }}
@@ -645,19 +606,19 @@ const Insights: React.FC = () => {
                             <linearGradient id="colorSleep" x1="0" y1="0" x2="0" y2="1"><stop offset="5%" stopColor="#6366f1" stopOpacity={0.4} /><stop offset="95%" stopColor="#6366f1" stopOpacity={0} /></linearGradient>
                           </defs>
                           <YAxis hide domain={[0, 4]} />
-                           <Tooltip 
+                           <Tooltip
                             contentStyle={tooltipStyles.contentStyle}
                             itemStyle={tooltipStyles.itemStyle}
                             labelStyle={tooltipStyles.labelStyle}
                             formatter={(value: any) => [value === 3 ? 'Good' : value === 2 ? 'Fair' : 'Poor', 'Quality']}
                           />
-                          <Area 
-                            type="monotone" 
-                            dataKey="sleep" 
-                            stroke="#6366f1" 
-                            strokeWidth={5} 
-                            fillOpacity={1} 
-                            fill="url(#colorSleep)" 
+                          <Area
+                            type="monotone"
+                            dataKey="sleep"
+                            stroke="#6366f1"
+                            strokeWidth={5}
+                            fillOpacity={1}
+                            fill="url(#colorSleep)"
                             animationDuration={1500}
                             dot={{ r: 4, fill: "#6366f1", strokeWidth: 2, stroke: theme === 'dark' ? '#121014' : '#fff' }}
                           />
@@ -670,7 +631,7 @@ const Insights: React.FC = () => {
                   <section className="rounded-[2.5rem] bg-white dark:bg-surface-dark p-8 shadow-soft border border-gray-100 dark:border-white/5 transition-colors">
                     <h3 className="text-xl font-bold text-[#121014] dark:text-white mb-2">Quality Split</h3>
                     <p className="text-sm text-gray-400 mb-6">Distribution of reported nights</p>
-                    
+
                     <div className="flex items-center justify-center h-48">
                       <ResponsiveContainer width="100%" height="100%">
                         <PieChart>
@@ -688,9 +649,9 @@ const Insights: React.FC = () => {
                               <Cell key={`cell-${index}`} fill={entry.color} />
                             ))}
                           </Pie>
-                          <Tooltip 
-                            contentStyle={{ 
-                              backgroundColor: theme === 'dark' ? '#1A161E' : '#FFFFFF', 
+                          <Tooltip
+                            contentStyle={{
+                              backgroundColor: theme === 'dark' ? '#1A161E' : '#FFFFFF',
                               border: '1px solid ' + (theme === 'dark' ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.1)'),
                               borderRadius: '16px',
                               boxShadow: '0 10px 15px -3px rgba(0, 0, 0, 0.2)',
@@ -704,7 +665,7 @@ const Insights: React.FC = () => {
                   </section>
                 </motion.div>
               ) : (
-                <motion.div 
+                <motion.div
                   key="energy-trends"
                   initial={{ opacity: 0, y: 10 }}
                   animate={{ opacity: 1, y: 0 }}
@@ -742,19 +703,19 @@ const Insights: React.FC = () => {
                             <linearGradient id="colorEnergy" x1="0" y1="0" x2="0" y2="1"><stop offset="5%" stopColor="#f59e0b" stopOpacity={0.4} /><stop offset="95%" stopColor="#f59e0b" stopOpacity={0} /></linearGradient>
                           </defs>
                           <YAxis hide domain={[0, 4]} />
-                          <Tooltip 
+                          <Tooltip
                             contentStyle={tooltipStyles.contentStyle}
                             itemStyle={tooltipStyles.itemStyle}
                             labelStyle={tooltipStyles.labelStyle}
                             formatter={(value: any) => [value === 3 ? 'High' : value === 2 ? 'Medium' : 'Low', 'Level']}
                           />
-                          <Area 
-                            type="monotone" 
-                            dataKey="energy" 
-                            stroke="#f59e0b" 
-                            strokeWidth={5} 
-                            fillOpacity={1} 
-                            fill="url(#colorEnergy)" 
+                          <Area
+                            type="monotone"
+                            dataKey="energy"
+                            stroke="#f59e0b"
+                            strokeWidth={5}
+                            fillOpacity={1}
+                            fill="url(#colorEnergy)"
                             animationDuration={1500}
                             dot={{ r: 4, fill: "#f59e0b", strokeWidth: 2, stroke: theme === 'dark' ? '#121014' : '#fff' }}
                           />
@@ -767,7 +728,7 @@ const Insights: React.FC = () => {
                   <section className="rounded-[2.5rem] bg-white dark:bg-surface-dark p-8 shadow-soft border border-gray-100 dark:border-white/5 transition-colors">
                     <h3 className="text-xl font-bold text-[#121014] dark:text-white mb-2">Energy Split</h3>
                     <p className="text-sm text-gray-400 mb-6">Proportion of energy levels reported</p>
-                    
+
                     <div className="flex items-center justify-center h-48">
                       <ResponsiveContainer width="100%" height="100%">
                         <PieChart>
@@ -785,9 +746,9 @@ const Insights: React.FC = () => {
                               <Cell key={`cell-${index}`} fill={entry.color} />
                             ))}
                           </Pie>
-                          <Tooltip 
-                            contentStyle={{ 
-                              backgroundColor: theme === 'dark' ? '#1A161E' : '#FFFFFF', 
+                          <Tooltip
+                            contentStyle={{
+                              backgroundColor: theme === 'dark' ? '#1A161E' : '#FFFFFF',
                               border: '1px solid ' + (theme === 'dark' ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.1)'),
                               borderRadius: '16px',
                               boxShadow: '0 10px 15px -3px rgba(0, 0, 0, 0.2)',
@@ -850,7 +811,7 @@ const Insights: React.FC = () => {
                 </div>
                 <button onClick={() => setShowShareModal(false)} className="w-8 h-8 rounded-full hover:bg-black/5 dark:hover:bg-white/10 flex items-center justify-center"><span className="material-symbols-outlined text-gray-400">close</span></button>
               </div>
-              <p className="text-sm text-gray-500 dark:text-gray-400 mb-4">Anyone with this link can view your profile card.</p>
+              <p className="text-sm text-gray-500 dark:text-gray-400 mb-4">Anyone with this link can view your card for 24 hours. Creating a new link replaces the previous one.</p>
               <div className="flex items-center gap-2 bg-gray-100 dark:bg-white/5 rounded-xl p-3 border border-gray-200 dark:border-white/10">
                 <input type="text" value={shareUrl} readOnly className="flex-1 bg-transparent text-sm text-[#121014] dark:text-white truncate outline-none" />
                 <button onClick={handleCopyLink} className={`shrink-0 w-10 h-10 rounded-xl flex items-center justify-center transition-all ${copied ? 'bg-green-500 text-white' : 'bg-primary hover:bg-primary/90 text-white'}`}><span className="material-symbols-outlined text-lg">{copied ? 'check' : 'content_copy'}</span></button>

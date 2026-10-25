@@ -1,4 +1,5 @@
 import { CycleSettings, CyclePhase } from '../types';
+import { calendarDayDifference } from './dates';
 
 export const calculateCyclePhase = (dateStr: string, settings: CycleSettings): CyclePhase => {
     // Guard against missing/invalid lastPeriodStart
@@ -19,7 +20,7 @@ export const calculateCyclePhase = (dateStr: string, settings: CycleSettings): C
     // Parse as local midnight — both strings are now guaranteed YYYY-MM-DD
     const today = new Date(todayDateOnly + 'T00:00:00');
     const start = new Date(startDateOnly + 'T00:00:00');
-    
+
     // Guard against invalid dates
     if (isNaN(today.getTime()) || isNaN(start.getTime())) {
       return {
@@ -30,14 +31,15 @@ export const calculateCyclePhase = (dateStr: string, settings: CycleSettings): C
         isOvulation: false
       };
     }
-    
+
     const msPerDay = 24 * 60 * 60 * 1000;
-    const diffDays = Math.round((today.getTime() - start.getTime()) / msPerDay);
-    
+    const diffDays = calendarDayDifference(todayDateOnly, startDateOnly);
+
     // Cycle day should be 1-indexed (1 to avgCycleLength)
-    const cycleLength = settings.avgCycleLength || 28;
-    const dayOfCycle = ((diffDays % cycleLength) + cycleLength) % cycleLength + 1;
-    
+    const cycleLength = Math.max(20, Math.min(90, settings.avgCycleLength || 28));
+    // A predicted period is not a recorded cycle start. Keep elapsed days intact.
+    const dayOfCycle = Math.max(1, diffDays + 1);
+
     let phase: CyclePhase['phase'] = 'Follicular';
     let isFertile = false;
     let isOvulation = false;
@@ -50,7 +52,7 @@ export const calculateCyclePhase = (dateStr: string, settings: CycleSettings): C
     if (dayOfCycle <= settings.avgPeriodLength) {
       phase = 'Menstrual';
     } else if (dayOfCycle >= fertileStart && dayOfCycle <= fertileEnd) {
-      phase = 'Follicular'; 
+      phase = 'Follicular';
       isFertile = true;
       if (dayOfCycle === ovulationDay) {
         phase = 'Ovulation';
@@ -61,11 +63,12 @@ export const calculateCyclePhase = (dateStr: string, settings: CycleSettings): C
     }
 
     const nextPeriodIn = cycleLength - dayOfCycle + 1;
-    
+
     return {
       currentDay: dayOfCycle,
       phase,
-      nextPeriodIn: nextPeriodIn > cycleLength ? 1 : nextPeriodIn,
+      nextPeriodIn,
+      overdueDays: Math.max(0, -nextPeriodIn),
       isFertile,
       isOvulation
     };

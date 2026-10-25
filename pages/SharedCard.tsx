@@ -31,16 +31,12 @@ const SharedCard: React.FC = () => {
             }
 
             try {
-                const { data, error: fetchError } = await supabase
-                    .from('shared_cards')
-                    .select('card_data')
-                    .eq('share_code', code)
-                    .single();
+                const { data, error: fetchError } = await supabase.rpc('get_shared_card', { p_code: code });
 
                 if (fetchError || !data) {
                     setError('Card not found or expired');
                 } else {
-                    setCardData((data as any).card_data as SharedCardData);
+                    setCardData(data as unknown as SharedCardData);
                 }
             } catch (err) {
                 setError('Failed to load card');
@@ -66,7 +62,7 @@ const SharedCard: React.FC = () => {
                 <span className="material-symbols-outlined text-6xl text-white/30 mb-4">link_off</span>
                 <h1 className="text-2xl font-bold text-white mb-2">Card Not Found</h1>
                 <p className="text-white/60 mb-6">This share link may have expired or been deleted.</p>
-                <button 
+                <button
                     onClick={() => navigate('/')}
                     className="px-6 py-3 bg-primary rounded-full text-white font-semibold"
                 >
@@ -100,12 +96,12 @@ const SharedCard: React.FC = () => {
             >
                 {/* Glassmorphism overlay */}
                 <div className="absolute inset-0 bg-white/5 backdrop-blur-sm" />
-                
+
                 <div className="relative z-10 p-8">
                     {/* Header */}
                     <div className="flex items-center gap-4 mb-8">
                         <div className="relative">
-                            <img 
+                            <img
                                 src={cardData.avatarUrl || "https://upload.wikimedia.org/wikipedia/commons/7/7c/Profile_avatar_placeholder_large.png"}
                                 alt="Profile"
                                 className="w-16 h-16 rounded-full object-cover border-2 border-white/20"
@@ -123,16 +119,16 @@ const SharedCard: React.FC = () => {
                         <div className="relative w-36 h-36">
                             <svg className="w-full h-full transform -rotate-90" viewBox="0 0 100 100">
                                 <circle cx="50" cy="50" r="42" stroke="rgba(255,255,255,0.1)" strokeWidth="8" fill="none" />
-                                <circle 
-                                    cx="50" 
-                                    cy="50" 
-                                    r="42" 
-                                    stroke="#984369" 
-                                    strokeWidth="8" 
+                                <circle
+                                    cx="50"
+                                    cy="50"
+                                    r="42"
+                                    stroke="#984369"
+                                    strokeWidth="8"
                                     fill="none"
                                     strokeLinecap="round"
                                     strokeDasharray={264}
-                                    strokeDashoffset={264 - (264 * (cardData.cycleDay / 28))}
+                                    strokeDashoffset={264 - (264 * Math.min(1, cardData.cycleDay / 28))}
                                     className="drop-shadow-[0_0_10px_rgba(152,67,105,0.5)]"
                                 />
                             </svg>
@@ -154,8 +150,8 @@ const SharedCard: React.FC = () => {
                     <div className="grid grid-cols-2 gap-4 mb-6">
                         <div className="bg-white/5 rounded-2xl p-4 text-center border border-white/10">
                             <span className="material-symbols-outlined text-primary text-2xl mb-1">water_drop</span>
-                            <p className="text-lg font-bold text-white">{cardData.nextPeriodIn}</p>
-                            <p className="text-xs text-white/50">Days to Period</p>
+                            <p className="text-lg font-bold text-white">{Math.abs(cardData.nextPeriodIn)}</p>
+                            <p className="text-xs text-white/50">{cardData.nextPeriodIn < 0 ? 'Days past estimate' : 'Days to period'}</p>
                         </div>
                         <div className="bg-white/5 rounded-2xl p-4 text-center border border-white/10">
                             <span className="material-symbols-outlined text-teal-400 text-2xl mb-1">favorite</span>
@@ -204,7 +200,7 @@ const SharedCard: React.FC = () => {
                 className="mt-8 text-center"
             >
                 <p className="text-white/40 text-sm mb-3">Track your own cycle</p>
-                <button 
+                <button
                     onClick={() => navigate('/signup')}
                     className="px-8 py-3 bg-primary hover:bg-primary/90 text-white font-bold rounded-full shadow-lg shadow-primary/30 transition-all"
                 >

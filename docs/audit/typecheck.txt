@@ -1,0 +1,60 @@
+
+> twilight-garden-cycle-tracker@0.0.3 typecheck
+> tsc --noEmit --pretty false
+
+components/ErrorBoundary.tsx(16,10): error TS2339: Property 'state' does not exist on type 'ErrorBoundary'.
+components/ErrorBoundary.tsx(28,10): error TS2339: Property 'setState' does not exist on type 'ErrorBoundary'.
+components/ErrorBoundary.tsx(32,14): error TS2339: Property 'state' does not exist on type 'ErrorBoundary'.
+components/ErrorBoundary.tsx(33,16): error TS2339: Property 'props' does not exist on type 'ErrorBoundary'.
+components/ErrorBoundary.tsx(34,21): error TS2339: Property 'props' does not exist on type 'ErrorBoundary'.
+components/ErrorBoundary.tsx(44,19): error TS2339: Property 'state' does not exist on type 'ErrorBoundary'.
+components/ErrorBoundary.tsx(56,17): error TS2339: Property 'props' does not exist on type 'ErrorBoundary'.
+components/ui/ModernIcons.tsx(4,52): error TS2344: Type '"svg"' does not satisfy the constraint 'keyof HTMLElements'.
+contexts/CouplesContext.tsx(1425,19): error TS2345: Argument of type 'any' is not assignable to parameter of type 'never'.
+contexts/CouplesContext.tsx(1448,15): error TS2345: Argument of type 'any' is not assignable to parameter of type 'never'.
+contexts/CouplesContext.tsx(1621,33): error TS2345: Argument of type 'any' is not assignable to parameter of type 'never'.
+contexts/CouplesContext.tsx(1763,21): error TS2345: Argument of type 'any' is not assignable to parameter of type 'never'.
+contexts/CouplesContext.tsx(1768,21): error TS2345: Argument of type 'any' is not assignable to parameter of type 'never'.
+hooks/useNotifications.ts(98,15): error TS2345: Argument of type 'any' is not assignable to parameter of type 'never'.
+hooks/useNotifications.ts(109,17): error TS2345: Argument of type 'any' is not assignable to parameter of type 'never'.
+lib/notifications.ts(287,74): error TS2769: No overload matches this call.
+  Overload 1 of 2, '(values: never, options?: { onConflict?: string; ignoreDuplicates?: boolean; count?: "exact" | "planned" | "estimated"; }): PostgrestFilterBuilder<{ PostgrestVersion: "12"; }, never, never, null, "user_fcm_tokens", never, "POST">', gave the following error.
+    Argument of type '{ user_id: string; token: string; device_type: string; updated_at: string; }' is not assignable to parameter of type 'never'.
+  Overload 2 of 2, '(values: never[], options?: { onConflict?: string; ignoreDuplicates?: boolean; count?: "exact" | "planned" | "estimated"; defaultToNull?: boolean; }): PostgrestFilterBuilder<{ PostgrestVersion: "12"; }, never, ... 4 more ..., "POST">', gave the following error.
+    Object literal may only specify known properties, and 'user_id' does not exist in type 'never[]'.
+lib/notifications.ts(396,66): error TS2769: No overload matches this call.
+  Overload 1 of 2, '(values: never, options?: { onConflict?: string; ignoreDuplicates?: boolean; count?: "exact" | "planned" | "estimated"; }): PostgrestFilterBuilder<{ PostgrestVersion: "12"; }, never, never, null, "user_fcm_tokens", never, "POST">', gave the following error.
+    Argument of type '{ user_id: string; token: string; device_type: string; updated_at: string; }' is not assignable to parameter of type 'never'.
+  Overload 2 of 2, '(values: never[], options?: { onConflict?: string; ignoreDuplicates?: boolean; count?: "exact" | "planned" | "estimated"; defaultToNull?: boolean; }): PostgrestFilterBuilder<{ PostgrestVersion: "12"; }, never, ... 4 more ..., "POST">', gave the following error.
+    Object literal may only specify known properties, and 'user_id' does not exist in type 'never[]'.
+lib/notifications.ts(534,69): error TS2769: No overload matches this call.
+  Overload 1 of 2, '(values: never, options?: { count?: "exact" | "planned" | "estimated"; }): PostgrestFilterBuilder<{ PostgrestVersion: "12"; }, never, never, null, "notifications", never, "POST">', gave the following error.
+    Argument of type '{ user_id: string; type: string; message: string; is_read: boolean; data: { url: string; gameName: string; notificationType: "invite" | "ring" | "partner_answered"; }; }' is not assignable to parameter of type 'never'.
+  Overload 2 of 2, '(values: never[], options?: { count?: "exact" | "planned" | "estimated"; defaultToNull?: boolean; }): PostgrestFilterBuilder<{ PostgrestVersion: "12"; }, never, never, null, "notifications", never, "POST">', gave the following error.
+    Object literal may only specify known properties, and 'user_id' does not exist in type 'never[]'.
+lib/sync.ts(62,17): error TS2345: Argument of type 'any' is not assignable to parameter of type 'never'.
+pages/games/DotsBoxes.tsx(122,34): error TS2339: Property 'status' does not exist on type 'never'.
+pages/games/DotsBoxes.tsx(122,67): error TS2339: Property 'player_x' does not exist on type 'never'.
+pages/games/DotsBoxes.tsx(122,101): error TS2339: Property 'player_o' does not exist on type 'never'.
+pages/games/DotsBoxes.tsx(125,37): error TS2345: Argument of type '{ player_o: any; status: string; }' is not assignable to parameter of type 'never'.
+pages/games/DotsBoxes.tsx(126,48): error TS2339: Property 'id' does not exist on type 'never'.
+pages/games/LoveTrivia.tsx(100,30): error TS2339: Property 'player_x' does not exist on type 'never'.
+pages/games/LoveTrivia.tsx(100,60): error TS2339: Property 'player_o' does not exist on type 'never'.
+pages/games/LoveTrivia.tsx(102,37): error TS2345: Argument of type '{ player_o: any; }' is not assignable to parameter of type 'never'.
+pages/games/LoveTrivia.tsx(103,44): error TS2339: Property 'id' does not exist on type 'never'.
+pages/games/LoveTrivia.tsx(113,26): error TS2769: No overload matches this call.
+  Overload 1 of 2, '(values: never, options?: { count?: "exact" | "planned" | "estimated"; }): PostgrestFilterBuilder<{ PostgrestVersion: "12"; }, never, never, null, "game_sessions", never, "POST">', gave the following error.
+    Argument of type '{ couple_id: any; game_type: string; board_state: LTState; player_x: any; player_o: null; status: string; }' is not assignable to parameter of type 'never'.
+  Overload 2 of 2, '(values: never[], options?: { count?: "exact" | "planned" | "estimated"; defaultToNull?: boolean; }): PostgrestFilterBuilder<{ PostgrestVersion: "12"; }, never, never, null, "game_sessions", never, "POST">', gave the following error.
+    Object literal may only specify known properties, and 'couple_id' does not exist in type 'never[]'.
+pages/Insights.tsx(149,19): error TS2345: Argument of type '{ card_data: any; }' is not assignable to parameter of type 'never'.
+pages/partner/PartnerAuthCallback.tsx(65,33): error TS2345: Argument of type 'any' is not assignable to parameter of type 'never'.
+pages/Settings.tsx(89,73): error TS2698: Spread types may only be created from object types.
+pages/Settings.tsx(397,51): error TS2345: Argument of type '{ partner_nickname: any; }' is not assignable to parameter of type 'never'.
+pages/settings/NotificationSettings.tsx(49,37): error TS2339: Property 'period_notifications' does not exist on type 'never'.
+pages/settings/NotificationSettings.tsx(50,39): error TS2339: Property 'reminder_notifications' does not exist on type 'never'.
+pages/settings/NotificationSettings.tsx(53,18): error TS2339: Property 'reminder_notifications' does not exist on type 'never'.
+pages/settings/NotificationSettings.tsx(56,18): error TS2339: Property 'period_notifications' does not exist on type 'never'.
+pages/settings/NotificationSettings.tsx(72,17): error TS2345: Argument of type 'any' is not assignable to parameter of type 'never'.
+remotion/src/Root.tsx(60,7): error TS2322: Type '{ key: string; id: string; component: React.FC<{ config: GameTutorialConfig; primaryColor: string; isDark: boolean; }>; durationInFrames: number; fps: number; width: number; height: number; defaultProps: { ...; }; }' is not assignable to type 'CompositionProps<AnyZodObject, { config: GameTutorialConfig; primaryColor: string; isDark: boolean; }>'.
+  Property 'key' does not exist on type 'CompositionProps<AnyZodObject, { config: GameTutorialConfig; primaryColor: string; isDark: boolean; }>'.

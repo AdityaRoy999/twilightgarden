@@ -1,3 +1,4 @@
+import { localDateKey } from '../lib/dates';
 import React, { useState, useEffect, useMemo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useData } from '../contexts/DataContext';
@@ -56,7 +57,7 @@ const Wellness: React.FC = () => {
     const [mapLoading, setMapLoading] = useState(false);
 
     // Build context for AI
-    const todayStr = new Date().toISOString().split('T')[0];
+    const todayStr = localDateKey();
     const todayLog = logs.find(l => l.date === todayStr);
 
     // Get last 15 logs for history context
@@ -65,7 +66,7 @@ const Wellness: React.FC = () => {
             .filter(l => l.date !== todayStr) // Exclude today
             .sort((a, b) => b.date.localeCompare(a.date)) // Most recent first
             .slice(0, 15)
-            .map(l => `- ${l.date}: Phase=${getCyclePhase(l.date).phase}, Moods=[${l.moods?.join(', ') || ''}], Symptoms=[${l.symptoms?.join(', ') || ''}], Energy=${l.energyLevel || 'N/A'}, Sleep=${l.sleepLevel || l.sleepQuality || 'N/A'}`)
+            .map(l => `- ${l.date}: Phase=${getCyclePhase(l.date).phase}, Moods=[${l.moods?.join(', ') || ''}], Symptoms=[${l.symptoms?.join(', ') || ''}], Energy=${l.energyLevel || 'N/A'}, Sleep=${l.sleepQuality || 'N/A'}`)
             .join('\n');
     }, [logs, todayStr]);
 
@@ -301,12 +302,12 @@ const Wellness: React.FC = () => {
                  <p className={`text-sm mt-2 ${isDark ? 'text-white/50' : 'text-gray-500'}`}>Finding nearby pharmacies and medical stores.</p>
             </div>
         );
-        
+
         if (error) return <ErrorCard message={error} onRetry={initShops} isDark={isDark} />;
 
         return (
             <div className="flex flex-col md:grid md:grid-cols-[1fr_2fr] gap-6 max-w-6xl mx-auto w-full">
-                
+
                 {/* Left side: Cards List */}
                 <div className="flex flex-col gap-4 h-[500px] overflow-y-auto no-scrollbar pr-2">
                     <div className={`rounded-2xl p-4 sticky top-0 z-10 ${isDark ? 'bg-gradient-to-br from-primary/20 to-pink-500/10 border border-primary/20 backdrop-blur-xl' : 'bg-gradient-to-br from-primary/10 to-pink-50 border border-primary/20 backdrop-blur-xl'}`}>
@@ -320,10 +321,10 @@ const Wellness: React.FC = () => {
                     </div>
 
                     {shops.map((shop) => (
-                        <div 
+                        <div
                             key={shop.id}
                             onClick={() => handleShopSelect(shop)}
-                            className={`shrink-0 rounded-2xl overflow-hidden border cursor-pointer transition-all duration-300 ${selectedShop?.id === shop.id 
+                            className={`shrink-0 rounded-2xl overflow-hidden border cursor-pointer transition-all duration-300 ${selectedShop?.id === shop.id
                                 ? 'border-primary shadow-lg scale-[1.02] ring-2 ring-primary/20 ' + (isDark ? 'bg-primary/10' : 'bg-primary/5')
                                 : isDark ? 'bg-surface-dark border-white/5 hover:bg-white/5' : 'bg-white border-gray-100 hover:bg-gray-50 hover:shadow-md'
                             }`}
@@ -345,7 +346,7 @@ const Wellness: React.FC = () => {
                                         <p className={`text-xs font-semibold ${isDark ? 'text-green-400' : 'text-green-600'}`}>{shop.phoneNumber}</p>
                                     </div>
                                 )}
-                                
+
                                 {selectedShop?.id === shop.id && route && (
                                     <div className={`mt-2 p-2 rounded-lg flex items-center justify-between ${isDark ? 'bg-black/50' : 'bg-primary/10'}`}>
                                         <div className="flex items-center gap-1.5">
@@ -370,9 +371,9 @@ const Wellness: React.FC = () => {
                 {/* Right side: Map */}
                 {userLocation && (
                     <div className={`rounded-2xl overflow-hidden h-[400px] md:h-[500px] border relative sticky top-24 ${isDark ? 'border-white/5' : 'border-gray-100'} shadow-soft z-0`}>
-                        <MapContainer 
-                            center={userLocation} 
-                            zoom={14} 
+                        <MapContainer
+                            center={userLocation}
+                            zoom={14}
                             className="w-full h-full"
                             zoomControl={false}
                         >
@@ -382,7 +383,7 @@ const Wellness: React.FC = () => {
                                 url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
                                 className={isDark ? 'map-tiles-dark' : ''}
                             />
-                            
+
                             {/* User Marker */}
                             <Marker position={userLocation} icon={userIcon}>
                                 <Popup>You are here</Popup>
@@ -390,8 +391,8 @@ const Wellness: React.FC = () => {
 
                             {/* Pharmacy Markers */}
                             {shops.map(shop => (
-                                <Marker 
-                                    key={shop.id} 
+                                <Marker
+                                    key={shop.id}
                                     position={[shop.lat, shop.lon]}
                                     eventHandlers={{
                                         click: () => handleShopSelect(shop),
@@ -400,9 +401,9 @@ const Wellness: React.FC = () => {
                                     <Popup className="custom-popup">
                                         <div className="flex flex-col gap-1 p-1">
                                             <strong className="text-sm font-bold">{shop.name}</strong>
-                                            <a 
+                                            <a
                                                 href={`https://www.google.com/maps/dir/?api=1&destination=${shop.lat},${shop.lon}`}
-                                                target="_blank" 
+                                                target="_blank"
                                                 rel="noopener noreferrer"
                                                 className="bg-primary text-white text-xs text-center font-bold py-1.5 mt-2 rounded-lg no-underline"
                                             >
@@ -415,9 +416,9 @@ const Wellness: React.FC = () => {
 
                             {/* Routing Polyline */}
                             {route && (
-                                <Polyline 
+                                <Polyline
                                     positions={route.coordinates.map(c => [c[1], c[0]])} // OSRM is [lon,lat], Leaflet needs [lat,lon]
-                                    pathOptions={{ color: 'var(--color-primary)', weight: 5, opacity: 0.8 }} 
+                                    pathOptions={{ color: 'var(--color-primary)', weight: 5, opacity: 0.8 }}
                                 />
                             )}
 

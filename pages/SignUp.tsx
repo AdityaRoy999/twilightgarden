@@ -7,7 +7,7 @@ const SignUp: React.FC = () => {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const isPartnerMode = searchParams.get('mode') === 'partner';
-  
+
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [showPassword, setShowPassword] = useState(false);
@@ -50,7 +50,7 @@ const SignUp: React.FC = () => {
       });
 
       if (error) throw error;
-      
+
       if (data.user) {
          setEmail(inputEmail);
          setVerifying(true);
@@ -211,7 +211,7 @@ const SignUp: React.FC = () => {
       </div>
 
       <div className="flex flex-col flex-1 items-center justify-start px-6 pt-6 pb-8 z-10">
-        
+
         {/* Logo */}
         <div className="w-24 h-24 mb-8 relative">
           <div className="absolute inset-0 bg-primary/20 rounded-full blur-2xl"></div>
@@ -228,7 +228,7 @@ const SignUp: React.FC = () => {
             {isPartnerMode ? 'Join Your Partner' : 'Create Account'}
           </h1>
           <p className="text-white/60 text-base font-normal leading-relaxed px-4 text-center">
-            {isPartnerMode 
+            {isPartnerMode
               ? 'Sign up to connect with your partner and support their journey.'
               : 'Join our community for personalized cycle insights.'
             }
@@ -244,15 +244,15 @@ const SignUp: React.FC = () => {
                   {error}
                 </div>
               )}
-              
+
               <div className="flex flex-col gap-2">
-                <label className="text-white/80 text-sm font-medium ml-1">Full Name</label>
+                <label htmlFor="fullName" className="text-white/80 text-sm font-medium ml-1">Full Name</label>
                 <div className="relative">
                   <span className="material-symbols-outlined absolute left-4 top-1/2 -translate-y-1/2 text-white/30 text-xl pointer-events-none">
                     person
                   </span>
                   <input
-                    name="fullName"
+                    name="fullName" id="fullName" autoComplete="name"
                     className="w-full rounded-2xl text-white border border-white/10 bg-surface-dark outline-none focus:ring-2 focus:ring-primary h-14 pl-12 pr-4 placeholder:text-white/30 text-base font-normal transition-all"
                     placeholder="Enter your name"
                     type="text"
@@ -262,13 +262,13 @@ const SignUp: React.FC = () => {
               </div>
 
               <div className="flex flex-col gap-2">
-                <label className="text-white/80 text-sm font-medium ml-1">Email Address</label>
+                <label htmlFor="email" className="text-white/80 text-sm font-medium ml-1">Email Address</label>
                 <div className="relative">
                   <span className="material-symbols-outlined absolute left-4 top-1/2 -translate-y-1/2 text-white/30 text-xl pointer-events-none">
                     mail
                   </span>
                   <input
-                    name="email"
+                    name="email" id="email" autoComplete="email"
                     className="w-full rounded-2xl text-white border border-white/10 bg-surface-dark outline-none focus:ring-2 focus:ring-primary h-14 pl-12 pr-4 placeholder:text-white/30 text-base font-normal transition-all"
                     placeholder="yourname@example.com"
                     type="email"
@@ -278,13 +278,13 @@ const SignUp: React.FC = () => {
               </div>
 
               <div className="flex flex-col gap-2">
-                <label className="text-white/80 text-sm font-medium ml-1">Create Password</label>
+                <label htmlFor="password" className="text-white/80 text-sm font-medium ml-1">Create Password</label>
                 <div className="relative">
                   <span className="material-symbols-outlined absolute left-4 top-1/2 -translate-y-1/2 text-white/30 text-xl pointer-events-none">
                     lock
                   </span>
                   <input
-                    name="password"
+                    name="password" id="password" autoComplete="new-password"
                     className="w-full rounded-2xl text-white border border-white/10 bg-surface-dark outline-none focus:ring-2 focus:ring-primary h-14 pl-12 pr-12 placeholder:text-white/30 text-base font-normal transition-all"
                     placeholder="••••••••"
                     type={showPassword ? "text" : "password"}
@@ -293,7 +293,7 @@ const SignUp: React.FC = () => {
                   />
                   <button
                     type="button"
-                    onClick={() => setShowPassword(!showPassword)}
+                    aria-label={showPassword ? "Hide password" : "Show password"} onClick={() => setShowPassword(!showPassword)}
                     className="absolute right-4 top-1/2 -translate-y-1/2 text-white/30 hover:text-white/60 transition-colors"
                   >
                     <span className="material-symbols-outlined text-xl">
@@ -327,7 +327,7 @@ const SignUp: React.FC = () => {
             </div>
 
             <div className="grid grid-cols-1 gap-4">
-              <button 
+              <button
                   onClick={handleGoogleLogin}
                   className="flex items-center justify-center gap-3 h-14 rounded-2xl border border-white/10 bg-white/5 hover:bg-white/10 transition-colors backdrop-blur-md active:scale-[0.98]"
               >
