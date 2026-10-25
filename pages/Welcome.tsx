@@ -16,15 +16,15 @@ const Welcome: React.FC = () => {
 
       {/* Scrollable Content */}
       <div className="flex-1 flex flex-col justify-between pt-4 pb-6 px-6 z-10 w-full">
-        <div className="flex justify-center w-full py-4 shrink-0">
+        <div className="flex justify-center w-full py-1 shrink-0">
           {/* Logo or Spacer */}
         </div>
-        
-        <div className="flex-1 flex flex-col justify-center items-center shrink-0 my-4 w-full">
+
+        <div className="flex-1 flex flex-col justify-center items-center my-2 w-full">
             <FeatureCarousel />
         </div>
 
-        <div className="w-full px-4 pb-8 z-10 shrink-0 mt-4">
+        <div className="w-full px-4 pb-2 z-10 shrink-0 mt-4">
           <div className="flex flex-col gap-4 max-w-sm mx-auto">
             {/* Primary CTA - For cycle tracking */}
             <button
@@ -34,7 +34,7 @@ const Welcome: React.FC = () => {
               <span className="text-[17px] font-bold leading-normal tracking-wide">Track My Cycle</span>
               <span className="ml-2 text-lg">🌸</span>
             </button>
-            
+
             {/* Secondary CTA - For partners */}
             <button
               onClick={() => navigate('/signup?mode=partner')}
@@ -43,7 +43,7 @@ const Welcome: React.FC = () => {
               <span className="text-[17px] font-bold leading-normal tracking-wide">Join as Partner</span>
               <span className="ml-2 text-lg">💙</span>
             </button>
-            
+
             <button onClick={() => navigate('/login')} className="text-white/40 text-[15px] font-medium hover:text-white transition-colors mt-2">
               Already have an account?{' '}
               <span className="text-white underline decoration-white/30 underline-offset-4 hover:decoration-white">Log in</span>

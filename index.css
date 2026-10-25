@@ -5,6 +5,17 @@
 @tailwind utilities;
 
 :root {
+  --primary-rgb: 152 67 105;
+  --primary-light-rgb: 248 232 238;
+  --bg-light-rgb: 253 252 248;
+  --bg-base-rgb: 253 252 248;
+  --bg-surface-rgb: 255 255 255;
+  --teal-rgb: 78 205 196;
+  --purple-rgb: 124 58 237;
+  --amber-rgb: 245 158 11;
+  --yellow-rgb: 255 230 109;
+  --shadow-soft: 0 4px 16px rgb(0 0 0 / 0.06);
+  --shadow-medium: 0 8px 24px rgb(0 0 0 / 0.12);
   /* PRIMARY BRAND COLORS */
   --color-primary: #984369; /* Main Pink */
   --color-primary-light: #f8e8ee; /* Light Pink Backgrounds */
@@ -49,6 +60,8 @@
 }
 
 .dark {
+  --bg-base-rgb: 18 16 20;
+  --bg-surface-rgb: 30 27 36;
   /* Dark Mode Overrides */
   --bg-base: var(--color-bg-dark);
   --bg-surface: var(--color-bg-surface-dark);
@@ -163,15 +176,15 @@ input:-webkit-autofill:hover,
 input:-webkit-autofill:focus,
 input:-webkit-autofill:active {
   -webkit-box-shadow: 0 0 0 30px var(--bg-surface) inset !important;
-  -webkit-text-fill-color: #ffffff !important;
-  caret-color: #ffffff !important;
+  -webkit-text-fill-color: var(--text-primary) !important;
+  caret-color: var(--text-primary) !important;
   transition: background-color 5000s ease-in-out 0s;
 }
 
 /* Firefox autofill */
 input:autofill {
   background-color: var(--bg-surface) !important;
-  color: #ffffff !important;
+  color: var(--text-primary) !important;
 }
 
 .animate-progress {
@@ -213,3 +226,6 @@ input:autofill {
 .custom-scrollbar::-webkit-scrollbar-thumb:hover {
   background: rgba(99, 102, 241, 0.4);
 }
+
+:focus-visible { outline: 2px solid var(--color-primary); outline-offset: 3px; }
+@media (prefers-reduced-motion: reduce) { *, *::before, *::after { animation-duration: 0.01ms !important; animation-iteration-count: 1 !important; scroll-behavior: auto !important; } }

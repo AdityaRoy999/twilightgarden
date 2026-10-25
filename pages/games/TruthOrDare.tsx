@@ -59,14 +59,14 @@ const TruthOrDare: React.FC = () => {
     const { theme, primaryColor } = useTheme();
     const { openTutorial } = useTutorial();
     const isDark = theme === 'dark';
-    
+
     // Local State
     const [items, setItems] = useState<TDItem[]>([]);
     const [session, setSession] = useState<GameSession | null>(null);
     const [loading, setLoading] = useState(true);
     const channelRef = useRef<ReturnType<typeof supabase.channel> | null>(null);
     const [ringCooldown, setRingCooldown] = useState(false);
-    const ringCooldownRef = useRef<ReturnType<typeof setTimeout>>();
+    const ringCooldownRef = useRef<ReturnType<typeof setTimeout>>(undefined);
 
     // Load Data
     useEffect(() => {
@@ -142,8 +142,8 @@ const TruthOrDare: React.FC = () => {
     useEffect(() => {
         if (!session?.id) return;
 
-        const ch = supabase.channel(`game_td_${session.id}`)
-            .on('postgres_changes', { event: '*', schema: 'public', table: 'game_sessions', filter: `id=eq.${session.id}` }, 
+        const ch = supabase.channel(`game_td_${session.id}`, { config: { private: true } })
+            .on('postgres_changes', { event: '*', schema: 'public', table: 'game_sessions', filter: `id=eq.${session.id}` },
             (payload) => {
                 const newSess = payload.new as GameSession;
                 if (newSess && newSess.game_type === 'truth_dare') {
@@ -151,8 +151,8 @@ const TruthOrDare: React.FC = () => {
                 }
             })
             .subscribe();
-            
-        return () => { 
+
+        return () => {
             supabase.removeChannel(ch);
             clearTimeout(ringCooldownRef.current);
         };
@@ -199,7 +199,7 @@ const TruthOrDare: React.FC = () => {
 
     const nextTurn = async () => {
         if (!session || !couple || !user) return;
-        
+
         try {
             const { board_state } = session;
             // Only the current turn's player can advance
@@ -215,7 +215,7 @@ const TruthOrDare: React.FC = () => {
             const nextPlayer = session.player_x === user.id
                 ? (session.player_o || user.id)
                 : session.player_x;
-                
+
             updateState({
                 currentCard: null,
                 phase: 'setup',
@@ -335,14 +335,14 @@ const TruthOrDare: React.FC = () => {
 
                         <AnimatePresence mode="wait">
                             {board_state.currentCard ? (
-                                <motion.div 
+                                <motion.div
                                     key="card"
                                     initial={{ scale: 0.9, opacity: 0 }}
                                     animate={{ scale: 1, opacity: 1 }}
                                     exit={{ scale: 0.9, opacity: 0 }}
                                     className={`w-full p-8 rounded-3xl text-center shadow-xl mb-8 relative overflow-hidden ${
-                                        board_state.currentCard.type === 'Truth' 
-                                            ? 'bg-gradient-to-br from-blue-500 to-cyan-600 text-white' 
+                                        board_state.currentCard.type === 'Truth'
+                                            ? 'bg-gradient-to-br from-blue-500 to-cyan-600 text-white'
                                             : 'bg-gradient-to-br from-rose-500 to-red-600 text-white'
                                     }`}
                                 >
@@ -355,7 +355,7 @@ const TruthOrDare: React.FC = () => {
                                 </motion.div>
                             ) : (
                                 <div className="text-center mb-12">
-                                    <motion.div 
+                                    <motion.div
                                         className="text-6xl mb-4"
                                         animate={{ rotate: [0, 10, -10, 0] }}
                                         transition={{ repeat: Infinity, duration: 2 }}
@@ -371,13 +371,13 @@ const TruthOrDare: React.FC = () => {
 
                         {isMyTurn && !board_state.currentCard && partnerPresent && (
                             <div className="flex gap-4 w-full">
-                                <button 
+                                <button
                                     onClick={() => pickCard('Truth')}
                                     className="flex-1 py-4 rounded-2xl bg-blue-500 hover:bg-blue-600 text-white font-bold text-lg shadow-lg active:scale-95 transition-transform"
                                 >
                                     Truth
                                 </button>
-                                <button 
+                                <button
                                     onClick={() => pickCard('Dare')}
                                     className="flex-1 py-4 rounded-2xl bg-rose-500 hover:bg-rose-600 text-white font-bold text-lg shadow-lg active:scale-95 transition-transform"
                                 >
@@ -387,7 +387,7 @@ const TruthOrDare: React.FC = () => {
                         )}
 
                         {board_state.currentCard && (
-                            <button 
+                            <button
                                 onClick={nextTurn}
                                  className={`w-full px-6 py-4 rounded-2xl font-bold shadow-lg transition-transform active:scale-95 ${
                                     isDark ? 'bg-white/10 hover:bg-white/20' : 'bg-gray-200 hover:bg-gray-300'

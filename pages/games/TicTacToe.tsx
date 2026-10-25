@@ -65,9 +65,9 @@ const TicTacToe: React.FC = () => {
 
     const channelRef = useRef<ReturnType<typeof supabase.channel> | null>(null);
     const [ringCooldown, setRingCooldown] = useState(false);
-    const ringCooldownRef = useRef<ReturnType<typeof setTimeout>>();
+    const ringCooldownRef = useRef<ReturnType<typeof setTimeout>>(undefined);
     const confettiRef = useRef<HTMLCanvasElement>(null);
-    const rafRef = useRef<number>();
+    const rafRef = useRef<number>(undefined);
 
     const showToast = (message: string, subMessage?: string, type: 'success' | 'error' = 'success') => {
         setToast({ isVisible: true, message, subMessage, type });
@@ -154,7 +154,7 @@ const TicTacToe: React.FC = () => {
                     .eq('couple_id', couple.id).eq('game_type', 'tictactoe')
                     .in('status', ['waiting', 'active'])
                     .order('created_at', { ascending: false }).limit(1).maybeSingle();
-                
+
                 if (cancelled) return;
 
                 if (existing) {
@@ -214,7 +214,7 @@ const TicTacToe: React.FC = () => {
         if (!game?.id || !user?.id) return;
 
         const channel = supabase.channel(`game_rt_${game.id}`, {
-            config: { broadcast: { self: false } }
+            config: { private: true, broadcast: { self: false } }
         });
 
         // Broadcast = WebSocket relay, <50 ms partner-to-partner — no DB round-trip

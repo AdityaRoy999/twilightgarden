@@ -28,7 +28,7 @@ const Login: React.FC = () => {
       });
 
       if (error) throw error;
-      // No explicit navigate('/') here - the cached session update or 
+      // No explicit navigate('/') here - the cached session update or
       // onAuthStateChange in AuthContext will trigger re-render
       // and PublicOnlyRoute will redirect to /dashboard
       // This implementation avoids race conditions where we redirect before user state is set
@@ -43,7 +43,7 @@ const Login: React.FC = () => {
       const isCapacitor = Capacitor.isNativePlatform();
       // window.__TAURI_INTERNALS__ is definitively only present in actual Tauri windows
       const isTauri = typeof window !== 'undefined' && !!(window as any).__TAURI_INTERNALS__;
-      
+
       console.log('Environment Check:', { isCapacitor, isTauri, url: window.location.origin });
 
       let redirectUrl = window.location.origin;
@@ -124,7 +124,7 @@ const Login: React.FC = () => {
               </div>
             )}
             <div className="flex flex-col gap-2">
-              <label className="text-white/80 text-sm font-medium ml-1">
+              <label htmlFor="email" className="text-white/80 text-sm font-medium ml-1">
                 Email Address
               </label>
               <div className="relative">
@@ -132,7 +132,7 @@ const Login: React.FC = () => {
                   mail
                 </span>
                 <input
-                  name="email"
+                  name="email" id="email" autoComplete="email"
                   className="w-full rounded-2xl text-white border border-white/10 bg-surface-dark outline-none focus:ring-2 focus:ring-primary h-14 pl-12 pr-4 placeholder:text-white/30 text-base font-normal transition-all"
                   placeholder="Your email"
                   type="email"
@@ -143,7 +143,7 @@ const Login: React.FC = () => {
 
             <div className="flex flex-col gap-2">
               <div className="flex justify-between items-center ml-1">
-                <label className="text-white/80 text-sm font-medium">
+                <label htmlFor="password" className="text-white/80 text-sm font-medium">
                   Password
                 </label>
                 <button
@@ -159,7 +159,7 @@ const Login: React.FC = () => {
                   lock
                 </span>
                 <input
-                  name="password"
+                  name="password" id="password" autoComplete="current-password"
                   className="w-full rounded-2xl text-white border border-white/10 bg-surface-dark outline-none focus:ring-2 focus:ring-primary h-14 pl-12 pr-12 placeholder:text-white/30 text-base font-normal transition-all"
                   placeholder="Your password"
                   type={showPassword ? "text" : "password"}
@@ -167,7 +167,7 @@ const Login: React.FC = () => {
                 />
                 <button
                   type="button"
-                  onClick={() => setShowPassword(!showPassword)}
+                  aria-label={showPassword ? "Hide password" : "Show password"} onClick={() => setShowPassword(!showPassword)}
                   className="absolute right-4 top-1/2 -translate-y-1/2 text-white/30 hover:text-white/60 transition-colors"
                 >
                   <span className="material-symbols-outlined text-xl">

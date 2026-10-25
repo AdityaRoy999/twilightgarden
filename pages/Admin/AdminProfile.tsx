@@ -9,17 +9,19 @@ const AdminProfile: React.FC = () => {
     const { theme, toggleTheme, primaryColor } = useTheme();
     const isDark = theme === 'dark';
 
-    const handleLogout = () => {
-        signOut();
-        navigate('/welcome');
+    const handleLogout = async () => {
+        try {
+            await signOut();
+            navigate('/welcome');
+        } catch { alert('Could not sign out. Check your connection and retry.'); }
     };
-    
+
     return (
         <div className={`animate-slideIn font-display flex flex-col pb-24 min-h-screen transition-colors duration-300 ${isDark ? 'bg-background-dark' : 'bg-[#FDFCF8]'}`}>
             <header className={`flex items-center px-6 pt-8 pb-4`}>
                 <h2 className={`text-2xl font-bold leading-tight tracking-tight ${isDark ? 'text-white' : 'text-[#121014]'}`}>Settings</h2>
             </header>
-            
+
             {/* Profile Card */}
             <div className="px-6 mb-8">
                 <div className={`rounded-2xl p-5 shadow-soft border flex flex-col items-center gap-4 transition-colors ${
@@ -44,7 +46,7 @@ const AdminProfile: React.FC = () => {
                     </span>
                 </div>
             </div>
-            
+
             {/* App Preferences */}
             <div className="px-6 mb-8">
                 <h3 className={`text-lg font-bold mb-3 px-1 ${isDark ? 'text-white' : 'text-[#121014]'}`}>App Preferences</h3>
@@ -52,7 +54,7 @@ const AdminProfile: React.FC = () => {
                     isDark ? 'bg-surface-dark border-white/5 shadow-none' : 'bg-white border-gray-100'
                 }`}>
                     {/* Theme Toggle */}
-                    <div 
+                    <div
                         className={`flex items-center justify-between p-4 transition-colors cursor-pointer group ${
                             isDark ? 'hover:bg-white/5' : 'hover:bg-gray-50'
                         }`}
@@ -76,14 +78,14 @@ const AdminProfile: React.FC = () => {
                     </div>
 
                     {/* App Theme Color Link */}
-                    <div 
+                    <div
                         className={`flex items-center justify-between p-4 transition-colors cursor-pointer group border-t ${
                             isDark ? 'border-white/5 hover:bg-white/5' : 'border-gray-100 hover:bg-gray-50'
                         }`}
                         onClick={() => navigate('/admin/settings/theme')}
                     >
                         <div className="flex items-center gap-3">
-                            <div 
+                            <div
                                 className={`w-10 h-10 rounded-xl shadow-sm border flex items-center justify-center transition-transform group-hover:scale-105 ${
                                     isDark ? 'border-white/10' : 'border-black/5'
                                 }`}
@@ -100,7 +102,7 @@ const AdminProfile: React.FC = () => {
                     </div>
                 </div>
             </div>
-            
+
             {/* Account Info */}
             <div className="px-6 mb-8">
                 <h3 className={`text-lg font-bold mb-3 px-1 ${isDark ? 'text-white' : 'text-[#121014]'}`}>Account Info</h3>
@@ -131,14 +133,14 @@ const AdminProfile: React.FC = () => {
                     </div>
                 </div>
             </div>
-            
+
             {/* Logout Button */}
             <div className="px-6">
-                <button 
+                <button
                     onClick={handleLogout}
                     className={`w-full py-3 rounded-xl font-semibold flex items-center justify-center gap-2 transition-colors ${
-                        isDark 
-                            ? 'bg-red-500/10 hover:bg-red-500/20 text-red-400 border border-red-500/20' 
+                        isDark
+                            ? 'bg-red-500/10 hover:bg-red-500/20 text-red-400 border border-red-500/20'
                             : 'bg-red-50 hover:bg-red-100 text-red-500 border border-red-100'
                     }`}
                 >

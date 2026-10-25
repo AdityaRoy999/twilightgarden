@@ -1,0 +1,145 @@
+{
+  "files": 117,
+  "lines": 35757,
+  "unreachableFromWebEntry": [
+    {
+      "file": "components/RelationshipWeather.tsx",
+      "referencedBy": []
+    },
+    {
+      "file": "components/tutorials/GamePreviews.tsx",
+      "referencedBy": []
+    },
+    {
+      "file": "components/ui/Button.tsx",
+      "referencedBy": []
+    },
+    {
+      "file": "components/ui/Card.tsx",
+      "referencedBy": []
+    },
+    {
+      "file": "components/ui/ModernIcons.tsx",
+      "referencedBy": []
+    }
+  ],
+  "declaredDependenciesNotImportedInWeb": [
+    "@capacitor/android",
+    "@capacitor/splash-screen",
+    "@types/leaflet",
+    "dotenv",
+    "motion",
+    "react-is"
+  ],
+  "exactAssetDuplicates": [
+    [
+      {
+        "file": "assets/icon.png",
+        "bytes": 167354
+      },
+      {
+        "file": "assets/splash.png",
+        "bytes": 167354
+      },
+      {
+        "file": "public/twilight.png",
+        "bytes": 167354
+      }
+    ],
+    [
+      {
+        "file": "src-tauri/icons/ios/AppIcon-20x20@2x-1.png",
+        "bytes": 2145
+      },
+      {
+        "file": "src-tauri/icons/ios/AppIcon-20x20@2x.png",
+        "bytes": 2145
+      },
+      {
+        "file": "src-tauri/icons/ios/AppIcon-40x40@1x.png",
+        "bytes": 2145
+      }
+    ],
+    [
+      {
+        "file": "src-tauri/icons/ios/AppIcon-29x29@2x-1.png",
+        "bytes": 3833
+      },
+      {
+        "file": "src-tauri/icons/ios/AppIcon-29x29@2x.png",
+        "bytes": 3833
+      }
+    ],
+    [
+      {
+        "file": "src-tauri/icons/ios/AppIcon-40x40@2x-1.png",
+        "bytes": 6469
+      },
+      {
+        "file": "src-tauri/icons/ios/AppIcon-40x40@2x.png",
+        "bytes": 6469
+      }
+    ],
+    [
+      {
+        "file": "src-tauri/icons/ios/AppIcon-40x40@3x.png",
+        "bytes": 12638
+      },
+      {
+        "file": "src-tauri/icons/ios/AppIcon-60x60@2x.png",
+        "bytes": 12638
+      }
+    ]
+  ],
+  "publicBytes": 30383224,
+  "largest": [
+    {
+      "file": "contexts/CouplesContext.tsx",
+      "lines": 1877
+    },
+    {
+      "file": "pages/LoveLock.tsx",
+      "lines": 1692
+    },
+    {
+      "file": "components/ui/AnimatedIcons.tsx",
+      "lines": 1165
+    },
+    {
+      "file": "pages/Insights.tsx",
+      "lines": 869
+    },
+    {
+      "file": "components/PartnerInsightsView.tsx",
+      "lines": 764
+    },
+    {
+      "file": "components/ui/ModernIcons.tsx",
+      "lines": 734
+    },
+    {
+      "file": "App.tsx",
+      "lines": 675
+    },
+    {
+      "file": "pages/games/EmojiCharades.tsx",
+      "lines": 644
+    },
+    {
+      "file": "contexts/DataContext.tsx",
+      "lines": 643
+    },
+    {
+      "file": "pages/Settings.tsx",
+      "lines": 625
+    },
+    {
+      "file": "pages/Games.tsx",
+      "lines": 624
+    },
+    {
+      "file": "pages/games/LoveTrivia.tsx",
+      "lines": 623
+    }
+  ]
+}

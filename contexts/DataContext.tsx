@@ -1,10 +1,13 @@
+import { useNotifications } from '../hooks/useNotifications';
+import { localDateKey, parseDateKey } from '../lib/dates';
 import React, { createContext, useContext, useEffect, useState } from 'react';
 import { supabase } from '../lib/supabase';
 import { useAuth } from './AuthContext';
 import { useCouples } from './CouplesContext';
-import { DailyLog, CycleSettings, CyclePhase, AppNotification } from '../types';
+import { DailyLog, DailyLogInput, CycleSettings, CyclePhase, AppNotification } from '../types';
 import { calculateCyclePhase } from '../lib/cycleUtils';
 import { encryptData, decryptData } from '../lib/encryption';
+import { useToday } from '../hooks/useToday';
 
 interface DataContextType {
   logs: DailyLog[];
@@ -12,8 +15,8 @@ interface DataContextType {
   loading: boolean;
   error: Error | null; // Added error state
   notifications: AppNotification[];
-  markAsRead: (id: string) => void;
-  addLog: (log: DailyLog) => Promise<void>;
+  markAsRead: (id: string) => Promise<void>;
+  addLog: (log: DailyLogInput) => Promise<void>;
   getLog: (date: string) => DailyLog | undefined;
   updateSettings: (settings: Partial<CycleSettings>) => Promise<void>;
   getCyclePhase: (date?: string) => CyclePhase;
@@ -49,8 +52,8 @@ const getCachedSettings = (userId: string | null): CycleSettings => {
     if (cached) return JSON.parse(cached);
   } catch { return DEFAULT_SETTINGS; }
   // Only fallback to legacy flag if no full settings exist
-  try { 
-      const done = localStorage.getItem('tw_onboarding_done') === 'true'; 
+  try {
+      const done = localStorage.getItem('tw_onboarding_done') === 'true';
       return done ? { ...DEFAULT_SETTINGS, onboardingCompleted: true } : DEFAULT_SETTINGS;
   } catch { return DEFAULT_SETTINGS; }
 };
@@ -76,9 +79,10 @@ const setCachedLogs = (userId: string | null, logs: DailyLog[]) => {
 };
 
 export const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+  const todayKey = useToday();
   const { user, loading: authLoading, sessionVerified, profileRefreshed } = useAuth();
   const { broadcastUpdate, partnerPubKey, keyVersion } = useCouples();
-  
+
   // Synchronous cache load prevents initial Dashboard "Day 1" flash
   const syncUserId = getSyncUserId();
   const [logs, setLogs] = useState<DailyLog[]>(() => {
@@ -89,8 +93,10 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children
     const userId = getSyncUserId();
     return getCachedSettings(userId);
   });
-  const [notifications, setNotifications] = useState<AppNotification[]>([]);
-  
+  const notificationStore = useNotifications();
+  const notifications: AppNotification[] = notificationStore.notifications.map(n => ({id:n.id,type:n.type,message:n.message,isRead:n.is_read,timestamp:n.created_at}));
+  const markAsRead = notificationStore.markAsRead;
+
   // Instant Loading Strategy:
   // If we have cached data, start with loading=false.
   // EXCEPT for fresh users who haven't finished onboarding.
@@ -98,7 +104,7 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children
     const userId = getSyncUserId();
     const cached = getCachedSettings(userId);
     const cachedLogs = getCachedLogs(userId);
-    
+
     // Check if user is already cached as a partner
     const cachedUser = localStorage.getItem('twilight-cached-user');
     if (cachedUser) {
@@ -115,7 +121,7 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
     const mapLog = async (l: any): Promise<DailyLog> => {
       let data = { ...l };
-      
+
       // Decrypt payload if it exists
       if (l.encrypted_payload && partnerPubKey) {
         try {
@@ -132,7 +138,7 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children
         ...data,
         energyLevel: data.energy_level || data.energyLevel,
         sleepQuality: data.sleep_quality || data.sleepQuality,
-        sleepHours: data.sleep_hours || data.sleepHours
+        sleepHours: data.sleep_hours ?? data.sleepHours
       };
     };
 
@@ -148,13 +154,16 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children
         async (payload) => {
           if (payload.eventType === 'INSERT') {
             const newLog = await mapLog(payload.new);
-            setLogs(prev => [newLog, ...prev].sort((a, b) => b.date.localeCompare(a.date)));
+            setLogs(prev => {
+              const next = [newLog, ...prev.filter(l => l.date !== newLog.date)].sort((a,b) => b.date.localeCompare(a.date));
+              setCachedLogs(user.id,next); return next;
+            });
           } else if (payload.eventType === 'UPDATE') {
             const updatedLog = await mapLog(payload.new);
-            setLogs(prev => prev.map(l => l.id === updatedLog.id ? updatedLog : l));
+            setLogs(prev => { const next=prev.map(l => l.date === updatedLog.date ? updatedLog : l); setCachedLogs(user.id,next); return next; });
           } else if (payload.eventType === 'DELETE') {
             const deletedId = payload.old.id;
-            setLogs(prev => prev.filter(l => l.id !== deletedId));
+            setLogs(prev => { const next=prev.filter(l => l.id !== deletedId); setCachedLogs(user.id,next); return next; });
           }
         }
       )
@@ -213,7 +222,7 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
 
     // Partner/supporter users don't track periods - bypass onboarding
-    if (user.role === 'partner' || user.user_metadata?.is_partner === true) {
+    if (user.role === 'partner') {
       setLogs([]);
       setCycleSettings({ ...DEFAULT_SETTINGS, onboardingCompleted: true });
       setLoading(false);
@@ -233,7 +242,7 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children
       }
 
       // Partner/supporter users don't track periods - bypass onboarding
-      if (user.role === 'partner' || user.user_metadata?.is_partner === true) {
+      if (user.role === 'partner') {
         setLogs([]);
         setCycleSettings({ ...DEFAULT_SETTINGS, onboardingCompleted: true });
         setLoading(false);
@@ -247,8 +256,8 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children
       }
 
       try {
-        // 🚀 PARALLEL: Fire all 3 queries simultaneously instead of sequentially
-        const [logsResult, settingsResult, notifResult] = await Promise.all([
+        // Fetch independent log and settings queries together.
+        const [logsResult, settingsResult] = await Promise.all([
           supabase
             .from('daily_logs')
             .select('id,date,flow,moods,symptoms,notes,energy_level,sleep_hours,sleep_quality,encrypted_payload,created_at')
@@ -258,12 +267,7 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children
             .select('*')
             .eq('user_id', user.id)
             .single(),
-          supabase
-            .from('notifications')
-            .select('id,type,message,is_read,created_at,encrypted_payload')
-            .eq('user_id', user.id)
-            .order('created_at', { ascending: false })
-            .limit(50)
+
         ]);
 
         // Process logs
@@ -281,7 +285,7 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children
         const { data: settingsData, error: settingsError } = settingsResult;
         if (!settingsError && settingsData) {
           let s = settingsData as any;
-          
+
           if (s.encrypted_payload && partnerPubKey) {
             const decrypted = await decryptData<any>(s.encrypted_payload, partnerPubKey);
             if (decrypted) s = { ...s, ...decrypted };
@@ -310,25 +314,7 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children
         }
 
         if (cancelled) return;
-        // Process notifications
-        const { data: notifData, error: notifError } = notifResult;
-        if (!notifError && notifData) {
-          const mapped = await Promise.all((notifData as any[]).map(async (n: any) => {
-            let message = n.message;
-            if (n.encrypted_payload && partnerPubKey) {
-              const decrypted = await decryptData<{ message: string }>(n.encrypted_payload, partnerPubKey);
-              if (decrypted) message = decrypted.message;
-            }
-            return {
-              id: n.id,
-              type: n.type,
-              message: message,
-              isRead: n.is_read,
-              timestamp: n.created_at
-            };
-          }));
-          if (!cancelled) setNotifications(mapped);
-        }
+
       } catch (err: any) {
         if (!cancelled) {
           console.error('Error fetching data:', err);
@@ -341,86 +327,15 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
     fetchData();
 
-    // Real-time subscription for new notifications (scoped to user)
-    const channel = supabase
-      .channel(`notifications_channel_${user.id}`)
-      .on(
-        'postgres_changes',
-        {
-          event: 'INSERT',
-          schema: 'public',
-          table: 'notifications',
-          filter: `user_id=eq.${user.id}`,
-        },
-        async (payload) => {
-          const newNotif = payload.new as any;
-          let message = newNotif.message;
-          
-          if (newNotif.encrypted_payload && partnerPubKey) {
-            const decrypted = await decryptData<{ message: string }>(newNotif.encrypted_payload, partnerPubKey);
-            if (decrypted) message = decrypted.message;
-          }
-
-          const mapped: AppNotification = {
-            id: newNotif.id,
-            type: newNotif.type,
-            message: message,
-            isRead: false,
-            timestamp: newNotif.created_at || new Date().toISOString()
-          };
-          setNotifications(prev => [mapped, ...prev]);
-          if (typeof Notification !== 'undefined' && Notification.permission === 'granted') {
-             try { new Notification('Twilight Garden', { body: mapped.message, icon: '/twilight.png' }); } catch { }
-          }
-        }
-      )
-      .subscribe();
-
-    return () => {
-      cancelled = true;
-      supabase.removeChannel(channel);
-    };
-
+    return () => { cancelled = true; };
   }, [user?.id, user?.role, sessionVerified, profileRefreshed, keyVersion]);
 
-  const markAsRead = async (id: string) => {
-    // Optimistic update
-    setNotifications(prev => prev.map(n => n.id === id ? { ...n, isRead: true } : n));
+  const addLog = async (newLog: DailyLogInput) => {
+    if (!user) throw new Error('Please sign in before saving a log.');
+    const existingIndex = logs.findIndex(log => log.date === newLog.date);
 
-    // Persist to database ONLY if it's a real DB notification (UUID)
-    // Local notifications start with 'reminder-' or 'period-'
-    if (id.startsWith('reminder-') || id.startsWith('period-')) return;
-
-    try {
-      await (supabase.from('notifications') as any).update({ is_read: true } as any).eq('id', id);
-    } catch (err) {
-      console.error("Failed to mark notification as read:", err);
-    }
-  };
-
-  const addLog = async (newLog: DailyLog) => {
-    if (!user) return;
-
-    // Save previous state for rollback on error
-    const previousLogs = logs;
-
-    // Optimistic Update — use functional updater to avoid stale closure
-    setLogs(prev => {
-      const existingIndex = prev.findIndex(l => l.date === newLog.date);
-      if (existingIndex >= 0) {
-        const updated = [...prev];
-        updated[existingIndex] = { ...updated[existingIndex], ...newLog };
-        return updated;
-      }
-      return [...prev, newLog];
-    });
-    // Also update cache (use current logs + newLog since we just set state)
-    const existingIndex = logs.findIndex(l => l.date === newLog.date);
-    const updatedForCache = existingIndex >= 0
-      ? logs.map((l, i) => i === existingIndex ? { ...l, ...newLog } : l)
-      : [...logs, newLog];
-    setCachedLogs(user.id, updatedForCache);
-
+    if (Number.isNaN(parseDateKey(newLog.date).getTime())) throw new Error('Choose a valid log date.');
+    if ((newLog.notes?.length ?? 0) > 500) throw new Error('Notes must be 500 characters or fewer.');
     // Persist to Supabase
     try {
       const payload: Partial<DailyLog> = {
@@ -438,22 +353,28 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children
         encryptedPayload = await encryptData(payload, partnerPubKey);
       }
 
-      const { error } = await supabase.from('daily_logs').upsert({
+      const { data: savedLog, error } = await supabase.from('daily_logs').upsert({
         user_id: user.id,
         date: newLog.date,
         // We still keep the original columns for basic filtering/indexing if needed,
         // but the 'encrypted_payload' is the source of truth now.
         flow: newLog.flow ?? null,
         moods: newLog.moods || [],
-        symptoms: newLog.symptoms || [],
+        symptoms: [...new Set(newLog.symptoms || [])],
         notes: newLog.notes || null,
         energy_level: newLog.energyLevel || null,
         sleep_quality: newLog.sleepQuality || null,
-        sleep_hours: newLog.sleepHours || null,
+        sleep_hours: newLog.sleepHours ?? null,
         encrypted_payload: encryptedPayload
-      } as any, { onConflict: 'user_id,date' });
+      } as any, { onConflict: 'user_id,date' }).select().single();
 
       if (error) throw error;
+      const mappedLog = await mapLog(savedLog);
+      setLogs(prev => {
+        const next = [...prev.filter(l => l.date !== mappedLog.date), mappedLog].sort((a,b) => b.date.localeCompare(a.date));
+        setCachedLogs(user.id, next);
+        return next;
+      });
 
       // Trigger Notification if it's a new log for today
       // Fire-and-forget: don't block the save on partner notification
@@ -502,28 +423,24 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children
           }
         })();
       }
-      
+
       // Trigger instant real-time sync for partner
       broadcastUpdate('log');
     } catch (err) {
       console.error("Failed to save log:", err);
-      // Revert optimistic update on error
-      setLogs(previousLogs);
-      setCachedLogs(user.id, previousLogs);
+      throw err;
     }
   };
 
   const getLog = (date: string) => logs.find(l => l.date === date);
 
   const updateSettings = async (updates: Partial<CycleSettings>) => {
-    // Save previous state for rollback
-    const previousSettings = cycleSettings;
+    if (!user) throw new Error('Please sign in before saving settings.');
     const newSettings = { ...cycleSettings, ...updates };
-    setCycleSettings(newSettings);
-    if (user) {
-        setCachedSettings(user.id, newSettings);
+    if (!Number.isFinite(newSettings.avgCycleLength) || newSettings.avgCycleLength < 20 || newSettings.avgCycleLength > 90 ||
+        !Number.isFinite(newSettings.avgPeriodLength) || newSettings.avgPeriodLength < 1 || newSettings.avgPeriodLength > 20 || newSettings.avgPeriodLength >= newSettings.avgCycleLength) {
+      throw new Error('Choose valid cycle and period lengths.');
     }
-
     if (user) {
       try {
         const payload = {
@@ -549,82 +466,23 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children
           encrypted_payload: encryptedPayload
         } as any);
         if (error) throw error;
-        
-        // Trigger instant real-time sync for partner
+
+        setCycleSettings(newSettings);
+        setCachedSettings(user.id, newSettings);
         broadcastUpdate('settings');
       } catch (err) {
         console.error("Failed to save settings:", err);
-        // Revert optimistic update on error
-        setCycleSettings(previousSettings);
-        setCachedSettings(user.id, previousSettings);
+        throw err;
       }
     }
   };
 
 
 
-  const getCyclePhase = (dateStr: string = new Date().toISOString().split('T')[0]): CyclePhase => {
+  const getCyclePhase = (dateStr: string = todayKey): CyclePhase => {
     return calculateCyclePhase(dateStr, cycleSettings);
   };
 
-  // Check for Notifications (Run once on load or when data changes)
-  useEffect(() => {
-    if (loading || !cycleSettings.lastPeriodStart) return;
-
-    const newNotifications: AppNotification[] = [];
-    const todayStr = new Date().toISOString().split('T')[0];
-
-    // 1. Reminder: check if logged today (only if it's evening, e.g., > 6PM)
-    const hasLoggedToday = logs.some(l => l.date === todayStr);
-    const hour = new Date().getHours();
-
-    if (!hasLoggedToday && hour >= 18) {
-      newNotifications.push({
-        id: 'reminder-' + todayStr,
-        type: 'reminder',
-        message: 'How are you feeling today? Tap to log.',
-        isRead: false,
-        timestamp: new Date().toISOString()
-      });
-    }
-
-    // 2. Period Prediction
-    const phase = getCyclePhase(todayStr);
-    if (phase.nextPeriodIn <= 3 && phase.nextPeriodIn > 0) {
-      const msg = `Your period is likely to start in ${phase.nextPeriodIn} days.`;
-      newNotifications.push({
-        id: 'period-soon-' + todayStr,
-        type: 'period_start',
-        message: msg,
-        isRead: false,
-        timestamp: new Date().toISOString()
-      });
-    }
-
-    // Deduplicate before firing system notifications
-    setNotifications(prev => {
-      const added = newNotifications.filter(n => !prev.some(p => p.id === n.id));
-      if (added.length === 0) return prev;
-
-      // Fire system notifications outside the state updater
-      queueMicrotask(() => {
-        if (typeof Notification !== 'undefined' && Notification.permission === 'granted') {
-          const periodAlert = added.find(n => n.type === 'period_start');
-          if (periodAlert) {
-            try { new Notification('Cycle Alert', { body: periodAlert.message, icon: '/icon.png' }); } catch (e) { /* */ }
-          }
-          const reminder = added.find(n => n.type === 'reminder');
-          if (reminder) {
-            try { new Notification('Twilight Garden', { body: reminder.message }); } catch (e) { /* */ }
-          }
-        }
-      });
-
-      return [...prev, ...added];
-    });
-
-
-  }, [logs, cycleSettings, loading]);
 
   return (
     <DataContext.Provider value={{ logs, cycleSettings, loading, error, notifications, markAsRead, addLog, getLog, updateSettings, getCyclePhase }}>

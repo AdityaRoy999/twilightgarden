@@ -1,3 +1,4 @@
+import { NotificationProvider } from './contexts/NotificationContext';
 import React, { useEffect } from 'react';
 import { HashRouter, Routes, Route, Navigate, useNavigate } from 'react-router-dom';
 import { App as CapacitorApp } from '@capacitor/app';
@@ -111,7 +112,7 @@ const LoadingScreen: React.FC = () => (
 
     {/* Ambient glow */}
     <div className="absolute inset-0 pointer-events-none">
-      <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[280px] h-[280px] rounded-full" 
+      <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[280px] h-[280px] rounded-full"
            style={{ background: 'radial-gradient(circle, rgba(152,67,105,0.15) 0%, transparent 70%)' }} />
     </div>
 
@@ -208,7 +209,7 @@ const RoleBasedHome: React.FC = () => {
   if (user.role === 'admin') {
     return <Navigate to="/admin/users" replace />;
   }
-  if (user.role === 'partner' || user.user_metadata?.is_partner === true) {
+  if (user.role === 'partner') {
     return <Navigate to="/partner/dashboard" replace />;
   }
   return <Navigate to="/dashboard" replace />;
@@ -270,7 +271,7 @@ const PartnerRoute: React.FC<{ children: React.ReactNode }> = ({ children }) => 
   // Partners can access routes even without a couple — pairing happens inside LoveLock
 
   // Strict check: non-partners who are NOT supporters (e.g. regular users trying to access partner routes)
-  // should be sent back to their dashboard. 
+  // should be sent back to their dashboard.
   // BUT if they are role='partner', they belong here regardless of supporter status.
   if (user.role !== 'partner' && !isSupporter) {
     // If they are the menstruator, send them to main dashboard
@@ -318,7 +319,7 @@ const RequireOnboarding: React.FC<{ children: React.ReactNode; allowIncomplete: 
 
   // Partner users bypass onboarding - they don't track periods
   // This is a safety catch-all
-  if (user?.role === 'partner' || user?.user_metadata?.is_partner === true) {
+  if (user?.role === 'partner') {
     return <Navigate to="/partner/dashboard" replace />;
   }
 
@@ -344,7 +345,7 @@ const PublicOnlyRoute: React.FC<{ children: React.ReactNode }> = ({ children }) 
     if (user.role === 'admin') {
       return <Navigate to="/admin/users" replace />;
     }
-    if (user.role === 'partner' || user.user_metadata?.is_partner === true) {
+    if (user.role === 'partner') {
       return <Navigate to="/partner/dashboard" replace />;
     }
     return <Navigate to="/dashboard" replace />;
@@ -379,6 +380,25 @@ const NotificationNavigationHandler: React.FC = () => {
 const WidgetSyncHandler: React.FC = () => {
   useWidgetSync();
   return null;
+};
+
+const AuthStatusBoundary: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+  const { error, refreshUser, recoveringPassword } = useAuth();
+  const navigate = useNavigate();
+  useEffect(() => {
+    if (recoveringPassword) navigate('/reset-password', { replace: true });
+  }, [recoveringPassword, navigate]);
+  if (error) return <main className="min-h-screen flex flex-col items-center justify-center gap-4 p-6 bg-background-dark text-white">
+    <h1 className="text-xl font-bold">Unable to verify your session</h1>
+    <p role="alert" className="max-w-md text-center">{error}</p>
+    <button onClick={() => { void refreshUser(); }} className="rounded-xl bg-primary px-6 py-3">Retry</button>
+  </main>;
+  return <>{children}</>;
+};
+
+const AccountScope: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+  const { user } = useAuth();
+  return <React.Fragment key={user?.id || 'signed-out'}>{children}</React.Fragment>;
 };
 
 const App: React.FC = () => {
@@ -504,11 +524,14 @@ const App: React.FC = () => {
     <ErrorBoundary>
       <ThemeProvider>
         <AuthProvider>
+          <AccountScope>
           <CouplesProvider>
-            <CallProvider>
+            <NotificationProvider>
+          <CallProvider>
               <DataProvider>
                 <TutorialProvider>
                 <HashRouter>
+                  <AuthStatusBoundary>
                   <RestorationOverlay />
                   <WidgetSyncHandler />
                   <NotificationNavigationHandler />
@@ -522,7 +545,9 @@ const App: React.FC = () => {
                     <Route path="/welcome" element={<PublicOnlyRoute><Welcome /></PublicOnlyRoute>} />
                     <Route path="/login" element={<PublicOnlyRoute><Login /></PublicOnlyRoute>} />
                     <Route path="/signup" element={<PublicOnlyRoute><SignUp /></PublicOnlyRoute>} />
-                    <Route path="/forgot-password" element={<PublicOnlyRoute><ForgotPassword /></PublicOnlyRoute>} />
+                    <Route path="/forgot-password" element={<ForgotPassword />} />
+                    <Route path="/reset-password" element={<ForgotPassword />} />
+                    <Route path="/partner/reset-password" element={<ForgotPassword />} />
 
                     {/* Dedicated Partner Auth Routes */}
                     <Route path="/partner/login" element={<PublicOnlyRoute><PartnerLogin /></PublicOnlyRoute>} />
@@ -661,11 +686,14 @@ const App: React.FC = () => {
                     <Route path="*" element={<AuthAwareRedirect />} />
                     </Routes>
                   </React.Suspense>
-              </HashRouter>
+                  </AuthStatusBoundary>
+                </HashRouter>
             </TutorialProvider>
           </DataProvider>
           </CallProvider>
+          </NotificationProvider>
           </CouplesProvider>
+          </AccountScope>
         </AuthProvider>
       </ThemeProvider>
     </ErrorBoundary>

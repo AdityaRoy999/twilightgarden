@@ -1,3 +1,4 @@
+import { localDateKey } from '../lib/dates';
 import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
 import { supabase } from '../lib/supabase';
 import { Database } from '../types';
@@ -27,7 +28,7 @@ export const AdminProvider: React.FC<{ children: React.ReactNode }> = ({ childre
 
     const fetchData = useCallback(async (isBackground = false) => {
         if (!isBackground) setIsLoading(true);
-        
+
         try {
             // Fetch Profiles
             const { data: profiles, error: profilesError } = await supabase
@@ -35,22 +36,22 @@ export const AdminProvider: React.FC<{ children: React.ReactNode }> = ({ childre
                 .select('*')
                 .neq('role', 'admin') // Filter out admins if needed, usually admins want to see users
                 .order('updated_at', { ascending: false });
-                
+
             if (profilesError) throw profilesError;
-            
+
             setUsers(profiles || []);
 
             // Fetch Logs Stats
-            const today = new Date().toISOString().split('T')[0];
+            const today = localDateKey();
             const { data: logs, error: logsError } = await supabase
                 .from('daily_logs')
                 .select('*')
                 .eq('date', today);
 
             if (!logsError) {
-                setStats({ 
+                setStats({
                     totalUsers: profiles?.length || 0,
-                    activeToday: logs?.length || 0 
+                    activeToday: logs?.length || 0
                 });
                 setRecentLogs(logs || []);
             }

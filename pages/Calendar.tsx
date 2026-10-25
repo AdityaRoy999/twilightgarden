@@ -1,3 +1,4 @@
+import { localDateKey } from '../lib/dates';
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useData } from '../contexts/DataContext';
@@ -7,7 +8,7 @@ import LogDetailsModal from '../components/LogDetailsModal';
 const CalendarView: React.FC = () => {
   const { logs, cycleSettings, getCyclePhase } = useData();
   const navigate = useNavigate();
-  
+
   // Navigation State
   const [viewDate, setViewDate] = React.useState(new Date());
 
@@ -19,7 +20,7 @@ const CalendarView: React.FC = () => {
 
   const today = new Date();
   const todayStr = `${today.getFullYear()}-${(today.getMonth() + 1).toString().padStart(2, '0')}-${today.getDate().toString().padStart(2, '0')}`;
-  
+
   const handlePrevMonth = () => {
     setViewDate(new Date(viewDate.getFullYear(), viewDate.getMonth() - 1, 1));
   };
@@ -27,7 +28,7 @@ const CalendarView: React.FC = () => {
   const handleNextMonth = () => {
     setViewDate(new Date(viewDate.getFullYear(), viewDate.getMonth() + 1, 1));
   };
-  
+
   const handleToday = () => {
     setViewDate(new Date());
   };
@@ -36,10 +37,11 @@ const CalendarView: React.FC = () => {
     // Construct date string YYYY-MM-DD
     const dateStr = `${currentYear}-${(viewDate.getMonth() + 1).toString().padStart(2, '0')}-${day.toString().padStart(2, '0')}`;
     const log = logs.find(l => l.date === dateStr);
-    
+
     // Check for actual log
     if (log?.flow) return { isPeriod: true, flow: log.flow };
-    
+    if (dateStr < cycleSettings.lastPeriodStart) return { isPeriod: false };
+
     // Check formatted predictions
     const phase = getCyclePhase(dateStr);
     return {
@@ -51,7 +53,7 @@ const CalendarView: React.FC = () => {
   };
 
   const todayDate = today;
-  
+
   const yestDate = new Date(todayDate);
   yestDate.setDate(todayDate.getDate() - 1);
   const yestStr = `${yestDate.getFullYear()}-${(yestDate.getMonth() + 1).toString().padStart(2, '0')}-${yestDate.getDate().toString().padStart(2, '0')}`;
@@ -66,7 +68,7 @@ const CalendarView: React.FC = () => {
     Luteal: "Winding down. Good for administrative tasks and decluttering."
   };
 
-  const todayPhase = getCyclePhase(new Date().toISOString().split('T')[0]);
+  const todayPhase = getCyclePhase(localDateKey());
 
   // Modal State
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -79,15 +81,15 @@ const CalendarView: React.FC = () => {
 
   return (
     <div className="animate-slideIn font-display">
-      <LogDetailsModal 
-         isOpen={isModalOpen} 
-         onClose={() => setIsModalOpen(false)} 
-         log={selectedLogForModal?.log || null} 
-         date={selectedLogForModal?.date || ''} 
+      <LogDetailsModal
+         isOpen={isModalOpen}
+         onClose={() => setIsModalOpen(false)}
+         log={selectedLogForModal?.log || null}
+         date={selectedLogForModal?.date || ''}
       />
       <header className="sticky top-0 z-30 bg-background-dark/80 backdrop-blur-md px-6 py-4 flex items-center justify-between border-b border-white/5">
         <h2 className="text-xl font-bold leading-tight tracking-tight text-white">Calendar</h2>
-        <button 
+        <button
             onClick={handleToday}
             className="group flex items-center justify-center gap-1.5 pl-3 pr-4 py-1.5 rounded-full bg-surface-dark border border-white/10 hover:border-primary/50 shadow-sm transition-all active:scale-95"
         >
@@ -101,7 +103,7 @@ const CalendarView: React.FC = () => {
         <div className="bg-surface-dark rounded-3xl shadow-soft p-5 relative overflow-hidden border border-white/5">
           {/* Header */}
           <div className="flex items-center justify-between mb-8 relative z-20">
-            <button 
+            <button
                 onClick={handlePrevMonth}
                 className="p-2 -ml-2 text-white hover:bg-white/5 rounded-full transition-colors"
             >
@@ -112,12 +114,12 @@ const CalendarView: React.FC = () => {
               <div className="flex items-center gap-1.5 mt-0.5">
                 <div className="w-1.5 h-1.5 rounded-full bg-ovulation"></div>
                 <span className="text-[10px] font-semibold text-gray-400 uppercase tracking-widest">
-                  Cycle Day {todayPhase.currentDay} 
+                  Cycle Day {todayPhase.currentDay}
                   {/* Note: Cycle Day calc needs to be relative to cycle start, for now hardcoded 14 for display or we can calculate relative to selected date */}
                 </span>
               </div>
             </div>
-            <button 
+            <button
                 onClick={handleNextMonth}
                 className="p-2 -mr-2 text-white hover:bg-white/5 rounded-full transition-colors"
             >
@@ -233,7 +235,7 @@ const CalendarView: React.FC = () => {
             <div key={idx} className="animate-slideIn" onClick={() => handleOpenModal(item.log || null, item.date)}>
                <div className="flex items-center justify-between px-2 mb-3">
                   <span className="text-xs font-bold text-gray-500 uppercase tracking-widest">{item.label}</span>
-                  <button 
+                  <button
                     onClick={(e) => {
                         e.stopPropagation(); // prevent modal open on edit click
                         navigate(`/log/details?date=${item.date}`);
@@ -243,14 +245,14 @@ const CalendarView: React.FC = () => {
                     Edit
                   </button>
                </div>
-               
+
                 <div className="flex items-center gap-3 overflow-x-auto pb-2 scrollbar-none cursor-pointer">
                   {/* Flow Chip */}
                   {item.log.flow && (
                     <div className="flex items-center gap-2 px-3 py-1.5 bg-white/5 border border-white/5 rounded-full shrink-0">
                        <span className="text-sm">
-                         {item.log.flow === 'spotting' ? '🫧' : 
-                          item.log.flow === 'light' ? '💧' : 
+                         {item.log.flow === 'spotting' ? '🫧' :
+                          item.log.flow === 'light' ? '💧' :
                           item.log.flow === 'medium' ? '🩸' : '🩸🩸'}
                        </span>
                        <span className="text-sm text-gray-200 capitalize">{item.log.flow}</span>
@@ -332,7 +334,7 @@ const CalendarView: React.FC = () => {
                    </div>
                 </div>
              </div>
-             
+
              <p className="text-gray-300 text-sm leading-relaxed relative z-10">
                 {phaseDescriptions[todayPhase.phase] || "Track your symptoms to get better insights."}
              </p>

@@ -15,7 +15,7 @@ const PartnerForgotPassword: React.FC = () => {
 
     try {
       const { error } = await supabase.auth.resetPasswordForEmail(email, {
-        redirectTo: `${window.location.origin}/#/partner/reset-password`,
+        redirectTo: `${window.location.origin}/#/reset-password`,
       });
 
       if (error) throw error;
@@ -58,16 +58,16 @@ const PartnerForgotPassword: React.FC = () => {
               {message.text}
             </div>
           )}
-          
+
           <div className="space-y-1">
             <label className="text-sm font-medium text-white/70 ml-1">Email Address</label>
-            <input 
-              type="email" 
-              required 
+            <input
+              type="email"
+              required
               value={email}
               onChange={(e) => setEmail(e.target.value)}
-              className="w-full h-14 bg-white/5 border border-white/10 rounded-xl px-5 focus:border-blue-500 outline-none transition-all" 
-              placeholder="your@email.com" 
+              className="w-full h-14 bg-white/5 border border-white/10 rounded-xl px-5 focus:border-blue-500 outline-none transition-all"
+              placeholder="your@email.com"
             />
           </div>
 

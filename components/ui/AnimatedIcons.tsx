@@ -81,7 +81,7 @@ const DashboardIcon = forwardRef<DashboardIconHandle, DashboardIconProps>(
       animate: {
         scale: [1, 1.06, 0.98, 1],
         rotate: [0, -1.5, 1.5, 0],
-        transition: { duration: 1.1 * duration, ease: "easeInOut" },
+        transition: { duration: 1.1 * duration, ease: "easeInOut" as const },
       },
     };
 
@@ -93,7 +93,7 @@ const DashboardIcon = forwardRef<DashboardIconHandle, DashboardIconProps>(
         y: [3, -2, 0],
         transition: {
           duration: 0.9 * duration,
-          ease: "easeInOut",
+          ease: "easeInOut" as const,
           delay: i * 0.08,
         },
       }),
@@ -178,7 +178,7 @@ const chartAnimations = {
       pathOffset: [1, 0],
       transition: {
         duration: 0.8,
-        ease: 'easeInOut',
+        ease: 'easeInOut' as const,
         opacity: { duration: 0.01 },
       },
     },
@@ -195,14 +195,14 @@ const userAnimations = {
       y: [0, 4, -2, 0],
       transition: {
         duration: 0.6,
-        ease: 'easeInOut',
+        ease: 'easeInOut' as const,
       },
     },
     circle: {
       y: [0, 1, -2, 0],
       transition: {
         duration: 0.6,
-        ease: 'easeInOut',
+        ease: 'easeInOut' as const,
       },
     },
   },
@@ -219,7 +219,7 @@ const calendarVariants: Variants = {
     scale: [1, 1.1, 1],
     transition: {
       duration: 0.6,
-      ease: "easeInOut",
+      ease: "easeInOut" as const,
       times: [0, 0.2, 0.4, 0.6, 0.8, 1]
     }
   }
@@ -328,7 +328,7 @@ const heartVariants: Variants = {
     stroke: ["rgb(236, 72, 153)", "rgb(236, 72, 153)", "rgb(236, 72, 153)"], // Fixed: removed currentColor
     transition: {
       duration: 0.8,
-      ease: "easeInOut",
+      ease: "easeInOut" as const,
       repeat: 0
     }
   }
@@ -363,7 +363,7 @@ const usersGroupVariants: Variants = {
   normal: { scale: 1 },
   animate: {
     scale: [1, 1.1, 1],
-    transition: { duration: 0.4, ease: "easeInOut" }
+    transition: { duration: 0.4, ease: "easeInOut" as const }
   }
 };
 
@@ -374,7 +374,7 @@ const userBounceVariants: Variants = {
     opacity: [0.7, 1, 1],
     transition: {
       duration: 0.4,
-      ease: "easeOut",
+      ease: "easeOut" as const,
       delay: i * 0.1
     }
   })
@@ -430,7 +430,7 @@ const noteHeartVariants: Variants = {
   animate: {
     scale: [1, 1.05, 1],
     rotate: [0, -2, 2, 0],
-    transition: { duration: 0.5, ease: "easeInOut" }
+    transition: { duration: 0.5, ease: "easeInOut" as const }
   }
 };
 
@@ -441,7 +441,7 @@ const heartPulseVariants: Variants = {
     fill: ["rgba(236, 72, 153, 0)", "rgba(236, 72, 153, 0.8)", "rgba(236, 72, 153, 0)"],
     transition: {
       duration: 0.6,
-      ease: "easeInOut",
+      ease: "easeInOut" as const,
       repeat: 1
     }
   }
@@ -482,7 +482,7 @@ const listItemVariants: Variants = {
     opacity: [0.5, 1, 1],
     transition: {
       duration: 0.3,
-      ease: "easeOut",
+      ease: "easeOut" as const,
       delay: i * 0.08
     }
   })
@@ -528,7 +528,7 @@ const gearVariants: Variants = {
     scale: [1, 1.1, 1],
     transition: {
       duration: 0.6,
-      ease: "easeInOut"
+      ease: "easeInOut" as const
     }
   }
 };
@@ -575,7 +575,7 @@ const sunRayVariants: Variants = {
   animate: {
     rotate: [0, 45],
     scale: [1, 1.1, 1],
-    transition: { duration: 0.5, ease: "easeInOut" }
+    transition: { duration: 0.5, ease: "easeInOut" as const }
   }
 };
 
@@ -615,7 +615,7 @@ const moonVariants: Variants = {
   animate: {
     rotate: [0, -20, 0],
     scale: [1, 1.15, 1],
-    transition: { duration: 0.5, ease: "easeInOut" }
+    transition: { duration: 0.5, ease: "easeInOut" as const }
   }
 };
 
@@ -656,7 +656,7 @@ export const AnimatedRefreshIcon: React.FC<IconProps & { size?: number }> = ({ i
       strokeLinejoin="round"
       className={className}
       animate={isActive ? { rotate: 360 } : { rotate: 0 }}
-      transition={{ duration: 0.6, ease: "easeInOut" }}
+      transition={{ duration: 0.6, ease: "easeInOut" as const }}
     >
       <path d="M3 12a9 9 0 0 1 9-9 9.75 9.75 0 0 1 6.74 2.74L21 8" />
       <path d="M21 3v5h-5" />
@@ -729,7 +729,7 @@ const chartPieVariants: Variants = {
     rotate: [0, 5, -5, 0],
     transition: {
       duration: 0.8,
-      ease: "easeInOut",
+      ease: "easeInOut" as const,
     },
   },
 };
@@ -745,7 +745,7 @@ const piePathVariants: Variants = {
     opacity: [0.7, 1],
     transition: {
       duration: 0.6,
-      ease: "easeInOut",
+      ease: "easeInOut" as const,
     },
   },
 };
@@ -867,7 +867,7 @@ export const AnimatedHomeIcon = forwardRef<HouseHandle, HouseProps>(
         opacity: 0.65,
         transition: {
           duration: 0.2 * duration,
-          ease: "easeOut",
+          ease: "easeOut" as const,
         },
       },
     };
@@ -878,7 +878,7 @@ export const AnimatedHomeIcon = forwardRef<HouseHandle, HouseProps>(
         opacity: [1, 0.4, 1],
         transition: {
           duration: 0.35 * duration,
-          ease: "easeInOut",
+          ease: "easeInOut" as const,
         },
       },
     };
@@ -984,7 +984,7 @@ export const BellIcon = forwardRef<BellIconHandle, BellIconProps>(
         transition: {
           duration: 1.6 * duration,
           repeat: 0,
-          ease: "easeInOut",
+          ease: "easeInOut" as const,
         },
       },
     };
@@ -996,7 +996,7 @@ export const BellIcon = forwardRef<BellIconHandle, BellIconProps>(
         transition: {
           duration: 1.6 * duration,
           repeat: 0,
-          ease: "easeInOut",
+          ease: "easeInOut" as const,
         },
       },
     };
@@ -1111,7 +1111,7 @@ export const ShareIcon = forwardRef<ShareIconHandle, ShareIconProps>(
         opacity: [0.4, 1],
         transition: {
           duration: 0.6 * duration,
-          ease: "easeInOut",
+          ease: "easeInOut" as const,
         },
       },
     };
@@ -1161,4 +1161,3 @@ export const ShareIcon = forwardRef<ShareIconHandle, ShareIconProps>(
 );
 
 ShareIcon.displayName = "ShareIcon";
-

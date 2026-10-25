@@ -1,4 +1,4 @@
-import { LocalNotifications, ScheduleOptions } from '@capacitor/local-notifications';
+import { LocalNotifications } from '@capacitor/local-notifications';
 import { PushNotifications } from '@capacitor/push-notifications';
 import { Capacitor } from '@capacitor/core';
 import { supabase } from './supabase';
@@ -6,6 +6,18 @@ import { supabase } from './supabase';
 // Guard to prevent concurrent/repeated push registration attempts
 let pushRegistrationInProgress = false;
 let pushRegistrationDone = false;
+let registeredUserId: string | null = null;
+let registeredToken: string | null = null;
+let registrationRevision = 0;
+let foregroundUnsubscribe: (() => void) | undefined;
+let listenersInitialized = false;
+const listenerHandles: Promise<{ remove: () => Promise<void> }>[] = [];
+const trackLocalListener: typeof LocalNotifications.addListener = ((...args: Parameters<typeof LocalNotifications.addListener>) => {
+  const handle = LocalNotifications.addListener(...args); listenerHandles.push(handle); return handle;
+}) as typeof LocalNotifications.addListener;
+const trackPushListener: typeof PushNotifications.addListener = ((...args: Parameters<typeof PushNotifications.addListener>) => {
+  const handle = PushNotifications.addListener(...args); listenerHandles.push(handle); return handle;
+}) as typeof PushNotifications.addListener;
 
 // Check if running in Capacitor (mobile)
 const isCapacitor = () => {
@@ -47,115 +59,8 @@ export async function checkNotificationPermission(): Promise<boolean> {
   }
 }
 
-// Default reminder times (can be customized)
-const DAILY_REMINDER_TIMES = [
-  { id: 10, hour: 9, minute: 0, title: '🌅 Good Morning!', body: 'Start your day by logging how you feel.' },
-  { id: 11, hour: 10, minute: 0, title: '✨ Gentle Reminder', body: 'Have you tracked your symptoms yet?' },
-  { id: 12, hour: 12, minute: 0, title: '☀️ Midday Check-in', body: 'Take a moment to update your log.' },
-  { id: 13, hour: 15, minute: 0, title: '🍵 Afternoon Check', body: 'How are you feeling this afternoon?' },
-  { id: 14, hour: 18, minute: 0, title: '🌆 Evening Reflection', body: 'Evening check-in time.' },
-  { id: 15, hour: 23, minute: 0, title: '🌙 Good Night', body: 'Don\'t forget to log your day before sleep.' },
-];
-
-// Schedule daily reminder notifications at multiple times
-export async function scheduleDailyReminders(): Promise<void> {
-  if (!isCapacitor()) {
-    console.log('Local notifications only work on mobile devices');
-    return;
-  }
-
-  try {
-    // Cancel existing daily reminders first
-    await LocalNotifications.cancel({ 
-      notifications: DAILY_REMINDER_TIMES.map(r => ({ id: r.id })) 
-    });
-
-    // Schedule reminders at all times
-    const notifications = DAILY_REMINDER_TIMES.map(reminder => ({
-      id: reminder.id,
-      title: reminder.title,
-      body: reminder.body,
-      schedule: {
-        on: {
-          hour: reminder.hour,
-          minute: reminder.minute,
-        },
-        repeats: true,
-        allowWhileIdle: true,
-      },
-      sound: 'default',
-      smallIcon: 'ic_launcher',
-      largeIcon: 'ic_launcher',
-    }));
-
-    await LocalNotifications.schedule({ notifications });
-    console.log('Daily reminders scheduled for 9am, 10am, 12pm, 3pm, 6pm, 11pm');
-  } catch (error) {
-    console.error('Error scheduling daily reminders:', error);
-  }
-}
-
-// Legacy function for backwards compatibility (schedules all 3 reminders)
-export async function scheduleDailyReminder(hour: number = 20, minute: number = 0): Promise<void> {
-  // Now schedules all 3 daily reminders
-  await scheduleDailyReminders();
-}
-
-// Schedule period prediction notification
-export async function schedulePeriodReminder(daysUntilPeriod: number): Promise<void> {
-  if (!isCapacitor() || daysUntilPeriod < 1) {
-    return;
-  }
-
-  try {
-    // Cancel existing period reminders
-    await LocalNotifications.cancel({ notifications: [{ id: 2, }, { id: 3 }] });
-
-    const notifications: ScheduleOptions['notifications'] = [];
-
-    // Notify 3 days before period
-    if (daysUntilPeriod >= 3) {
-      const threeDaysBefore = new Date();
-      threeDaysBefore.setDate(threeDaysBefore.getDate() + (daysUntilPeriod - 3));
-      threeDaysBefore.setHours(9, 0, 0, 0);
-
-      notifications.push({
-        id: 2,
-        title: '🌙 Period Coming Soon',
-        body: 'Your period is expected in about 3 days. Stay prepared!',
-        schedule: { at: threeDaysBefore },
-        sound: 'default',
-        smallIcon: 'ic_launcher',
-        largeIcon: 'ic_launcher',
-      });
-    }
-
-    // Notify 1 day before period
-    if (daysUntilPeriod >= 1) {
-      const oneDayBefore = new Date();
-      oneDayBefore.setDate(oneDayBefore.getDate() + (daysUntilPeriod - 1));
-      oneDayBefore.setHours(9, 0, 0, 0);
-
-      notifications.push({
-        id: 3,
-        title: '🌺 Period Expected Tomorrow',
-        body: 'Your period is likely to start tomorrow. Take care!',
-        schedule: { at: oneDayBefore },
-        sound: 'default',
-        smallIcon: 'ic_launcher',
-        largeIcon: 'ic_launcher',
-      });
-    }
-
-    if (notifications.length > 0) {
-      await LocalNotifications.schedule({ notifications });
-      console.log('Period reminders scheduled');
-    }
-  } catch (error) {
-    console.error('Error scheduling period reminder:', error);
-  }
-}
-
+// Scheduled reminders are delivered by the authenticated server job. Retire old
+// device schedules so one preference does not produce six daily alerts.
 // Cancel all scheduled notifications
 export async function cancelAllNotifications(): Promise<void> {
   if (!isCapacitor()) return;
@@ -186,14 +91,16 @@ export async function getPendingNotifications(): Promise<number> {
 
 // Initialize notification listeners (Local + Push)
 export function initNotificationListeners(): void {
+  if (listenersInitialized || !isCapacitor()) return;
+  listenersInitialized = true;
   if (!isCapacitor()) return;
 
   // Local Notifications
-  LocalNotifications.addListener('localNotificationReceived', (notification) => {
+  trackLocalListener('localNotificationReceived', (notification) => {
     console.log('Local Notification received:', notification);
   });
 
-  LocalNotifications.addListener('localNotificationActionPerformed', (action) => {
+  trackLocalListener('localNotificationActionPerformed', (action) => {
     console.log('Local Notification action performed:', action);
     if (action.notification.id === 1) {
       window.location.hash = '#/log/details';
@@ -201,7 +108,7 @@ export function initNotificationListeners(): void {
   });
 
   // Push Notifications
-  PushNotifications.addListener('pushNotificationReceived', (notification) => {
+  trackPushListener('pushNotificationReceived', (notification) => {
     console.log('Push received:', notification);
     // Show local notification when app is in foreground
     LocalNotifications.schedule({
@@ -216,112 +123,89 @@ export function initNotificationListeners(): void {
     });
   });
 
-  PushNotifications.addListener('pushNotificationActionPerformed', (notification) => {
+  trackPushListener('pushNotificationActionPerformed', (notification) => {
     console.log('Push action performed:', notification);
     const data = notification.notification.data;
-    
+
     // Use a custom event to notify App.tsx about the navigation target
     if (data?.url) {
       const navEvent = new CustomEvent('appNotificationClick', { detail: { url: data.url } });
       window.dispatchEvent(navEvent);
-      
+
       // Fallback: still set hash but the event is primary
       window.location.hash = '#' + data.url;
     }
   });
 }
 
-export async function registerPushNotifications(userId: string) {
-    // Prevent concurrent or repeated registration attempts
-    if (pushRegistrationDone) {
-        console.log('[Push] Already registered, skipping');
-        return;
-    }
-    if (pushRegistrationInProgress) {
-        console.log('[Push] Registration already in progress, skipping');
-        return;
-    }
-    pushRegistrationInProgress = true;
+export async function resetPushRegistration(userId: string | null) {
+  registrationRevision++;
+  await cancelAllNotifications();
+  foregroundUnsubscribe?.(); foregroundUnsubscribe = undefined;
+  const handles = listenerHandles.splice(0);
+  await Promise.allSettled(handles.map(async handle => (await handle).remove()));
+  if (userId && registeredToken) {
+    const { error } = await supabase.from('user_fcm_tokens').delete().eq('user_id', userId).eq('token', registeredToken);
+    if (error) console.warn('Could not remove the previous push-token association');
+  }
+  if (isCapacitor()) {
+    try { await PushNotifications.unregister(); } catch { /* Platform may not support unregister. */ }
+  } else if (registeredToken) {
+    try {
+      const { messaging } = await import('./firebase');
+      const { deleteToken } = await import('firebase/messaging');
+      await deleteToken(messaging);
+    } catch { /* Token expiry is also handled by the server. */ }
+  }
+  registeredUserId = null; registeredToken = null;
+  pushRegistrationDone = false; pushRegistrationInProgress = false; listenersInitialized = false;
+}
 
-    // Initialize listeners after guard so they're only added once
+export async function registerPushNotifications(userId: string, requestPermission = false) {
+  if (registeredUserId && registeredUserId !== userId) await resetPushRegistration(registeredUserId);
+  if ((pushRegistrationDone || pushRegistrationInProgress) && registeredUserId === userId) return;
+  registeredUserId = userId;
+  const revision = registrationRevision;
+  pushRegistrationInProgress = true;
+  try {
+    if (!isCapacitor()) {
+      if (!('Notification' in window)) return;
+      if (Notification.permission !== 'granted') {
+        if (!requestPermission || await Notification.requestPermission() !== 'granted') return;
+      }
+      const { isSupported } = await import('firebase/messaging');
+      if (!await isSupported()) return;
+      await registerWebPush(userId, revision);
+      pushRegistrationDone = registeredToken !== null && revision === registrationRevision;
+      return;
+    }
+    let permissions = await PushNotifications.checkPermissions();
+    if (permissions.receive === 'prompt' && requestPermission) permissions = await PushNotifications.requestPermissions();
+    if (permissions.receive !== 'granted') return;
     initNotificationListeners();
-
-    if (isCapacitor()) {
-        // ── MOBILE (Capacitor) ──
-        try {
-            let permStatus = await PushNotifications.checkPermissions();
-      
-            if (permStatus.receive === 'prompt') {
-                permStatus = await PushNotifications.requestPermissions();
-            }
-      
-            if (permStatus.receive !== 'granted') {
-                console.log('Push permission not granted');
-                return;
-            }
-      
-            // Create Android Notification Channel
-            if (Capacitor.getPlatform() === 'android') {
-                try {
-                    await PushNotifications.createChannel({
-                        id: 'PushNotifications',
-                        name: 'Twilight Garden Push',
-                        description: 'High priority notifications for messages and games',
-                        importance: 5, // High importance for banners
-                        visibility: 1, // Public visibility
-                        vibration: true,
-                    });
-                    console.log('Android notification channel created');
-                } catch (channelErr) {
-                    console.error('Failed to create Android notification channel:', channelErr);
-                }
-            }
-
-            await PushNotifications.register();
-
-            // Listen for token
-            PushNotifications.addListener('registration', async (token) => {
-                console.log('Push registration success, token:', token.value);
-                
-                // Save token to Supabase
-                const { error } = await supabase.from('user_fcm_tokens').upsert({
-                    user_id: userId,
-                    token: token.value,
-                    device_type: Capacitor.getPlatform(), // 'android' or 'ios'
-                    updated_at: new Date().toISOString()
-                }, { onConflict: 'user_id, token' });
-                
-                if (error) {
-                    console.error('Error saving FCM token:', error);
-                }
-                pushRegistrationDone = true;
-                pushRegistrationInProgress = false;
-            });
-
-            PushNotifications.addListener('registrationError', (error) => {
-                console.error('Push registration error:', error);
-                pushRegistrationInProgress = false;
-            });
-
-        } catch (e) {
-            console.error('Error registering push notifications:', e);
-            pushRegistrationInProgress = false;
-        }
-    } else {
-        // ── WEB (Service Worker + Web Push) ──
-        try {
-            await registerWebPush(userId);
-            pushRegistrationDone = true;
-        } catch (e) {
-            console.error('Error registering web push:', e);
-        } finally {
-            pushRegistrationInProgress = false;
-        }
+    if (Capacitor.getPlatform() === 'android') {
+      await PushNotifications.createChannel({ id: 'PushNotifications', name: 'Twilight Garden', importance: 5, visibility: 0, vibration: true });
     }
+    await new Promise<void>((resolve, reject) => {
+      const timeout = setTimeout(() => reject(new Error('Push registration timed out')), 15000);
+      trackPushListener('registration', async token => {
+        clearTimeout(timeout);
+        if (revision !== registrationRevision || registeredUserId !== userId) { resolve(); return; }
+        const { error } = await supabase.from('user_fcm_tokens').upsert({user_id:userId, token:token.value, device_type:Capacitor.getPlatform(), updated_at:new Date().toISOString()}, {onConflict:'user_id,token'});
+        if (error) { reject(error); return; }
+        registeredToken = token.value; pushRegistrationDone = true; resolve();
+      });
+      trackPushListener('registrationError', () => { clearTimeout(timeout); reject(new Error('Push registration failed')); });
+      // Both listeners are attached before registration can emit a token.
+      void Promise.all(listenerHandles).then(() => PushNotifications.register()).catch(err => { clearTimeout(timeout); reject(err); });
+    });
+  } finally {
+    if (revision === registrationRevision) pushRegistrationInProgress = false;
+  }
 }
 
 // Web Push via Firebase Cloud Messaging
-async function registerWebPush(userId: string) {
+async function registerWebPush(userId: string, revision: number) {
     if (!('serviceWorker' in navigator)) {
         console.log('[FCM-Web] Service workers not supported');
         return;
@@ -329,7 +213,7 @@ async function registerWebPush(userId: string) {
 
     // 1. Ensure notification permission
     console.log('[FCM-Web] Step 1: Checking notification permission...');
-    const permission = await Notification.requestPermission();
+    const permission = Notification.permission;
     if (permission !== 'granted') {
         console.log('[FCM-Web] Permission denied:', permission);
         return;
@@ -342,7 +226,7 @@ async function registerWebPush(userId: string) {
     try {
         swRegistration = await navigator.serviceWorker.register('/firebase-messaging-sw.js');
         console.log('[FCM-Web] SW registered, scope:', swRegistration.scope);
-        
+
         // Wait for SW to become active (with 10s timeout)
         if (swRegistration.installing) {
             console.log('[FCM-Web] SW installing, waiting for activation...');
@@ -380,7 +264,7 @@ async function registerWebPush(userId: string) {
     console.log('[FCM-Web] Step 4: Getting FCM token...');
     try {
         const { messaging, getToken, onMessage } = await import('./firebase');
-        
+
         const token = await getToken(messaging, {
             vapidKey: 'BDFuOMVDuIBiI-aki2NHbFS7qXLYqlj7Fy1LFW7WQ7yIp5E8f7tMp_N46lQHNmAh8LpWslQ6O7ucMzoRr9ZMa5A',
             serviceWorkerRegistration: swRegistration,
@@ -392,6 +276,7 @@ async function registerWebPush(userId: string) {
         }
         console.log('[FCM-Web] ✅ FCM token obtained:', token.substring(0, 20) + '...');
 
+        if (revision !== registrationRevision || registeredUserId !== userId) return;
         // 5. Save to user_fcm_tokens (same table as mobile)
         const { error } = await supabase.from('user_fcm_tokens').upsert({
             user_id: userId,
@@ -401,27 +286,28 @@ async function registerWebPush(userId: string) {
         }, { onConflict: 'user_id,token' });
 
         if (error) {
-            console.error('[FCM-Web] Error saving FCM token:', error);
+            throw error;
         } else {
-            console.log('[FCM-Web] ✅ FCM token saved to Supabase');
+            registeredToken = token;
         }
 
+        if (revision !== registrationRevision || registeredUserId !== userId) {
+            await supabase.from('user_fcm_tokens').delete().eq('user_id', userId).eq('token', token);
+            return;
+        }
         // 6. Listen for foreground messages
-        onMessage(messaging, async (payload) => {
+        foregroundUnsubscribe?.();
+        foregroundUnsubscribe = onMessage(messaging, async (payload) => {
             console.log('[FCM-Web] Foreground message:', payload);
             if (payload.notification) {
                 const title = payload.notification.title || 'Twilight Garden';
                 const body = payload.notification.body || 'New notification';
-                
+
                 // If running in Tauri Desktop app, send native OS notification
                 if (!!(window as any).__TAURI_INTERNALS__ || !!(window as any).__TAURI__) {
                     try {
-                        const { isPermissionGranted, requestPermission, sendNotification } = await import('@tauri-apps/plugin-notification');
+                        const { isPermissionGranted, sendNotification } = await import('@tauri-apps/plugin-notification');
                         let permissionGranted = await isPermissionGranted();
-                        if (!permissionGranted) {
-                            const permission = await requestPermission();
-                            permissionGranted = permission === 'granted';
-                        }
                         if (permissionGranted) {
                             sendNotification({ title, body });
                             return; // Early return to prevent fallback
@@ -430,7 +316,7 @@ async function registerWebPush(userId: string) {
                         console.warn('[FCM-Web] Tauri native notification skipped/failed, falling back to Web API:', e);
                     }
                 }
-                
+
                 // Fallback for standard Web/PWA
                 new Notification(title, {
                     body,
@@ -442,7 +328,7 @@ async function registerWebPush(userId: string) {
     } catch (err: any) {
         console.error('[FCM-Web] ❌ Failed to get FCM token:', err.message || err);
         console.error('[FCM-Web] Full error:', err);
-        
+
         // Specific advice based on error
         if (err.message?.includes('push service')) {
             console.error('[FCM-Web] 🔧 DIAGNOSIS: Browser cannot contact FCM push servers.');
@@ -491,7 +377,7 @@ export async function sendGameNotification(
         .select('full_name')
         .eq('id', currentUserId)
         .single();
-      
+
       if (senderProfile && (senderProfile as any).full_name) {
         nickname = (senderProfile as any).full_name.split(' ')[0]; // Use first name
       }

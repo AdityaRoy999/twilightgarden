@@ -55,13 +55,13 @@ const ThisOrThat: React.FC = () => {
     const { theme, primaryColor } = useTheme();
     const { openTutorial } = useTutorial();
     const isDark = theme === 'dark';
-    
+
     const [items, setItems] = useState<TTItem[]>([]);
     const [session, setSession] = useState<GameSession | null>(null);
     const [loading, setLoading] = useState(true);
     const channelRef = useRef<ReturnType<typeof supabase.channel> | null>(null);
     const [ringCooldown, setRingCooldown] = useState(false);
-    const ringCooldownRef = useRef<ReturnType<typeof setTimeout>>();
+    const ringCooldownRef = useRef<ReturnType<typeof setTimeout>>(undefined);
 
     useEffect(() => { loadData().then(setItems).catch(console.error); }, []);
 
@@ -146,8 +146,8 @@ const ThisOrThat: React.FC = () => {
     useEffect(() => {
         if (!session?.id) return;
 
-        const ch = supabase.channel(`game_tt_${session.id}`)
-            .on('postgres_changes', { event: '*', schema: 'public', table: 'game_sessions', filter: `id=eq.${session.id}` }, 
+        const ch = supabase.channel(`game_tt_${session.id}`, { config: { private: true } })
+            .on('postgres_changes', { event: '*', schema: 'public', table: 'game_sessions', filter: `id=eq.${session.id}` },
             (payload) => {
                 const newSess = payload.new as GameSession;
                 if (newSess && newSess.game_type === 'this_or_that') {
@@ -155,8 +155,8 @@ const ThisOrThat: React.FC = () => {
                 }
             })
             .subscribe();
-            
-        return () => { 
+
+        return () => {
             supabase.removeChannel(ch);
             clearTimeout(ringCooldownRef.current);
         };
@@ -178,7 +178,7 @@ const ThisOrThat: React.FC = () => {
             history: [...currentState.history, nextCard.id],
             roundNumber: nextRoundNum,
         };
-        
+
         await (supabase.from('game_sessions') as any).update({ board_state: newState }).eq('id', idToUpdate);
     };
 
@@ -390,7 +390,7 @@ const ThisOrThat: React.FC = () => {
                 {/* Status or Result Header */}
                 <div className="h-12 flex items-center justify-center">
                     {showResult ? (
-                        <motion.div 
+                        <motion.div
                             initial={{ scale: 0 }} animate={{ scale: 1 }}
                             className={`px-6 py-2 rounded-full font-bold flex items-center gap-2 ${match ? 'bg-green-500/20 text-green-500' : 'bg-red-500/20 text-red-500'}`}
                         >
@@ -410,7 +410,7 @@ const ThisOrThat: React.FC = () => {
                     onClick={() => !myVote && vote('A')}
                     disabled={!!myVote}
                     className={`w-full py-8 rounded-3xl border-2 transition-all relative overflow-hidden group ${
-                        myVote === 'A' ? 'border-blue-500 bg-blue-500/10' : 
+                        myVote === 'A' ? 'border-blue-500 bg-blue-500/10' :
                         isDark ? 'border-white/10 bg-white/5' : 'border-gray-200 bg-white'
                     }`}
                 >
@@ -429,7 +429,7 @@ const ThisOrThat: React.FC = () => {
                     onClick={() => !myVote && vote('B')}
                     disabled={!!myVote}
                     className={`w-full py-8 rounded-3xl border-2 transition-all relative overflow-hidden group ${
-                        myVote === 'B' ? 'border-purple-500 bg-purple-500/10' : 
+                        myVote === 'B' ? 'border-purple-500 bg-purple-500/10' :
                         isDark ? 'border-white/10 bg-white/5' : 'border-gray-200 bg-white'
                     }`}
                 >
@@ -440,7 +440,7 @@ const ThisOrThat: React.FC = () => {
                 </button>
 
                 {showResult && (
-                    <button 
+                    <button
                         onClick={nextRound}
                         className={`w-full px-6 py-4 rounded-2xl font-bold shadow-lg mt-8 ${
                             isDark ? 'bg-white text-black' : 'bg-black text-white'

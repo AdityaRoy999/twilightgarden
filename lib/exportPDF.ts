@@ -1,3 +1,4 @@
+import { localDateKey } from './dates';
 import { jsPDF } from 'jspdf';
 import { DailyLog, CycleSettings } from '../types';
 import { Filesystem, Directory } from '@capacitor/filesystem';
@@ -23,7 +24,7 @@ const savePDFMobile = async (doc: jsPDF, fileName: string): Promise<void> => {
   const dataUri = doc.output('datauristring');
   const commaIdx = dataUri.indexOf(',');
   const pdfBase64 = commaIdx >= 0 ? dataUri.substring(commaIdx + 1) : dataUri;
-  
+
   try {
     // Save directly to Documents/Downloads directory
     await Filesystem.writeFile({
@@ -36,7 +37,7 @@ const savePDFMobile = async (doc: jsPDF, fileName: string): Promise<void> => {
     return;
   } catch (error) {
     console.error('Error saving to Downloads, trying Documents:', error);
-    
+
     // Fallback: try Documents directory
     try {
       await Filesystem.writeFile({
@@ -47,14 +48,14 @@ const savePDFMobile = async (doc: jsPDF, fileName: string): Promise<void> => {
       return;
     } catch (fallbackError) {
       console.error('Error saving to Documents:', fallbackError);
-      
+
       // Last fallback: Use share sheet
       const result = await Filesystem.writeFile({
         path: fileName,
         data: pdfBase64,
         directory: Directory.Cache,
       });
-      
+
       await Share.share({
         title: fileName,
         text: 'Your Twilight Garden Health Report',
@@ -78,7 +79,7 @@ const COLORS = {
 export async function exportHealthDataToPDF(data: ExportData): Promise<void> {
   const { profile, cycleSettings, logs } = data;
   const doc = new jsPDF();
-  
+
   const pageWidth = doc.internal.pageSize.getWidth();
   const pageHeight = doc.internal.pageSize.getHeight();
   const margin = 20;
@@ -149,17 +150,17 @@ export async function exportHealthDataToPDF(data: ExportData): Promise<void> {
 
   // Summary cards
   const cardWidth = (pageWidth - 2 * margin - 10) / 2;
-  
+
   // Card 1: Cycle Length
   doc.setFillColor(255, 255, 255);
   doc.setDrawColor(230, 230, 230);
   doc.roundedRect(margin, yPos, cardWidth, 40, 5, 5, 'FD');
-  
+
   doc.setFont('helvetica', 'normal');
   doc.setFontSize(10);
   doc.setTextColor(107, 114, 128);
   doc.text('Average Cycle', margin + 10, yPos + 15);
-  
+
   doc.setFont('helvetica', 'bold');
   doc.setFontSize(20);
   doc.setTextColor(152, 67, 105);
@@ -168,12 +169,12 @@ export async function exportHealthDataToPDF(data: ExportData): Promise<void> {
   // Card 2: Period Length
   doc.setFillColor(255, 255, 255);
   doc.roundedRect(margin + cardWidth + 10, yPos, cardWidth, 40, 5, 5, 'FD');
-  
+
   doc.setFont('helvetica', 'normal');
   doc.setFontSize(10);
   doc.setTextColor(107, 114, 128);
   doc.text('Average Period', margin + cardWidth + 20, yPos + 15);
-  
+
   doc.setFont('helvetica', 'bold');
   doc.setFontSize(20);
   doc.setTextColor(152, 67, 105);
@@ -211,7 +212,7 @@ export async function exportHealthDataToPDF(data: ExportData): Promise<void> {
   // Table Header
   doc.setFillColor(248, 232, 238);
   doc.rect(margin, yPos, pageWidth - 2 * margin, 10, 'F');
-  
+
   doc.setFont('helvetica', 'bold');
   doc.setFontSize(9);
   doc.setTextColor(152, 67, 105);
@@ -256,7 +257,7 @@ export async function exportHealthDataToPDF(data: ExportData): Promise<void> {
     doc.text(symptomsStr, margin + 105, yPos + 5);
 
     yPos += 10;
-    
+
     // Light row separator
     doc.setDrawColor(245, 245, 245);
     doc.setLineWidth(0.3);
@@ -289,8 +290,8 @@ export async function exportHealthDataToPDF(data: ExportData): Promise<void> {
   }
 
   // Save the PDF
-  const fileName = `Twilight_Health_Report_${today.toISOString().split('T')[0]}.pdf`;
-  
+  const fileName = `Twilight_Health_Report_${localDateKey(today)}.pdf`;
+
   if (isCapacitor()) {
     await savePDFMobile(doc, fileName);
   } else {
@@ -304,7 +305,7 @@ export async function exportHealthDataToPDF(data: ExportData): Promise<void> {
 export async function exportDoctorsReport(data: ExportData): Promise<void> {
   const { profile, cycleSettings, logs } = data;
   const doc = new jsPDF();
-  
+
   const pageWidth = doc.internal.pageSize.getWidth();
   const pageHeight = doc.internal.pageSize.getHeight();
   const margin = 20;
@@ -375,7 +376,7 @@ export async function exportDoctorsReport(data: ExportData): Promise<void> {
   doc.setFont('helvetica', 'normal');
   doc.setFontSize(10);
   doc.setTextColor(75, 85, 99);
-  
+
   const col1 = margin + 10;
   const col2 = margin + 65;
   const col3 = margin + 120;
@@ -419,12 +420,12 @@ export async function exportDoctorsReport(data: ExportData): Promise<void> {
   const symptomCounts: Record<string, number> = {};
   const moodCounts: Record<string, number> = {};
   const flowCounts: Record<string, number> = {};
-  
+
   const last90Days = new Date();
   last90Days.setDate(last90Days.getDate() - 90);
-  
+
   const recentLogs = logs.filter(l => new Date(l.date) >= last90Days);
-  
+
   recentLogs.forEach(log => {
     if (log.symptoms) {
       log.symptoms.forEach(s => {
@@ -489,7 +490,7 @@ export async function exportDoctorsReport(data: ExportData): Promise<void> {
 
   // ============== RECENT LOG ENTRIES ==============
   addNewPageIfNeeded(60);
-  
+
   doc.setFont('helvetica', 'bold');
   doc.setFontSize(12);
   doc.setTextColor(31, 41, 55);
@@ -499,7 +500,7 @@ export async function exportDoctorsReport(data: ExportData): Promise<void> {
   // Table header
   doc.setFillColor(243, 244, 246);
   doc.rect(margin, yPos, pageWidth - 2 * margin, 8, 'F');
-  
+
   doc.setFont('helvetica', 'bold');
   doc.setFontSize(8);
   doc.setTextColor(55, 65, 81);
@@ -516,17 +517,17 @@ export async function exportDoctorsReport(data: ExportData): Promise<void> {
 
   doc.setFont('helvetica', 'normal');
   doc.setFontSize(8);
-  
+
   for (const log of sortedLogs) {
     addNewPageIfNeeded(10);
-    
+
     const logDate = new Date(log.date);
     doc.setTextColor(75, 85, 99);
     doc.text(logDate.toLocaleDateString('en-US', { month: 'short', day: 'numeric' }), margin + 3, yPos + 4);
     doc.text(log.flow || '-', margin + 30, yPos + 4);
     doc.text((log.symptoms?.slice(0, 2).join(', ') || '-').substring(0, 30), margin + 55, yPos + 4);
     doc.text((log.moods?.slice(0, 2).join(', ') || '-').substring(0, 25), margin + 120, yPos + 4);
-    
+
     yPos += 7;
     doc.setDrawColor(243, 244, 246);
     doc.line(margin, yPos, pageWidth - margin, yPos);
@@ -536,15 +537,15 @@ export async function exportDoctorsReport(data: ExportData): Promise<void> {
 
   // ============== DISCLAIMER ==============
   addNewPageIfNeeded(40);
-  
+
   doc.setFillColor(254, 243, 199); // Yellow warning
   doc.rect(margin, yPos, pageWidth - 2 * margin, 25, 'F');
-  
+
   doc.setFont('helvetica', 'bold');
   doc.setFontSize(8);
   doc.setTextColor(161, 98, 7);
   doc.text('DISCLAIMER', margin + 5, yPos + 8);
-  
+
   doc.setFont('helvetica', 'normal');
   doc.setFontSize(7);
   doc.text('This report is generated from self-reported data in the Twilight Garden app. It is intended for', margin + 5, yPos + 15);
@@ -562,8 +563,8 @@ export async function exportDoctorsReport(data: ExportData): Promise<void> {
   }
 
   // Save
-  const fileName = `Doctors_Report_${today.toISOString().split('T')[0]}.pdf`;
-  
+  const fileName = `Doctors_Report_${localDateKey(today)}.pdf`;
+
   if (isCapacitor()) {
     await savePDFMobile(doc, fileName);
   } else {

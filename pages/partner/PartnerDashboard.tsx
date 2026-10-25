@@ -1,3 +1,4 @@
+import { localDateKey } from '../../lib/dates';
 import React from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useCouples } from '../../contexts/CouplesContext';
@@ -111,7 +112,7 @@ const PartnerDashboard: React.FC = () => {
                                 maxLength={6}
                                 className="w-full text-center text-3xl font-mono tracking-widest py-4 rounded-2xl border-2 border-gray-200 dark:border-white/10 bg-white dark:bg-white/5 focus:border-pink-500 outline-none transition-colors"
                             />
-                            
+
                             {pairingError && (
                                 <p className="text-red-500 text-sm font-medium">{pairingError}</p>
                             )}
@@ -182,8 +183,8 @@ const PartnerDashboard: React.FC = () => {
         irregularCycle: false
     };
 
-    const cycleData = calculateCyclePhase(new Date().toISOString().split('T')[0], cycleSettings);
-    
+    const cycleData = calculateCyclePhase(localDateKey(), cycleSettings);
+
     // Cycle Progress Calculation
     const progress = Math.min((cycleData.currentDay / cycleSettings.avgCycleLength) * 100, 100);
     const radius = 120;
@@ -193,9 +194,9 @@ const PartnerDashboard: React.FC = () => {
     // Determine colors
     let primaryColor = '#984369'; // Default/Menstrual
     let phaseLabel = 'Menstrual Phase';
-    
+
     if (cycleData.phase === 'Follicular') {
-        primaryColor = '#4CAF50'; 
+        primaryColor = '#4CAF50';
         phaseLabel = 'Follicular Phase';
     } else if (cycleData.phase === 'Ovulation') {
         primaryColor = '#2196F3';
@@ -271,7 +272,7 @@ const PartnerDashboard: React.FC = () => {
                             strokeLinecap="round"
                         />
                     </svg>
-                    
+
                     {/* Center Text */}
                     <div className="absolute inset-0 flex flex-col items-center justify-center text-center px-8">
                          <span className="text-[11px] font-bold tracking-[0.2em] uppercase mb-1" style={{ color: primaryColor }}>Cycle Day</span>
@@ -295,18 +296,18 @@ const PartnerDashboard: React.FC = () => {
                             <span className="material-symbols-outlined text-4xl text-primary">water_drop</span>
                          </div>
                          <div>
-                            <span className="text-xs font-bold text-gray-400 uppercase tracking-wider">Next Period</span>
+                            <span className="text-xs font-bold text-gray-400 uppercase tracking-wider">{cycleData.nextPeriodIn < 0 ? 'Past estimate' : 'Next period'}</span>
                             <div className="mt-1 flex items-baseline gap-1">
                                  <span className="text-3xl font-bold text-gray-800 dark:text-white">
-                                     {cycleData.nextPeriodIn}
+                                     {Math.abs(cycleData.nextPeriodIn)}
                                  </span>
                                  <span className="text-sm font-medium text-gray-500">days</span>
                             </div>
                          </div>
                          <div className="w-full bg-gray-100 dark:bg-white/10 h-1.5 rounded-full mt-3 overflow-hidden">
-                            <div 
-                                className="h-full bg-primary rounded-full" 
-                                style={{ width: `${Math.max(100 - (cycleData.nextPeriodIn / cycleSettings.avgCycleLength) * 100, 10)}%` }} // Reverse logic approx
+                            <div
+                                className="h-full bg-primary rounded-full"
+                                style={{ width: `${Math.min(100, Math.max(100 - (cycleData.nextPeriodIn / cycleSettings.avgCycleLength) * 100, 10))}%` }} // Reverse logic approx
                             ></div>
                          </div>
                     </div>
@@ -336,9 +337,9 @@ const PartnerDashboard: React.FC = () => {
                         <h3 className="font-bold text-lg text-gray-800 dark:text-white">Today's Status</h3>
                         <span className="text-xs text-gray-400 font-medium uppercase tracking-wider">{format(new Date(), 'MMM d')}</span>
                     </div>
-                    
+
                     {todayLog ? (
-                        <div 
+                        <div
                             onClick={() => {
                                 setSelectedLogDate(todayStr);
                                 setIsModalOpen(true);
@@ -391,7 +392,7 @@ const PartnerDashboard: React.FC = () => {
                          <div>
                              <h3 className="font-bold text-lg mb-1">Partner Tip</h3>
                              <p className="text-white/90 text-sm md:text-base leading-relaxed">
-                                {cycleData.phase === 'Menstrual' 
+                                {cycleData.phase === 'Menstrual'
                                     ? "She might be feeling lower energy. Offer some comfort food or a cozy movie night!"
                                     : cycleData.phase === 'Follicular'
                                     ? "Energy is rising! Great time to plan fun activities together."

@@ -1,14 +1,15 @@
+import { localDateKey } from '../lib/dates';
 import React, { createContext, useContext, useEffect, useState, useMemo } from 'react';
 import { supabase } from '../lib/supabase';
 import { useAuth } from './AuthContext';
 import { Couple, SharedNote } from '../types';
-import { 
-  initializeEncryptionKeys, 
-  encryptMessage, 
-  decryptMessage, 
-  encryptData, 
-  decryptData, 
-  encryptBlob, 
+import {
+  initializeEncryptionKeys,
+  encryptMessage,
+  decryptMessage,
+  encryptData,
+  decryptData,
+  encryptBlob,
   decryptBlob,
   encryptIdentityWithPin,
   decryptIdentityWithPin,
@@ -44,7 +45,7 @@ interface CouplesContextType {
   markAsRead: (noteIds: string[]) => Promise<void>;
   setIsChatOpen: (isOpen: boolean) => void;
   uploadMedia: (file: File) => Promise<string>;
-  
+
   // Partner Features
   isSupporter: boolean;
   partnerProfile: any | null; // Using any for simplicity for now, should be Profile
@@ -116,7 +117,7 @@ export const CouplesProvider: React.FC<{ children: React.ReactNode }> = ({ child
   const [isChatOpen, setIsChatOpen] = useState(false);
   const [hasMoreNotes, setHasMoreNotes] = useState(false);
   const [loadingOlder, setLoadingOlder] = useState(false);
-  
+
   // Partner State
   const [partnerProfile, setPartnerProfile] = useState<any | null>(null);
   const [partnerSettings, setPartnerSettings] = useState<any | null>(null);
@@ -145,11 +146,11 @@ export const CouplesProvider: React.FC<{ children: React.ReactNode }> = ({ child
   };
 
   // Check if current user is the "supporter"
-  const isSupporter = couple 
-    ? (couple.partner_1_id === user?.id && couple.partner_1_role === 'supporter') || 
+  const isSupporter = couple
+    ? (couple.partner_1_id === user?.id && couple.partner_1_role === 'supporter') ||
       (couple.partner_2_id === user?.id)
     : user?.role === 'partner';
-  
+
   // Use a ref to track chat open status without triggering re-subscriptions
   const isChatOpenRef = React.useRef(isChatOpen);
 
@@ -202,7 +203,7 @@ export const CouplesProvider: React.FC<{ children: React.ReactNode }> = ({ child
 
     try {
     import.meta.env.DEV && console.log('[E2EE] Initializing for user:', user.id);
-    
+
     // Clear partner cache on start/restart to ensure fresh keys are fetched correctly
     partnerPublicKeyRef.current = null;
     deviceKeysRef.current.clear();
@@ -213,7 +214,7 @@ export const CouplesProvider: React.FC<{ children: React.ReactNode }> = ({ child
     const currentDeviceId = localDeviceId || crypto.randomUUID();
     if (!localDeviceId) await Preferences.set({ key: 'tw_device_id', value: currentDeviceId });
     setDeviceId(currentDeviceId);
-    
+
     // 2. Local Key Management — get or create this user's key pair
     const pubKey = await initializeEncryptionKeys(user.id);
     import.meta.env.DEV && console.log('[E2EE] Local Public Key (Base64):', pubKey);
@@ -246,7 +247,7 @@ export const CouplesProvider: React.FC<{ children: React.ReactNode }> = ({ child
     // If we ALSO have a cloud backup, we MUST restore it to read old history.
     const localKeyRegistered = existingKeys?.some((k: any) => k.public_key === pubKey);
     import.meta.env.DEV && console.log('[E2EE] Local key already in DB?', localKeyRegistered);
-    
+
     if (!localKeyRegistered && cloudBackup) {
         console.warn('[E2EE] New device/identity detected with existing backup. Sync required.');
         setIsSyncRequired(true);
@@ -267,16 +268,8 @@ export const CouplesProvider: React.FC<{ children: React.ReactNode }> = ({ child
         last_active: new Date().toISOString()
     } as any, { onConflict: 'user_id,device_id' });
 
-    // 7. Clean stale entries from OTHER device IDs in user_keys
-    const staleEntries = existingKeys?.filter(
-      (k: any) => k.device_id !== currentDeviceId
-    );
-    if (staleEntries?.length > 0) {
-      import.meta.env.DEV && console.log('[E2EE] Cleaning', staleEntries.length, 'stale entries');
-      await (supabase.from('user_keys' as any).delete()
-        .eq('user_id', user.id as any)
-        .neq('device_id', currentDeviceId as any) as any);
-    }
+    // Other registered devices are valid decryption routes. Remove a device only
+    // through the explicit device-management action.
 
     await fetchCoupleData();
 
@@ -285,7 +278,7 @@ export const CouplesProvider: React.FC<{ children: React.ReactNode }> = ({ child
       import.meta.env.DEV && console.log('[E2EE] No backup found. Prompting PIN setup.');
       setShowPinSetup(true);
     }
-    
+
     setE2eeReady(true); // Signal that backup check is complete
     } finally {
       refreshE2EERunningRef.current = false;
@@ -293,7 +286,7 @@ export const CouplesProvider: React.FC<{ children: React.ReactNode }> = ({ child
   };
 
   useEffect(() => {
-    if (authLoading) return; 
+    if (authLoading) return;
     refreshE2EE();
   }, [user?.id, authLoading, keyVersion]);
 
@@ -308,9 +301,9 @@ export const CouplesProvider: React.FC<{ children: React.ReactNode }> = ({ child
   const fetchCoupleData = async () => {
     try {
       if (!user) return;
-      
+
       // Timeout promise to prevent hanging
-      const timeoutPromise = new Promise((_, reject) => 
+      const timeoutPromise = new Promise((_, reject) =>
         setTimeout(() => reject(new Error('Couple data fetch timeout')), 10000)
       );
 
@@ -318,10 +311,10 @@ export const CouplesProvider: React.FC<{ children: React.ReactNode }> = ({ child
           // fetchData logic continued below
 
           // 2. Standard Fetch fallback
-          const query = user.role === 'admin' 
+          const query = user.role === 'admin'
             ? (supabase.from('couples' as any).select('id,partner_1_id,partner_2_id,partner_1_role,status,pairing_code,share_enabled,love_code,love_unlocked,created_at') as any).eq('partner_1_id', user.id).order('created_at', { ascending: false })
             : (supabase.from('couples' as any).select('id,partner_1_id,partner_2_id,partner_1_role,status,pairing_code,share_enabled,love_code,love_unlocked,created_at') as any).or(`partner_1_id.eq.${user.id},partner_2_id.eq.${user.id}`).order('created_at', { ascending: false });
-          
+
           const { data: rows, error: coupleError } = await query;
 
           if (coupleError) throw coupleError;
@@ -362,9 +355,9 @@ export const CouplesProvider: React.FC<{ children: React.ReactNode }> = ({ child
 
             // E2EE Decryption Flow
             const resolvedPartnerId = coupleData.partner_1_id === user.id ? coupleData.partner_2_id : coupleData.partner_1_id;
-            
+
             // Show cached decrypted notes OR in-memory decrypted notes while we decrypt
-            // IMPORTANT: Do NOT replace visible decrypted notes with raw encrypted ones — 
+            // IMPORTANT: Do NOT replace visible decrypted notes with raw encrypted ones —
             // that causes the "encryption keys flash" bug on reload.
             const hasExistingDecryptedNotes = notes.length > 0 && notes.some(n => isContentDecrypted(n.content));
             if (!hasExistingDecryptedNotes) {
@@ -386,7 +379,7 @@ export const CouplesProvider: React.FC<{ children: React.ReactNode }> = ({ child
             // Decrypt all notes at once (no chunked delays — crypto is fast)
             const partnerPubKey = await fetchPartnerPublicKey(resolvedPartnerId || undefined);
             const toDecrypt = fetched.slice(0, NOTES_PAGE_SIZE);
-            
+
             const decryptedResults: SharedNote[] = await Promise.all(
               toDecrypt.map(async (note) => {
                 // Use in-memory cache only if the note content hasn't changed in DB
@@ -423,7 +416,7 @@ export const CouplesProvider: React.FC<{ children: React.ReactNode }> = ({ child
             const unacknowledgedNotes = fetched
               .filter(n => n.sender_id !== user.id && n.status === 'sent')
               .map(n => n.id);
-            
+
             if (unacknowledgedNotes.length > 0) {
               const query: any = (supabase.from('shared_notes') as any).update({ status: 'delivered' });
               await query.in('id', unacknowledgedNotes);
@@ -459,7 +452,7 @@ export const CouplesProvider: React.FC<{ children: React.ReactNode }> = ({ child
 
     try {
       // 1. Determine which key to use for this specific message
-      // If we are the sender, we always use the partner's "latest" key 
+      // If we are the sender, we always use the partner's "latest" key
       // (because that's what we encrypted it with for self-decryption/backup flow)
       // If the partner is the sender, we MUST use the key for the device they sent it from.
       let currentPartnerKey = partnerPubKey;
@@ -481,11 +474,11 @@ export const CouplesProvider: React.FC<{ children: React.ReactNode }> = ({ child
       }
 
       let content = await decryptFn(note.content, currentPartnerKey);
-      
+
       // 2. If decryption failed, try one re-fetch bypassing all caches
       if ((content.includes('🔐 Message locked') || content === note.content) && currentPartnerKey) {
           import.meta.env.DEV && console.log('[E2EE] Decryption failed, trying to re-fetch partner key from DB (bypassing cache)...');
-          const freshKey = await fetchPartnerPublicKey(undefined, deviceIdToFetch, true); 
+          const freshKey = await fetchPartnerPublicKey(undefined, deviceIdToFetch, true);
           if (freshKey && freshKey !== currentPartnerKey) {
               import.meta.env.DEV && console.log('[E2EE] Found different partner key, retrying decryption...');
               content = await decryptFn(note.content, freshKey);
@@ -497,11 +490,11 @@ export const CouplesProvider: React.FC<{ children: React.ReactNode }> = ({ child
 
       const decrypted = { ...note };
       decrypted.content = content;
-      
+
       if (note.media_url) {
           decrypted.media_url = await decryptFn(note.media_url, currentPartnerKey);
       }
-      
+
       if (note.reply_content) {
           decrypted.reply_content = await decryptFn(note.reply_content, currentPartnerKey);
       }
@@ -548,7 +541,7 @@ export const CouplesProvider: React.FC<{ children: React.ReactNode }> = ({ child
 
     // 1. MAIN CHANNEL: Couple status & Shared Notes
     const mainChannel = supabase
-      .channel(`couple_main_${couple.id}`)
+      .channel(`couple_main_${couple.id}`, { config: { private: true } })
       .on(
         'postgres_changes',
         { event: '*', schema: 'public', table: 'couples', filter: `id=eq.${couple.id}` },
@@ -558,7 +551,7 @@ export const CouplesProvider: React.FC<{ children: React.ReactNode }> = ({ child
                 const oldStatus = couple?.status;
                 const newCouple = payload.new as Couple;
                 setCouple(newCouple);
-                
+
                 // If couple just became active, clear partner key cache to get fresh keys
                 if (newCouple.status === 'active' && oldStatus !== 'active') {
                     import.meta.env.DEV && console.log('[Realtime] Couple active! Clearing partner key cache.');
@@ -615,7 +608,7 @@ export const CouplesProvider: React.FC<{ children: React.ReactNode }> = ({ child
         async (payload) => {
           if (payload.eventType === 'INSERT') {
             let newNote = payload.new as SharedNote;
-            
+
             // WE MUST DECRYPT ON INSERT
             const partnerPubKey = await fetchPartnerPublicKey();
             newNote = await decryptNote(newNote, partnerPubKey, user.id);
@@ -653,7 +646,7 @@ export const CouplesProvider: React.FC<{ children: React.ReactNode }> = ({ child
             }
           } else if (payload.eventType === 'UPDATE') {
              let updatedNote = payload.new as SharedNote;
-             
+
               // WE MUST DECRYPT ON UPDATE
               const partnerPubKey = await fetchPartnerPublicKey();
               updatedNote = await decryptNote(updatedNote, partnerPubKey, user.id);
@@ -691,7 +684,7 @@ export const CouplesProvider: React.FC<{ children: React.ReactNode }> = ({ child
     let partnerChannel: any = null;
     if (couple.status === 'active' && partnerId && partnerId !== user.id) {
       partnerChannel = supabase
-        .channel(`partner_realtime_${partnerId}`)
+        .channel(`partner_realtime_${partnerId}`, { config: { private: true } })
         // Live profile sync (name, avatar changes)
         .on(
           'postgres_changes',
@@ -772,7 +765,7 @@ export const CouplesProvider: React.FC<{ children: React.ReactNode }> = ({ child
           .eq('sender_id', user.id)
           .order('created_at', { ascending: false })
           .limit(20) as any);
-        
+
         if (data && data.length > 0) {
           setNotes(prev => prev.map(n => {
             const updated = (data as any[]).find(d => d.id === n.id);
@@ -791,14 +784,14 @@ export const CouplesProvider: React.FC<{ children: React.ReactNode }> = ({ child
       if (partnerChannel) supabase.removeChannel(partnerChannel);
       if (statusPollInterval) clearInterval(statusPollInterval);
     };
-  }, [couple?.id, user?.id, partnerId, couple?.status]); 
+  }, [couple?.id, user?.id, partnerId, couple?.status]);
 
   // Direct Broadcast helper
   const broadcastUpdate = (type: 'log' | 'settings' | 'profile') => {
     if (!couple?.id || !partnerId) return;
-    
+
     const channelId = `partner_realtime_${user?.id}`; // Listeners listen to the sender's channel
-    const ch = supabase.channel(channelId);
+    const ch = supabase.channel(channelId, { config: { private: true } });
     // Safety timeout: remove the channel after 5s regardless of subscription status
     const timeout = setTimeout(() => {
       try { supabase.removeChannel(ch); } catch {}
@@ -841,12 +834,12 @@ export const CouplesProvider: React.FC<{ children: React.ReactNode }> = ({ child
       if (error) throw error;
       const fetched = (data || []) as SharedNote[];
       setHasMoreNotes(fetched.length > NOTES_PAGE_SIZE);
-      
+
       const partnerPubKey = await fetchPartnerPublicKey();
       const decryptedPage = await Promise.all(fetched.slice(0, NOTES_PAGE_SIZE).reverse().map(async (n) => {
           const cached = decryptedNotesCacheRef.current.get(n.id);
           if (cached && cached.content === n.content) return cached;
-          
+
           const decrypted = await decryptNote(n, partnerPubKey, user.id);
           decryptedNotesCacheRef.current.set(n.id, decrypted);
           if (decryptedNotesCacheRef.current.size > MAX_DECRYPTED_CACHE) {
@@ -874,7 +867,7 @@ export const CouplesProvider: React.FC<{ children: React.ReactNode }> = ({ child
         throw new Error('You are already connected. Disconnect first to create a new pairing.');
       }
       // Already have a pending code — just return it
-      if (couple.status === 'pending' && couple.pairing_code) {
+      if (couple.status === 'pending' && couple.pairing_code && Date.parse(couple.created_at) > Date.now() - 86400000) {
         return couple.pairing_code;
       }
     }
@@ -882,7 +875,7 @@ export const CouplesProvider: React.FC<{ children: React.ReactNode }> = ({ child
     // Double-check against the DB to prevent race conditions
     const { data: existing } = await (supabase
       .from('couples')
-      .select('id, status, pairing_code') as any)
+      .select('id, status, pairing_code, created_at') as any)
       .or(`partner_1_id.eq.${user.id},partner_2_id.eq.${user.id}`)
       .limit(1)
       .maybeSingle();
@@ -891,14 +884,14 @@ export const CouplesProvider: React.FC<{ children: React.ReactNode }> = ({ child
       if (existing.status === 'active') {
         throw new Error('You are already connected. Disconnect first to create a new pairing.');
       }
-      if (existing.status === 'pending' && existing.pairing_code && existing.pairing_code.length === 6) {
+      if (existing.status === 'pending' && existing.pairing_code && existing.pairing_code.length === 6 && Date.parse(existing.created_at) > Date.now() - 86400000) {
         // Return the existing pending code instead of creating another
         return existing.pairing_code;
       }
       // Stale pending row OR legacy 4-char code — delete it to allow fresh 6-char generation
       await (supabase.from('couples').delete().eq('id', existing.id) as any);
     }
-    
+
     const arr = new Uint8Array(6);
     crypto.getRandomValues(arr);
     const code = Array.from(arr).map(b => (b % 36).toString(36)).join('').substring(0, 6).toUpperCase();
@@ -923,7 +916,7 @@ export const CouplesProvider: React.FC<{ children: React.ReactNode }> = ({ child
   if (!user) throw new Error('Not authenticated');
 
   // Guard: block joining if this user ALREADY has an ACTIVE pairing.
-  // If it's only 'pending' (e.g. they generated a code but now want to join instead), 
+  // If it's only 'pending' (e.g. they generated a code but now want to join instead),
   // allow them to proceed but cleanup the existing pending record first.
   if (couple) {
     if (couple.status === 'active') {
@@ -946,40 +939,12 @@ export const CouplesProvider: React.FC<{ children: React.ReactNode }> = ({ child
     throw new Error('You are already connected to someone. Disconnect first.');
   }
 
-  // Prevent partner-to-partner connections:
-  // Look up the pending couple row to check the creator's role
-  if (user.role === 'partner') {
-    const { data: pendingCouple } = await (supabase
-      .from('couples')
-      .select('partner_1_id, partner_1_role') as any)
-      .eq('pairing_code', code.toUpperCase() as any)
-      .eq('status', 'pending' as any)
-      .maybeSingle();
-
-    if (pendingCouple?.partner_1_role === 'supporter') {
-      // Both are partners (supporter role = partner account)
-      throw new Error('Two partner accounts cannot connect with each other. One must be a regular user account.');
-    }
-  } else {
-    // user.role === 'user' — check if code creator is also a user (menstruator)
-    const { data: pendingCouple } = await (supabase
-      .from('couples')
-      .select('partner_1_id, partner_1_role') as any)
-      .eq('pairing_code', code.toUpperCase() as any)
-      .eq('status', 'pending' as any)
-      .maybeSingle();
-
-    if (pendingCouple?.partner_1_role === 'menstruator') {
-      // Both are regular users (menstruator role = user account)
-      throw new Error('Two user accounts cannot connect with each other. One must be a partner account.');
-    }
-  }
-
+  // The pairing RPC validates membership, account roles and code expiry atomically.
   const rpcCall: any = supabase.rpc.bind(supabase);
   const { data, error } = await rpcCall('join_couple', { code_input: code });
 
   if (error) throw error;
-  
+
   setCouple(data as any);
   // Trigger PIN setup prompt for the joining user
   if (!hasCloudBackup) {
@@ -990,30 +955,16 @@ export const CouplesProvider: React.FC<{ children: React.ReactNode }> = ({ child
   const uploadMedia = async (file: File): Promise<string> => {
     if (!user || !couple) throw new Error('Not authenticated');
 
-    const fileExt = file.name.split('.').pop();
-    const fileName = `${couple.id}/${Date.now()}.${fileExt}`;
-    const filePath = `${fileName}`;
-
-    // E2EE: Encrypt the file content before upload
-    let uploadData: ArrayBuffer | File = file;
-    const partnerPubKey = await fetchPartnerPublicKey();
-    if (partnerPubKey) {
-        import.meta.env.DEV && console.log('[E2EE] Encrypting file for upload...');
-        const arrayBuffer = await file.arrayBuffer();
-        uploadData = await encryptBlob(arrayBuffer, partnerPubKey);
-        import.meta.env.DEV && console.log('[E2EE] File encryption complete');
-    }
-
-      const { error: uploadError } = await (supabase.storage
-        .from('chat-media' as any) as any)
-        .upload(filePath, uploadData, {
-            contentType: file.type // Maintain original mime type
-        } as any);
-
-    if (uploadError) throw uploadError;
-
-    const { data } = supabase.storage.from('chat-media').getPublicUrl(filePath);
-    return data.publicUrl;
+    if (couple.status !== 'active') throw new Error('Connect to your partner first.');
+    if (!file.size || file.size > 20 * 1024 * 1024) throw new Error('Attachments must be smaller than 20 MB.');
+    if (!['image/jpeg','image/png','image/webp','image/gif','audio/webm','audio/ogg','audio/mp4'].includes(file.type.split(';')[0])) throw new Error('Unsupported attachment format.');
+    const partnerKey = await fetchPartnerPublicKey();
+    if (!partnerKey) throw new Error('Your partner must set up encryption before you can send attachments.');
+    const encrypted = await encryptBlob(await file.arrayBuffer(), partnerKey);
+    const path = couple.id + '/' + crypto.randomUUID() + '.enc';
+    const { error } = await supabase.storage.from('chat-media').upload(path, encrypted, { contentType: 'application/octet-stream' });
+    if (error) throw error;
+    return 'chat-media:' + path;
   };
 
   const fetchPartnerPublicKey = async (manualUserId?: string, targetDeviceId?: string, forceRefresh = false): Promise<string | null> => {
@@ -1036,7 +987,7 @@ export const CouplesProvider: React.FC<{ children: React.ReactNode }> = ({ child
         .from('user_keys' as any)
         .select('public_key')
         .eq('user_id', id as any);
-    
+
     if (targetDeviceId) {
         query = query.eq('device_id', targetDeviceId as any);
     } else {
@@ -1044,7 +995,7 @@ export const CouplesProvider: React.FC<{ children: React.ReactNode }> = ({ child
     }
 
     const { data, error } = await (query.limit(1).maybeSingle() as any);
-    
+
     if (data?.public_key) {
         if (!manualUserId) {
             if (targetDeviceId) deviceKeysRef.current.set(targetDeviceId, data.public_key);
@@ -1064,7 +1015,7 @@ export const CouplesProvider: React.FC<{ children: React.ReactNode }> = ({ child
             .order('last_active', { ascending: false })
             .limit(1)
             .maybeSingle() as any);
-        
+
         if (anyKeyData?.public_key) {
             deviceKeysRef.current.set(targetDeviceId, anyKeyData.public_key);
             return anyKeyData.public_key;
@@ -1115,7 +1066,7 @@ export const CouplesProvider: React.FC<{ children: React.ReactNode }> = ({ child
       media_url: mediaUrl,
       created_at: new Date().toISOString(),
     };
-    
+
     setNotes((prev) => [...prev, optimisticNote]);
 
     try {
@@ -1149,8 +1100,8 @@ export const CouplesProvider: React.FC<{ children: React.ReactNode }> = ({ child
 
       if (noteError) throw noteError;
       let note = noteData as SharedNote;
-      
-      // Decrypt for self 
+
+      // Decrypt for self
       const partnerPubKey = await fetchPartnerPublicKey(resolvedPartnerId);
       note = await decryptNote(note, partnerPubKey, user.id);
 
@@ -1172,7 +1123,7 @@ export const CouplesProvider: React.FC<{ children: React.ReactNode }> = ({ child
           .select('partner_nickname')
           .eq('id', recipientId)
           .single();
-        
+
         if (recipientProfile && (recipientProfile as any).partner_nickname) {
             nickname = (recipientProfile as any).partner_nickname;
         } else {
@@ -1189,18 +1140,8 @@ export const CouplesProvider: React.FC<{ children: React.ReactNode }> = ({ child
       } catch (err) {
           console.warn('[CouplesContext] Failed to fetch nickname', err);
       }
-      
-      const displayMessage = `New love note from your ${nickname} ❤️`;
 
-        // 2. Send Push
-        (supabase.functions as any).invoke('push-notifications', {
-          body: {
-            userId: recipientId,
-            message: displayMessage,
-            type: 'chat',
-            noteId: note.id 
-          }
-        }).catch((err: any) => console.error('Push failed:', err));
+      const displayMessage = `New love note from your ${nickname} ❤️`;
 
         // 3. Insert In-App Notification
         (supabase.from('notifications' as any) as any).insert({
@@ -1226,11 +1167,11 @@ export const CouplesProvider: React.FC<{ children: React.ReactNode }> = ({ child
       if(!note) return;
 
       const currentReactions: any[] = note.reactions || [];
-      
+
       // Check if user already reacted with this emoji
       const existingReactionIndex = currentReactions.findIndex(r => r.user_id === user.id && r.emoji === emoji);
       let updatedReactions;
-      
+
       if (existingReactionIndex !== -1) {
           // Remove reaction (toggle off)
           updatedReactions = [...currentReactions];
@@ -1242,7 +1183,7 @@ export const CouplesProvider: React.FC<{ children: React.ReactNode }> = ({ child
       }
 
       // Optimistic update
-      setNotes((prev) => prev.map(n => 
+      setNotes((prev) => prev.map(n =>
         n.id === noteId ? { ...n, reactions: updatedReactions as any } : n
       ));
 
@@ -1252,11 +1193,11 @@ export const CouplesProvider: React.FC<{ children: React.ReactNode }> = ({ child
         // differs from the partner's general public key.
         const query: any = (supabase.from('shared_notes') as any).update({ reactions: updatedReactions });
         const { error } = await query.eq('id', noteId);
-        
+
         if(error) throw error;
       } catch (error) {
         // Revert on error
-        setNotes((prev) => prev.map(n => 
+        setNotes((prev) => prev.map(n =>
           n.id === noteId ? { ...n, reactions: currentReactions as any } : n
         ));
         throw error;
@@ -1402,14 +1343,14 @@ export const CouplesProvider: React.FC<{ children: React.ReactNode }> = ({ child
 
     // Don't optimistically add to state — the Realtime INSERT handler will pick it up
   };
-  
+
     const replyToNote = async (noteId: string, reply: string) => {
       if(!user) return;
       const note = notes.find(n => n.id === noteId);
       const previousReply = note?.reply_content;
-      
+
       // Optimistic update
-      setNotes((prev) => prev.map(n => 
+      setNotes((prev) => prev.map(n =>
         n.id === noteId ? { ...n, reply_content: reply } : n
       ));
 
@@ -1424,11 +1365,11 @@ export const CouplesProvider: React.FC<{ children: React.ReactNode }> = ({ child
           .from('shared_notes' as any)
           .update({ reply_content: finalReply } as any) as any)
           .eq('id', noteId as any);
-        
+
         if(error) throw error;
       } catch (error) {
         // Revert on error
-        setNotes((prev) => prev.map(n => 
+        setNotes((prev) => prev.map(n =>
           n.id === noteId ? { ...n, reply_content: previousReply } : n
         ));
         throw error;
@@ -1439,7 +1380,7 @@ export const CouplesProvider: React.FC<{ children: React.ReactNode }> = ({ child
     if (!user || noteIds.length === 0) return;
 
     // Optimistic update
-    setNotes((prev) => prev.map(n => 
+    setNotes((prev) => prev.map(n =>
       noteIds.includes(n.id) ? { ...n, status: 'read' } : n
     ));
 
@@ -1451,8 +1392,8 @@ export const CouplesProvider: React.FC<{ children: React.ReactNode }> = ({ child
 
   const fetchPartnerDataInternal = async (currentCouple: Couple, currentUserId: string) => {
       // Determine partner ID — must be the OTHER person in the couple
-      const partnerId = currentCouple.partner_1_id === currentUserId 
-          ? currentCouple.partner_2_id 
+      const partnerId = currentCouple.partner_1_id === currentUserId
+          ? currentCouple.partner_2_id
           : currentCouple.partner_1_id;
 
       import.meta.env.DEV && console.log('[PARTNER DEBUG] currentUserId:', currentUserId);
@@ -1466,7 +1407,7 @@ export const CouplesProvider: React.FC<{ children: React.ReactNode }> = ({ child
         return;
       }
 
-      const timeoutPromise = new Promise((_, reject) => 
+      const timeoutPromise = new Promise((_, reject) =>
         setTimeout(() => reject(new Error('Partner data fetch timeout')), 8000)
       );
 
@@ -1496,7 +1437,7 @@ export const CouplesProvider: React.FC<{ children: React.ReactNode }> = ({ child
                       .from('daily_logs' as any)
                       .select('*') as any)
                       .eq('user_id', partnerId as any)
-                      .gte('date', thirtyDaysAgo.toISOString().split('T')[0] as any)
+                      .gte('date', localDateKey(thirtyDaysAgo) as any)
                       .order('date', { ascending: false })
                   : Promise.resolve({ data: null }),
           ]);
@@ -1513,7 +1454,7 @@ export const CouplesProvider: React.FC<{ children: React.ReactNode }> = ({ child
 
               if (settingsData) {
                   let s = settingsData as any;
-                  
+
                   // Decrypt partner settings
                   if (s.encrypted_payload && partnerPubKey) {
                     const decrypted = await decryptData<any>(s.encrypted_payload, partnerPubKey, user.id);
@@ -1521,7 +1462,7 @@ export const CouplesProvider: React.FC<{ children: React.ReactNode }> = ({ child
                   }
 
                   let effectiveStart = s.last_period_start || s.lastPeriodStart || '';
-                  
+
                   // SMART FALLBACK: If start date is missing in settings, derive from logs
                   if (!effectiveStart && logsData && logsData.length > 0) {
                       const latestFlowLog = logsData.find((l: any) => l.flow);
@@ -1577,13 +1518,13 @@ export const CouplesProvider: React.FC<{ children: React.ReactNode }> = ({ child
 
   const toggleGhostMode = async () => {
       if (!couple || !user) return;
-      
+
       try {
           const newStatus = !couple.share_enabled;
-          
+
           // Optimistic update
           setCouple(prev => prev ? { ...prev, share_enabled: newStatus } : null);
-    
+
           // Use explicit casting to bypass intermittent schema mapping failures
           const { error } = await ((supabase
               .from('couples' as any) as any)
@@ -1600,7 +1541,7 @@ export const CouplesProvider: React.FC<{ children: React.ReactNode }> = ({ child
 
   const generateLoveCode = async () => {
     if (!user || !couple) throw new Error('Not authenticated');
-    
+
     const arr = new Uint8Array(6);
     crypto.getRandomValues(arr);
     const code = Array.from(arr).map(b => (b % 36).toString(36)).join('').substring(0, 6).toUpperCase();
@@ -1618,7 +1559,7 @@ export const CouplesProvider: React.FC<{ children: React.ReactNode }> = ({ child
     if (!user || !couple) throw new Error('Not authenticated');
 
     const { data, error } = await (supabase
-      .rpc('unlock_love_notes', { code_input: code } as any) as any);
+      .rpc('join_couple_love_lock', { code_input: code } as any) as any);
 
     if (error) throw error;
     setCouple(data as any);
@@ -1626,7 +1567,7 @@ export const CouplesProvider: React.FC<{ children: React.ReactNode }> = ({ child
 
   const disconnectCouple = async () => {
     if (!user || !couple) throw new Error('Not authenticated');
-    
+
     try {
       import.meta.env.DEV && console.log('[E2EE] Wiping relationship data...');
       const partnerId = couple.partner_1_id === user.id ? couple.partner_2_id : couple.partner_1_id;
@@ -1636,11 +1577,11 @@ export const CouplesProvider: React.FC<{ children: React.ReactNode }> = ({ child
         .from('shared_notes' as any)
         .delete() as any)
         .eq('couple_id', couple.id as any);
-        
+
       // 2. Delete the couple
       const { error } = await (supabase.from('couples' as any) as any).delete().eq('id', couple.id as any);
       if (error) throw error;
-      
+
       // 3. Full key reset for BOTH users in the DB
       // This ensures the partner doesn't stay "Locked" if they miss the Realtime event
       await (supabase.from('user_keys' as any).delete()
@@ -1648,7 +1589,7 @@ export const CouplesProvider: React.FC<{ children: React.ReactNode }> = ({ child
 
       // NOTE: Do NOT delete partner's keys — RLS should prevent it, and it would
       // break their E2EE on other couples. Partner's keys are cleaned up by their own client.
-      
+
       // 4. Re-register current device's key (fresh entry, no backup)
       const pubKey = await initializeEncryptionKeys(user.id);
       await (supabase.from('user_keys' as any) as any).insert({
@@ -1658,7 +1599,7 @@ export const CouplesProvider: React.FC<{ children: React.ReactNode }> = ({ child
         device_name: `${navigator.platform || 'Device'} (${deviceId?.slice(0, 4)})`,
         last_active: new Date().toISOString()
       } as any);
-      
+
       // 5. Reset local state
       partnerPublicKeyRef.current = null;
       setPartnerPubKey(null);
@@ -1684,7 +1625,7 @@ export const CouplesProvider: React.FC<{ children: React.ReactNode }> = ({ child
     import.meta.env.DEV && console.log('[E2EE] Setting up Cloud Backup...');
     const { value: privKey } = await Preferences.get({ key: `${user.id}_private_key` });
     const { value: pubKey } = await Preferences.get({ key: `${user.id}_public_key` }); // Get public key too
-    
+
     if (!privKey || !pubKey) {
         console.error('[E2EE] Keys not found locally during backup setup!');
         throw new Error('Keys not found locally');
@@ -1692,12 +1633,12 @@ export const CouplesProvider: React.FC<{ children: React.ReactNode }> = ({ child
 
     const { ciphertext, salt } = await encryptIdentityWithPin(privKey, pin);
     import.meta.env.DEV && console.log('[E2EE] Identity encrypted with PIN. Uploading to identity_backups...');
-    
+
     const { error } = await (supabase
         .from('identity_backups' as any)
-        .upsert({ 
+        .upsert({
             user_id: user.id,
-            backup_identity: ciphertext, 
+            backup_identity: ciphertext,
             backup_salt: salt,
             public_key: pubKey // Populate public_key column
         } as any) as any);
@@ -1777,7 +1718,7 @@ export const CouplesProvider: React.FC<{ children: React.ReactNode }> = ({ child
     // Start UI Restoration Sequence
     setRestorationState({ isRestoring: true, progress: 10, status: 'Restoring secure identity...' });
     await sleep(800);
-    
+
     setRestorationState({ isRestoring: true, progress: 40, status: 'Re-deriving shared keys...' });
     setIsHistorySynced(true);
     setIsSyncRequired(false);
@@ -1792,7 +1733,7 @@ export const CouplesProvider: React.FC<{ children: React.ReactNode }> = ({ child
       fetchCoupleData(),
       couple ? fetchPartnerDataInternal(couple, user.id) : Promise.resolve()
     ]);
-    
+
     setRestorationState({ isRestoring: true, progress: 95, status: 'Finalizing...' });
     await sleep(500);
 

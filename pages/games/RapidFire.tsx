@@ -83,7 +83,7 @@ const RapidFire: React.FC = () => {
     const [loading, setLoading] = useState(true);
     const channelRef = useRef<ReturnType<typeof supabase.channel> | null>(null);
     const [ringCooldown, setRingCooldown] = useState(false);
-    const ringCooldownRef = useRef<ReturnType<typeof setTimeout>>();
+    const ringCooldownRef = useRef<ReturnType<typeof setTimeout>>(undefined);
     const [timer, setTimer] = useState(TIME_PER_Q);
     const [answer, setAnswer] = useState('');
     const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
@@ -170,8 +170,8 @@ const RapidFire: React.FC = () => {
     useEffect(() => {
         if (!session?.id) return;
 
-        const ch = supabase.channel(`game_rf_${session.id}`)
-            .on('postgres_changes', { event: '*', schema: 'public', table: 'game_sessions', filter: `id=eq.${session.id}` }, 
+        const ch = supabase.channel(`game_rf_${session.id}`, { config: { private: true } })
+            .on('postgres_changes', { event: '*', schema: 'public', table: 'game_sessions', filter: `id=eq.${session.id}` },
             (payload) => {
                 const newSess = payload.new as GameSession;
                 if (newSess && newSess.game_type === 'rapid_fire') {
@@ -180,7 +180,7 @@ const RapidFire: React.FC = () => {
             })
             .subscribe();
 
-        return () => { 
+        return () => {
             supabase.removeChannel(ch);
             clearTimeout(ringCooldownRef.current);
         };

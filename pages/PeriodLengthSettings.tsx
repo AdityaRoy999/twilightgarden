@@ -9,9 +9,14 @@ const PeriodLengthSettings: React.FC = () => {
   const { cycleSettings, updateSettings } = useData();
   const [length, setLength] = useState(cycleSettings.avgPeriodLength);
 
-  const handleSave = () => {
-    updateSettings({ avgPeriodLength: length });
-    navigate(-1);
+  const [saving, setSaving] = useState(false);
+  const [saveError, setSaveError] = useState<string | null>(null);
+  const handleSave = async () => {
+    if (saving) return;
+    setSaving(true); setSaveError(null);
+    try { await updateSettings({ avgPeriodLength: length }); navigate(-1); }
+    catch (err) { setSaveError(err instanceof Error ? err.message : 'Could not save changes. Please retry.'); }
+    finally { setSaving(false); }
   };
 
   return (
@@ -41,7 +46,7 @@ const PeriodLengthSettings: React.FC = () => {
 
         {/* Picker */}
         <div className="w-full max-w-sm mb-12 px-4">
-            <ModernSlider 
+            <ModernSlider
                 value={length}
                 min={2}
                 max={15}
@@ -67,11 +72,13 @@ const PeriodLengthSettings: React.FC = () => {
       </main>
 
       <div className="px-6 pt-4 pb-8 z-20 mt-auto">
-        <button 
+        {saveError && <p role="alert" className="mb-3 text-red-400">{saveError}</p>}
+        <button
             onClick={handleSave}
+            disabled={saving}
             className="w-full bg-primary hover:bg-primary/90 text-white font-bold py-4 rounded-2xl shadow-lg shadow-primary/20 transition-all active:scale-[0.98]"
         >
-            Save Changes
+            {saving ? 'Saving…' : 'Save Changes'}
         </button>
       </div>
     </div>

@@ -7,7 +7,6 @@
     <meta name="description" content="Twilight Garden - Your Personal menstrual health companion" />
     <link rel="icon" type="image/png" href="/twilight.png" />
     <link rel="apple-touch-icon" href="/twilight.png" />
-    <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
     <link href="https://fonts.googleapis.com" rel="preconnect" />
     <link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect" />
     <link
@@ -23,55 +22,6 @@
       rel="stylesheet"
     />
     <link rel="manifest" href="/manifest.json" />
-    <script>
-      /* =============================================
-         TAILWIND CONFIGURATION
-         =============================================
-         Colors are defined in index.css as CSS variables.
-         This config maps Tailwind classes to those variables.
-         
-         To change colors: Edit index.css :root section
-         ============================================= */
-      tailwind.config = {
-        darkMode: "class",
-        theme: {
-          extend: {
-            fontFamily: {
-              display: ["Plus Jakarta Sans", "sans-serif"],
-              epilogue: ["Epilogue", "sans-serif"],
-            },
-            colors: {
-              /* Reference CSS variables from index.css */
-              primary: "var(--color-primary)",
-              "primary-dim": "var(--color-primary-dim)",
-              "primary-light": "var(--color-primary-light)",
-              "primary-glow": "var(--color-primary-glow)",
-              "background-light": "var(--color-bg-light)",
-              "background-dark": "var(--bg-base)",
-              "surface-dark": "var(--bg-surface)",
-              "accent-teal": "var(--color-accent-teal)",
-              "accent-purple": "var(--color-accent-purple)",
-              "accent-amber": "var(--color-accent-amber)",
-              fertile: "var(--color-accent-teal)",
-              ovulation: "var(--color-accent-yellow)",
-            },
-            boxShadow: {
-              soft: "var(--shadow-soft)",
-              medium: "var(--shadow-medium)",
-            },
-            animation: {
-              slideIn: "slideIn 0.4s ease-out",
-            },
-            keyframes: {
-              slideIn: {
-                "0%": { transform: "translateY(20px)", opacity: "0" },
-                "100%": { transform: "translateY(0)", opacity: "1" },
-              },
-            },
-          },
-        },
-      };
-    </script>
     <style>
       /* =============================================
          COLORS ARE NOW DEFINED IN index.css

@@ -13,7 +13,7 @@ const __dirname = path.dirname(__filename);
 dotenv.config({ path: path.resolve(__dirname, '../.env') });
 
 const supabaseUrl = process.env.VITE_SUPABASE_URL;
-const supabaseServiceKey = process.env.VITE_SUPABASE_SERVICE_ROLE_KEY;
+const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
 
 if (!supabaseUrl || !supabaseServiceKey) {
   console.error("❌ Missing Supabase URL or Service Role Key in .env");
@@ -47,12 +47,12 @@ async function runDesktopRelease() {
   // Require signing password
   let signingPassword = await ask("Enter Tauri Signing Password for twilight.key: ");
   signingPassword = signingPassword ? signingPassword.trim() : "";
-  
+
   if (!signingPassword) {
     console.error("❌ A signing password is required to build the Tauri updater!");
     process.exit(1);
   }
-  
+
   const privateKeyPath = path.resolve(__dirname, '../twilight.key');
   if (!fs.existsSync(privateKeyPath)) {
      console.error(`❌ Private key not found at ${privateKeyPath}`);
@@ -73,10 +73,10 @@ async function runDesktopRelease() {
 
   console.log(`\n--- Release Configuration ---`);
   console.log(`Current Version: ${currentVersion}`);
-  
+
   const versionParts = currentVersion.split('.');
   const nextPatch = `${versionParts[0]}.${versionParts[1]}.${parseInt(versionParts[2]) + 1}`;
-  
+
   const inputVersion = await ask(`New Version [${nextPatch}]: `);
   const newVersion = inputVersion || nextPatch;
 
@@ -89,12 +89,12 @@ async function runDesktopRelease() {
   }
   const fullChangelog = changelogEntries.map(e => `• ${e}`).join('\n');
   const releaseNotes = fullChangelog || 'General improvements and bug fixes.';
-  
+
   rl.close();
 
   // 2. Bump versions across files
   console.log(`\n⬆️ Bumping version from ${currentVersion} to ${newVersion}...`);
-  
+
   // package.json
   packageJson.version = newVersion;
   fs.writeFileSync(packageJsonPath, JSON.stringify(packageJson, null, 2));
@@ -133,13 +133,13 @@ async function runDesktopRelease() {
   // 4. Locate Build output (NSIS or MSI updater .zip and .sig)
   // Tauri v2 places the updater zip inside the specific bundle folder, e.g., bundle/nsis or bundle/msi
   const bundleBaseDir = path.resolve(__dirname, '../src-tauri/target/release/bundle');
-  
+
   function findUpdaterFiles(dir) {
     let installerPath = null;
     let sigPath = null;
-    
+
     if (!fs.existsSync(dir)) return { installerPath, sigPath };
-    
+
     const entries = fs.readdirSync(dir, { withFileTypes: true });
     for (const entry of entries) {
       const fullPath = path.join(dir, entry.name);
@@ -156,7 +156,7 @@ async function runDesktopRelease() {
            if (!fullPath.endsWith('.sig')) {
               installerPath = fullPath;
            }
-        } 
+        }
         if (fullPath.endsWith('.exe.sig') || fullPath.endsWith('.msi.sig')) {
           sigPath = fullPath;
           if (fullPath.endsWith('.exe.sig')) {
@@ -174,10 +174,10 @@ async function runDesktopRelease() {
     console.error("❌ Could not find the installer and .sig updater bundles in the target/release/bundle directory! Ensure your signing keys are perfectly correct.");
     process.exit(1);
   }
-  
+
   const zipFile = path.basename(installerPath);
   const zipPath = installerPath;
-  
+
   const signature = fs.readFileSync(sigPath, 'utf8');
 
   // 5. Upload installer ZIP to Supabase Storage
@@ -202,7 +202,7 @@ async function runDesktopRelease() {
     .storage
     .from('desktop-updates')
     .getPublicUrl(storageZipPath);
-  
+
   const installerUrl = publicUrlData.publicUrl;
   console.log(`✅ Upload successful: ${installerUrl}`);
 
@@ -262,24 +262,24 @@ async function runDesktopRelease() {
   if (fetchError) {
     console.error("⚠️ Failed to fetch old updates for cleanup:", fetchError);
   } else if (oldUpdates && oldUpdates.length > 0) {
-    
+
     // Attempt to list and delete all files in the old version's folder
     for (const old of oldUpdates) {
       console.log(`🧹 Cleaning up Storage for old version ${old.version}...`);
       const oldFolder = `desktop-releases/${old.version}`;
-      
+
       const { data: listData, error: listError } = await supabase.storage.from('desktop-updates').list(oldFolder);
-      
+
       if (!listError && listData && listData.length > 0) {
         const filesToRemove = listData.map(file => `${oldFolder}/${file.name}`);
         await supabase.storage.from('desktop-updates').remove(filesToRemove);
       }
     }
-    
+
     // Delete rows from DB
     const idsToDelete = oldUpdates.map(u => u.id);
     const { error: dbDelError } = await supabase.from('desktop_updates').delete().in('id', idsToDelete);
-    
+
     if (dbDelError) {
       console.error("⚠️ Error deleting old DB records:", dbDelError);
     } else {

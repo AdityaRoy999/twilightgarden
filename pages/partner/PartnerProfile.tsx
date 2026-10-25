@@ -1,3 +1,4 @@
+import { uploadAvatar } from '../../lib/media';
 import React, { useState, useEffect, useRef } from 'react';
 import { useAuth } from '../../contexts/AuthContext';
 import { supabase } from '../../lib/supabase';
@@ -16,7 +17,7 @@ const PartnerProfile: React.FC = () => {
   const navigate = useNavigate();
   const [showSyncModal, setShowSyncModal] = useState(false);
   const isDark = theme === 'dark';
-  
+
   const [activeTab, setActiveTab] = useState<'profile' | 'settings'>('profile');
 
   // Profile Form State
@@ -29,7 +30,7 @@ const PartnerProfile: React.FC = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [uploading, setUploading] = useState(false);
   const [saveMessage, setSaveMessage] = useState<string | null>(null);
-  
+
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const presets = [
@@ -55,7 +56,7 @@ const PartnerProfile: React.FC = () => {
   const fetchProfile = async () => {
     try {
       if (!user) return;
-      
+
       const { data, error } = await supabase
         .from('profiles')
         .select('*')
@@ -63,7 +64,7 @@ const PartnerProfile: React.FC = () => {
         .single();
 
       if (error) throw error;
-      
+
       if (data) {
         const profile = data as any;
         setFullName(profile.full_name || '');
@@ -88,21 +89,9 @@ const PartnerProfile: React.FC = () => {
         throw new Error('You must select an image to upload.');
       }
 
-      const file = event.target.files[0];
-      const fileExt = file.name.split('.').pop();
-      const fileName = `${user?.id}/${Math.random()}.${fileExt}`;
-      const filePath = `${fileName}`;
-
-      const { error: uploadError } = await supabase.storage
-        .from('avatars')
-        .upload(filePath, file);
-
-      if (uploadError) {
-        throw uploadError;
-      }
-
-      const { data } = supabase.storage.from('avatars').getPublicUrl(filePath);
-      setAvatarUrl(data.publicUrl);
+      if (!user) throw new Error('Please sign in.');
+      const url = await uploadAvatar(event.target.files[0], user.id);
+      setAvatarUrl(url);
 
     } catch (error: any) {
       alert(error.message);
@@ -128,7 +117,7 @@ const PartnerProfile: React.FC = () => {
 
         const { error } = await supabase.from('profiles').upsert(updates);
         if (error) throw error;
-        
+
         setSaveMessage('Profile updated successfully!');
         setTimeout(() => setSaveMessage(null), 3000);
     } catch (error: any) {
@@ -150,7 +139,7 @@ const PartnerProfile: React.FC = () => {
   const handleToggleAnimations = async () => {
       const newValue = !animationsEnabled;
       updateAnimationsEnabled(newValue);
-      
+
       const { error } = await supabase.auth.updateUser({
           data: { animationsEnabled: newValue }
       });
@@ -162,7 +151,7 @@ const PartnerProfile: React.FC = () => {
   const handleToggleSolidNav = async () => {
       const newValue = !solidNavBg;
       updateSolidNavBg(newValue);
-      
+
       const { error } = await supabase.auth.updateUser({
           data: { solidNavBg: newValue }
       });
@@ -189,7 +178,7 @@ const PartnerProfile: React.FC = () => {
 
          {/* Tabs */}
          <div className={`flex p-1 rounded-2xl mb-6 ${isDark ? 'bg-[#1E1E1E]' : 'bg-gray-100'}`}>
-            <button 
+            <button
                 onClick={() => setActiveTab('profile')}
                 className={`flex-1 py-3 rounded-xl text-sm font-bold transition-all relative ${
                     activeTab === 'profile' ? 'text-white' : (isDark ? 'text-gray-400 hover:text-gray-200' : 'text-gray-500 hover:text-gray-800')
@@ -204,7 +193,7 @@ const PartnerProfile: React.FC = () => {
                 )}
                 <span className="relative z-10">Public Profile</span>
             </button>
-            <button 
+            <button
                 onClick={() => setActiveTab('settings')}
                 className={`flex-1 py-3 rounded-xl text-sm font-bold transition-all relative ${
                     activeTab === 'settings' ? 'text-white' : (isDark ? 'text-gray-400 hover:text-gray-200' : 'text-gray-500 hover:text-gray-800')
@@ -235,8 +224,8 @@ const PartnerProfile: React.FC = () => {
                     {/* Avatar Section */}
                     <div className="relative group">
                     <div className={`relative w-32 h-32 rounded-full p-1 border-2 border-dashed ${isDark ? 'border-white/20' : 'border-gray-300'}`}>
-                        <img 
-                        src={avatarUrl || "https://upload.wikimedia.org/wikipedia/commons/7/7c/Profile_avatar_placeholder_large.png"} 
+                        <img
+                        src={avatarUrl || "https://upload.wikimedia.org/wikipedia/commons/7/7c/Profile_avatar_placeholder_large.png"}
                         alt="Profile"
                         className="w-full h-full rounded-full object-cover shadow-lg"
                         />
@@ -246,7 +235,7 @@ const PartnerProfile: React.FC = () => {
                             </div>
                         )}
                     </div>
-                    <button 
+                    <button
                         onClick={handleAvatarClick}
                         disabled={uploading}
                         className={`absolute bottom-1 right-1 flex items-center justify-center p-2.5 rounded-full shadow-lg border-[3px] active:scale-95 transition-all cursor-pointer hover:scale-105 bg-primary text-white ${isDark ? 'border-[#121014]' : 'border-[#FDFCF8]'}`}
@@ -267,7 +256,7 @@ const PartnerProfile: React.FC = () => {
                          {/* Name */}
                          <div className="space-y-2">
                              <label className={`text-xs font-bold ml-1 uppercase tracking-wider ${isDark ? 'text-gray-500' : 'text-gray-400'}`}>Full Name</label>
-                             <input 
+                             <input
                                 type="text"
                                 value={fullName}
                                 onChange={(e) => setFullName(e.target.value)}
@@ -277,12 +266,12 @@ const PartnerProfile: React.FC = () => {
                                 placeholder="Enter your name"
                              />
                          </div>
-                         
+
 
                          {/* Bio */}
                          <div className="space-y-2">
                              <label className={`text-xs font-bold ml-1 uppercase tracking-wider ${isDark ? 'text-gray-500' : 'text-gray-400'}`}>Bio</label>
-                             <textarea 
+                             <textarea
                                 value={bio}
                                 onChange={(e) => setBio(e.target.value)}
                                 className={`w-full h-32 pl-4 pr-4 py-4 rounded-2xl border font-medium focus:ring-1 focus:ring-primary focus:border-primary transition-all outline-none resize-none leading-relaxed ${
@@ -292,7 +281,7 @@ const PartnerProfile: React.FC = () => {
                              />
                          </div>
 
-                         <button 
+                         <button
                             onClick={handleSave}
                             disabled={isLoading || uploading}
                             className="w-full h-14 bg-primary hover:bg-primary/90 text-white font-bold rounded-2xl shadow-lg shadow-primary/20 transition-all active:scale-[0.98] flex items-center justify-center gap-2 mt-4 disabled:opacity-70 disabled:pointer-events-none"
@@ -325,8 +314,8 @@ const PartnerProfile: React.FC = () => {
                              <div className="flex flex-col gap-2">
                                 <label className={`text-sm font-bold ${isDark ? 'text-gray-300' : 'text-gray-700'}`}>Partner Nickname</label>
                                 <div className="relative">
-                                    <input 
-                                        type="text" 
+                                    <input
+                                        type="text"
                                         placeholder="e.g. Puchii, Tutii"
                                         value={partnerNickname}
                                         onChange={(e) => setPartnerNickname(e.target.value)}
@@ -342,7 +331,7 @@ const PartnerProfile: React.FC = () => {
                         </div>
 
                          <div className={`rounded-2xl overflow-hidden shadow-sm border mb-6 ${isDark ? 'bg-[#1E1E1E] border-white/5' : 'bg-white border-gray-100'}`}>
-                            <div 
+                            <div
                                 className={`flex items-center justify-between p-4 hover:bg-black/5 dark:hover:bg-white/5 transition-colors cursor-pointer group`}
                                 onClick={() => navigate('/partner/notifications')}
                             >
@@ -363,7 +352,7 @@ const PartnerProfile: React.FC = () => {
                     {/* Appearance Section */}
                     <section>
                         <h3 className={`text-sm font-bold uppercase tracking-widest mb-4 ${isDark ? 'text-gray-500' : 'text-gray-400'}`}>Appearance</h3>
-                        
+
                         {/* Dark Mode Toggle */}
                         <div className={`p-4 rounded-2xl flex items-center justify-between shadow-sm border mb-4 ${isDark ? 'bg-[#1E1E1E] border-white/5' : 'bg-white border-gray-100'}`}>
                             <div className="flex items-center gap-3">
@@ -375,14 +364,14 @@ const PartnerProfile: React.FC = () => {
                                     <p className={`text-xs ${isDark ? 'text-gray-500' : 'text-gray-400'}`}>Easier on the eyes</p>
                                 </div>
                             </div>
-                            <button 
+                            <button
                                 onClick={toggleTheme}
                                 className={`w-12 h-7 rounded-full transition-colors relative ${isDark ? 'bg-primary' : 'bg-gray-300'}`}
                             >
                                 <div className={`w-5 h-5 bg-white rounded-full shadow-md absolute top-1 transition-transform ${isDark ? 'left-6' : 'left-1'}`} />
                             </button>
                         </div>
-                        
+
                         {/* Animations Toggle */}
                         <div className={`p-4 rounded-2xl flex items-center justify-between shadow-sm border mb-4 ${isDark ? 'bg-[#1E1E1E] border-white/5' : 'bg-white border-gray-100'}`}>
                             <div className="flex items-center gap-3">
@@ -394,7 +383,7 @@ const PartnerProfile: React.FC = () => {
                                     <p className={`text-xs ${isDark ? 'text-gray-500' : 'text-gray-400'}`}>Fluid app interactions</p>
                                 </div>
                             </div>
-                            <button 
+                            <button
                                 onClick={handleToggleAnimations}
                                 className={`w-12 h-7 rounded-full transition-colors relative ${animationsEnabled ? 'bg-primary' : 'bg-gray-300'}`}
                             >
@@ -413,7 +402,7 @@ const PartnerProfile: React.FC = () => {
                                     <p className={`text-xs ${isDark ? 'text-gray-500' : 'text-gray-400'}`}>Remove glassblur effect</p>
                                 </div>
                             </div>
-                            <button 
+                            <button
                                 onClick={handleToggleSolidNav}
                                 className={`w-12 h-7 rounded-full transition-colors relative ${solidNavBg ? 'bg-primary' : 'bg-gray-300'}`}
                             >
@@ -430,8 +419,8 @@ const PartnerProfile: React.FC = () => {
                                         key={color}
                                         onClick={() => updatePrimaryColor(color)}
                                         className={`w-full aspect-square rounded-xl transition-all flex items-center justify-center relative ${
-                                            primaryColor === color 
-                                                ? 'ring-2 ring-offset-2 ring-primary scale-105 shadow-lg z-10' 
+                                            primaryColor === color
+                                                ? 'ring-2 ring-offset-2 ring-primary scale-105 shadow-lg z-10'
                                                 : 'hover:scale-105'
                                         } ${isDark ? 'ring-offset-[#1E1E1E]' : 'ring-offset-white'}`}
                                         style={{ backgroundColor: color }}
@@ -449,7 +438,7 @@ const PartnerProfile: React.FC = () => {
                     <section>
                          <h3 className={`text-sm font-bold uppercase tracking-widest mb-4 ${isDark ? 'text-gray-500' : 'text-gray-400'}`}>Security</h3>
                          <div className={`rounded-2xl overflow-hidden shadow-sm border ${isDark ? 'bg-[#1E1E1E] border-white/5' : 'bg-white border-gray-100'}`}>
-                            <div 
+                            <div
                                 className="flex items-center justify-between p-4 hover:bg-black/5 dark:hover:bg-white/5 transition-colors cursor-pointer group"
                                 onClick={() => setShowSyncModal(true)}
                             >
@@ -477,9 +466,9 @@ const PartnerProfile: React.FC = () => {
                     {/* Account Section */}
                     <section>
                          <h3 className={`text-sm font-bold uppercase tracking-widest mb-4 ${isDark ? 'text-gray-500' : 'text-gray-400'}`}>Account</h3>
-                         
+
                          <div className={`p-1 rounded-2xl overflow-hidden shadow-sm border ${isDark ? 'bg-[#1E1E1E] border-white/5' : 'bg-white border-gray-100'}`}>
-                             <button 
+                             <button
                                 onClick={handleSignOut}
                                 className={`w-full p-4 flex items-center justify-between transition-colors ${isDark ? 'hover:bg-white/5' : 'hover:bg-gray-50'}`}
                              >
@@ -501,7 +490,7 @@ const PartnerProfile: React.FC = () => {
         </AnimatePresence>
       </main>
 
-      <SyncHistoryModal 
+      <SyncHistoryModal
         isOpen={showSyncModal}
         onClose={() => setShowSyncModal(false)}
       />

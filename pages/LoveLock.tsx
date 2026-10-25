@@ -1,3 +1,4 @@
+import { loadChatMedia } from '../lib/media';
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useCouples } from '../contexts/CouplesContext';
@@ -28,10 +29,10 @@ const isNative = () => {
 
 const LoveLock: React.FC = () => {
     const navigate = useNavigate(); // Added navigate
-    const { 
-        couple, notes, isLoading, createNote, generatePairingCode, joinCouple, 
-        addReaction, replyToNote, markAsRead, setIsChatOpen, uploadMedia, 
-        isSupporter, partnerProfile, disconnectCouple, hasMoreNotes, 
+    const {
+        couple, notes, isLoading, createNote, generatePairingCode, joinCouple,
+        addReaction, replyToNote, markAsRead, setIsChatOpen, uploadMedia,
+        isSupporter, partnerProfile, disconnectCouple, hasMoreNotes,
         loadingOlder, loadOlderNotes, partnerPubKey,
         isSyncRequired, hasCloudBackup, showPinSetup,
         toggleStar, togglePin, deleteNote, forwardNote
@@ -98,7 +99,7 @@ const LoveLock: React.FC = () => {
     const [aiCustomPrompt, setAICustomPrompt] = useState('');
     const [showSecurity, setShowSecurity] = useState(false);
     const [aiGenerating, setAIGenerating] = useState(false);
-    
+
     // GIF Picker state
     const [showGifPicker, setShowGifPicker] = useState(false);
     const [gifSearch, setGifSearch] = useState('');
@@ -221,12 +222,12 @@ const LoveLock: React.FC = () => {
 
     // Available emojis for reactions
     const reactionEmojis = ['❤️', '😍', '😂', '😢', '😮', '🔥', '👍', '💋', '🥰', '😘', '💕', '✨'];
-    
+
     // Toast State
-    const [toast, setToast] = useState<{ isVisible: boolean; message: string; subMessage?: string; type: 'success' | 'error' }>({ 
-        isVisible: false, 
-        message: '', 
-        type: 'success' 
+    const [toast, setToast] = useState<{ isVisible: boolean; message: string; subMessage?: string; type: 'success' | 'error' }>({
+        isVisible: false,
+        message: '',
+        type: 'success'
     });
 
     const showToast = (message: string, subMessage?: string, type: 'success' | 'error' = 'success') => {
@@ -236,7 +237,7 @@ const LoveLock: React.FC = () => {
     const closeToast = () => {
         setToast(prev => ({ ...prev, isVisible: false }));
     };
-    
+
     // For auto-scrolling
     const notesEndRef = useRef<HTMLDivElement>(null);
     const chatContainerRef = useRef<HTMLDivElement>(null);
@@ -266,7 +267,7 @@ const LoveLock: React.FC = () => {
                  setEmojiPickerNoteId(null);
              }
         };
-        
+
         document.addEventListener('click', handleClickOutside);
         return () => document.removeEventListener('click', handleClickOutside);
     }, [emojiPickerNoteId]);
@@ -277,12 +278,12 @@ const LoveLock: React.FC = () => {
     // Mark messages as read when viewing
     useEffect(() => {
         if (!user || !notes?.length) return;
-        
+
         // Find messages sent by partner that are not yet read AND not already marked
         const unreadNotes = notes
             .filter(n => n.sender_id !== user.id && n.status !== 'read' && !markedAsReadRef.current.has(n.id))
             .map(n => n.id);
-            
+
         if (unreadNotes.length > 0) {
             unreadNotes.forEach(id => markedAsReadRef.current.add(id));
             markAsRead(unreadNotes);
@@ -316,7 +317,7 @@ const LoveLock: React.FC = () => {
     // Smart auto-scroll when notes change
     useEffect(() => {
         if (!notes?.length) return;
-        
+
         const currentLength = notes.length;
         const lastLength = lastNotesLengthRef.current;
         lastNotesLengthRef.current = currentLength;
@@ -474,24 +475,9 @@ const LoveLock: React.FC = () => {
     const handleDownloadImage = async (url: string) => {
         const toastId = showToast('Downloading...', 'Please wait', 'success');
         try {
-            const response = await fetch(url);
-            if (!response.ok) throw new Error('Fetch failed');
-            
-            const arrayBuffer = await response.arrayBuffer();
-            let finalData: ArrayBuffer = arrayBuffer;
-
-            const isGiphy = url.includes('giphy.com');
-
-            if (partnerPubKey && !isGiphy) {
-                try {
-                    finalData = await decryptBlob(arrayBuffer, partnerPubKey);
-                    console.log('[E2EE] Downloaded file decrypted');
-                } catch (e) {
-                    console.warn('[E2EE] Decryption failed during download, saving raw', e);
-                }
-            }
-
-            const blob = new Blob([finalData]);
+            const blob = url.includes('giphy.com')
+                ? await (await fetch(url)).blob()
+                : await loadChatMedia(url, partnerPubKey);
             const blobUrl = window.URL.createObjectURL(blob);
             const link = document.createElement('a');
             link.href = blobUrl;
@@ -504,8 +490,7 @@ const LoveLock: React.FC = () => {
         } catch (error) {
             console.error('Download failed', error);
             showToast('Error', 'Failed to download image', 'error');
-            // Fallback
-            window.open(url, '_blank');
+
         }
     };
 
@@ -820,7 +805,7 @@ const LoveLock: React.FC = () => {
                             {isSyncRequired || notes.some(n => n.content?.includes('🔐 Message locked')) ? (
                                 <>
                                     <div className="w-1.5 h-1.5 rounded-full bg-amber-500" />
-                                    <span 
+                                    <span
                                         onClick={() => window.dispatchEvent(new CustomEvent('recheck-lockdown'))}
                                         className="text-[10px] text-amber-500 font-bold uppercase tracking-wider cursor-pointer hover:underline"
                                     >
@@ -830,7 +815,7 @@ const LoveLock: React.FC = () => {
                             ) : (!hasCloudBackup && showPinSetup) ? (
                                 <>
                                     <div className="w-1.5 h-1.5 rounded-full bg-pink-500 animate-pulse" />
-                                    <span 
+                                    <span
                                         onClick={() => window.dispatchEvent(new CustomEvent('recheck-lockdown'))}
                                         className="text-[10px] text-pink-500 font-bold uppercase tracking-wider cursor-pointer hover:underline"
                                     >
@@ -848,7 +833,7 @@ const LoveLock: React.FC = () => {
                 </div>
 
                 <div className="flex items-center gap-1 bg-gray-100 dark:bg-white/5 p-1 rounded-full border dark:border-white/5">
-                    <button 
+                    <button
                         onClick={() => setViewFilter(viewFilter === 'starred' ? 'all' : 'starred')}
                         className={`w-10 h-10 rounded-full flex items-center justify-center transition-all active:scale-90 ${
                           viewFilter === 'starred' ? 'text-amber-500 bg-amber-50 dark:bg-amber-500/10' : 'text-gray-500 dark:text-gray-400 hover:text-amber-500 hover:bg-white dark:hover:bg-white/10'
@@ -857,14 +842,14 @@ const LoveLock: React.FC = () => {
                     >
                         <span className="material-symbols-outlined text-[20px]">{viewFilter === 'starred' ? 'star' : 'star_border'}</span>
                     </button>
-                    <button 
+                    <button
                         onClick={() => initiateCall(false)}
                         className="w-10 h-10 rounded-full flex items-center justify-center text-gray-500 dark:text-gray-400 hover:text-green-500 hover:bg-white dark:hover:bg-white/10 transition-all active:scale-90"
                         title="Voice Call"
                     >
                         <Phone className="w-4 h-4" />
                     </button>
-                    <button 
+                    <button
                         onClick={() => initiateCall(true)}
                         className="w-10 h-10 rounded-full flex items-center justify-center text-gray-500 dark:text-gray-400 hover:text-blue-500 hover:bg-white dark:hover:bg-white/10 transition-all active:scale-90"
                         title="Video Call"
@@ -872,14 +857,14 @@ const LoveLock: React.FC = () => {
                         <Video className="w-5 h-5" />
                     </button>
                     <div className="w-[1px] h-4 bg-gray-200 dark:bg-white/10 mx-0.5" />
-                    <button 
+                    <button
                             onClick={() => setShowSecurity(true)}
                             className="w-10 h-10 rounded-full flex items-center justify-center text-gray-500 dark:text-gray-400 hover:text-primary hover:bg-white dark:hover:bg-white/10 transition-all active:scale-90"
                             title="Security Verification"
                     >
                         <Shield className="w-4 h-4" />
                     </button>
-                    <button 
+                    <button
                             onClick={handleDisconnect}
                             className="w-10 h-10 rounded-full flex items-center justify-center text-gray-500 dark:text-gray-400 hover:text-red-500 hover:bg-white dark:hover:bg-white/10 transition-all active:scale-90"
                             title="Disconnect"
@@ -890,9 +875,9 @@ const LoveLock: React.FC = () => {
             </div>
 
             {/* Notes List - Adjusted padding for fixed header */}
-            <div 
-                ref={chatContainerRef} 
-                onScroll={handleChatScroll} 
+            <div
+                ref={chatContainerRef}
+                onScroll={handleChatScroll}
                 className="flex-1 overflow-y-auto p-4 space-y-4 pt-20 pb-48 no-scrollbar"
             >
                 {/* View filter bar */}
@@ -965,7 +950,7 @@ const LoveLock: React.FC = () => {
 
                         // Find the original note being replied to
                         const repliedNote = note.reply_to_id ? notes.find(n => n.id === note.reply_to_id) : null;
-                        
+
                         return (
                             <motion.div
                                 key={note.id}
@@ -989,10 +974,10 @@ const LoveLock: React.FC = () => {
                                     onTouchEnd={handleLongPressEnd}
                                     onTouchMove={handleLongPressEnd}
                                     className={`relative max-w-[85%] group ${
-                                    isImage 
-                                        ? 'rounded-2xl overflow-hidden' 
-                                        : isMe 
-                                            ? 'bg-primary text-white rounded-2xl rounded-br-sm shadow-sm' 
+                                    isImage
+                                        ? 'rounded-2xl overflow-hidden'
+                                        : isMe
+                                            ? 'bg-primary text-white rounded-2xl rounded-br-sm shadow-sm'
                                             : 'bg-white dark:bg-[#1E1C24] text-gray-800 dark:text-gray-100 border border-gray-100 dark:border-gray-800 rounded-2xl rounded-bl-sm shadow-sm'
                                 }`}>
                                     {/* Forwarded label */}
@@ -1031,10 +1016,10 @@ const LoveLock: React.FC = () => {
                                                 {new Date(note.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
                                                 {isMe && (
                                                     <span className={`material-symbols-outlined text-[14px] ${
-                                                        note.status === 'read' 
-                                                            ? 'text-[#53bdeb] font-bold' 
-                                                            : note.status === 'delivered' 
-                                                                ? 'text-white/70' 
+                                                        note.status === 'read'
+                                                            ? 'text-[#53bdeb] font-bold'
+                                                            : note.status === 'delivered'
+                                                                ? 'text-white/70'
                                                                 : 'text-white/50'
                                                     }`}>
                                                         {note.status === 'sent' ? 'check' : 'done_all'}
@@ -1047,9 +1032,9 @@ const LoveLock: React.FC = () => {
                                             {note.type === 'gif' ? (
                                                 <div className="relative group/media">
                                                     {note.media_url?.startsWith('http') ? (
-                                                        <img 
-                                                            src={note.media_url} 
-                                                            alt="GIF" 
+                                                        <img
+                                                            src={note.media_url}
+                                                            alt="GIF"
                                                             className="block max-w-full w-auto h-auto max-h-80 object-contain cursor-pointer"
                                                             onClick={() => setSelectedImage(note.media_url)}
                                                             loading="lazy"
@@ -1062,10 +1047,10 @@ const LoveLock: React.FC = () => {
                                                     )}
                                                 </div>
                                             ) : (
-                                                <SecureImage 
-                                                    src={note.media_url} 
+                                                <SecureImage
+                                                    src={note.media_url}
                                                     partnerPubKey={partnerPubKey}
-                                                    alt="Shared image" 
+                                                    alt="Shared image"
                                                     className="block max-w-full w-auto h-auto max-h-80 object-contain cursor-pointer"
                                                     onClick={() => setSelectedImage(note.media_url)}
                                                 />
@@ -1091,7 +1076,7 @@ const LoveLock: React.FC = () => {
                                 <div className={`flex items-center flex-wrap gap-1 mt-1 px-1 relative ${isMe ? 'mr-1' : 'ml-1'}`}>
                                     {(() => {
                                         if (!Array.isArray(note.reactions) || note.reactions.length === 0) return null;
-                                        
+
                                         // Group reactions by emoji
                                         const counts = (note.reactions as any[]).reduce((acc, r) => {
                                             acc[r.emoji] = (acc[r.emoji] || 0) + 1;
@@ -1109,8 +1094,8 @@ const LoveLock: React.FC = () => {
                                                     handleReaction(note.id, emoji);
                                                 }}
                                                 className={`flex items-center justify-center gap-[2px] px-1.5 py-0.5 rounded-full shadow-sm border transition-all hover:scale-105 active:scale-95 ${
-                                                    hasReacted(emoji) 
-                                                        ? 'bg-pink-50 dark:bg-pink-500/10 border-pink-200 dark:border-pink-500/30' 
+                                                    hasReacted(emoji)
+                                                        ? 'bg-pink-50 dark:bg-pink-500/10 border-pink-200 dark:border-pink-500/30'
                                                         : 'bg-white dark:bg-[#2A2730] border-gray-100 dark:border-gray-700/50 hover:bg-gray-50 dark:hover:bg-[#34303B]'
                                                 }`}
                                             >
@@ -1119,17 +1104,17 @@ const LoveLock: React.FC = () => {
                                             </button>
                                         ));
                                     })()}
-                                    
+
                                     {/* Add Reaction Button */}
                                     {!isMe && (
                                         <div className="relative" onClick={(e) => e.stopPropagation()}>
-                                            <button 
+                                            <button
                                                 onClick={() => setEmojiPickerNoteId(emojiPickerNoteId === note.id ? null : note.id)}
                                                 className="w-5 h-5 flex items-center justify-center rounded-full text-gray-400 hover:text-pink-500 hover:bg-gray-100 dark:hover:bg-white/5 transition-all outline-none bg-white dark:bg-[#2A2730] shadow-sm border border-gray-100 dark:border-gray-700/50 ml-0.5"
                                             >
                                                 <span className="material-symbols-outlined text-[14px]">add</span>
                                             </button>
-                                            
+
                                             <AnimatePresence>
                                                 {emojiPickerNoteId === note.id && (
                                                     <motion.div
@@ -1231,7 +1216,7 @@ const LoveLock: React.FC = () => {
                     >
                         {/* Left Side Action Buttons (Camera & GIF) */}
                         <div className="flex items-center gap-2 shrink-0">
-                            <button 
+                            <button
                                 onClick={handlePickImage}
                                 className="w-[44px] h-[44px] flex items-center justify-center rounded-full bg-gray-100 dark:bg-[#1E1C24] text-gray-500 hover:text-pink-500 hover:bg-white dark:hover:bg-white/10 transition-all border border-transparent hover:border-pink-500/20 active:scale-95 shadow-sm dark:shadow-none"
                                 title="Photos"
@@ -1239,7 +1224,7 @@ const LoveLock: React.FC = () => {
                                 <span className="material-symbols-outlined text-[22px]">add_a_photo</span>
                             </button>
 
-                            <button 
+                            <button
                                 onClick={() => setShowGifPicker(true)}
                                 className="w-[44px] h-[44px] flex items-center justify-center rounded-full bg-gray-100 dark:bg-[#1E1C24] text-gray-500 hover:text-purple-500 hover:bg-white dark:hover:bg-white/10 transition-all border border-transparent hover:border-purple-500/20 active:scale-95 shadow-sm dark:shadow-none"
                                 title="GIFs"
@@ -1250,14 +1235,14 @@ const LoveLock: React.FC = () => {
 
                         {/* Center Pill Container (Text + AI) */}
                         <div className="flex-1 min-w-0 bg-gray-100 dark:bg-white/5 rounded-[28px] flex items-center p-1 gap-2 border border-transparent focus-within:border-gray-200 dark:focus-within:border-white/10 transition-colors">
-                            <button 
+                            <button
                                 onClick={() => setShowAISheet(true)}
                                 className="w-8 h-8 flex items-center justify-center rounded-full text-gray-400 hover:text-violet-500 hover:bg-white dark:hover:bg-white/10 transition-all shrink-0 ml-1"
                                 title="AI Love Note"
                             >
                                 <span className="material-symbols-outlined text-[20px]">auto_awesome</span>
                             </button>
-                            
+
                             <textarea
                                 ref={textareaRef}
                                 value={noteContent}
@@ -1301,8 +1286,8 @@ const LoveLock: React.FC = () => {
                 </AnimatePresence>
             </div>
             </div>
-            
-            <Toast 
+
+            <Toast
                 message={toast.message}
                 subMessage={toast.subMessage}
                 isVisible={toast.isVisible}
@@ -1365,7 +1350,7 @@ const LoveLock: React.FC = () => {
                         className="fixed inset-0 z-[100] bg-black/95 backdrop-blur-sm flex items-center justify-center p-4"
                         onClick={() => setSelectedImage(null)}
                     >
-                        <motion.div 
+                        <motion.div
                             initial={{ scale: 0.95, opacity: 0 }}
                             animate={{ scale: 1, opacity: 1 }}
                             exit={{ scale: 0.95, opacity: 0 }}
@@ -1373,20 +1358,20 @@ const LoveLock: React.FC = () => {
                             onClick={(e) => e.stopPropagation()}
                         >
                             {selectedImage.includes('giphy.com') ? (
-                                <img 
-                                    src={selectedImage} 
+                                <img
+                                    src={selectedImage}
                                     alt="Full preview"
                                     className="max-w-full max-h-[75vh] object-contain rounded-lg shadow-2xl"
                                 />
                             ) : (
-                                <SecureImage 
-                                    src={selectedImage} 
+                                <SecureImage
+                                    src={selectedImage}
                                     partnerPubKey={partnerPubKey}
                                     alt="Full preview"
                                     className="max-w-full max-h-[75vh] object-contain rounded-lg shadow-2xl"
                                 />
                             )}
-                            
+
                             <div className="flex gap-4 mt-6">
                                 <button
                                     onClick={() => setSelectedImage(null)}
@@ -1507,7 +1492,7 @@ const LoveLock: React.FC = () => {
                             onClick={(e) => e.stopPropagation()}
                         >
                             <div className="w-12 h-1 bg-gray-300 dark:bg-gray-600 rounded-full mx-auto mb-4" />
-                            
+
                             <div className="relative mb-4">
                                 <span className="absolute left-3 top-1/2 -translate-y-1/2 material-symbols-outlined text-gray-400">search</span>
                                 <input
@@ -1548,9 +1533,9 @@ const LoveLock: React.FC = () => {
                 )}
             </AnimatePresence>
             {/* Security Verification Modal */}
-            <SecurityVerification 
-                isOpen={showSecurity} 
-                onClose={() => setShowSecurity(false)} 
+            <SecurityVerification
+                isOpen={showSecurity}
+                onClose={() => setShowSecurity(false)}
                 partnerPubKey={partnerPubKey}
             />
 

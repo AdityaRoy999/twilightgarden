@@ -30,49 +30,69 @@ Twilight Garden is a beautifully designed, privacy-focused menstrual health appl
 
 ### Prerequisites
 
-- Node.js (v18 or higher)
-- npm or yarn
-- A Supabase project (for backend features - optional for UI demo)
+- Node.js 22.12+ (Node 22.14.0 was used for the October 2026 audit), or a compatible version listed in `package.json`.
+- npm
+- A configured Supabase project. The app requires its URL and anon/publishable key even to render; there is no standalone demo mode.
 
 ### Installation
 
 1.  **Clone the repository**
 
     ```bash
-    git clone https://github.com/yourusername/twilight-garden.git
-    cd twilight-garden
+    # Open your existing twilightgarden checkout.
     ```
 
 2.  **Install dependencies**
 
     ```bash
-    npm install
+    npm ci
     ```
 
 3.  **Set up Environment Variables**
-    Create a `.env` file in the root directory:
+    If `.env` already exists, retain it. Otherwise copy `.env.example` to `.env` and set:
 
     ```env
     VITE_SUPABASE_URL=your_supabase_project_url
     VITE_SUPABASE_ANON_KEY=your_supabase_anon_key
     ```
 
+    `VITE_` values are browser configuration. Never prefix administrator, service-role, AI-provider, or search-provider secrets with `VITE_`. Release scripts read `SUPABASE_SERVICE_ROLE_KEY`. Edge Functions need their own deployed secrets; the root `.env` does not configure the hosted functions.
+
 4.  **Run the Development Server**
     ```bash
-    npm run dev
+    npm run dev:local
     ```
-    Open [http://localhost:5173](http://localhost:5173) to view it in your browser.
+    Open [http://localhost:3000](http://localhost:3000). This command binds to the local machine and fails if port 3000 is occupied.
+
+5. **Check the project**
+
+    ```bash
+    npm run build
+    npm test
+    npm audit
+    ```
+
+    `npm run build` includes TypeScript validation. The repaired lockfile has zero npm audit findings. See [the repair status](docs/REPAIR_STATUS_2026-10-25.md) for tested fixes and outstanding security/platform work; [the original audit](docs/PROJECT_AUDIT_2026-10-25.md) records the earlier 39 type errors and 33 audit findings.
+
+The browser uses the configured hosted Supabase backend. `supabase/config.toml` configures functions; the migration directory mirrors deployed history, including the current repairs. That history is not yet a verified empty-database bootstrap. Do not run loose setup/repair SQL against an existing database.
 
 ## 📱 Project Structure
 
 ```
-src/
-├── components/      # Reusable UI components (Modals, Cards, etc.)
-├── contexts/        # React Contexts (Auth, Data, Theme)
-├── lib/             # Utilities (Supabase client, PDF export logic)
-├── pages/           # Main Route Pages (Dashboard, Calendar, Insights)
-├── styles/          # Global styles and Tailwind directives
-└── types/           # TypeScript interfaces
+App.tsx              # Router, providers, guards, platform callbacks
+index.tsx            # Browser entry
+index.html           # HTML shell; Tailwind is compiled through PostCSS
+index.css            # Theme variables and global styles
+components/          # UI, modals, layouts, icons
+contexts/            # Auth, data, couples, calls, theme, administration
+lib/                 # Supabase, encryption, notifications, calculations, exports
+pages/               # Tracking, partner, admin, wellness, and game screens
+types.ts             # Application types; DB types in lib/database.types.ts
+supabase/            # Edge Functions, deployed migration history, legacy snippets
+src-tauri/           # Windows/desktop wrapper
+remotion/            # Separate tutorial-video project with its own dependencies
+scripts/             # Release and maintenance scripts
+docs/                # Audit, evidence, and upgrade priorities
 ```
 
 ## 🎨 Color Palette
@@ -87,7 +107,7 @@ src/
 
 ## 📄 License
 
-This project is licensed under the MIT License - see the LICENSE file for details.
+No LICENSE file is currently checked into this repository. Confirm the intended license before distribution.
 
 ---
 

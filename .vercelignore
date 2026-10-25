@@ -1,0 +1,10 @@
+.git
+.env*
+!.env.example
+**/*firebase-adminsdk*.json
+**/*.key
+tmp
+docs/audit
+remotion
+src-tauri
+scripts

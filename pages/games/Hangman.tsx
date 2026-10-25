@@ -90,7 +90,7 @@ const Hangman: React.FC = () => {
     const [toast, setToast] = useState<{ isVisible: boolean; message: string; subMessage?: string; type: 'success' | 'error' }>({ isVisible: false, message: '', type: 'success' });
     const channelRef = useRef<ReturnType<typeof supabase.channel> | null>(null);
     const [ringCooldown, setRingCooldown] = useState(false);
-    const ringCooldownRef = useRef<ReturnType<typeof setTimeout>>();
+    const ringCooldownRef = useRef<ReturnType<typeof setTimeout>>(undefined);
 
     const showToast = (m: string, s?: string, t: 'success' | 'error' = 'success') => setToast({ isVisible: true, message: m, subMessage: s, type: t });
 
@@ -135,7 +135,7 @@ const Hangman: React.FC = () => {
     /* ─── realtime ─── */
     useEffect(() => {
         if (!game?.id || !user?.id) return;
-        const ch = supabase.channel(`game_rt_${game.id}`, { config: { broadcast: { self: false } } });
+        const ch = supabase.channel(`game_rt_${game.id}`, { config: { private: true, broadcast: { self: false } } });
         ch.on('broadcast', { event: 'game_update' }, ({ payload }) => setGame(payload as GameSession));
         ch.on('postgres_changes', { event: 'UPDATE', schema: 'public', table: 'game_sessions', filter: `id=eq.${game.id}` },
             (p) => setGame(p.new as GameSession));
@@ -299,9 +299,9 @@ const Hangman: React.FC = () => {
                         {amPicker ? (
                             <>
                                 <p className="text-lg font-bold" style={{ color: primaryColor }}>Choose a word for your partner!</p>
-                                <button onClick={pickRandom} 
+                                <button onClick={pickRandom}
                                     disabled={game.status !== 'active'}
-                                    className={`w-full py-4 rounded-2xl font-bold text-white active:scale-95 transition-transform ${game.status !== 'active' ? 'opacity-50 grayscale pointer-events-none' : ''}`} 
+                                    className={`w-full py-4 rounded-2xl font-bold text-white active:scale-95 transition-transform ${game.status !== 'active' ? 'opacity-50 grayscale pointer-events-none' : ''}`}
                                     style={{ backgroundColor: primaryColor }}>
                                     🎲 Random Word
                                 </button>

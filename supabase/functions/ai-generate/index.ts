@@ -1,4 +1,5 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
+import { consumeBudget, json, readBody, requireUser } from '../_shared/security.ts';
 
 const NVIDIA_API_KEY = Deno.env.get('NVIDIA_API_KEY');
 const SERPER_API_KEY = Deno.env.get('SERPER_API_KEY') || Deno.env.get('VITE_SERPER_API');
@@ -36,7 +37,8 @@ async function searchProducts(query: string): Promise<Product[]> {
     try {
         // Try shopping search first
         const shoppingRes = await fetch('https://google.serper.dev/shopping', {
-            method: 'POST',
+            method: "POST",
+            signal: AbortSignal.timeout(20000),
             headers: { 'X-API-KEY': SERPER_API_KEY, 'Content-Type': 'application/json' },
             body: JSON.stringify({ q: query, gl: 'in', hl: 'en', num: 5 }),
         });
@@ -57,7 +59,8 @@ async function searchProducts(query: string): Promise<Product[]> {
 
         // Fallback: regular search (works better for Blinkit/quick-commerce)
         const searchRes = await fetch('https://google.serper.dev/search', {
-            method: 'POST',
+            method: "POST",
+            signal: AbortSignal.timeout(20000),
             headers: { 'X-API-KEY': SERPER_API_KEY, 'Content-Type': 'application/json' },
             body: JSON.stringify({ q: query + ' buy India', gl: 'in', hl: 'en', num: 5 }),
         });
@@ -93,9 +96,19 @@ serve(async (req) => {
     if (req.method === 'OPTIONS') {
         return new Response('ok', { headers: corsHeaders });
     }
+    if (req.method !== 'POST') return json({ error: 'Method not allowed' }, 405);
+    const userId = await requireUser(req);
+    if (!userId) return json({ error: 'Authentication required' }, 401);
 
     try {
-        const { mood, customPrompt, search_query } = await req.json();
+        if (!await consumeBudget(userId, 'ai', 10)) return json({ error: 'Please wait before making another request.' }, 429);
+        const { mood, customPrompt, search_query, lat, lon } = await readBody(req);
+        const supportedModes = ['search','places','raw','missing','morning','appreciation','flirty','apology','encouragement'];
+        if (typeof mood !== 'string' || !supportedModes.includes(mood) ||
+            (customPrompt !== undefined && (typeof customPrompt !== 'string' || customPrompt.length > 12000)) ||
+            (search_query !== undefined && (typeof search_query !== 'string' || search_query.length > 300))) {
+            return json({ error: 'Invalid request parameters' }, 400);
+        }
 
         // ── Product Search Mode ──
         if (mood === 'search' && search_query) {
@@ -110,25 +123,27 @@ serve(async (req) => {
         if (mood === 'places') {
             if (!SERPER_API_KEY) throw new Error('SERPER_API_KEY is not set');
 
-            const { lat, lon } = await req.clone().json().catch(() => ({}));
+            if (typeof lat !== 'number' || typeof lon !== 'number' || !Number.isFinite(lat) || !Number.isFinite(lon) ||
+                Math.abs(lat) > 90 || Math.abs(lon) > 180) return json({ error: 'Valid coordinates are required' }, 400);
 
-            const placesBody: any = { 
-                q: search_query || 'pharmacy medical store', 
-                gl: 'in', 
-                hl: 'en', 
+            const placesBody: any = {
+                q: search_query || 'pharmacy medical store',
+                gl: 'in',
+                hl: 'en',
                 num: 20 // Increase to fetch more results to find the closest ones
             };
 
-            // Use Serper's ll parameter with a precise zoom level. 
+            // Use Serper's ll parameter with a precise zoom level.
             // 14z is roughly city/neighborhood level, which works best for finding local places
-            if (lat && lon) {
+            if (Number.isFinite(lat) && Number.isFinite(lon)) {
                 // By combining "near me" with the ll parameter, Serper correctly geolocates
                 placesBody.q = (search_query || 'pharmacy medical store') + ' near me';
                 placesBody.ll = `@${lat},${lon},14z`;
             }
 
             const placesRes = await fetch('https://google.serper.dev/places', {
-                method: 'POST',
+                method: "POST",
+            signal: AbortSignal.timeout(20000),
                 headers: { 'X-API-KEY': SERPER_API_KEY, 'Content-Type': 'application/json' },
                 body: JSON.stringify(placesBody),
             });
@@ -150,10 +165,20 @@ serve(async (req) => {
             throw new Error('NVIDIA_API_KEY is not set');
         }
 
-        const prompt = customPrompt || search_query || '';
+        const prompts: Record<string, string> = {
+          missing: 'Write a short affectionate message telling my partner I miss them.',
+          morning: 'Write a warm, short good-morning message to my partner.',
+          appreciation: 'Write a short sincere note appreciating my partner.',
+          flirty: 'Write a playful, affectionate, non-explicit message to my partner.',
+          apology: 'Write a short sincere apology to my partner without making excuses.',
+          encouragement: 'Write a short supportive message encouraging my partner.',
+        };
+        const prompt = customPrompt || search_query || prompts[mood] || '';
+        if (!prompt.trim()) return json({ error: 'A prompt is required' }, 400);
 
         const response = await fetch(NVIDIA_URL, {
-            method: 'POST',
+            method: "POST",
+            signal: AbortSignal.timeout(20000),
             headers: {
                 'Content-Type': 'application/json',
                 'Authorization': `Bearer ${NVIDIA_API_KEY}`,
@@ -181,9 +206,7 @@ serve(async (req) => {
             status: 200,
         });
     } catch (error) {
-        return new Response(JSON.stringify({ error: error.message }), {
-            headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-            status: 400,
-        });
+        console.error('AI request failed', error instanceof Error ? error.name : 'UnknownError');
+        return json({ error: error instanceof SyntaxError ? 'Invalid JSON body' : 'The request could not be completed. Please retry.' }, error instanceof SyntaxError ? 400 : 502);
     }
 });

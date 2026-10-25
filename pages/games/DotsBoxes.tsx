@@ -10,6 +10,7 @@ import Toast from '../../components/Toast';
 import { sendGameNotification } from '../../lib/notifications';
 import GameEndedScreen from '../../components/GameEndedScreen';
 import { endSession } from '../../lib/gameSessions';
+import type { Database } from '../../lib/database.types';
 
 const GRID = 4; // 4x4 dots = 3x3 boxes
 const TOTAL_LINES = 2 * GRID * (GRID - 1); // 24 lines
@@ -35,6 +36,14 @@ interface GameSession {
 
 const emptyState: DBState = { lines: {}, boxes: {}, scores: {} };
 
+function parseSession(row: Database['public']['Tables']['game_sessions']['Row']): GameSession {
+    const board = row.board_state;
+    if (!board || typeof board !== 'object' || Array.isArray(board) ||
+        !board.lines || !board.boxes || !board.scores ||
+        !['waiting', 'active', 'finished', 'ended'].includes(row.status || '')) throw new Error('Invalid dots and boxes session');
+    return { ...row, status: row.status as GameSession['status'], board_state: board as unknown as DBState };
+}
+
 const PARTNER_COLOR = '#06B6D4'; // cyan-500
 
 const DotsBoxes: React.FC = () => {
@@ -50,7 +59,7 @@ const DotsBoxes: React.FC = () => {
     const [toast, setToast] = useState<{ isVisible: boolean; message: string; subMessage?: string; type: 'success' | 'error' }>({ isVisible: false, message: '', type: 'success' });
     const channelRef = useRef<ReturnType<typeof supabase.channel> | null>(null);
     const [ringCooldown, setRingCooldown] = useState(false);
-    const ringCooldownRef = useRef<ReturnType<typeof setTimeout>>();
+    const ringCooldownRef = useRef<ReturnType<typeof setTimeout>>(undefined);
 
     const showToast = (message: string, subMessage?: string, type: 'success' | 'error' = 'success') => {
         setToast({ isVisible: true, message, subMessage, type });
@@ -125,11 +134,11 @@ const DotsBoxes: React.FC = () => {
                             .update({ player_o: user.id, status: 'active' })
                             .eq('id', existing.id).select().single();
                         if (!cancelled && updated) {
-                            setGame(updated);
+                            setGame(parseSession(updated));
                             setTimeout(() => channelRef.current?.send({ type: 'broadcast', event: 'game_update', payload: updated }), 80);
                         }
                     } else {
-                        if (!cancelled) setGame(existing);
+                        if (!cancelled) setGame(parseSession(existing));
                     }
                 } else {
                     const { data: created } = await (supabase
@@ -154,7 +163,7 @@ const DotsBoxes: React.FC = () => {
     /* ─── realtime ─── */
     useEffect(() => {
         if (!game?.id || !user?.id) return;
-        const channel = supabase.channel(`game_rt_${game.id}`, { config: { broadcast: { self: false } } });
+        const channel = supabase.channel(`game_rt_${game.id}`, { config: { private: true, broadcast: { self: false } } });
         channel.on('broadcast', { event: 'game_update' }, ({ payload }) => setGame(payload as GameSession));
         channel.on('postgres_changes', { event: 'UPDATE', schema: 'public', table: 'game_sessions', filter: `id=eq.${game.id}` },
             (p) => { const u = p.new as GameSession; setGame(prev => {

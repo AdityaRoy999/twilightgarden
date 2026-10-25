@@ -1,7 +1,9 @@
-import React, { useState, useEffect } from 'react';
+import QRCode from 'react-qr-code';
+import { derivePublicKeyFromPrivate, setCachedPrivateKey } from '../lib/encryption';
+import React, { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { 
-  X, Smartphone, Laptop, QrCode, Shield, 
+import {
+  X, Smartphone, Laptop, QrCode, Shield,
   Key, RefreshCw, CheckCircle2, AlertCircle,
   Copy, ScanLine, ArrowRight, Lock
 } from 'lucide-react';
@@ -9,9 +11,9 @@ import { useAuth } from '../contexts/AuthContext';
 import { useCouples } from '../contexts/CouplesContext';
 import { createSyncSession, sendSyncPayload } from '../lib/sync';
 import { supabase } from '../lib/supabase';
-import { 
+import {
   initializeEncryptionKeys,
-  encryptIdentityWithPin, 
+  encryptIdentityWithPin,
   decryptIdentityWithPin,
   encryptWithEphemeralKey,
   decryptWithEphemeralKey
@@ -27,12 +29,23 @@ interface SyncHistoryModalProps {
 
 export const SyncHistoryModal: React.FC<SyncHistoryModalProps> = ({ isOpen, onClose, initialTab = 'sync' }) => {
   const { user } = useAuth();
-  const { 
-    deviceId, 
-    completeSyncHandshake, 
-    refreshE2EE, 
+  const receiverChannel = useRef<ReturnType<typeof supabase.channel> | null>(null);
+  const receiverRevision = useRef(0);
+  const completionTimer = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
+  useEffect(() => {
+    return () => {
+      receiverRevision.current++;
+      clearTimeout(completionTimer.current);
+      if(receiverChannel.current) void supabase.removeChannel(receiverChannel.current);
+      receiverChannel.current=null;
+    };
+  },[isOpen,user?.id]);
+  const {
+    deviceId,
+    completeSyncHandshake,
+    refreshE2EE,
     restoreFromCloudBackup,
-    hasCloudBackup 
+    hasCloudBackup
   } = useCouples();
   const [activeTab, setActiveTab] = useState<'sync' | 'backup'>(initialTab);
   const [mode, setMode] = useState<'idle' | 'receiver' | 'sender' | 'pin-restore' | 'pin-setup'>('idle');
@@ -43,7 +56,7 @@ export const SyncHistoryModal: React.FC<SyncHistoryModalProps> = ({ isOpen, onCl
       setActiveTab(initialTab);
     }
   }, [isOpen, initialTab]);
-  
+
   // Sync States
   const [syncToken, setSyncToken] = useState('');
   const [session, setSession] = useState<any>(null);
@@ -60,8 +73,11 @@ export const SyncHistoryModal: React.FC<SyncHistoryModalProps> = ({ isOpen, onCl
     if (!user) return;
     setStatus('pending');
     setMode('receiver');
+    const revision=++receiverRevision.current;
+    if(receiverChannel.current) void supabase.removeChannel(receiverChannel.current);
     try {
         const { session: newSession, ephemeralPrivate: priv } = await createSyncSession(user.id);
+        if(revision!==receiverRevision.current)return;
         setSession(newSession);
         setSyncToken(newSession.token);
         setEphemeralPrivate(priv);
@@ -69,9 +85,9 @@ export const SyncHistoryModal: React.FC<SyncHistoryModalProps> = ({ isOpen, onCl
         // Listen for completion
         const channel = supabase
             .channel(`sync_${newSession.token}`)
-            .on('postgres_changes' as any, { 
-                event: 'UPDATE', 
-                schema: 'public', 
+            .on('postgres_changes' as any, {
+                event: 'UPDATE',
+                schema: 'public',
                 table: 'sync_sessions',
                 filter: `id=eq.${newSession.id}`
             }, async (payload: any) => {
@@ -79,26 +95,26 @@ export const SyncHistoryModal: React.FC<SyncHistoryModalProps> = ({ isOpen, onCl
                 if (updated.status === 'completed' && updated.encrypted_payload) {
                     try {
                         setStatus('completing');
-                        // We need the SENDER's public key. 
-                        // For simplicity, we assume the sender is the same user (multi-device)
-                        // Fetch the primary key for the user
-                        const { data: keys } = await (supabase
-                            .from('user_keys' as any)
-                            .select('public_key')
-                            .eq('user_id', user.id)
-                            .limit(1) as any);
-                        
-                        if (!keys?.[0]) throw new Error('Sender key not found');
-
-                        const decryptedKey = await decryptWithEphemeralKey(
-                            updated.encrypted_payload,
-                            priv,
-                            keys[0].public_key
-                        );
-                        
-                        await Preferences.set({ key: `${user.id}_private_key`, value: decryptedKey });
+                        if(revision!==receiverRevision.current)return;
+                        let senderKey: string, ciphertext: string;
+                        if(updated.encrypted_payload.startsWith('{')){
+                          const envelope=JSON.parse(updated.encrypted_payload);
+                          if(envelope.version!==1||typeof envelope.senderPublicKey!=='string'||typeof envelope.ciphertext!=='string')throw new Error('Invalid handshake');
+                          senderKey=envelope.senderPublicKey;ciphertext=envelope.ciphertext;
+                        }else{
+                          const {data:keys,error}=await supabase.from('user_keys').select('public_key').eq('user_id',user.id).order('last_active',{ascending:false}).limit(1);
+                          if(error||!keys?.[0])throw new Error('Sender key not found');
+                          senderKey=keys[0].public_key;ciphertext=updated.encrypted_payload;
+                        }
+                        const decryptedKey=await decryptWithEphemeralKey(ciphertext,priv,senderKey);
+                        if(revision!==receiverRevision.current)return;
+                        const publicKey=derivePublicKeyFromPrivate(decryptedKey);
+                        await Preferences.set({key:user.id+'_private_key',value:decryptedKey});
+                        await Preferences.set({key:user.id+'_public_key',value:publicKey});
+                        setCachedPrivateKey(decryptedKey);
+                        await supabase.from('sync_sessions').delete().eq('id',newSession.id);
                         setStatus('success');
-                        setTimeout(async () => {
+                        completionTimer.current = setTimeout(async () => {
                             await refreshE2EE();
                             onClose();
                         }, 1500);
@@ -111,15 +127,12 @@ export const SyncHistoryModal: React.FC<SyncHistoryModalProps> = ({ isOpen, onCl
             })
             .subscribe();
 
-        return () => { supabase.removeChannel(channel); };
+        receiverChannel.current = channel;
     } catch (err) {
         setStatus('error');
         setError('Failed to start session');
     }
   };
-
-  // Logic is simpler if we do it in a coordinated way.
-  // For the sake of this implementation, I will focus on the UI flow first.
 
   if (!isOpen) return null;
 
@@ -133,7 +146,7 @@ export const SyncHistoryModal: React.FC<SyncHistoryModalProps> = ({ isOpen, onCl
           className="absolute inset-0 bg-black/60 backdrop-blur-sm"
           onClick={onClose}
         />
-        
+
         <motion.div
           initial={{ opacity: 0, scale: 0.9, y: 20 }}
           animate={{ opacity: 1, scale: 1, y: 0 }}
@@ -146,7 +159,7 @@ export const SyncHistoryModal: React.FC<SyncHistoryModalProps> = ({ isOpen, onCl
               <h2 className="text-xl font-bold dark:text-white">History Sync</h2>
               <p className="text-sm text-gray-500">Access messages from all devices</p>
             </div>
-            <button 
+            <button
               onClick={onClose}
               className="p-2 hover:bg-gray-100 dark:hover:bg-white/5 rounded-full transition-colors"
             >
@@ -161,8 +174,8 @@ export const SyncHistoryModal: React.FC<SyncHistoryModalProps> = ({ isOpen, onCl
                 key={tab}
                 onClick={() => setActiveTab(tab)}
                 className={`flex-1 py-2 text-sm font-medium rounded-lg transition-all ${
-                  activeTab === tab 
-                    ? 'bg-white dark:bg-[#2C2C2E] text-primary shadow-sm' 
+                  activeTab === tab
+                    ? 'bg-white dark:bg-[#2C2C2E] text-primary shadow-sm'
                     : 'text-gray-500 hover:text-gray-700 dark:hover:text-gray-300'
                 }`}
               >
@@ -176,14 +189,14 @@ export const SyncHistoryModal: React.FC<SyncHistoryModalProps> = ({ isOpen, onCl
               <div className="space-y-6">
                 {mode === 'idle' && (
                   <div className="grid grid-cols-2 gap-4">
-                    <button 
+                    <button
                       onClick={() => initiateReceiver()}
                       className="flex flex-col items-center gap-3 p-6 bg-primary/10 border border-primary/20 rounded-2xl hover:bg-primary/20 transition-all group"
                     >
                       <Laptop className="w-8 h-8 text-primary group-hover:scale-110 transition-transform" />
                       <span className="text-sm font-semibold text-primary">This is my new device</span>
                     </button>
-                    <button 
+                    <button
                       onClick={() => setMode('sender')}
                       className="flex flex-col items-center gap-3 p-6 bg-pink-500/10 border border-pink-500/20 rounded-2xl hover:bg-pink-500/20 transition-all group"
                     >
@@ -197,11 +210,7 @@ export const SyncHistoryModal: React.FC<SyncHistoryModalProps> = ({ isOpen, onCl
                   <div className="flex flex-col items-center text-center space-y-6">
                     <div className="relative p-4 bg-white rounded-2xl shadow-xl">
                       {syncToken ? (
-                        <img 
-                          src={`https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=twilightsync:${syncToken}`} 
-                          alt="Sync QR"
-                          className="w-48 h-48"
-                        />
+                        <QRCode value={'twilightsync:'+syncToken} size={192} title="Device identity sync code" />
                       ) : (
                         <div className="w-48 h-48 flex items-center justify-center">
                           <RefreshCw className="w-8 h-8 text-primary animate-spin" />
@@ -226,7 +235,7 @@ export const SyncHistoryModal: React.FC<SyncHistoryModalProps> = ({ isOpen, onCl
                          <p className="text-xs text-amber-700 dark:text-amber-400">Enter the 8-digit code displayed on your new device to authorize it.</p>
                     </div>
                     <div className="space-y-4">
-                        <input 
+                        <input
                             type="text"
                             maxLength={8}
                             placeholder="Enter 8-digit code"
@@ -235,7 +244,7 @@ export const SyncHistoryModal: React.FC<SyncHistoryModalProps> = ({ isOpen, onCl
                             className="w-full bg-gray-50 dark:bg-black/20 border border-gray-100 dark:border-white/10 rounded-xl px-4 py-4 text-center text-2xl font-mono font-bold tracking-[0.2em] text-primary focus:ring-2 focus:ring-primary/20 outline-none uppercase"
                         />
                         {error && <p className="text-xs text-red-500 text-center">{error}</p>}
-                        <button 
+                        <button
                             disabled={syncToken.length < 8 || isSubmitting}
                             onClick={async () => {
                                 setIsSubmitting(true);
@@ -275,7 +284,7 @@ export const SyncHistoryModal: React.FC<SyncHistoryModalProps> = ({ isOpen, onCl
                      {error && <p className="text-xs text-red-500 text-center">{error}</p>}
                      <div className="flex justify-center gap-2">
                          {[1,2,3,4,5,6].map((i) => (
-                             <div 
+                             <div
                                 key={i}
                                 className={`w-8 h-10 rounded-lg border flex items-center justify-center text-lg font-bold transition-all ${
                                     pin.length >= i ? 'border-primary bg-primary/5 dark:text-white' : 'border-gray-100 dark:border-white/5'
@@ -285,7 +294,7 @@ export const SyncHistoryModal: React.FC<SyncHistoryModalProps> = ({ isOpen, onCl
                              </div>
                          ))}
                      </div>
-                     
+
                      <div className="grid grid-cols-3 gap-1.5 px-4">
                          {[1,2,3,4,5,6,7,8,9,0].map(n => (
                              <button
@@ -296,7 +305,7 @@ export const SyncHistoryModal: React.FC<SyncHistoryModalProps> = ({ isOpen, onCl
                                 {n}
                              </button>
                          ))}
-                         <button 
+                         <button
                             onClick={() => setPin(p => p.slice(0, -1))}
                             className="h-10 bg-red-50 dark:bg-red-500/10 text-red-500 rounded-lg flex items-center justify-center transition-colors"
                          >
@@ -305,7 +314,7 @@ export const SyncHistoryModal: React.FC<SyncHistoryModalProps> = ({ isOpen, onCl
                      </div>
 
                      <div className="grid grid-cols-2 gap-3">
-                        <button 
+                        <button
                             disabled={pin.length < 6 || isSubmitting}
                             onClick={async () => {
                                 setIsSubmitting(true);
@@ -314,17 +323,17 @@ export const SyncHistoryModal: React.FC<SyncHistoryModalProps> = ({ isOpen, onCl
                                      const { value: privKey } = await Preferences.get({ key: `${user?.id}_private_key` });
                                      if (!privKey) throw new Error('Local keys missing');
                                      const { ciphertext, salt } = await encryptIdentityWithPin(privKey, pin);
-                                     
+
                                      // Upsert into dedicated identity_backups table for persistence
                                      const { error: upsertError } = await (supabase.from('identity_backups' as any) as any)
-                                        .upsert({ 
-                                            user_id: user?.id, 
-                                            backup_identity: ciphertext, 
-                                            backup_salt: salt 
+                                        .upsert({
+                                            user_id: user?.id,
+                                            backup_identity: ciphertext,
+                                            backup_salt: salt
                                         } as any);
-                                     
+
                                      if (upsertError) throw upsertError;
-                                     
+
                                      setStatus('success');
                                      setTimeout(() => setPin(''), 1000);
                                  } catch (e: any) {
@@ -337,7 +346,7 @@ export const SyncHistoryModal: React.FC<SyncHistoryModalProps> = ({ isOpen, onCl
                          >
                              Enable Backup
                          </button>
-                          <button 
+                          <button
                              disabled={pin.length < 6 || isSubmitting}
                              onClick={async () => {
                                  setIsSubmitting(true);

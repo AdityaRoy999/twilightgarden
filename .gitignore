@@ -8,6 +8,20 @@ pnpm-debug.log*
 lerna-debug.log*
 .env
 .env.local
+.env.*
+!.env.example
+
+# Private credentials and release signing material (also review tracked files/history)
+*firebase-adminsdk*.json
+*.key
+supabase/.temp/
+.vercel/
+tmp/
+test-results/
+coverage/
+tmp_*.txt
+ts_errors*.txt
+errors.txt
 
 node_modules
 dist

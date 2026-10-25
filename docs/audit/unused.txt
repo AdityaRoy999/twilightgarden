@@ -1,0 +1,228 @@
+
+> twilight-garden-cycle-tracker@0.0.3 typecheck
+> tsc --noEmit --pretty false --noUnusedLocals --noUnusedParameters
+
+App.tsx(44,7): error TS6133: 'JoinPartner' is declared but its value is never read.
+App.tsx(54,7): error TS6133: 'PartnerNotifications' is declared but its value is never read.
+App.tsx(202,11): error TS6133: 'isSupporter' is declared but its value is never read.
+App.tsx(259,11): error TS6133: 'couple' is declared but its value is never read.
+components/AdminLayout.tsx(3,18): error TS6133: 'AnimatePresence' is declared but its value is never read.
+components/AdminLayout.tsx(13,7): error TS6133: 'pageVariants' is declared but its value is never read.
+components/AdminLayout.tsx(19,7): error TS6133: 'pageTransition' is declared but its value is never read.
+components/AdminLayout.tsx(28,11): error TS6133: 'location' is declared but its value is never read.
+components/ErrorBoundary.tsx(16,10): error TS2339: Property 'state' does not exist on type 'ErrorBoundary'.
+components/ErrorBoundary.tsx(28,10): error TS2339: Property 'setState' does not exist on type 'ErrorBoundary'.
+components/ErrorBoundary.tsx(32,14): error TS2339: Property 'state' does not exist on type 'ErrorBoundary'.
+components/ErrorBoundary.tsx(33,16): error TS2339: Property 'props' does not exist on type 'ErrorBoundary'.
+components/ErrorBoundary.tsx(34,21): error TS2339: Property 'props' does not exist on type 'ErrorBoundary'.
+components/ErrorBoundary.tsx(44,19): error TS2339: Property 'state' does not exist on type 'ErrorBoundary'.
+components/ErrorBoundary.tsx(56,17): error TS2339: Property 'props' does not exist on type 'ErrorBoundary'.
+components/IdentityLockdownPrompt.tsx(4,31): error TS6133: 'Smartphone' is declared but its value is never read.
+components/Layout.tsx(3,18): error TS6133: 'AnimatePresence' is declared but its value is never read.
+components/LogDetailsModal.tsx(17,9): error TS6133: 'theme' is declared but its value is never read.
+components/PartnerInsightsView.tsx(7,3): error TS6133: 'XAxis' is declared but its value is never read.
+components/PartnerInsightsView.tsx(14,3): error TS6133: 'PieChart' is declared but its value is never read.
+components/PartnerInsightsView.tsx(15,3): error TS6133: 'Pie' is declared but its value is never read.
+components/PartnerInsightsView.tsx(16,3): error TS6133: 'Legend' is declared but its value is never read.
+components/PartnerLayout.tsx(7,5): error TS6133: 'AnimatedLogsIcon' is declared but its value is never read.
+components/PartnerLayout.tsx(19,11): error TS6133: 'location' is declared but its value is never read.
+components/RelationshipWeather.tsx(15,3): error TS6133: 'mood' is declared but its value is never read.
+components/SyncHistoryModal.tsx(4,26): error TS6133: 'QrCode' is declared but its value is never read.
+components/SyncHistoryModal.tsx(4,34): error TS6133: 'Shield' is declared but its value is never read.
+components/SyncHistoryModal.tsx(5,3): error TS6133: 'Key' is declared but its value is never read.
+components/SyncHistoryModal.tsx(6,3): error TS6133: 'Copy' is declared but its value is never read.
+components/SyncHistoryModal.tsx(6,9): error TS6133: 'ScanLine' is declared but its value is never read.
+components/SyncHistoryModal.tsx(6,19): error TS6133: 'ArrowRight' is declared but its value is never read.
+components/SyncHistoryModal.tsx(10,29): error TS6133: 'sendSyncPayload' is declared but its value is never read.
+components/SyncHistoryModal.tsx(13,3): error TS6133: 'initializeEncryptionKeys' is declared but its value is never read.
+components/SyncHistoryModal.tsx(15,3): error TS6133: 'decryptIdentityWithPin' is declared but its value is never read.
+components/SyncHistoryModal.tsx(16,3): error TS6133: 'encryptWithEphemeralKey' is declared but its value is never read.
+components/SyncHistoryModal.tsx(31,5): error TS6133: 'deviceId' is declared but its value is never read.
+components/SyncHistoryModal.tsx(35,5): error TS6133: 'hasCloudBackup' is declared but its value is never read.
+components/SyncHistoryModal.tsx(49,10): error TS6133: 'session' is declared but its value is never read.
+components/SyncHistoryModal.tsx(50,10): error TS6133: 'ephemeralPrivate' is declared but its value is never read.
+components/TodayReportModal.tsx(67,71): error TS6133: 'mimeType' is declared but its value is never read.
+components/tutorials/GamePreviews.tsx(148,40): error TS6133: 'i' is declared but its value is never read.
+components/tutorials/GamePreviews.tsx(196,62): error TS6133: 'isDark' is declared but its value is never read.
+components/tutorials/GlobalGameTutorial.tsx(1,17): error TS6133: 'useState' is declared but its value is never read.
+components/tutorials/GlobalGameTutorial.tsx(10,11): error TS6133: 'primaryColor' is declared but its value is never read.
+components/tutorials/GlobalGameTutorial.tsx(18,11): error TS6133: 'handleOpenTutorial' is declared but its value is never read.
+components/ui/AnimatedIcons.tsx(524,7): error TS6133: 'gearVariants' is declared but its value is never read.
+components/ui/ModernIcons.tsx(4,52): error TS2344: Type '"svg"' does not satisfy the constraint 'keyof HTMLElements'.
+components/ui/ModernSlider.tsx(1,18): error TS6133: 'useRef' is declared but its value is never read.
+components/ui/ModernSlider.tsx(19,3): error TS6133: 'label' is declared but its value is never read.
+contexts/AuthContext.tsx(82,21): error TS6133: 'error' is declared but its value is never read.
+contexts/CouplesContext.tsx(9,3): error TS6133: 'encryptData' is declared but its value is never read.
+contexts/CouplesContext.tsx(12,3): error TS6133: 'decryptBlob' is declared but its value is never read.
+contexts/CouplesContext.tsx(1046,19): error TS6133: 'error' is declared but its value is never read.
+contexts/CouplesContext.tsx(1400,19): error TS6133: 'newNote' is declared but its value is never read.
+contexts/CouplesContext.tsx(1425,19): error TS2345: Argument of type 'any' is not assignable to parameter of type 'never'.
+contexts/CouplesContext.tsx(1448,15): error TS2345: Argument of type 'any' is not assignable to parameter of type 'never'.
+contexts/CouplesContext.tsx(1621,33): error TS2345: Argument of type 'any' is not assignable to parameter of type 'never'.
+contexts/CouplesContext.tsx(1632,13): error TS6133: 'partnerId' is declared but its value is never read.
+contexts/CouplesContext.tsx(1763,21): error TS2345: Argument of type 'any' is not assignable to parameter of type 'never'.
+contexts/CouplesContext.tsx(1768,21): error TS2345: Argument of type 'any' is not assignable to parameter of type 'never'.
+contexts/DataContext.tsx(79,26): error TS6133: 'authLoading' is declared but its value is never read.
+contexts/DataContext.tsx(83,9): error TS6133: 'syncUserId' is declared but its value is never read.
+contexts/ThemeContext.tsx(29,30): error TS6133: 'c' is declared but its value is never read.
+contexts/ThemeContext.tsx(32,35): error TS6133: 'e' is declared but its value is never read.
+contexts/ThemeContext.tsx(34,28): error TS6133: 's' is declared but its value is never read.
+hooks/useAutoUpdater.ts(4,10): error TS6133: 'ask' is declared but its value is never read.
+hooks/useNotifications.ts(98,15): error TS2345: Argument of type 'any' is not assignable to parameter of type 'never'.
+hooks/useNotifications.ts(109,17): error TS2345: Argument of type 'any' is not assignable to parameter of type 'never'.
+lib/exportPDF.ts(69,7): error TS6133: 'COLORS' is declared but its value is never read.
+lib/notifications.ts(99,45): error TS6133: 'hour' is declared but its value is never read.
+lib/notifications.ts(99,64): error TS6133: 'minute' is declared but its value is never read.
+lib/notifications.ts(287,74): error TS2769: No overload matches this call.
+  Overload 1 of 2, '(values: never, options?: { onConflict?: string; ignoreDuplicates?: boolean; count?: "exact" | "planned" | "estimated"; }): PostgrestFilterBuilder<{ PostgrestVersion: "12"; }, never, never, null, "user_fcm_tokens", never, "POST">', gave the following error.
+    Argument of type '{ user_id: string; token: string; device_type: string; updated_at: string; }' is not assignable to parameter of type 'never'.
+  Overload 2 of 2, '(values: never[], options?: { onConflict?: string; ignoreDuplicates?: boolean; count?: "exact" | "planned" | "estimated"; defaultToNull?: boolean; }): PostgrestFilterBuilder<{ PostgrestVersion: "12"; }, never, ... 4 more ..., "POST">', gave the following error.
+    Object literal may only specify known properties, and 'user_id' does not exist in type 'never[]'.
+lib/notifications.ts(396,66): error TS2769: No overload matches this call.
+  Overload 1 of 2, '(values: never, options?: { onConflict?: string; ignoreDuplicates?: boolean; count?: "exact" | "planned" | "estimated"; }): PostgrestFilterBuilder<{ PostgrestVersion: "12"; }, never, never, null, "user_fcm_tokens", never, "POST">', gave the following error.
+    Argument of type '{ user_id: string; token: string; device_type: string; updated_at: string; }' is not assignable to parameter of type 'never'.
+  Overload 2 of 2, '(values: never[], options?: { onConflict?: string; ignoreDuplicates?: boolean; count?: "exact" | "planned" | "estimated"; defaultToNull?: boolean; }): PostgrestFilterBuilder<{ PostgrestVersion: "12"; }, never, ... 4 more ..., "POST">', gave the following error.
+    Object literal may only specify known properties, and 'user_id' does not exist in type 'never[]'.
+lib/notifications.ts(534,69): error TS2769: No overload matches this call.
+  Overload 1 of 2, '(values: never, options?: { count?: "exact" | "planned" | "estimated"; }): PostgrestFilterBuilder<{ PostgrestVersion: "12"; }, never, never, null, "notifications", never, "POST">', gave the following error.
+    Argument of type '{ user_id: string; type: string; message: string; is_read: boolean; data: { url: string; gameName: string; notificationType: "invite" | "ring" | "partner_answered"; }; }' is not assignable to parameter of type 'never'.
+  Overload 2 of 2, '(values: never[], options?: { count?: "exact" | "planned" | "estimated"; defaultToNull?: boolean; }): PostgrestFilterBuilder<{ PostgrestVersion: "12"; }, never, never, null, "notifications", never, "POST">', gave the following error.
+    Object literal may only specify known properties, and 'user_id' does not exist in type 'never[]'.
+lib/sync.ts(2,52): error TS6133: 'decryptWithEphemeralKey' is declared but its value is never read.
+lib/sync.ts(62,17): error TS2345: Argument of type 'any' is not assignable to parameter of type 'never'.
+lib/wellnessAI.ts(192,15): error TS6133: 'query' is declared but its value is never read.
+pages/Admin/AdminDashboard.tsx(1,17): error TS6133: 'useEffect' is declared but its value is never read.
+pages/Admin/AdminDashboard.tsx(3,1): error TS6133: 'supabase' is declared but its value is never read.
+pages/Admin/AdminDashboard.tsx(12,6): error TS6196: 'UserProfile' is declared but never used.
+pages/Admin/AdminDashboard.tsx(15,11): error TS6198: All destructured elements are unused.
+pages/Admin/AdminDashboard.tsx(18,27): error TS6133: 'recentLogs' is declared but its value is never read.
+pages/Admin/AdminDashboard.tsx(188,40): error TS6133: 'index' is declared but its value is never read.
+pages/Admin/AdminLogs.tsx(1,17): error TS6133: 'useEffect' is declared but its value is never read.
+pages/Calendar.tsx(8,17): error TS6133: 'cycleSettings' is declared but its value is never read.
+pages/Dashboard.tsx(17,9): error TS6133: 'partnerProfile' is declared but its value is never read.
+pages/games/DotsBoxes.tsx(15,7): error TS6133: 'TOTAL_LINES' is declared but its value is never read.
+pages/games/DotsBoxes.tsx(59,11): error TS6133: 'isPlayer1' is declared but its value is never read.
+pages/games/DotsBoxes.tsx(76,85): error TS6133: 'playerId' is declared but its value is never read.
+pages/games/DotsBoxes.tsx(122,34): error TS2339: Property 'status' does not exist on type 'never'.
+pages/games/DotsBoxes.tsx(122,67): error TS2339: Property 'player_x' does not exist on type 'never'.
+pages/games/DotsBoxes.tsx(122,101): error TS2339: Property 'player_o' does not exist on type 'never'.
+pages/games/DotsBoxes.tsx(125,37): error TS2345: Argument of type '{ player_o: any; status: string; }' is not assignable to parameter of type 'never'.
+pages/games/DotsBoxes.tsx(126,48): error TS2339: Property 'id' does not exist on type 'never'.
+pages/games/EmojiCharades.tsx(386,11): error TS6133: 'toggleReveal' is declared but its value is never read.
+pages/games/EmojiCharades.tsx(392,11): error TS6133: 'nextCard' is declared but its value is never read.
+pages/games/Hangman.tsx(3,18): error TS6133: 'AnimatePresence' is declared but its value is never read.
+pages/games/LoveTrivia.tsx(100,30): error TS2339: Property 'player_x' does not exist on type 'never'.
+pages/games/LoveTrivia.tsx(100,60): error TS2339: Property 'player_o' does not exist on type 'never'.
+pages/games/LoveTrivia.tsx(102,37): error TS2345: Argument of type '{ player_o: any; }' is not assignable to parameter of type 'never'.
+pages/games/LoveTrivia.tsx(103,44): error TS2339: Property 'id' does not exist on type 'never'.
+pages/games/LoveTrivia.tsx(113,26): error TS2769: No overload matches this call.
+  Overload 1 of 2, '(values: never, options?: { count?: "exact" | "planned" | "estimated"; }): PostgrestFilterBuilder<{ PostgrestVersion: "12"; }, never, never, null, "game_sessions", never, "POST">', gave the following error.
+    Argument of type '{ couple_id: any; game_type: string; board_state: LTState; player_x: any; player_o: null; status: string; }' is not assignable to parameter of type 'never'.
+  Overload 2 of 2, '(values: never[], options?: { count?: "exact" | "planned" | "estimated"; defaultToNull?: boolean; }): PostgrestFilterBuilder<{ PostgrestVersion: "12"; }, never, never, null, "game_sessions", never, "POST">', gave the following error.
+    Object literal may only specify known properties, and 'couple_id' does not exist in type 'never[]'.
+pages/games/LoveTrivia.tsx(218,11): error TS6133: 'nextCard' is declared but its value is never read.
+pages/games/LoveTrivia.tsx(375,11): error TS6133: 'hasPartner' is declared but its value is never read.
+pages/games/MemoryMatch.tsx(3,18): error TS6133: 'AnimatePresence' is declared but its value is never read.
+pages/games/MemoryMatch.tsx(262,11): error TS6133: 'totalPairs' is declared but its value is never read.
+pages/games/NeverHaveIEver.tsx(79,11): error TS6133: 'channelRef' is declared but its value is never read.
+pages/games/NeverHaveIEver.tsx(248,11): error TS6133: 'isMyTurn' is declared but its value is never read.
+pages/games/RapidFire.tsx(78,11): error TS6133: 'openTutorial' is declared but its value is never read.
+pages/games/RapidFire.tsx(84,11): error TS6133: 'channelRef' is declared but its value is never read.
+pages/games/RapidFire.tsx(291,11): error TS6133: 'partnerPresent' is declared but its value is never read.
+pages/games/RiddleMe.tsx(3,18): error TS6133: 'AnimatePresence' is declared but its value is never read.
+pages/games/RiddleMe.tsx(53,7): error TS6133: 'ROUNDS_OPTIONS' is declared but its value is never read.
+pages/games/SongLyrics.tsx(81,11): error TS6133: 'openTutorial' is declared but its value is never read.
+pages/games/SongLyrics.tsx(87,11): error TS6133: 'channelRef' is declared but its value is never read.
+pages/games/SongLyrics.tsx(291,11): error TS6133: 'partnerPresent' is declared but its value is never read.
+pages/games/StoryBuilder.tsx(97,11): error TS6133: 'partnerId' is declared but its value is never read.
+pages/games/ThisOrThat.tsx(3,18): error TS6133: 'AnimatePresence' is declared but its value is never read.
+pages/games/ThisOrThat.tsx(62,11): error TS6133: 'channelRef' is declared but its value is never read.
+pages/games/TicTacToe.tsx(152,48): error TS6133: 'findErr' is declared but its value is never read.
+pages/games/TruthOrDare.tsx(9,1): error TS6133: 'Toast' is declared but its value is never read.
+pages/games/TruthOrDare.tsx(67,11): error TS6133: 'channelRef' is declared but its value is never read.
+pages/games/TwentyQuestions.tsx(3,18): error TS6133: 'AnimatePresence' is declared but its value is never read.
+pages/games/TwoTruthsOneLie.tsx(3,18): error TS6133: 'AnimatePresence' is declared but its value is never read.
+pages/games/WordGuess.tsx(3,18): error TS6133: 'AnimatePresence' is declared but its value is never read.
+pages/games/WordGuess.tsx(35,7): error TS6133: 'ALPHABET' is declared but its value is never read.
+pages/games/WouldYouRather.tsx(3,18): error TS6133: 'AnimatePresence' is declared but its value is never read.
+pages/Insights.tsx(8,3): error TS6133: 'XAxis' is declared but its value is never read.
+pages/Insights.tsx(14,3): error TS6133: 'CartesianGrid' is declared but its value is never read.
+pages/Insights.tsx(97,19): error TS6133: 'setProfile' is declared but its value is never read.
+pages/Insights.tsx(149,19): error TS2345: Argument of type '{ card_data: any; }' is not assignable to parameter of type 'never'.
+pages/Insights.tsx(487,43): error TS6133: 'entry' is declared but its value is never read.
+pages/LogDetails.tsx(130,9): error TS6133: 'sleepOptions' is declared but its value is never read.
+pages/Login.tsx(3,1): error TS6133: 'useAuth' is declared but its value is never read.
+pages/LoveLock.tsx(11,1): error TS6133: 'AudioPlayer' is declared but its value is never read.
+pages/LoveLock.tsx(30,11): error TS6133: 'navigate' is declared but its value is never read.
+pages/LoveLock.tsx(33,22): error TS6133: 'replyToNote' is declared but its value is never read.
+pages/LoveLock.tsx(34,9): error TS6133: 'isSupporter' is declared but its value is never read.
+pages/LoveLock.tsx(40,11): error TS6133: 'theme' is declared but its value is never read.
+pages/LoveLock.tsx(160,11): error TS6133: 'hasLinks' is declared but its value is never read.
+pages/LoveLock.tsx(245,11): error TS6133: 'isAdmin' is declared but its value is never read.
+pages/LoveLock.tsx(475,15): error TS6133: 'toastId' is declared but its value is never read.
+pages/LoveLock.tsx(963,31): error TS6133: 'isPinned' is declared but its value is never read.
+pages/partner/PartnerAuthCallback.tsx(65,33): error TS2345: Argument of type 'any' is not assignable to parameter of type 'never'.
+pages/partner/PartnerCalendar.tsx(2,85): error TS6133: 'isToday' is declared but its value is never read.
+pages/partner/PartnerDashboard.tsx(2,18): error TS6133: 'AnimatePresence' is declared but its value is never read.
+pages/partner/PartnerDashboard.tsx(9,1): error TS6133: 'PartnerInsightsView' is declared but its value is never read.
+pages/partner/PartnerDashboard.tsx(15,11): error TS6133: 'theme' is declared but its value is never read.
+pages/partner/PartnerLogin.tsx(175,34): error TS6133: 'error' is declared but its value is never read.
+pages/partner/PartnerLogs.tsx(2,18): error TS6133: 'AnimatePresence' is declared but its value is never read.
+pages/partner/PartnerNotifications.tsx(1,17): error TS6133: 'useEffect' is declared but its value is never read.
+pages/partner/PartnerNotifications.tsx(4,28): error TS6133: 'Notification' is declared but its value is never read.
+pages/partner/PartnerProfile.tsx(7,18): error TS6133: 'Key' is declared but its value is never read.
+pages/partner/PartnerProfile.tsx(7,23): error TS6133: 'Lock' is declared but its value is never read.
+pages/partner/PartnerProfile.tsx(24,10): error TS6133: 'email' is declared but its value is never read.
+pages/partner/PartnerSignUp.tsx(268,38): error TS6133: 'error' is declared but its value is never read.
+pages/partner/PartnerWellness.tsx(46,11): error TS6133: 'user' is declared but its value is never read.
+pages/Settings.tsx(21,10): error TS6133: 'isLoadingDevices' is declared but its value is never read.
+pages/Settings.tsx(81,25): error TS6133: 'error' is declared but its value is never read.
+pages/Settings.tsx(89,73): error TS2698: Spread types may only be created from object types.
+pages/Settings.tsx(397,51): error TS2345: Argument of type '{ partner_nickname: any; }' is not assignable to parameter of type 'never'.
+pages/settings/NotificationSettings.tsx(42,21): error TS6133: 'error' is declared but its value is never read.
+pages/settings/NotificationSettings.tsx(49,37): error TS2339: Property 'period_notifications' does not exist on type 'never'.
+pages/settings/NotificationSettings.tsx(50,39): error TS2339: Property 'reminder_notifications' does not exist on type 'never'.
+pages/settings/NotificationSettings.tsx(53,18): error TS2339: Property 'reminder_notifications' does not exist on type 'never'.
+pages/settings/NotificationSettings.tsx(56,18): error TS2339: Property 'period_notifications' does not exist on type 'never'.
+pages/settings/NotificationSettings.tsx(72,17): error TS2345: Argument of type 'any' is not assignable to parameter of type 'never'.
+remotion/src/DotsBoxesVideo.tsx(2,24): error TS6133: 'Sequence' is declared but its value is never read.
+remotion/src/DotsBoxesVideo.tsx(54,11): error TS6133: 'smoothProgress' is declared but its value is never read.
+remotion/src/EmojiCharadesVideo.tsx(11,8): error TS6133: 'fps' is declared but its value is never read.
+remotion/src/EmojiCharadesVideo.tsx(18,8): error TS6133: 'frameInStep' is declared but its value is never read.
+remotion/src/HangmanVideo.tsx(2,24): error TS6133: 'Sequence' is declared but its value is never read.
+remotion/src/HangmanVideo.tsx(2,75): error TS6133: 'interpolate' is declared but its value is never read.
+remotion/src/MemoryMatchVideo.tsx(11,8): error TS6133: 'fps' is declared but its value is never read.
+remotion/src/NeverHaveIEverVideo.tsx(18,8): error TS6133: 'fps' is declared but its value is never read.
+remotion/src/RapidFireVideo.tsx(21,8): error TS6133: 'fps' is declared but its value is never read.
+remotion/src/RiddleMeVideo.tsx(11,8): error TS6133: 'fps' is declared but its value is never read.
+remotion/src/Root.tsx(2,23): error TS6133: 'Folder' is declared but its value is never read.
+remotion/src/Root.tsx(60,7): error TS2322: Type '{ key: string; id: string; component: React.FC<{ config: GameTutorialConfig; primaryColor: string; isDark: boolean; }>; durationInFrames: number; fps: number; width: number; height: number; defaultProps: { ...; }; }' is not assignable to type 'CompositionProps<AnyZodObject, { config: GameTutorialConfig; primaryColor: string; isDark: boolean; }>'.
+  Property 'key' does not exist on type 'CompositionProps<AnyZodObject, { config: GameTutorialConfig; primaryColor: string; isDark: boolean; }>'.
+remotion/src/RPSVideo.tsx(7,7): error TS6133: 'PARTNER_COLOR' is declared but its value is never read.
+remotion/src/SongLyricsVideo.tsx(11,8): error TS6133: 'fps' is declared but its value is never read.
+remotion/src/SongLyricsVideo.tsx(17,8): error TS6133: 'frameInStep' is declared but its value is never read.
+remotion/src/SongLyricsVideo.tsx(130,117): error TS6133: 'color' is declared but its value is never read.
+remotion/src/StoryBuilderVideo.tsx(11,8): error TS6133: 'fps' is declared but its value is never read.
+remotion/src/ThisOrThatVideo.tsx(11,8): error TS6133: 'fps' is declared but its value is never read.
+remotion/src/ThisOrThatVideo.tsx(18,8): error TS6133: 'frameInStep' is declared but its value is never read.
+remotion/src/TicTacToeVideo.tsx(11,8): error TS6133: 'fps' is declared but its value is never read.
+remotion/src/TicTacToeVideo.tsx(129,181): error TS6133: 'secondary' is declared but its value is never read.
+remotion/src/TriviaVideo.tsx(2,24): error TS6133: 'Sequence' is declared but its value is never read.
+remotion/src/TriviaVideo.tsx(5,7): error TS6133: 'SECONDARY_BG' is declared but its value is never read.
+remotion/src/TriviaVideo.tsx(46,8): error TS6133: 'btnScale' is declared but its value is never read.
+remotion/src/TriviaVideo.tsx(88,54): error TS6133: 'i' is declared but its value is never read.
+remotion/src/TruthDareVideo.tsx(2,24): error TS6133: 'Sequence' is declared but its value is never read.
+remotion/src/TruthDareVideo.tsx(2,67): error TS6133: 'spring' is declared but its value is never read.
+remotion/src/TruthDareVideo.tsx(5,7): error TS6133: 'SECONDARY_BG' is declared but its value is never read.
+remotion/src/TruthDareVideo.tsx(30,8): error TS6133: 'fps' is declared but its value is never read.
+remotion/src/TutorialVideo.tsx(11,8): error TS6133: 'fps' is declared but its value is never read.
+remotion/src/TutorialVideo.tsx(12,8): error TS6133: 'frame' is declared but its value is never read.
+remotion/src/TwentyQuestionsVideo.tsx(11,8): error TS6133: 'fps' is declared but its value is never read.
+remotion/src/TwentyQuestionsVideo.tsx(18,8): error TS6133: 'frameInStep' is declared but its value is never read.
+remotion/src/TwoTruthsOneLieVideo.tsx(11,8): error TS6133: 'fps' is declared but its value is never read.
+remotion/src/WordleVideo.tsx(2,24): error TS6133: 'Sequence' is declared but its value is never read.
+remotion/src/WordleVideo.tsx(2,67): error TS6133: 'spring' is declared but its value is never read.
+remotion/src/WordleVideo.tsx(29,8): error TS6133: 'fps' is declared but its value is never read.
+remotion/src/WouldYouRatherVideo.tsx(11,8): error TS6133: 'fps' is declared but its value is never read.
+remotion/src/WouldYouRatherVideo.tsx(18,8): error TS6133: 'frameInStep' is declared but its value is never read.
+remotion/src/WouldYouRatherVideo.tsx(21,8): error TS6133: 'phase' is declared but its value is never read.

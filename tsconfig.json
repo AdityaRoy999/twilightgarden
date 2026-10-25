@@ -27,6 +27,13 @@
     "noEmit": true
   },
   "exclude": [
-    "supabase/functions"
+    "supabase/functions",
+    "remotion",
+    "dist",
+    "docs",
+    "node_modules",
+    "tmp",
+    "test-results",
+    "coverage"
   ]
 }

@@ -3,9 +3,15 @@
   "private": true,
   "version": "0.0.3",
   "type": "module",
+  "engines": {
+    "node": "^20.19.0 || >=22.12.0"
+  },
   "scripts": {
     "dev": "vite",
-    "build": "vite build",
+    "dev:local": "vite --host 127.0.0.1 --port 3000 --strictPort",
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run",
+    "build": "npm run typecheck && vite build",
     "preview": "vite preview",
     "release": "node scripts/release.js",
     "release:desktop": "node scripts/release-desktop.js",
@@ -41,7 +47,6 @@
     "jspdf": "^4.2.0",
     "leaflet": "^1.9.4",
     "lucide-react": "^0.575.0",
-    "motion": "^12.34.3",
     "react": "^19.2.4",
     "react-dom": "^19.2.4",
     "react-is": "^19.2.4",
@@ -51,18 +56,29 @@
     "recharts": "^3.7.0"
   },
   "devDependencies": {
-    "@capacitor/assets": "^3.0.5",
     "@capacitor/cli": "^8.1.0",
+    "@tailwindcss/container-queries": "0.1.1",
+    "@tailwindcss/forms": "0.5.11",
     "@tauri-apps/api": "^2.10.1",
     "@tauri-apps/cli": "^2.10.0",
+    "@testing-library/react": "16.3.3",
     "@types/node": "^25.3.2",
+    "@types/react": "19.3.0",
+    "@types/react-dom": "19.3.0",
     "@vitejs/plugin-react": "^5.1.4",
+    "autoprefixer": "10.6.1",
+    "jsdom": "29.1.1",
+    "postcss": "8.5.31",
+    "tailwindcss": "3.4.19",
     "typescript": "^5.9.3",
     "vite": "^7.3.1",
+    "vitest": "5.0.5",
     "web-push": "^3.6.7"
   },
   "overrides": {
     "tar": "^7.5.8",
-    "minimatch": "^3.1.2"
+    "minimatch": "^3.1.2",
+    "@grpc/grpc-js": "1.14.6",
+    "postcss-selector-parser": "7.1.6"
   }
 }

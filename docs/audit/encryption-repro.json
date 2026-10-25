@@ -1,0 +1,6 @@
+{
+  "differentPartnerKeys": true,
+  "cacheIdentifiersCollide": true,
+  "secondRecipientDecryptsWithCache": false,
+  "secondRecipientDecryptsAfterCacheClear": true
+}
