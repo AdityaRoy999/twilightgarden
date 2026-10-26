@@ -3,6 +3,9 @@ import ReactDOM from 'react-dom/client';
 import App from './App';
 import { App as CapacitorApp } from '@capacitor/app';
 import { supabase } from './lib/supabase';
+import {installChunkRecovery} from './lib/chunkRecovery';
+
+installChunkRecovery();
 
 // Listen for deep link callbacks (OAuth) — Capacitor only
 // Tauri deep links are handled in App.tsx via @tauri-apps/plugin-deep-link
