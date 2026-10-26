@@ -92,7 +92,8 @@ try {
   for (const name of ['ai-generate', 'call-credentials', 'push-notifications', 'push-notifications-']) {
     for (const body of ['{', '[]']) await probe(`${name} invalid body ${body === '{' ? 'syntax' : 'shape'}`, `/functions/v1/${name}`, 400, { method: 'POST', token: tokens[0], body });
   }
-  await probe('AI generation', '/functions/v1/ai-generate', 200, { method: 'POST', token: tokens[0], body: JSON.stringify({ mood: 'raw', customPrompt: 'Reply only OK.' }) });
+  const guidance = await probe('AI Wellness generation', '/functions/v1/ai-generate', 200, { method: 'POST', token: tokens[0], body: JSON.stringify({ mood: 'raw', customPrompt: 'Generate exactly 3 concise, complete general self-care tips. Each starts with an emoji and a bold title followed by one sentence. Fictional test context: Luteal phase, cycle day 25, calm mood, tired after a busy day, 6 hours sleep. Do not diagnose or recommend medication. Recent fictional history: three daily check-ins with mixed energy and 6 to 8 hours sleep.' }) });
+  assert.ok(typeof guidance?.text === 'string' && guidance.text.length > 50 && !guidance.text.includes('<think>'), 'Wellness must receive a visible answer, not just provider reasoning tokens');
   await probe('product search', '/functions/v1/ai-generate', 200, { method: 'POST', token: tokens[0], body: JSON.stringify({ mood: 'search', search_query: 'hot water bottle India' }) });
   await probe('places search', '/functions/v1/ai-generate', 200, { method: 'POST', token: tokens[0], body: JSON.stringify({ mood: 'places', lat: 22.5726, lon: 88.3639 }) });
   // Discover every table referenced by the client, then exercise its read route.

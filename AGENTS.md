@@ -11,6 +11,9 @@
   message arrivals. Do not delay requests or navigation to wait for animation.
 - Viewport overlays belong in `MotionPortal` or `SpringModal`, outside animated
   route transforms. Chat occupies the full content pane and owns one scroll area.
+- Keep scrollbar tracks hidden while preserving scrolling. Selection uses fills
+  and text colors without outlines; keep keyboard focus visible through a fill
+  or underline. Reaction arrivals use the shared springs and retain real emoji.
 - After changing Tailwind configuration, restart the local server and run
   `npm run verify:ui`. Keep shared theme tokens in `styles/bloom.css` and
   reference-specific gradients in `styles/dark.css`.

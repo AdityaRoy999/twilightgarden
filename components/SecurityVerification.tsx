@@ -108,7 +108,7 @@ export function SecurityVerification({
     };
   }, [isOpen, scanning, fingerprint]);
   return (
-    <SpringModal open={isOpen} onClose={onClose} labelledBy="security-title" className="max-w-lg p-0">
+    <SpringModal open={isOpen} onClose={onClose} labelledBy="security-title" className="security-dialog max-w-lg p-0">
       <header className="sticky top-0 z-10 flex items-center justify-between border-b border-black/10 bg-background-dark p-4 dark:border-white/10 dark:bg-background-dark">
         <h2
           id="security-title"
@@ -155,7 +155,7 @@ export function SecurityVerification({
                   ? "Codes do not match. Check the account and device before continuing."
                   : "Awaiting code comparison"}
             </p>
-            <div className="mx-auto flex w-fit rounded-2xl bg-white p-5">
+            <div className="security-qr mx-auto flex w-fit rounded-2xl bg-white p-5">
               <QRCode value={fingerprint} size={220} />
             </div>
             <p

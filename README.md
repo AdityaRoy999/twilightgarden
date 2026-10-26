@@ -109,6 +109,8 @@ UI icons are local SVGs in `components/ui/Icons.tsx`. Shared motion presets live
 
 Run `npm run design:preview` for 56 static page layouts in both appearances and `npm run verify:ui` to inspect the CSS served by localhost. The opt-in `npm run verify:api` creates and cleans synthetic accounts and requires the server-only service role key. See [the latest UI/API verification](docs/DARK_MOTION_AND_API_2026-10-27.md) for evidence and limits.
 
+The [interaction polish notes](docs/INTERACTION_POLISH_2026-10-27.md) cover reaction motion, Wellness loading, the journal redesign, and the opt-in sample-history seeder.
+
 ## 📄 License
 
 No LICENSE file is currently checked into this repository. Confirm the intended license before distribution.

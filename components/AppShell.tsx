@@ -80,7 +80,7 @@ export default function AppShell({ mode = "tracker" }: { mode?: Mode }) {
         aria-label={label}
         title={label}
         className={({ isActive }) =>
-          `relative isolate flex min-h-12 items-center rounded-xl transition-colors focus-visible:outline-primary ${compact ? "flex-1 flex-col justify-center gap-1 px-1 py-2 text-[11px]" : "gap-3 px-3 py-3 text-sm font-medium " + (isCollapsed ? "justify-center" : "")} ${isActive ? "bg-primary/15 text-primary" : "text-gray-500 hover:bg-black/5 hover:text-gray-900 dark:text-gray-400 dark:hover:bg-white/5 dark:hover:text-white"}`
+          `relative isolate flex min-h-12 items-center rounded-xl transition-colors focus-visible:outline-primary ${compact ? "flex-1 flex-col justify-center gap-1 px-1 py-2 text-[11px]" : "gap-3 px-3 py-3 text-sm font-medium "} ${isActive ? "bg-primary/15 text-primary" : "text-gray-500 hover:bg-black/5 hover:text-gray-900 dark:text-gray-400 dark:hover:bg-white/5 dark:hover:text-white"}`
         }
       >
         {(location.pathname === to || (to === '/settings' && location.pathname.startsWith('/settings/'))) && <motion.span className="nav-spring-pill" layoutId={compact ? 'mobile-selection' : 'desktop-selection'} transition={motionTransition(springs.selection, reduced)} aria-hidden="true"/>}
@@ -90,7 +90,7 @@ export default function AppShell({ mode = "tracker" }: { mode?: Mode }) {
           aria-hidden="true"
           className="relative z-10 shrink-0"
         />
-        <span className={isCollapsed ? "sr-only" : "relative z-10"}>{label}</span>
+        <motion.span initial={false} className="sidebar-link-label relative z-10" aria-hidden={isCollapsed || undefined} animate={!compact ? { opacity: collapsed ? 0 : 1, width: collapsed ? 0 : 'auto' } : { opacity: 1 }} transition={motionTransition(springs.section, reduced)}>{label}</motion.span>
       </NavLink>
     );
   };
@@ -103,23 +103,24 @@ export default function AppShell({ mode = "tracker" }: { mode?: Mode }) {
         Skip to content
       </a>
       {!hide && (
-        <aside
+        <motion.aside
           aria-label="Sidebar"
           data-collapsed={collapsed}
-          className={`bloom-sidebar hidden h-full shrink-0 flex-col border-r md:flex ${collapsed ? "w-20" : "w-60"}`}
+          initial={false}
+          animate={{ width: collapsed ? 80 : 240 }}
+          transition={motionTransition(springs.section, reduced)}
+          className="bloom-sidebar hidden h-full shrink-0 flex-col border-r md:flex"
         >
           <div
-            className={`mb-6 flex h-12 shrink-0 items-center ${collapsed ? "justify-center" : "justify-between gap-2 px-1"}`}
+            className="mb-6 flex h-12 shrink-0 items-center justify-between gap-2 px-1"
           >
-            {!collapsed && (
-              <Link
+              <motion.div className="sidebar-brand" initial={false} animate={{ width: collapsed ? 0 : 'auto', opacity: collapsed ? 0 : 1 }} transition={motionTransition(springs.section, reduced)} inert={collapsed} aria-hidden={collapsed || undefined}><Link
                 to={items[0].to}
                 className="flex min-w-0 items-center gap-2 text-primary"
               >
                 <Flower2 size={28} aria-hidden="true" />
                 <span className="font-display text-lg font-bold">Twilight</span>
-              </Link>
-            )}
+              </Link></motion.div>
             <button
               onClick={() => setCollapsed((v) => !v)}
               aria-label={collapsed ? "Expand sidebar" : "Collapse sidebar"}
@@ -135,10 +136,8 @@ export default function AppShell({ mode = "tracker" }: { mode?: Mode }) {
           >
             {items.map((item) => renderLink(item))}
           </nav>
-          {!collapsed && (
-            <footer><Flower2 size={25}/><strong>A little closer, every day</strong><p>{mode === "partner" ? "Small moments of care make a difference." : "Your body. Your rhythm. A space that grows with you."}</p></footer>
-          )}
-        </aside>
+            <motion.footer initial={false} animate={{ opacity: collapsed ? 0 : 1, height: collapsed ? 0 : 'auto', padding: collapsed ? 0 : 18, marginTop: collapsed ? 0 : 20 }} transition={motionTransition(springs.section, reduced)} aria-hidden={collapsed || undefined}><Flower2 size={25}/><strong>A little closer, every day</strong><p>{mode === "partner" ? "Small moments of care make a difference." : "Your body. Your rhythm. A space that grows with you."}</p></motion.footer>
+        </motion.aside>
       )}
       <div
         className={`flex min-h-0 min-w-0 flex-1 flex-col ${!hide ? "pb-[calc(92px+env(safe-area-inset-bottom))] md:pb-0" : ""}`}
