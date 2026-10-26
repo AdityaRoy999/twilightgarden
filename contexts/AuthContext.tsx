@@ -1,3 +1,4 @@
+import { Preferences } from '@capacitor/preferences';
 import React, { createContext, useContext, useEffect, useRef, useState } from 'react';
 import type { Session, User as AuthUser } from '@supabase/supabase-js';
 import { supabase } from '../lib/supabase';
@@ -7,6 +8,7 @@ import { clearEncryptionCache } from '../lib/encryption';
 
 interface AuthContextType {
   user: User | null;
+  dataEpoch: string | null;
   loading: boolean;
   sessionVerified: boolean;
   profileRefreshed: boolean;
@@ -32,9 +34,12 @@ function clearPrivateCaches() {
 }
 
 async function loadProfile(authUser: AuthUser): Promise<User> {
-  const { data, error } = await supabase.from('profiles')
+  let { data, error } = await supabase.from('profiles')
     .select('role, full_name, avatar_url').eq('id', authUser.id)
     .abortSignal(AbortSignal.timeout(10000)).single();
+  if(error?.code==='PGRST116'){
+    const result=await supabase.rpc('ensure_own_profile');data=result.data;error=result.error;
+  }
   if (error) throw error;
   if (!data || !['user', 'partner', 'admin'].includes(data.role)) throw new Error('Your profile could not be verified. Please retry.');
   return {
@@ -46,6 +51,8 @@ async function loadProfile(authUser: AuthUser): Promise<User> {
 }
 
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+  const [dataEpoch,setDataEpoch]=useState<string|null>(null);
+  const epochRef=useRef<string|null>(null);
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
   const [sessionVerified, setSessionVerified] = useState(false);
@@ -66,10 +73,22 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         }
         return;
       }
+      const epochResult=await supabase.rpc('get_data_epoch');
+      if(epochResult.error)throw epochResult.error;
+      if(!mountedRef.current||revision!==revisionRef.current)return;
+      const epoch=String(epochResult.data);
+      const marker='app-dataset-epoch:'+session.user.id;
+      if(localStorage.getItem(marker)!==epoch){
+        clearPrivateCaches();
+        await Promise.all([Preferences.remove({key:session.user.id+'_private_key'}),Preferences.remove({key:session.user.id+'_public_key'})]);
+        if(!mountedRef.current||revision!==revisionRef.current)return;
+        localStorage.setItem(marker,epoch);
+      }
       const profile = await loadProfile(session.user);
       if (!mountedRef.current || revision !== revisionRef.current) return;
       if (userIdRef.current && userIdRef.current !== profile.id) clearPrivateCaches();
       userIdRef.current = profile.id;
+      epochRef.current=epoch;setDataEpoch(epoch);
       localStorage.setItem('twilight-cached-user', JSON.stringify(profile));
       setUser(profile); setSessionVerified(true); setProfileRefreshed(true); setError(null);
       void registerPushNotifications(profile.id).catch(() => {});
@@ -109,6 +128,15 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     await applySession(data.session, ++revisionRef.current);
   };
 
+  useEffect(()=>{
+    if(!user?.id)return;
+    const check=()=>{void supabase.rpc('get_data_epoch').then(({data,error})=>{if(!error&&data!==epochRef.current)void signOut().catch(()=>{clearPrivateCaches();setUser(null);setError('The application data was reset. Please sign in again.');});});};
+    const channel=supabase.channel('dataset-reset').on('postgres_changes',{event:'UPDATE',schema:'public',table:'app_dataset'},check).subscribe();
+    const timer=setInterval(check,60000);
+    window.addEventListener('focus',check);window.addEventListener('online',check);
+    return()=>{clearInterval(timer);window.removeEventListener('focus',check);window.removeEventListener('online',check);void supabase.removeChannel(channel);};
+  },[user?.id]);
+
   const signOut = async () => {
     await resetPushRegistration(userIdRef.current);
     const { error } = await supabase.auth.signOut();
@@ -119,7 +147,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     setRecoveringPassword(false); setError(null);
   };
 
-  return <AuthContext.Provider value={{ user, loading, sessionVerified, profileRefreshed, error,
+  return <AuthContext.Provider value={{ user, dataEpoch, loading, sessionVerified, profileRefreshed, error,
     recoveringPassword, completePasswordRecovery: () => setRecoveringPassword(false), signOut, refreshUser }}>
     {children}
   </AuthContext.Provider>;

@@ -5,7 +5,7 @@ import { useCall } from '../contexts/CallContext';
 
 export const CallModal: React.FC = () => {
     const { 
-        callStatus, 
+        callStatus,callError,dismissCallError,callLatencyMs,
         localStream, 
         remoteStream, 
         callerName, 
@@ -48,7 +48,7 @@ export const CallModal: React.FC = () => {
         }
     }, [remoteStream, isVideoCall]);
 
-    if (callStatus === 'idle') return null;
+    if(callStatus==='idle')return callError?<div role="alert" className="fixed bottom-24 left-4 right-4 z-[1000] mx-auto flex max-w-md items-center justify-between gap-3 rounded-2xl border border-amber-400/30 bg-[#211e27] p-4 text-sm text-white shadow-xl"><span>{callError}</span><button aria-label="Dismiss call error" onClick={dismissCallError} className="min-h-11 px-3">Close</button></div>:null;
 
     return (
         <AnimatePresence>
@@ -95,7 +95,7 @@ export const CallModal: React.FC = () => {
                                 <h2 className="text-2xl font-semibold">{callerName || 'Partner'}</h2>
                                 <p className="text-white/40">
                                     {callStatus === 'calling' ? 'Calling...' : 
-                                     callStatus === 'incoming' ? 'Incoming Call' : 
+                                     callStatus === 'incoming' ? 'Incoming Call' : callStatus==='connecting'?'Connecting media…':
                                      'Connected'}
                                 </p>
                             </div>
@@ -120,6 +120,7 @@ export const CallModal: React.FC = () => {
                         )}
                     </div>
 
+                    {callLatencyMs!==null&&<p className="mt-3 text-xs text-white/60" aria-live="polite">{callLatencyMs} ms round-trip{callLatencyMs>350?' · Network delay':''}</p>}
                     {/* Controls */}
                     <div className="w-full mt-8 flex flex-col items-center space-y-8">
                         
@@ -128,7 +129,7 @@ export const CallModal: React.FC = () => {
                                 <motion.button
                                     whileHover={{ scale: 1.1 }}
                                     whileTap={{ scale: 0.9 }}
-                                    onClick={rejectCall}
+                                    aria-label="Decline call" onClick={rejectCall}
                                     className="p-5 rounded-full bg-red-500 text-white shadow-lg shadow-red-500/30"
                                 >
                                     <PhoneOff size={32} />
@@ -136,7 +137,7 @@ export const CallModal: React.FC = () => {
                                 <motion.button
                                     whileHover={{ scale: 1.1 }}
                                     whileTap={{ scale: 0.9 }}
-                                    onClick={acceptCall}
+                                    aria-label="Accept call" onClick={acceptCall}
                                     className="p-5 rounded-full bg-green-500 text-white shadow-lg shadow-green-500/30 animate-pulse"
                                 >
                                     <Phone size={32} />
@@ -145,7 +146,7 @@ export const CallModal: React.FC = () => {
                         ) : (
                             <div className="flex items-center space-x-6 bg-white/5 backdrop-blur-xl p-4 px-8 rounded-full border border-white/10">
                                 <button 
-                                    onClick={toggleMute}
+                                    aria-label={isMuted?"Unmute microphone":"Mute microphone"} onClick={toggleMute}
                                     className={`p-3 rounded-full transition-colors ${isMuted ? 'bg-red-500/20 text-red-400' : 'bg-white/10 text-white'}`}
                                 >
                                     {isMuted ? <MicOff size={24} /> : <Mic size={24} />}
@@ -153,7 +154,7 @@ export const CallModal: React.FC = () => {
                                 
                                 {isVideoCall && (
                                     <button 
-                                        onClick={toggleVideo}
+                                        aria-label={isVideoOff?"Enable camera":"Disable camera"} onClick={toggleVideo}
                                         className={`p-3 rounded-full transition-colors ${isVideoOff ? 'bg-red-500/20 text-red-400' : 'bg-white/10 text-white'}`}
                                     >
                                         {isVideoOff ? <VideoOff size={24} /> : <Video size={24} />}
@@ -161,7 +162,7 @@ export const CallModal: React.FC = () => {
                                 )}
 
                                 <button 
-                                    onClick={endCall}
+                                    aria-label="End call" onClick={endCall}
                                     className="p-4 rounded-full bg-red-500 text-white shadow-lg shadow-red-500/40"
                                 >
                                     <PhoneOff size={28} />

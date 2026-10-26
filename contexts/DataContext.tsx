@@ -136,6 +136,7 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
       return {
         ...data,
+        periodStarted: data.is_period_start ?? data.periodStarted ?? false,
         energyLevel: data.energy_level || data.energyLevel,
         sleepQuality: data.sleep_quality || data.sleepQuality,
         sleepHours: data.sleep_hours ?? data.sleepHours
@@ -260,7 +261,7 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children
         const [logsResult, settingsResult] = await Promise.all([
           supabase
             .from('daily_logs')
-            .select('id,date,flow,moods,symptoms,notes,energy_level,sleep_hours,sleep_quality,encrypted_payload,created_at')
+            .select('id,date,is_period_start,flow,moods,symptoms,notes,energy_level,sleep_hours,sleep_quality,encrypted_payload,created_at')
             .eq('user_id', user.id),
           supabase
             .from('user_settings')
@@ -294,7 +295,7 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children
           let effectiveStart = s.last_period_start || s.lastPeriodStart || '';
           if (!effectiveStart && logsData && logsData.length > 0) {
             const sortedLogs = [...(logsData as any[])].sort((a, b) => b.date.localeCompare(a.date));
-            const latestFlowLog = sortedLogs.find(l => l.flow);
+            const latestFlowLog = sortedLogs.find(l => l.is_period_start);
             if (latestFlowLog) effectiveStart = latestFlowLog.date;
           }
 
@@ -353,23 +354,17 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children
         encryptedPayload = await encryptData(payload, partnerPubKey);
       }
 
-      const { data: savedLog, error } = await supabase.from('daily_logs').upsert({
-        user_id: user.id,
-        date: newLog.date,
-        // We still keep the original columns for basic filtering/indexing if needed,
-        // but the 'encrypted_payload' is the source of truth now.
-        flow: newLog.flow ?? null,
-        moods: newLog.moods || [],
-        symptoms: [...new Set(newLog.symptoms || [])],
-        notes: newLog.notes || null,
-        energy_level: newLog.energyLevel || null,
-        sleep_quality: newLog.sleepQuality || null,
-        sleep_hours: newLog.sleepHours ?? null,
-        encrypted_payload: encryptedPayload
-      } as any, { onConflict: 'user_id,date' }).select().single();
-
+      const {data:result,error}=await supabase.rpc('save_daily_log',{
+        p_date:newLog.date,p_period_start:!!newLog.periodStarted,p_encrypted:encryptedPayload,
+        p_values:{flow:newLog.flow??null,moods:newLog.moods||[],symptoms:[...new Set(newLog.symptoms||[])],notes:newLog.notes||null,energy_level:newLog.energyLevel??null,sleep_quality:newLog.sleepQuality??null,sleep_hours:newLog.sleepHours??null}
+      });
+      const saved=result as unknown as {log:Record<string,unknown>;settings:Record<string,any>};
+      const savedLog=saved?.log;
       if (error) throw error;
       const mappedLog = await mapLog(savedLog);
+      const settings=saved.settings;
+      const nextSettings={avgCycleLength:settings.avg_cycle_length,avgPeriodLength:settings.avg_period_length,lastPeriodStart:settings.last_period_start||'',onboardingCompleted:settings.onboarding_completed,irregularCycle:settings.irregular_cycle};
+      setCycleSettings(nextSettings);setCachedSettings(user.id,nextSettings);
       setLogs(prev => {
         const next = [...prev.filter(l => l.date !== mappedLog.date), mappedLog].sort((a,b) => b.date.localeCompare(a.date));
         setCachedLogs(user.id, next);
@@ -456,15 +451,10 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children
           encryptedPayload = await encryptData(payload, partnerPubKey);
         }
 
-        const { error } = await supabase.from('user_settings').upsert({
-          user_id: user.id,
-          avg_cycle_length: newSettings.avgCycleLength,
-          avg_period_length: newSettings.avgPeriodLength,
-          last_period_start: newSettings.lastPeriodStart || null,
-          onboarding_completed: newSettings.onboardingCompleted,
-          irregular_cycle: newSettings.irregularCycle,
-          encrypted_payload: encryptedPayload
-        } as any);
+        const { error } = await supabase.rpc('save_cycle_settings',{p_encrypted:encryptedPayload,p_values:{
+          avg_cycle_length:newSettings.avgCycleLength,avg_period_length:newSettings.avgPeriodLength,
+          last_period_start:newSettings.lastPeriodStart||null,onboarding_completed:newSettings.onboardingCompleted,irregular_cycle:newSettings.irregularCycle
+        }});
         if (error) throw error;
 
         setCycleSettings(newSettings);
@@ -480,7 +470,7 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
 
   const getCyclePhase = (dateStr: string = todayKey): CyclePhase => {
-    return calculateCyclePhase(dateStr, cycleSettings);
+    return calculateCyclePhase(dateStr, cycleSettings,logs);
   };
 
 

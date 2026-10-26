@@ -16,7 +16,7 @@ const Settings: React.FC = () => {
   const { signOut, user } = useAuth();
   const { theme, toggleTheme, primaryColor, animationsEnabled, updateAnimationsEnabled, solidNavBg, updateSolidNavBg } = useTheme();
   const { cycleSettings, updateSettings, logs } = useData();
-  const { deviceId } = useCouples();
+  const { deviceId,identityReady } = useCouples();
   const navigate = useNavigate();
   const [devices, setDevices] = useState<any[]>([]);
   const [isLoadingDevices, setIsLoadingDevices] = useState(false);
@@ -76,6 +76,13 @@ const Settings: React.FC = () => {
     }
   }, [user]);
 
+  useEffect(()=>{
+    if(!user?.id||!identityReady)return;
+    void fetchDevices();
+    const refresh=()=>{void fetchDevices();};window.addEventListener('focus',refresh);
+    return()=>window.removeEventListener('focus',refresh);
+  },[user?.id,deviceId,identityReady]);
+
 
   const fetchProfile = async () => {
       try {
@@ -90,8 +97,6 @@ const Settings: React.FC = () => {
               localStorage.setItem('twilight_profile', JSON.stringify({ ...data, _cachedAt: Date.now() }));
           }
 
-          // Also fetch devices
-          fetchDevices();
       } catch (error) {
           console.error("Error fetching profile", error);
       }
@@ -100,11 +105,12 @@ const Settings: React.FC = () => {
   const fetchDevices = async () => {
     if (!user) return;
     setIsLoadingDevices(true);
-    const { data } = await (supabase
+    const { data,error } = await (supabase
       .from('user_keys' as any)
       .select('device_id, device_name, last_active')
       .eq('user_id', user.id) as any);
     if (data) setDevices(data);
+    if(error)showToast('Could not load registered devices','Please retry.','error');
     setIsLoadingDevices(false);
   };
 
@@ -571,7 +577,7 @@ const Settings: React.FC = () => {
 
             <div>
               <h3 className="text-[#121014] dark:text-white text-lg font-bold mb-3 px-1">Linked Devices</h3>
-              <p className="text-xs text-gray-500 mb-4 px-1">These devices can read your encrypted messages.</p>
+              <p className="text-xs text-gray-500 mb-4 px-1">Registered encryption devices. Removing a registration does not sign that device out or erase its saved keys.</p>
               <div className="bg-white dark:bg-surface-dark rounded-2xl border border-gray-100 dark:border-white/5 overflow-hidden shadow-soft transition-colors">
                 {devices.map((device) => (
                   <div key={device.device_id} className="flex items-center justify-between p-4 border-b border-gray-100 dark:border-white/5 last:border-0">
@@ -595,6 +601,7 @@ const Settings: React.FC = () => {
                      {device.device_id !== deviceId && (
                        <button
                         onClick={() => unlinkDevice(device.device_id)}
+                        aria-label={'Remove registration for '+(device.device_name||'device')}
                         className="p-2 text-gray-400 hover:text-red-500 transition-colors"
                        >
                          <Trash2 size={18} />
@@ -603,7 +610,7 @@ const Settings: React.FC = () => {
                   </div>
                 ))}
                 {devices.length === 0 && (
-                  <div className="p-8 text-center text-gray-500 text-sm">No devices found.</div>
+                  <div className="p-8 text-center text-gray-500 text-sm">{isLoadingDevices?'Loading devices…':'No devices found.'}</div>
                 )}
               </div>
             </div>

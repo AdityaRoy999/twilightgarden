@@ -49,7 +49,7 @@ export async function generateKeyPair(): Promise<{ publicKey: string; privateKey
     const privateKeyJwk = await window.crypto.subtle.exportKey('jwk', keyPair.privateKey);
 
     return {
-        publicKey: window.btoa(JSON.stringify(publicKeyJwk)),
+        publicKey: derivePublicKeyFromPrivate(window.btoa(JSON.stringify(privateKeyJwk))),
         privateKey: window.btoa(JSON.stringify(privateKeyJwk))
     };
 }
@@ -123,7 +123,7 @@ export function getCachedPrivateKey(): string | null {
  */
 export function isContentDecrypted(content: string | null | undefined): boolean {
     if (!content) return true; // empty/null counts as "decrypted"
-    if (content.startsWith('🔐')) return true; // placeholder is still "processed"
+    if (content.startsWith('🔐')) return false;
     // Base64 cipher: long, no spaces, only B64 chars
     if (content.length > 40 && !/\s/.test(content) && /^[A-Za-z0-9+/=]+$/.test(content)) {
         return false;
@@ -351,7 +351,8 @@ export async function decryptBlob(encryptedData: ArrayBuffer, partnerPublicKeyB6
  * Generates a 60-digit fingerprint for manual verification (WhatsApp style)
  */
 export async function generateVerificationFingerprint(ownPubKey: string, partnerPubKey: string): Promise<string> {
-    const sortedKeys = [ownPubKey, partnerPubKey].sort();
+    const canonical=(value:string)=>{const key=JSON.parse(window.atob(value));return JSON.stringify({kty:key.kty,crv:key.crv,x:key.x,y:key.y});};
+    const sortedKeys = [canonical(ownPubKey), canonical(partnerPubKey)].sort();
     const combined = sortedKeys.join('');
     const encoder = new TextEncoder();
     const data = encoder.encode(combined);
@@ -373,7 +374,7 @@ export async function generateVerificationFingerprint(ownPubKey: string, partner
  * Used to back up the private key to the cloud, encrypted with a user-chosen PIN.
  */
 
-async function derivePinKey(pin: string, salt: Uint8Array): Promise<CryptoKey> {
+async function derivePinKey(pin: string, salt: Uint8Array, iterations=600000): Promise<CryptoKey> {
     const encoder = new TextEncoder();
     const pinData = encoder.encode(pin);
 
@@ -385,7 +386,7 @@ async function derivePinKey(pin: string, salt: Uint8Array): Promise<CryptoKey> {
         {
             name: 'PBKDF2',
             salt: salt.buffer as ArrayBuffer,
-            iterations: 100000,
+            iterations,
             hash: 'SHA-256'
         },
         baseKey,
@@ -414,13 +415,14 @@ export async function encryptIdentityWithPin(privateKeyB64: string, pin: string)
 
     return {
         ciphertext: arrayBufferToBase64(combined.buffer),
-        salt: arrayBufferToBase64(salt.buffer)
+        salt: 'v2:'+arrayBufferToBase64(salt.buffer)
     };
 }
 
 export async function decryptIdentityWithPin(encryptedB64: string, pin: string, saltB64: string): Promise<string> {
-    const salt = new Uint8Array(base64ToArrayBuffer(saltB64));
-    const sharedKey = await derivePinKey(pin, salt);
+    const current=saltB64.startsWith('v2:');
+    const salt = new Uint8Array(base64ToArrayBuffer(current?saltB64.slice(3):saltB64));
+    const sharedKey = await derivePinKey(pin, salt,current?600000:100000);
 
     const combined = new Uint8Array(base64ToArrayBuffer(encryptedB64));
     const iv = combined.slice(0, 12);

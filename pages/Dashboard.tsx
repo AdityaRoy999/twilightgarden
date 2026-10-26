@@ -141,7 +141,7 @@ const Dashboard: React.FC = () => {
 
                 <span className="text-[17px] md:text-xl font-bold text-[#121014] dark:text-white mb-1">{cycleData.phase} Phase</span>
                 <span className="text-xs md:text-sm font-medium text-gray-400 dark:text-gray-400 max-w-[140px] md:max-w-xs leading-relaxed">
-                    {cycleData.phase === 'Follicular' ? 'Estrogen rising, energy levels up' :
+                    {cycleData.phase === 'Unknown' ? 'Record a new period start to refresh your estimates' : cycleData.phase === 'Follicular' ? 'Estrogen rising, energy levels up' :
                     cycleData.phase === 'Ovulation' ? 'Peak fertility, high energy' :
                     cycleData.phase === 'Luteal' ? 'Progesterone rising, wind down' :
                     'Rest and recharge'}
@@ -161,10 +161,10 @@ const Dashboard: React.FC = () => {
                             <span className="text-[10px] font-bold text-gray-400 uppercase tracking-wide">Next Period</span>
                         </div>
                         <div className="flex flex-col">
-                            {cycleSettings.irregularCycle ? (
+                            {cycleData.hasEstimate===false ? (
                             <>
-                                <span className="text-lg font-bold text-[#121014] dark:text-white mb-0.5">Not Tracked</span>
-                                <span className="text-xs font-medium text-gray-400">Irregular cycle mode</span>
+                                <span className="text-lg font-bold text-[#121014] dark:text-white mb-0.5">No estimate</span>
+                                <span className="text-xs font-medium text-gray-400">{cycleSettings.irregularCycle?'Irregular cycle mode':'Record a period start'}</span>
                             </>
                             ) : (
                             <>
@@ -182,12 +182,12 @@ const Dashboard: React.FC = () => {
                             <span className="text-[10px] font-bold text-gray-400 uppercase tracking-wide">Fertility</span>
                         </div>
                         <div className="flex flex-col">
-                            {cycleSettings.irregularCycle ? (
+                            {cycleData.hasEstimate===false ? (
                             <>
                                 <span className="text-lg font-bold text-[#121014] dark:text-white mb-1.5 leading-tight">Not Tracked</span>
                                 <div className="flex items-center gap-1">
                                     <div className="w-1.5 h-1.5 rounded-full bg-gray-400"></div>
-                                    <span className="text-xs font-medium text-gray-400">Irregular cycle mode</span>
+                                    <span className="text-xs font-medium text-gray-400">{cycleSettings.irregularCycle?'Irregular cycle mode':'Record a period start'}</span>
                                 </div>
                             </>
                             ) : (
@@ -195,10 +195,10 @@ const Dashboard: React.FC = () => {
                                 {/* Calculate Fertile Window: Ovulation is approx 14 days before next period. Window is O-5 to O+1 */}
                                 {(() => {
                                     const ovulationDate = new Date(nextPeriodDate);
-                                    ovulationDate.setDate(nextPeriodDate.getDate() - 14);
+                                    ovulationDate.setDate(nextPeriodDate.getDate() - 15);
 
                                     const fertileStart = new Date(ovulationDate);
-                                    fertileStart.setDate(ovulationDate.getDate() - 5);
+                                    fertileStart.setDate(ovulationDate.getDate() - 4);
 
                                     const fertileEnd = new Date(ovulationDate);
                                     fertileEnd.setDate(ovulationDate.getDate() + 1);
@@ -215,7 +215,7 @@ const Dashboard: React.FC = () => {
                                 <div className="flex items-center gap-1">
                                     <div className={`w-1.5 h-1.5 rounded-full ${cycleData.isFertile ? 'bg-[#4ECDC4]' : 'bg-gray-400'}`}></div>
                                     <span className={`text-xs font-medium ${cycleData.isFertile ? 'text-[#4ECDC4]' : 'text-gray-400'}`}>
-                                    {cycleData.isFertile ? 'High Chance' : 'Low Chance'}
+                                    {cycleData.isFertile ? 'Estimated window' : 'Outside window'}
                                     </span>
                                 </div>
                             </>

@@ -19,7 +19,6 @@ import RestorationOverlay from './components/RestorationOverlay';
 import { useWidgetSync } from './hooks/useWidgetSync';
 import { useAutoUpdater } from './hooks/useAutoUpdater';
 import { IdentityLockdownPrompt } from './components/IdentityLockdownPrompt';
-import { PinSetupPrompt } from './components/PinSetupPrompt';
 import ErrorBoundary from './components/ErrorBoundary';
 // KeySyncWrapper removed in favor of Signal-style multi-device sync
 
@@ -397,8 +396,8 @@ const AuthStatusBoundary: React.FC<{ children: React.ReactNode }> = ({ children 
 };
 
 const AccountScope: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const { user } = useAuth();
-  return <React.Fragment key={user?.id || 'signed-out'}>{children}</React.Fragment>;
+  const { user, dataEpoch } = useAuth();
+  return <React.Fragment key={(user?.id || 'signed-out')+':'+dataEpoch}>{children}</React.Fragment>;
 };
 
 const App: React.FC = () => {
@@ -539,7 +538,7 @@ const App: React.FC = () => {
                   <GlobalGameTutorial />
                   <CallModal />
                   <IdentityLockdownPrompt />
-                  <PinSetupPrompt />
+
                   <React.Suspense fallback={<LoadingScreen />}>
                     <Routes>
                     <Route path="/welcome" element={<PublicOnlyRoute><Welcome /></PublicOnlyRoute>} />

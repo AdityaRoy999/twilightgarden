@@ -114,8 +114,7 @@ const CalendarView: React.FC = () => {
               <div className="flex items-center gap-1.5 mt-0.5">
                 <div className="w-1.5 h-1.5 rounded-full bg-ovulation"></div>
                 <span className="text-[10px] font-semibold text-gray-400 uppercase tracking-widest">
-                  Cycle Day {todayPhase.currentDay}
-                  {/* Note: Cycle Day calc needs to be relative to cycle start, for now hardcoded 14 for display or we can calculate relative to selected date */}
+                  {todayPhase.currentDay?'Cycle Day '+todayPhase.currentDay:'Record a period start'}
                 </span>
               </div>
             </div>

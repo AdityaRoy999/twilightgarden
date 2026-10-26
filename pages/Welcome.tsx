@@ -6,7 +6,7 @@ const Welcome: React.FC = () => {
   const navigate = useNavigate();
 
   return (
-    <div className="relative flex min-h-screen w-full flex-col bg-background-dark text-white font-display overflow-y-auto overflow-x-hidden">
+    <div className="relative flex h-dvh min-h-0 w-full flex-col bg-background-dark text-white font-display overflow-y-auto overflow-x-hidden">
       {/* Fixed Background Layer */}
       <div className="fixed inset-0 overflow-hidden pointer-events-none">
         <div className="absolute top-[-10%] right-[-10%] w-[350px] h-[350px] bg-accent-teal/10 rounded-full blur-[100px]"></div>

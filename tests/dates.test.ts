@@ -21,4 +21,7 @@ describe('calendar dates and cycle estimates', () => {
     expect(result.isFertile).toBe(false);
   });
   it('starts a recorded cycle at day one', () => { const result=calculateCyclePhase('2026-10-01',settings); expect(result.currentDay).toBe(1); expect(result.phase).toBe('Menstrual'); });
+  it('does not predict fertility or a next period for irregular cycles',()=>{const result=calculateCyclePhase('2026-10-14',{...settings,irregularCycle:true});expect(result.hasEstimate).toBe(false);expect(result.isFertile).toBe(false);expect(result.phase).toBe('Unknown');});
+  it('does not fabricate history before a recorded start or from invalid dates',()=>{for(const date of ['2026-09-30','2026-02-30','invalid']){const result=calculateCyclePhase(date,settings);expect(result.currentDay).toBe(0);expect(result.hasEstimate).toBe(false);}});
+  it('uses the latest explicit period start applicable to a historical calendar day',()=>{const logs=[{date:'2026-09-03',periodStarted:true},{date:'2026-09-05',flow:'medium'}];const result=calculateCyclePhase('2026-09-06',settings,logs);expect(result.currentDay).toBe(4);expect(result.phase).toBe('Menstrual');expect(calculateCyclePhase('2026-10-01',settings,logs).currentDay).toBe(1);});
 });

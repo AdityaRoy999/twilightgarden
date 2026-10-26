@@ -30,7 +30,7 @@ const isNative = () => {
 const LoveLock: React.FC = () => {
     const navigate = useNavigate(); // Added navigate
     const {
-        couple, notes, isLoading, createNote, generatePairingCode, joinCouple,
+        couple, notes, isLoading, createNote, retryNote, chatConnected, generatePairingCode, joinCouple,
         addReaction, replyToNote, markAsRead, setIsChatOpen, uploadMedia,
         isSupporter, partnerProfile, disconnectCouple, hasMoreNotes,
         loadingOlder, loadOlderNotes, partnerPubKey,
@@ -274,6 +274,12 @@ const LoveLock: React.FC = () => {
 
     // Track which note IDs we've already marked as read to avoid flooding Supabase
     const markedAsReadRef = useRef<Set<string>>(new Set());
+    const [visibilityRevision,setVisibilityRevision]=useState(0);
+    useEffect(()=>{
+        const visible=()=>{if(document.visibilityState==='visible')setVisibilityRevision(value=>value+1);};
+        document.addEventListener('visibilitychange',visible);window.addEventListener('focus',visible);
+        return()=>{document.removeEventListener('visibilitychange',visible);window.removeEventListener('focus',visible);};
+    },[]);
 
     // Mark messages as read when viewing
     useEffect(() => {
@@ -281,14 +287,14 @@ const LoveLock: React.FC = () => {
 
         // Find messages sent by partner that are not yet read AND not already marked
         const unreadNotes = notes
-            .filter(n => n.sender_id !== user.id && n.status !== 'read' && !markedAsReadRef.current.has(n.id))
+            .filter(n => !n.content.startsWith('🔐') && document.visibilityState==='visible' && n.sender_id !== user.id && n.status !== 'read' && !markedAsReadRef.current.has(n.id))
             .map(n => n.id);
 
         if (unreadNotes.length > 0) {
             unreadNotes.forEach(id => markedAsReadRef.current.add(id));
-            markAsRead(unreadNotes);
+            void markAsRead(unreadNotes).catch(()=>{unreadNotes.forEach(id=>markedAsReadRef.current.delete(id));});
         }
-    }, [notes, user]);
+    }, [notes, user, visibilityRevision]);
 
     const handleChatScroll = () => {
         const el = chatContainerRef.current;
@@ -331,7 +337,7 @@ const LoveLock: React.FC = () => {
         if (currentLength > lastLength) {
             if (isAtBottomRef.current || sentByMe) {
                 // Use a slight delay to ensure the DOM has rendered the new message
-                setTimeout(() => scrollToBottom(), 50);
+                requestAnimationFrame(() => scrollToBottom());
             }
         }
     }, [notes, user?.id]);
@@ -344,7 +350,7 @@ const LoveLock: React.FC = () => {
     }, [couple]);
 
     const scrollToBottom = () => {
-        notesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+        const el=chatContainerRef.current; if(el)el.scrollTo({top:el.scrollHeight,behavior:"smooth"});
     };
 
     const handleGenerateCode = async () => {
@@ -624,11 +630,12 @@ const LoveLock: React.FC = () => {
 
     // Handle sending text with reply-to support
     const handleSendText = async () => {
-        if (!noteContent.trim()) return;
+        if (!noteContent.trim() || isSubmitting) return;
+        if(isSyncRequired||!hasCloudBackup){window.dispatchEvent(new CustomEvent('recheck-lockdown'));return;}
+        const draft=noteContent;setNoteContent('');
         setIsSubmitting(true);
         try {
-            await createNote(noteContent, 'text', undefined, replyToNote_id || undefined);
-            setNoteContent('');
+            await createNote(draft, 'text', undefined, replyToNote_id || undefined);
             setReplyToNoteId(null);
             // Reset textarea height after sending
             if (textareaRef.current) {
@@ -637,7 +644,8 @@ const LoveLock: React.FC = () => {
             scrollToBottom();
         } catch (error) {
              console.error(error);
-             showToast('Error', 'Failed to send note', 'error');
+             if(!(error as {queued?:boolean})?.queued)setNoteContent(current=>current?draft+'\n'+current:draft);
+             showToast('Message not sent', (error as {queued?:boolean})?.queued?'Your encrypted message is saved. Tap Retry messages.':error instanceof Error?error.message:'Please retry.', 'error');
         } finally {
             setIsSubmitting(false);
         }
@@ -784,9 +792,9 @@ const LoveLock: React.FC = () => {
 
     // STATE: Active (Chat Interface) — couple is paired and active, show chat directly
     return (
-        <div className="flex flex-col h-[100dvh] max-h-[100dvh] relative overflow-hidden bg-[#FAF9FB] dark:bg-[#0F0E13]">
+        <div className="flex flex-col h-full max-h-full relative overflow-hidden bg-[#FAF9FB] dark:bg-[#0F0E13]">
              {/* Header - Fixed at top */}
-            <div className="fixed top-0 left-0 right-0 z-50 bg-white/80 dark:bg-[#0F0E13]/80 backdrop-blur-xl border-b dark:border-white/5 px-4 h-16 flex items-center justify-between">
+            <div className="relative z-30 shrink-0 bg-white/80 dark:bg-[#0F0E13]/80 backdrop-blur-xl border-b dark:border-white/5 px-4 h-16 flex items-center justify-between">
                 <div className="flex items-center gap-3">
                     <div className="w-10 h-10 rounded-full bg-pink-100 dark:bg-pink-900/20 overflow-hidden border-2 border-primary/20">
                         {partnerProfile?.avatar_url ? (
@@ -819,13 +827,13 @@ const LoveLock: React.FC = () => {
                                         onClick={() => window.dispatchEvent(new CustomEvent('recheck-lockdown'))}
                                         className="text-[10px] text-pink-500 font-bold uppercase tracking-wider cursor-pointer hover:underline"
                                     >
-                                        Setup PIN
+                                        Protect history
                                     </span>
                                 </>
                             ) : (
                                 <>
                                     <div className="w-1.5 h-1.5 rounded-full bg-green-500 animate-pulse" />
-                                    <span className="text-[10px] text-gray-400 font-medium uppercase tracking-wider">Secure Connection</span>
+                                    <span className="text-[10px] text-gray-400 font-medium uppercase tracking-wider">{chatConnected?'Connected · encrypted':'Reconnecting…'}</span>
                                 </>
                             )}
                         </div>
@@ -878,7 +886,7 @@ const LoveLock: React.FC = () => {
             <div
                 ref={chatContainerRef}
                 onScroll={handleChatScroll}
-                className="flex-1 overflow-y-auto p-4 space-y-4 pt-20 pb-48 no-scrollbar"
+                className="flex-1 min-h-0 overflow-y-auto overscroll-contain p-4 space-y-4"
             >
                 {/* View filter bar */}
                 {viewFilter !== 'all' && (
@@ -1022,7 +1030,7 @@ const LoveLock: React.FC = () => {
                                                                 ? 'text-white/70'
                                                                 : 'text-white/50'
                                                     }`}>
-                                                        {note.status === 'sent' ? 'check' : 'done_all'}
+                                                        {note.localStatus==='sending'?'schedule':note.localStatus==='failed'?'error_outline':note.status === 'sent' ? 'check' : 'done_all'}
                                                     </span>
                                                 )}
                                             </div>
@@ -1161,7 +1169,8 @@ const LoveLock: React.FC = () => {
                 onChange={handleFileSelected}
             />
 
-            <div className="absolute bottom-[86px] md:bottom-8 left-[5%] right-[5%] md:left-4 md:right-4 max-w-[400px] md:max-w-3xl mx-auto z-[60] flex flex-col">
+            <div className="relative z-30 mx-auto flex w-full shrink-0 flex-col border-t border-black/5 bg-white p-3 dark:border-white/5 dark:bg-[#0F0E13]">
+            {notes.some(note=>note.localStatus==='failed')&&<div role="status" className="mb-2 flex items-center justify-between rounded-xl bg-amber-500/10 px-4 py-2 text-sm text-amber-600"><span>Some messages have not been sent.</span><button onClick={()=>{for(const note of notes.filter(n=>n.localStatus==='failed'))void retryNote(note.id).catch(()=>{});}} className="min-h-11 px-3 font-semibold">Retry messages</button></div>}
             {/* Reply bar */}
             <AnimatePresence>
               {replyNote && (
@@ -1245,6 +1254,8 @@ const LoveLock: React.FC = () => {
 
                             <textarea
                                 ref={textareaRef}
+                                aria-label="Message"
+                                maxLength={8000}
                                 value={noteContent}
                                 onChange={(e) => {
                                     setNoteContent(e.target.value);
@@ -1254,7 +1265,7 @@ const LoveLock: React.FC = () => {
                                 className="flex-1 bg-transparent border-none focus:ring-0 resize-none max-h-32 min-h-[36px] py-2 px-2 text-[15px] outline-none placeholder:text-gray-400 leading-[20px]"
                                 rows={1}
                                 onKeyDown={(e) => {
-                                    if(e.key === 'Enter' && !e.shiftKey) {
+                                    if(e.key === 'Enter' && !e.shiftKey && !e.nativeEvent.isComposing) {
                                         e.preventDefault();
                                         handleSendText();
                                     }
@@ -1267,6 +1278,7 @@ const LoveLock: React.FC = () => {
                             {noteContent.trim() ? (
                                 <button
                                     onClick={handleSendText}
+                                    aria-label="Send message"
                                     disabled={isSubmitting}
                                     className="w-[44px] h-[44px] flex items-center justify-center bg-primary text-white rounded-full hover:brightness-110 active:scale-95 disabled:opacity-50 transition-all shadow-md shadow-primary/20"
                                 >
@@ -1275,6 +1287,7 @@ const LoveLock: React.FC = () => {
                             ) : (
                                 <button
                                     onClick={() => setShowRecorder(true)}
+                                    aria-label="Record voice message"
                                     className="w-[44px] h-[44px] flex items-center justify-center rounded-full bg-gray-100 dark:bg-[#1E1C24] text-gray-500 hover:text-primary hover:bg-white dark:hover:bg-white/10 transition-all border border-transparent hover:border-primary/20 active:scale-95 shadow-sm dark:shadow-none"
                                 >
                                     <span className="material-symbols-outlined text-[22px]">mic</span>
