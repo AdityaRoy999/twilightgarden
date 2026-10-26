@@ -1,0 +1,26 @@
+:where(.app-icon-glyph) { font-size: 24px; }
+.app-icon-glyph { display: inline-flex; align-items: center; justify-content: center; line-height: 1; vertical-align: middle; font-family: inherit; }
+.app-icon-glyph > svg { display: block; width: 1em; height: 1em; flex-shrink: 0; }
+.nav-spring-pill { position: absolute; inset: 0; border-radius: inherit; background: var(--bloom-tint); z-index: 0; }
+.bloom-mobile-nav a[aria-current='page'], .bloom-mobile-nav > button[data-active='true'], .bloom-sidebar nav a[aria-current='page'] { background: transparent; }
+.bloom-route, .bloom-route > .animate-slideIn { animation: none; }
+.spring-modal-backdrop { position: fixed; inset: 0; z-index: 300; display: flex; justify-content: center; align-items: center; padding: 20px; background: #17102070; }
+.spring-modal-backdrop.is-sheet { align-items: flex-end; padding: 12px 12px calc(12px + env(safe-area-inset-bottom)); }
+.spring-modal-panel { width: 100%; max-width: 460px; max-height: calc(100dvh - 40px); overflow-y: auto; overscroll-behavior: contain; border-radius: 28px; border: 1px solid var(--border-color); background: var(--bg-surface); color: var(--text-primary); box-shadow: 0 24px 80px -25px #24112650; }
+.is-sheet .spring-modal-panel { max-height: calc(100dvh - 64px); }
+.app-shell[data-chat='true'] { background: var(--bg-base); }
+#main-content[data-chat='true'] { overflow: hidden; background: var(--bg-base); }
+.app-shell[data-chat='true'] .bloom-route { max-width: none; }
+#main-content[data-chat='true'] .reference-chat { width: 100%; height: 100%; max-width: none; max-height: none; margin: 0; border: 0; border-radius: 0; background: var(--bg-base); }
+.reference-chat .bloom-chat-header { border-radius: 0; background: var(--bg-base); padding: 14px 20px; border-bottom: 1px solid var(--border-color); }
+.reference-chat .reference-chat-messages { background: transparent; overflow-anchor: none; padding-inline: 20px; }
+.reference-chat .reference-chat-composer { background: var(--bg-base) !important; border: 0 !important; padding: 12px 18px 8px; box-shadow: none; }
+.chat-message-row { will-change: auto; }
+.reference-message-bubble { box-shadow: 0 4px 12px -9px #bc6d90; }
+.reference-message-bubble.is-mine { background: linear-gradient(115deg, var(--action-start), var(--color-primary)); }
+@media (max-width: 767px) {
+  .reference-chat .bloom-chat-header { padding: 10px 16px; }
+  .reference-chat .reference-chat-messages { padding-inline: 16px; }
+  .reference-chat .reference-chat-composer { padding-inline: 12px; }
+}
+@media (prefers-reduced-motion: reduce) { .nav-spring-pill, .spring-modal-panel, .chat-message-row { animation: none !important; } }

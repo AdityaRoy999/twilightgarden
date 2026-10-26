@@ -1,3 +1,4 @@
+import { AppIcon } from '../components/ui/Icons';
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
@@ -168,7 +169,7 @@ const BreathingExercises: React.FC = () => {
                     }} 
                     className={`w-10 h-10 rounded-full flex items-center justify-center ${isDark ? 'hover:bg-white/10' : 'hover:bg-black/5'}`}
                 >
-                    <span className={`material-symbols-outlined ${isDark ? 'text-white' : 'text-[var(--text-primary)]'}`}>arrow_back</span>
+                    <span className={`app-icon-glyph ${isDark ? 'text-white' : 'text-[var(--text-primary)]'}`}><AppIcon name={"arrow_back"}/></span>
                 </button>
                 <h1 className={`text-2xl font-bold tracking-tight ${isDark ? 'text-white' : 'text-[var(--text-primary)]'}`}>
                     {selectedExercise ? selectedExercise.name : configuringExercise ? 'Setup Session' : 'Breathing Exercises'}
@@ -215,21 +216,21 @@ const BreathingExercises: React.FC = () => {
                                                 background: `${ex.color}15`,
                                             }}
                                         >
-                                            <span className="material-symbols-filled text-3xl relative z-10" style={{ color: ex.color }}>{ex.icon}</span>
+                                            <span className="app-icon-glyph text-3xl relative z-10" style={{ color: ex.color }}><AppIcon name={ex.icon}/></span>
                                         </div>
                                         <div className="flex-1 min-w-0 pt-1">
                                             <div className="flex items-center justify-between mb-1.5">
                                                 <h3 className={`font-bold text-lg tracking-tight ${isDark ? 'text-white' : 'text-gray-900'}`}>{ex.name}</h3>
-                                                <span className={`material-symbols-outlined text-xl transition-all group-hover:translate-x-1 ${isDark ? 'text-white/20' : 'text-gray-300'}`}>chevron_right</span>
+                                                <span className={`app-icon-glyph text-xl transition-all group-hover:translate-x-1 ${isDark ? 'text-white/20' : 'text-gray-300'}`}><AppIcon name={"chevron_right"}/></span>
                                             </div>
                                             <p className={`text-sm leading-relaxed mb-4 line-clamp-2 ${isDark ? 'text-white/50' : 'text-gray-600'}`}>{ex.description}</p>
                                             <div className="flex items-center gap-4">
                                                 <div className={`flex items-center gap-1.5 px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider ${isDark ? 'bg-white/5 text-white/40' : 'bg-gray-100 text-gray-500'}`}>
-                                                    <span className="material-symbols-outlined text-xs">timer</span>
+                                                    <span className="app-icon-glyph text-xs"><AppIcon name={"timer"}/></span>
                                                     {ex.steps.map(s => `${s.duration}s`).join(' · ')}
                                                 </div>
                                                 <div className={`flex items-center gap-1.5 px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider ${isDark ? 'bg-white/5 text-white/40' : 'bg-gray-100 text-gray-500'}`}>
-                                                    <span className="material-symbols-outlined text-xs">refresh</span>
+                                                    <span className="app-icon-glyph text-xs"><AppIcon name={"refresh"}/></span>
                                                     {ex.rounds} rounds
                                                 </div>
                                             </div>
@@ -250,7 +251,7 @@ const BreathingExercises: React.FC = () => {
                         >
                             <div className="flex flex-col items-center text-center gap-4">
                                 <div className="w-20 h-20 rounded-3xl flex items-center justify-center" style={{ background: `${configuringExercise.color}15` }}>
-                                    <span className="material-symbols-filled text-4xl" style={{ color: configuringExercise.color }}>{configuringExercise.icon}</span>
+                                    <span className="app-icon-glyph text-4xl" style={{ color: configuringExercise.color }}><AppIcon name={configuringExercise.icon}/></span>
                                 </div>
                                 <div>
                                     <h2 className={`text-2xl font-bold mb-1 ${isDark ? 'text-white' : 'text-gray-900'}`}>{configuringExercise.name}</h2>
@@ -295,7 +296,7 @@ const BreathingExercises: React.FC = () => {
                                 onClick={startExercise}
                                 className="on-brand w-full py-5 bg-primary text-white font-black rounded-3xl shadow-xl shadow-primary/20 flex items-center justify-center gap-2 text-lg active:scale-95 transition-transform"
                             >
-                                <span className="material-symbols-filled">play_arrow</span>
+                                <span className="app-icon-glyph"><AppIcon name={"play_arrow"}/></span>
                                 START SESSION
                             </button>
                         </motion.div>
@@ -314,10 +315,10 @@ const BreathingExercises: React.FC = () => {
                                 transition={{ type: 'spring', delay: 0.2 }}
                                 className="w-24 h-24 rounded-full bg-emerald-500/20 flex items-center justify-center"
                             >
-                                <span className="material-symbols-filled text-5xl text-emerald-500">check_circle</span>
+                                <span className="app-icon-glyph text-5xl text-emerald-500"><AppIcon name={"check_circle"}/></span>
                             </motion.div>
                             <div className="text-center">
-                                <h2 className={`text-2xl font-bold mb-2 ${isDark ? 'text-white' : 'text-gray-900'}`}>Well Done! 🎉</h2>
+                                <h2 className={`text-2xl font-bold mb-2 ${isDark ? 'text-white' : 'text-gray-900'}`}>Well Done! <AppIcon name={"🎉"}/></h2>
                                 <p className={`text-sm ${isDark ? 'text-white/50' : 'text-gray-500'}`}>
                                     You completed {selectedExercise.rounds} rounds of {selectedExercise.name}
                                 </p>
@@ -399,16 +400,14 @@ const BreathingExercises: React.FC = () => {
                                     onClick={resetExercise}
                                     className={`w-14 h-14 rounded-full flex items-center justify-center ${isDark ? 'bg-white/5 hover:bg-white/10' : 'bg-gray-100 hover:bg-gray-200'}`}
                                 >
-                                    <span className={`material-symbols-outlined ${isDark ? 'text-white/70' : 'text-gray-600'}`}>close</span>
+                                    <span className={`app-icon-glyph ${isDark ? 'text-white/70' : 'text-gray-600'}`}><AppIcon name={"close"}/></span>
                                 </button>
                                 <button
                                     onClick={toggleRunning}
                                     className="w-20 h-20 rounded-full flex items-center justify-center text-white shadow-lg"
                                     style={{ backgroundColor: selectedExercise.color }}
                                 >
-                                    <span className="material-symbols-filled text-3xl">
-                                        {isRunning ? 'pause' : 'play_arrow'}
-                                    </span>
+                                    <span className="app-icon-glyph text-3xl"><AppIcon name={isRunning ? 'pause' : 'play_arrow'}/></span>
                                 </button>
                                 <div className="w-14" /> {/* Spacer for centering */}
                             </div>

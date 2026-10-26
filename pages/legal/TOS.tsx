@@ -1,3 +1,4 @@
+import { AppIcon } from '../../components/ui/Icons';
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
 
@@ -11,7 +12,7 @@ const TOS: React.FC = () => {
                     onClick={() => navigate(-1)} 
                     className="flex items-center gap-2 text-white/60 hover:text-white transition-colors mb-8 group"
                 >
-                    <span className="material-symbols-outlined group-hover:-translate-x-1 transition-transform">arrow_back</span>
+                    <span className="app-icon-glyph group-hover:-translate-x-1 transition-transform"><AppIcon name={"arrow_back"}/></span>
                     <span>Back</span>
                 </button>
 

@@ -1,3 +1,4 @@
+import { AppIcon } from '../../components/ui/Icons';
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -223,15 +224,15 @@ const WouldYouRather: React.FC = () => {
     return (
         <div className={`min-h-screen flex flex-col font-display transition-colors ${isDark ? 'bg-background-dark text-white' : 'bg-background-dark text-[var(--text-primary)]'}`}>
             <header className={`flex items-center justify-between px-5 py-4 sticky top-0 z-20 backdrop-blur-sm border-b ${isDark ? 'bg-background-dark/95 border-white/5' : 'bg-background-dark/95 border-gray-100'}`}>
-                <button onClick={handleExit} className="w-10 h-10 rounded-full flex items-center justify-center hover:bg-white/10"><span className="material-symbols-outlined">arrow_back</span></button>
-                <h1 className="text-lg font-bold">Would You Rather 🤔</h1>
+                <button onClick={handleExit} className="w-10 h-10 rounded-full flex items-center justify-center hover:bg-white/10"><span className="app-icon-glyph"><AppIcon name={"arrow_back"}/></span></button>
+                <h1 className="text-lg font-bold">Would You Rather <AppIcon name={"🤔"}/></h1>
                 <div className="flex items-center">
                     <button
                         onClick={() => openTutorial('would-you-rather')}
                         className="w-10 h-10 rounded-full flex items-center justify-center hover:bg-white/10 transition-all active:scale-90 mr-1"
                         title="Watch Tutorial"
                     >
-                        <span className="material-symbols-outlined text-xl" style={{ color: primaryColor }}>play_circle</span>
+                        <span className="app-icon-glyph text-xl" style={{ color: primaryColor }}><AppIcon name={"play_circle"}/></span>
                     </button>
                     <button
                         onClick={async () => {
@@ -244,7 +245,7 @@ const WouldYouRather: React.FC = () => {
                         className={`w-10 h-10 rounded-full flex items-center justify-center transition-all ${ringCooldown ? 'opacity-30' : 'hover:bg-white/10 active:scale-90'}`}
                         title="Ring Partner"
                     >
-                        <span className="material-symbols-outlined text-xl">{ringCooldown ? 'notifications_off' : 'notifications_active'}</span>
+                        <span className="app-icon-glyph text-xl"><AppIcon name={ringCooldown ? 'notifications_off' : 'notifications_active'}/></span>
                     </button>
                 </div>
             </header>
@@ -293,7 +294,7 @@ const WouldYouRather: React.FC = () => {
                         {(state?.phase === 'playing' || state?.phase === 'revealed' || state?.phase === 'finished') && (
                             <div className="flex items-center gap-3">
                                 <div className="flex items-center gap-1">
-                                    <span className="text-lg">💕</span>
+                                    <span className="text-lg"><AppIcon name={"💕"}/></span>
                                     <span className="text-sm font-bold" style={{ color: primaryColor }}>{matchPct}% match</span>
                                 </div>
                                 <span className="text-xs text-gray-400">•</span>
@@ -309,7 +310,7 @@ const WouldYouRather: React.FC = () => {
                                     {CATEGORIES.map(c => (
                                         <button key={c.key} onClick={() => selectCategory(c.key)}
                                             className={`py-4 rounded-2xl font-bold text-center active:scale-95 transition-all ${isDark ? 'bg-white/5 hover:bg-white/10' : 'bg-gray-50 hover:bg-gray-100'}`}>
-                                            <span className="text-2xl block mb-1">{c.icon}</span>
+                                            <span className="text-2xl block mb-1"><AppIcon name={c.icon}/></span>
                                             <span className="text-sm">{c.label}</span>
                                         </button>
                                     ))}
@@ -343,7 +344,7 @@ const WouldYouRather: React.FC = () => {
                                 {!myChoice && partnerChoice && !currentRound.revealed && (
                                     <motion.div initial={{ opacity: 0, y: -5 }} animate={{ opacity: 1, y: 0 }}
                                         className={`flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-medium ${isDark ? 'bg-green-500/10 text-green-400' : 'bg-green-50 text-green-600'}`}>
-                                        <span>✅</span> Partner has chosen — your turn!
+                                        <span><AppIcon name={"✅"}/></span> Partner has chosen — your turn!
                                     </motion.div>
                                 )}
 
@@ -433,7 +434,7 @@ const WouldYouRather: React.FC = () => {
                                 </div>
 
                                 <div className="flex flex-col items-center gap-3 w-full max-w-xs mt-4">
-                                    <button onClick={handlePlayAgain} className="on-brand w-full px-6 py-4 rounded-2xl font-bold text-white shadow-lg active:scale-95" style={{ backgroundColor: primaryColor }}>Play Again 🔄</button>
+                                    <button onClick={handlePlayAgain} className="on-brand w-full px-6 py-4 rounded-2xl font-bold text-white shadow-lg active:scale-95" style={{ backgroundColor: primaryColor }}>Play Again <AppIcon name={"🔄"}/></button>
                                     <button onClick={handleExit} className={`w-full px-6 py-3 rounded-2xl font-bold ${isDark ? 'bg-white/5 text-gray-300' : 'bg-gray-100 text-gray-600'}`}>Exit Game</button>
                                 </div>
                             </motion.div>

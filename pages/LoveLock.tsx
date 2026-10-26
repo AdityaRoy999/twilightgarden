@@ -1,9 +1,13 @@
+import { useAppMotion } from '../hooks/useAppMotion';
+import { springs, motionTransition, newlyAppended, type MessageStamp } from '../lib/motion';
+import { MotionPortal } from '../components/ui/MotionPortal';
+import { AppIcon } from '../components/ui/Icons';
 import { loadChatMedia } from '../lib/media';
-import React, { useState, useEffect, useRef, useCallback } from 'react';
+import React, { useState, useEffect, useLayoutEffect, useMemo, useRef, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useCouples } from '../contexts/CouplesContext';
 import { useAuth } from '../contexts/AuthContext';
-import { motion, AnimatePresence } from 'framer-motion';
+import { motion, AnimatePresence, animate, useMotionValue } from 'framer-motion';
 import { useTheme } from '../contexts/ThemeContext';
 import Toast from '../components/Toast';
 import { Camera, CameraResultType, CameraSource } from '@capacitor/camera';
@@ -13,7 +17,7 @@ import { AudioPlayer } from '../components/ui/AudioPlayer';
 import { AudioRecorder } from '../components/AudioRecorder';
 import { SecureImage, SecureAudio } from '../components/SecureMedia';
 import { generateLoveNote, AI_MOODS, AIMood } from '../lib/ai';
-import { Shield, Phone, Video, EllipsisVertical } from 'lucide-react';
+import { Shield, Phone, Video, EllipsisVertical } from '../components/ui/Icons';
 import { useCall } from '../contexts/CallContext';
 import { SecurityVerification } from '../components/SecurityVerification';
 import MessageContextMenu, { MessageAction } from '../components/MessageContextMenu';
@@ -39,6 +43,7 @@ const LoveLock: React.FC = () => {
     } = useCouples();
     const { user } = useAuth();
     const { theme } = useTheme();
+    const { reduced } = useAppMotion();
     const { initiateCall } = useCall();
 
     const [inputCode, setInputCode] = useState('');
@@ -199,7 +204,7 @@ const LoveLock: React.FC = () => {
                         }`}
                         onClick={(e) => e.stopPropagation()}
                     >
-                        <span className="material-symbols-outlined text-[13px]">open_in_new</span>
+                        <span className="app-icon-glyph text-[13px]"><AppIcon name={"open_in_new"}/></span>
                         Open
                     </a>
                     <button
@@ -212,7 +217,7 @@ const LoveLock: React.FC = () => {
                             isMe ? 'bg-white/20 text-white hover:bg-white/30' : 'bg-gray-100 dark:bg-white/5 text-gray-500 hover:bg-gray-200 dark:hover:bg-white/10'
                         }`}
                     >
-                        <span className="material-symbols-outlined text-[13px]">content_copy</span>
+                        <span className="app-icon-glyph text-[13px]"><AppIcon name={"content_copy"}/></span>
                         Copy
                     </button>
                 </div>
@@ -242,6 +247,15 @@ const LoveLock: React.FC = () => {
     const notesEndRef = useRef<HTMLDivElement>(null);
     const chatContainerRef = useRef<HTMLDivElement>(null);
     const isAtBottomRef = useRef(true);
+    const previousMessages = useRef<{ coupleId: string; notes: MessageStamp[] } | null>(null);
+    const playedEntrances = useRef(new Set<string>());
+    const scrollValue = useMotionValue(0);
+    const scrollAnimation = useRef<ReturnType<typeof animate> | null>(null);
+    const scrollingAutomatically = useRef(false);
+    const loadingPage = useRef(false);
+    const freshMessages = useMemo(() => newlyAppended(previousMessages.current?.notes || [], notes, !isLoading && previousMessages.current?.coupleId === couple?.id), [notes, isLoading, couple?.id]);
+    const stopAutoScroll = () => { scrollAnimation.current?.stop(); scrollingAutomatically.current = false; };
+    useEffect(() => () => scrollAnimation.current?.stop(), []);
 
     const isAdmin = user?.role === 'admin';
 
@@ -296,51 +310,47 @@ const LoveLock: React.FC = () => {
         }
     }, [notes, user, visibilityRevision]);
 
+    const loadEarlierMessages = async () => {
+        const el = chatContainerRef.current;
+        if (!el || loadingOlder || loadingPage.current || !hasMoreNotes) return;
+        const prevHeight = el.scrollHeight;
+        const prevTop = el.scrollTop;
+        loadingPage.current = true;
+        try {
+            await loadOlderNotes();
+            requestAnimationFrame(() => {
+                if (chatContainerRef.current === el) el.scrollTop = prevTop + el.scrollHeight - prevHeight;
+            });
+        } catch {
+            showToast('Could not load earlier messages', 'Please retry.', 'error');
+        } finally {
+            loadingPage.current = false;
+        }
+    };
+
     const handleChatScroll = () => {
         const el = chatContainerRef.current;
         if (!el) return;
 
         // Check if user is near bottom (within 50px threshold)
         const isBottom = el.scrollHeight - el.scrollTop - el.clientHeight < 50;
-        isAtBottomRef.current = isBottom;
+        if (!scrollingAutomatically.current) isAtBottomRef.current = isBottom;
 
-        if (loadingOlder || !hasMoreNotes) return;
-        if (el.scrollTop < 80) {
-            const prevHeight = el.scrollHeight;
-            loadOlderNotes().then(() => {
-                // Preserve scroll position after prepending older messages
-                requestAnimationFrame(() => {
-                    if (chatContainerRef.current) {
-                        chatContainerRef.current.scrollTop = chatContainerRef.current.scrollHeight - prevHeight;
-                    }
-                });
-            });
-        }
+        if (loadingOlder || loadingPage.current || !hasMoreNotes || scrollingAutomatically.current) return;
+        if (el.scrollTop < 80) void loadEarlierMessages();
     };
 
-    const lastNotesLengthRef = useRef(notes?.length || 0);
-
-    // Smart auto-scroll when notes change
-    useEffect(() => {
-        if (!notes?.length) return;
-
-        const currentLength = notes.length;
-        const lastLength = lastNotesLengthRef.current;
-        lastNotesLengthRef.current = currentLength;
-
-        const lastNote = notes[currentLength - 1];
-        const sentByMe = lastNote.sender_id === user?.id;
-
-        // ONLY auto-scroll if:
-        // 1. A NEW message was added (length increased)
-        // 2. AND (User is already at the bottom OR it's their own message)
-        if (currentLength > lastLength) {
-            if (isAtBottomRef.current || sentByMe) {
-                // Use a slight delay to ensure the DOM has rendered the new message
-                requestAnimationFrame(() => scrollToBottom());
-            }
-        }
-    }, [notes, user?.id]);
+    useLayoutEffect(() => {
+        if (isLoading || couple?.status !== 'active') return;
+        const first = !previousMessages.current || previousMessages.current.coupleId !== couple.id;
+        if (first) playedEntrances.current.clear();
+        // Consume arrivals even when a filter hides them or motion is disabled.
+        // Revealing them later is history navigation, not a new message arrival.
+        else for (const id of freshMessages) playedEntrances.current.add(id);
+        previousMessages.current = { coupleId: couple.id, notes: notes.map(({ id, created_at }) => ({ id, created_at })) };
+        if (first) scrollToBottom(true);
+        else if (freshMessages.size && (isAtBottomRef.current || notes.some(note => freshMessages.has(note.id) && note.sender_id === user?.id))) scrollToBottom();
+    }, [notes, isLoading, couple?.id, freshMessages, user?.id]);
 
     useEffect(() => {
         if (couple?.pairing_code && couple.status === 'pending') {
@@ -349,9 +359,19 @@ const LoveLock: React.FC = () => {
         }
     }, [couple]);
 
-    const scrollToBottom = () => {
-        const el=chatContainerRef.current; if(el)el.scrollTo({top:el.scrollHeight,behavior:"smooth"});
-    };
+    function scrollToBottom(immediate = false) {
+        const el = chatContainerRef.current;
+        if (!el) return;
+        const target = Math.max(0, el.scrollHeight - el.clientHeight);
+        scrollAnimation.current?.stop();
+        if (reduced || immediate) {
+            scrollValue.jump(target); el.scrollTop = target; scrollingAutomatically.current = false; isAtBottomRef.current = true;
+            return;
+        }
+        if (!scrollingAutomatically.current) scrollValue.jump(el.scrollTop);
+        scrollingAutomatically.current = true;
+        scrollAnimation.current = animate(scrollValue, target, { ...springs.section, onUpdate: value => { el.scrollTop = value; }, onComplete: () => { scrollingAutomatically.current = false; isAtBottomRef.current = true; } });
+    }
 
     const handleGenerateCode = async () => {
         try {
@@ -701,10 +721,10 @@ const LoveLock: React.FC = () => {
     // Stage 1: Initial Pairing — both roles can generate or enter
     if (!couple || couple.status === 'pending') {
         return (
-            <div className="min-h-[80vh] flex flex-col items-center justify-center p-6 space-y-8">
+            <div className="chat-pairing min-h-[80vh] flex flex-col items-center justify-center p-6 space-y-8">
                 <div className="relative w-24 h-24 bg-pink-100 dark:bg-pink-900/20 rounded-full flex items-center justify-center mb-4">
-                    <span className="material-symbols-outlined text-5xl text-pink-500">lock</span>
-                    <motion.div animate={{ scale: [1, 1.2, 1] }} transition={{ repeat: Infinity, duration: 2 }} className="absolute -top-1 -right-1 text-2xl">❤️</motion.div>
+                    <span className="app-icon-glyph text-5xl text-pink-500"><AppIcon name={"lock"}/></span>
+                    <motion.div animate={{ scale: [1, 1.2, 1] }} transition={{ repeat: Infinity, duration: 2 }} className="absolute -top-1 -right-1 text-2xl"><AppIcon name={"❤️"}/></motion.div>
                 </div>
 
                 <div className="text-center max-w-sm">
@@ -749,7 +769,7 @@ const LoveLock: React.FC = () => {
                                     </div>
                                     <p className="text-sm text-gray-500">Share this code with your partner to connect.</p>
                                     <div className="flex items-center justify-center space-x-2 text-pink-500 text-sm animate-pulse">
-                                        <span className="material-symbols-outlined text-lg">sync</span>
+                                        <span className="app-icon-glyph text-lg"><AppIcon name={"sync"}/></span>
                                         <span>Waiting for partner...</span>
                                     </div>
                                 </>
@@ -758,7 +778,7 @@ const LoveLock: React.FC = () => {
                                     onClick={handleGenerateCode}
                                     className="on-brand w-full py-4 bg-pink-500 hover:bg-pink-600 active:bg-pink-700 text-white rounded-xl font-bold font-display text-base transition-all shadow-lg shadow-pink-500/30 flex items-center justify-center gap-2"
                                 >
-                                    <span className="material-symbols-outlined text-xl">key</span>
+                                    <span className="app-icon-glyph text-xl"><AppIcon name={"key"}/></span>
                                     Generate Access Code
                                 </button>
                             )}
@@ -781,7 +801,8 @@ const LoveLock: React.FC = () => {
                                 disabled={inputCode.length !== 6}
                                 className="on-brand w-full py-4 bg-gradient-to-r from-pink-500 to-rose-500 disabled:opacity-50 disabled:cursor-not-allowed text-white rounded-xl font-bold transition-all shadow-lg shadow-pink-500/30"
                             >
-                                Unlock My Heart 💖
+
+                                Unlock My Heart <AppIcon name={"💖"}/>
                             </button>
                         </div>
                     )}
@@ -838,7 +859,7 @@ const LoveLock: React.FC = () => {
                         }`}
                         title="Starred messages"
                     >
-                        <span className="material-symbols-outlined text-[20px]">{viewFilter === 'starred' ? 'star' : 'star_border'}</span>
+                        <span className="app-icon-glyph text-[20px]"><AppIcon name={viewFilter === 'starred' ? 'star' : 'star_border'}/></span>
                     </button>
                     <button
                         onClick={() => initiateCall(false)}
@@ -867,7 +888,7 @@ const LoveLock: React.FC = () => {
                             className="w-10 h-10 rounded-full flex items-center justify-center text-gray-500 dark:text-gray-400 hover:text-red-500 hover:bg-white dark:hover:bg-white/10 transition-all active:scale-90"
                             title="Disconnect"
                     >
-                        <span className="material-symbols-outlined text-[20px]">link_off</span>
+                        <span className="app-icon-glyph text-[20px]"><AppIcon name={"link_off"}/></span>
                     </button>
                 </div>
                 <div className="flex items-center gap-1 md:hidden">
@@ -888,13 +909,16 @@ const LoveLock: React.FC = () => {
             <div
                 ref={chatContainerRef}
                 onScroll={handleChatScroll}
+                onWheel={stopAutoScroll}
+                onTouchStart={stopAutoScroll}
+                onPointerDown={stopAutoScroll}
                 className="reference-chat-messages flex-1 min-h-0 overflow-y-auto overscroll-contain p-4 space-y-4"
             >
                 {/* View filter bar */}
                 {viewFilter !== 'all' && (
                   <div className="flex items-center justify-between bg-white dark:bg-surface-dark rounded-xl px-3 py-2 border border-gray-100 dark:border-gray-800 mb-2">
                     <span className="text-xs font-bold text-gray-500 dark:text-gray-400 flex items-center gap-1.5">
-                      <span className="material-symbols-outlined text-[16px]">{viewFilter === 'starred' ? 'star' : 'keep'}</span>
+                      <span className="app-icon-glyph text-[16px]"><AppIcon name={viewFilter === 'starred' ? 'star' : 'keep'}/></span>
                       {viewFilter === 'starred' ? 'Starred messages' : 'Pinned messages'}
                       <span className="ml-1 text-pink-500 font-mono">{filteredNotes.length}</span>
                     </span>
@@ -910,7 +934,7 @@ const LoveLock: React.FC = () => {
                     </span>
                     <div className="flex items-center gap-2">
                       <button onClick={handleBulkDelete} className="text-xs text-red-500 font-bold hover:underline flex items-center gap-1">
-                        <span className="material-symbols-outlined text-[14px]">delete</span>
+                        <span className="app-icon-glyph text-[14px]"><AppIcon name={"delete"}/></span>
                         Delete
                       </button>
                       <button onClick={() => { setSelectMode(false); setSelectedNoteIds(new Set()); }} className="text-xs text-gray-400 font-bold hover:underline">Cancel</button>
@@ -927,7 +951,7 @@ const LoveLock: React.FC = () => {
                       onClick={() => setViewFilter('pinned')}
                       className="sticky top-0 z-10 w-full flex items-center gap-2 bg-amber-50/95 dark:bg-amber-500/15 backdrop-blur-sm text-amber-700 dark:text-amber-400 rounded-xl px-3 py-2 border border-amber-200 dark:border-amber-500/20 mb-2 text-xs font-medium hover:bg-amber-100 dark:hover:bg-amber-500/20 transition-colors shadow-sm"
                     >
-                      <span className="material-symbols-outlined text-[16px]">keep</span>
+                      <span className="app-icon-glyph text-[16px]"><AppIcon name={"keep"}/></span>
                       {pinnedNotes.length} pinned message{pinnedNotes.length > 1 ? 's' : ''}
                     </button>
                   );
@@ -939,15 +963,15 @@ const LoveLock: React.FC = () => {
                         {loadingOlder ? (
                             <span className="text-xs text-gray-400 animate-pulse">Loading older messages...</span>
                         ) : (
-                            <button onClick={() => loadOlderNotes()} className="text-xs text-pink-400 hover:text-pink-500 transition-colors">
-                                ↑ Load older messages
+                            <button onClick={() => void loadEarlierMessages()} className="text-xs text-pink-400 hover:text-pink-500 transition-colors">
+                                <AppIcon name="arrow_upward" size={14}/> Load older messages
                             </button>
                         )}
                     </div>
                 )}
                 {filteredNotes.length === 0 ? (
                     <div className="h-full flex flex-col items-center justify-center text-gray-400 opacity-50">
-                        <span className="material-symbols-outlined text-4xl mb-2">{viewFilter !== 'all' ? (viewFilter === 'starred' ? 'star_border' : 'keep_off') : 'edit_note'}</span>
+                        <span className="app-icon-glyph text-4xl mb-2"><AppIcon name={viewFilter !== 'all' ? (viewFilter === 'starred' ? 'star_border' : 'keep_off') : 'edit_note'}/></span>
                         <p>{viewFilter !== 'all' ? `No ${viewFilter} messages` : 'Write your first note...'}</p>
                     </div>
                 ) : (
@@ -964,9 +988,12 @@ const LoveLock: React.FC = () => {
                         return (
                             <motion.div
                                 key={note.id}
-                                initial={{ opacity: 0, y: 10 }}
-                                animate={{ opacity: 1, y: 0 }}
-                                className={`flex flex-col mb-4 ${isMe ? 'items-end' : 'items-start'} ${isSelected ? 'ring-2 ring-pink-500 rounded-2xl' : ''}`}
+                                initial={!reduced && freshMessages.has(note.id) && !playedEntrances.current.has(note.id) ? { opacity: .65, y: isMe ? 26 : 14, x: isMe ? 8 : -5, scale: .95 } : false}
+                                animate={{ opacity: 1, y: 0, x: 0, scale: 1 }}
+                                transition={{ ...motionTransition(springs.message, reduced), opacity: { duration: reduced ? 0 : .12 } }}
+                                style={{ transformOrigin: isMe ? 'right bottom' : 'left bottom' }}
+                                onAnimationStart={() => { if (freshMessages.has(note.id)) playedEntrances.current.add(note.id); }}
+                                className={`chat-message-row flex flex-col mb-4 ${isMe ? 'items-end' : 'items-start'} ${isSelected ? 'ring-2 ring-pink-500 rounded-2xl' : ''}`}
                                 onClick={() => {
                                   if (selectMode) {
                                     setSelectedNoteIds(prev => {
@@ -983,7 +1010,7 @@ const LoveLock: React.FC = () => {
                                     onTouchStart={handleLongPressStart(note.id, isMe)}
                                     onTouchEnd={handleLongPressEnd}
                                     onTouchMove={handleLongPressEnd}
-                                    className={`reference-message-bubble ${isMe ? 'is-mine' : ''} relative max-w-[85%] group ${
+                                    data-kind={isImage ? 'media' : 'text'} className={`reference-message-bubble ${isMe ? 'is-mine' : ''} relative max-w-[85%] group ${
                                     isImage
                                         ? 'rounded-2xl overflow-hidden'
                                         : isMe
@@ -993,7 +1020,7 @@ const LoveLock: React.FC = () => {
                                     {/* Forwarded label */}
                                     {note.is_forwarded && (
                                       <div className={`flex items-center gap-1 px-4 pt-2 pb-0 text-[10px] italic ${isMe ? 'text-white/60' : 'text-gray-400'}`}>
-                                        <span className="material-symbols-outlined text-[12px]">forward</span>
+                                        <span className="app-icon-glyph text-[12px]"><AppIcon name={"forward"}/></span>
                                         Forwarded
                                       </div>
                                     )}
@@ -1022,18 +1049,16 @@ const LoveLock: React.FC = () => {
                                                 renderMessageContent(note.content, isMe)
                                             )}
                                             <div className={`text-[10px] mt-1 flex items-center justify-end gap-1 opacity-70 ${isMe ? 'text-white/80' : 'text-gray-400'}`}>
-                                                {isStarred && <span className="material-symbols-outlined text-[12px] text-amber-400">star</span>}
+                                                {isStarred && <span className="app-icon-glyph text-[12px] text-amber-400"><AppIcon name={"star"}/></span>}
                                                 {new Date(note.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
                                                 {isMe && (
-                                                    <span className={`material-symbols-outlined text-[14px] ${
+                                                    <span className={`app-icon-glyph text-[14px] ${
                                                         note.status === 'read'
                                                             ? 'text-[#53bdeb] font-bold'
                                                             : note.status === 'delivered'
                                                                 ? 'text-white/70'
                                                                 : 'text-white/50'
-                                                    }`}>
-                                                        {note.localStatus==='sending'?'schedule':note.localStatus==='failed'?'error_outline':note.status === 'sent' ? 'check' : 'done_all'}
-                                                    </span>
+                                                    }`}><AppIcon name={note.localStatus==='sending'?'schedule':note.localStatus==='failed'?'error_outline':note.status === 'sent' ? 'check' : 'done_all'}/></span>
                                                 )}
                                             </div>
                                         </div>
@@ -1051,7 +1076,7 @@ const LoveLock: React.FC = () => {
                                                         />
                                                     ) : (
                                                         <div className="w-full h-40 bg-gray-100 dark:bg-white/5 flex flex-col items-center justify-center gap-2">
-                                                            <span className="material-symbols-outlined text-gray-400">lock</span>
+                                                            <span className="app-icon-glyph text-gray-400"><AppIcon name={"lock"}/></span>
                                                             <span className="text-[10px] text-gray-400">Encrypted Media</span>
                                                         </div>
                                                     )}
@@ -1070,13 +1095,11 @@ const LoveLock: React.FC = () => {
                                                     {new Date(note.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
                                                 </span>
                                                 {isMe && (
-                                                    <span className={`material-symbols-outlined text-[14px] ${
+                                                    <span className={`app-icon-glyph text-[14px] ${
                                                         note.status === 'read'
                                                             ? 'text-[#53bdeb] font-bold'
                                                             : 'text-white/70'
-                                                    }`}>
-                                                        {note.status === 'sent' ? 'check' : 'done_all'}
-                                                    </span>
+                                                    }`}><AppIcon name={note.status === 'sent' ? 'check' : 'done_all'}/></span>
                                                 )}
                                             </div>
                                         </div>
@@ -1122,7 +1145,7 @@ const LoveLock: React.FC = () => {
                                                 onClick={() => setEmojiPickerNoteId(emojiPickerNoteId === note.id ? null : note.id)}
                                                 className="w-5 h-5 flex items-center justify-center rounded-full text-gray-400 hover:text-pink-500 hover:bg-gray-100 dark:hover:bg-white/5 transition-all outline-none bg-white dark:bg-surface-dark shadow-sm border border-gray-100 dark:border-gray-700/50 ml-0.5"
                                             >
-                                                <span className="material-symbols-outlined text-[14px]">add</span>
+                                                <span className="app-icon-glyph text-[14px]"><AppIcon name={"add"}/></span>
                                             </button>
 
                                             <AnimatePresence>
@@ -1131,7 +1154,7 @@ const LoveLock: React.FC = () => {
                                                         initial={{ opacity: 0, scale: 0.8, y: 5 }}
                                                         animate={{ opacity: 1, scale: 1, y: 0 }}
                                                         exit={{ opacity: 0, scale: 0.8, y: 5 }}
-                                                        transition={{ type: "spring", stiffness: 400, damping: 25 }}
+                                                        transition={motionTransition(springs.selection, reduced)}
                                                         className={`absolute bottom-full mb-1.5 ${isMe ? 'right-0 origin-bottom-right' : 'left-0 origin-bottom-left'} p-1.5 bg-white/95 dark:bg-surface-dark/95 backdrop-blur-md rounded-[20px] shadow-[0_4px_20px_-4px_rgba(0,0,0,0.15)] dark:shadow-[0_4px_20px_-4px_rgba(0,0,0,0.4)] border border-gray-200 dark:border-gray-700/50 z-50 flex items-center gap-1 w-max`}
                                                     >
                                                         {reactionEmojis.slice(0, 6).map((emoji) => (
@@ -1195,7 +1218,7 @@ const LoveLock: React.FC = () => {
                       onClick={() => setReplyToNoteId(null)}
                       className="w-7 h-7 flex items-center justify-center rounded-full text-gray-400 hover:text-gray-600 hover:bg-gray-100 dark:hover:bg-white/10 transition-colors"
                     >
-                      <span className="material-symbols-outlined text-[18px]">close</span>
+                      <span className="app-icon-glyph text-[18px]"><AppIcon name={"close"}/></span>
                     </button>
                   </div>
                 </motion.div>
@@ -1232,7 +1255,7 @@ const LoveLock: React.FC = () => {
                                 className="w-[44px] h-[44px] flex items-center justify-center rounded-full bg-gray-100 dark:bg-surface-dark text-gray-500 hover:text-pink-500 hover:bg-white dark:hover:bg-white/10 transition-all border border-transparent hover:border-pink-500/20 active:scale-95 shadow-sm dark:shadow-none"
                                 title="Photos"
                             >
-                                <span className="material-symbols-outlined text-[22px]">add_a_photo</span>
+                                <span className="app-icon-glyph text-[22px]"><AppIcon name={"add_a_photo"}/></span>
                             </button>
 
                             <button
@@ -1240,7 +1263,7 @@ const LoveLock: React.FC = () => {
                                 className="w-[44px] h-[44px] flex items-center justify-center rounded-full bg-gray-100 dark:bg-surface-dark text-gray-500 hover:text-purple-500 hover:bg-white dark:hover:bg-white/10 transition-all border border-transparent hover:border-purple-500/20 active:scale-95 shadow-sm dark:shadow-none"
                                 title="GIFs"
                             >
-                                <span className="material-symbols-outlined text-[23px]">gif_box</span>
+                                <span className="app-icon-glyph text-[23px]"><AppIcon name={"gif_box"}/></span>
                             </button>
                         </div>
 
@@ -1251,7 +1274,7 @@ const LoveLock: React.FC = () => {
                                 className="w-8 h-8 flex items-center justify-center rounded-full text-gray-400 hover:text-violet-500 hover:bg-white dark:hover:bg-white/10 transition-all shrink-0 ml-1"
                                 title="AI Love Note"
                             >
-                                <span className="material-symbols-outlined text-[20px]">auto_awesome</span>
+                                <span className="app-icon-glyph text-[20px]"><AppIcon name={"auto_awesome"}/></span>
                             </button>
 
                             <textarea
@@ -1284,7 +1307,7 @@ const LoveLock: React.FC = () => {
                                     disabled={isSubmitting}
                                     className="on-brand w-[44px] h-[44px] flex items-center justify-center bg-primary text-white rounded-full hover:brightness-110 active:scale-95 disabled:opacity-50 transition-all shadow-md shadow-primary/20"
                                 >
-                                    <span className="material-symbols-outlined text-[22px] ml-0.5">arrow_upward</span>
+                                    <span className="app-icon-glyph text-[22px] ml-0.5"><AppIcon name={"arrow_upward"}/></span>
                                 </button>
                             ) : (
                                 <button
@@ -1292,7 +1315,7 @@ const LoveLock: React.FC = () => {
                                     aria-label="Record voice message"
                                     className="w-[44px] h-[44px] flex items-center justify-center rounded-full bg-gray-100 dark:bg-surface-dark text-gray-500 hover:text-primary hover:bg-white dark:hover:bg-white/10 transition-all border border-transparent hover:border-primary/20 active:scale-95 shadow-sm dark:shadow-none"
                                 >
-                                    <span className="material-symbols-outlined text-[22px]">mic</span>
+                                    <span className="app-icon-glyph text-[22px]"><AppIcon name={"mic"}/></span>
                                 </button>
                             )}
                         </div>
@@ -1313,7 +1336,7 @@ const LoveLock: React.FC = () => {
             {/* Confirmation Dialog (replaces native confirm()) */}
             <AnimatePresence>
                 {confirmDialog && (
-                    <motion.div
+                    <MotionPortal><motion.div
                         initial={{ opacity: 0 }}
                         animate={{ opacity: 1 }}
                         exit={{ opacity: 0 }}
@@ -1351,14 +1374,14 @@ const LoveLock: React.FC = () => {
                                 </button>
                             </div>
                         </motion.div>
-                    </motion.div>
+                    </motion.div></MotionPortal>
                 )}
             </AnimatePresence>
 
             {/* Image Preview Modal */}
             <AnimatePresence>
                 {selectedImage && (
-                    <motion.div
+                    <MotionPortal><motion.div
                         initial={{ opacity: 0 }}
                         animate={{ opacity: 1 }}
                         exit={{ opacity: 0 }}
@@ -1392,25 +1415,25 @@ const LoveLock: React.FC = () => {
                                     onClick={() => setSelectedImage(null)}
                                     className="w-12 h-12 flex items-center justify-center bg-white/10 hover:bg-white/20 text-white rounded-full backdrop-blur-md transition-colors"
                                 >
-                                    <span className="material-symbols-outlined">close</span>
+                                    <span className="app-icon-glyph"><AppIcon name={"close"}/></span>
                                 </button>
                                 <button
                                     onClick={() => handleDownloadImage(selectedImage)}
                                     className="on-brand px-8 py-3 bg-primary hover:brightness-110 active:scale-95 text-white rounded-full font-bold shadow-lg shadow-primary/30 flex items-center gap-2 transition-all"
                                 >
-                                    <span className="material-symbols-outlined">download</span>
+                                    <span className="app-icon-glyph"><AppIcon name={"download"}/></span>
                                     <span>Download</span>
                                 </button>
                             </div>
                         </motion.div>
-                    </motion.div>
+                    </motion.div></MotionPortal>
                 )}
             </AnimatePresence>
 
             {/* AI Love Note Bottom Sheet */}
             <AnimatePresence>
                 {showAISheet && (
-                    <motion.div
+                    <MotionPortal><motion.div
                         initial={{ opacity: 0 }}
                         animate={{ opacity: 1 }}
                         exit={{ opacity: 0 }}
@@ -1421,7 +1444,7 @@ const LoveLock: React.FC = () => {
                             initial={{ y: '100%' }}
                             animate={{ y: 0 }}
                             exit={{ y: '100%' }}
-                            transition={{ type: 'spring', damping: 25, stiffness: 300 }}
+                            transition={motionTransition(springs.sheet, reduced)}
                             className="w-full max-w-md bg-white dark:bg-surface-dark rounded-t-3xl p-6 pb-8"
                             onClick={(e) => e.stopPropagation()}
                         >
@@ -1429,7 +1452,7 @@ const LoveLock: React.FC = () => {
                             <div className="w-10 h-1 bg-gray-300 dark:bg-gray-600 rounded-full mx-auto mb-5" />
 
                             <div className="flex items-center gap-2 mb-5">
-                                <span className="material-symbols-outlined text-violet-500">auto_awesome</span>
+                                <span className="app-icon-glyph text-violet-500"><AppIcon name={"auto_awesome"}/></span>
                                 <h3 className="text-lg font-bold">AI Love Note</h3>
                             </div>
 
@@ -1446,7 +1469,7 @@ const LoveLock: React.FC = () => {
                                                 : 'bg-gray-100 dark:bg-white/5 hover:bg-gray-200 dark:hover:bg-white/10'
                                         }`}
                                     >
-                                        {m.emoji} {m.label}
+                                        <AppIcon name={m.emoji}/> {m.label}
                                     </button>
                                 ))}
                             </div>
@@ -1473,11 +1496,9 @@ const LoveLock: React.FC = () => {
                             >
                                 {aiGenerating ? (
                                     <span className="flex items-center justify-center gap-2">
-                                        <motion.span
-                                            animate={{ rotate: 360 }}
+                                        <motion.span animate={{ rotate: 360 }}
                                             transition={{ repeat: Infinity, duration: 1, ease: 'linear' }}
-                                            className="material-symbols-outlined text-lg"
-                                        >progress_activity</motion.span>
+                                            className="app-icon-glyph text-lg"><AppIcon name={"progress_activity"}/></motion.span>
                                         Generating...
                                     </span>
                                 ) : (
@@ -1485,13 +1506,13 @@ const LoveLock: React.FC = () => {
                                 )}
                             </button>
                         </motion.div>
-                    </motion.div>
+                    </motion.div></MotionPortal>
                 )}
             </AnimatePresence>
             {/* GIF Picker Sheet */}
             <AnimatePresence>
                 {showGifPicker && (
-                    <motion.div
+                    <MotionPortal><motion.div
                         initial={{ opacity: 0 }}
                         animate={{ opacity: 1 }}
                         exit={{ opacity: 0 }}
@@ -1502,14 +1523,14 @@ const LoveLock: React.FC = () => {
                             initial={{ y: '100%' }}
                             animate={{ y: 0 }}
                             exit={{ y: '100%' }}
-                            transition={{ type: 'spring', damping: 25, stiffness: 300 }}
+                            transition={motionTransition(springs.sheet, reduced)}
                             className="w-full max-w-lg bg-white dark:bg-surface-dark rounded-t-3xl p-4 h-[70vh] flex flex-col"
                             onClick={(e) => e.stopPropagation()}
                         >
                             <div className="w-12 h-1 bg-gray-300 dark:bg-gray-600 rounded-full mx-auto mb-4" />
 
                             <div className="relative mb-4">
-                                <span className="absolute left-3 top-1/2 -translate-y-1/2 material-symbols-outlined text-gray-400">search</span>
+                                <span className="absolute left-3 top-1/2 -translate-y-1/2 app-icon-glyph text-gray-400"><AppIcon name={"search"}/></span>
                                 <input
                                     type="text"
                                     value={gifSearch}
@@ -1523,7 +1544,7 @@ const LoveLock: React.FC = () => {
                             <div className="flex-1 overflow-y-auto no-scrollbar columns-2 gap-2 pb-safe px-1">
                                 {gifLoading && gifResults.length === 0 ? (
                                     <div className="col-span-2 flex justify-center py-10 w-full">
-                                        <span className="material-symbols-outlined animate-spin text-gray-400">progress_activity</span>
+                                        <span className="app-icon-glyph animate-spin text-gray-400"><AppIcon name={"progress_activity"}/></span>
                                     </div>
                                 ) : (
                                     (gifResults.length > 0 ? gifResults : []).map((gif: any) => (
@@ -1544,7 +1565,7 @@ const LoveLock: React.FC = () => {
                                 )}
                             </div>
                         </motion.div>
-                    </motion.div>
+                    </motion.div></MotionPortal>
                 )}
             </AnimatePresence>
             {/* Security Verification Modal */}
@@ -1567,7 +1588,7 @@ const LoveLock: React.FC = () => {
             {/* Message Info Modal */}
             <AnimatePresence>
               {messageInfoNote && (
-                <motion.div
+                <MotionPortal><motion.div
                   initial={{ opacity: 0 }}
                   animate={{ opacity: 1 }}
                   exit={{ opacity: 0 }}
@@ -1578,13 +1599,13 @@ const LoveLock: React.FC = () => {
                     initial={{ y: '100%' }}
                     animate={{ y: 0 }}
                     exit={{ y: '100%' }}
-                    transition={{ type: 'spring', damping: 25, stiffness: 300 }}
+                    transition={motionTransition(springs.sheet, reduced)}
                     className="w-full max-w-md bg-white dark:bg-surface-dark rounded-t-3xl p-6 pb-8"
                     onClick={(e) => e.stopPropagation()}
                   >
                     <div className="w-10 h-1 bg-gray-300 dark:bg-gray-600 rounded-full mx-auto mb-5" />
                     <h3 className="text-lg font-bold mb-4 flex items-center gap-2">
-                      <span className="material-symbols-outlined text-pink-500">info</span>
+                      <span className="app-icon-glyph text-pink-500"><AppIcon name={"info"}/></span>
                       Message Info
                     </h3>
 
@@ -1600,7 +1621,7 @@ const LoveLock: React.FC = () => {
                       <div className="space-y-3">
                         <div className="flex items-center justify-between text-sm">
                           <span className="text-gray-500 dark:text-gray-400 flex items-center gap-2">
-                            <span className="material-symbols-outlined text-[18px]">schedule</span>
+                            <span className="app-icon-glyph text-[18px]"><AppIcon name={"schedule"}/></span>
                             Sent
                           </span>
                           <span className="font-medium">
@@ -1612,7 +1633,7 @@ const LoveLock: React.FC = () => {
 
                         <div className="flex items-center justify-between text-sm">
                           <span className="text-gray-500 dark:text-gray-400 flex items-center gap-2">
-                            <span className={`material-symbols-outlined text-[18px] ${messageInfoNote.status === 'read' ? 'text-[#53bdeb]' : ''}`}>done_all</span>
+                            <span className={`app-icon-glyph text-[18px] ${messageInfoNote.status === 'read' ? 'text-[#53bdeb]' : ''}`}><AppIcon name={"done_all"}/></span>
                             Status
                           </span>
                           <span className={`font-medium capitalize ${messageInfoNote.status === 'read' ? 'text-[#53bdeb]' : ''}`}>
@@ -1622,7 +1643,7 @@ const LoveLock: React.FC = () => {
 
                         <div className="flex items-center justify-between text-sm">
                           <span className="text-gray-500 dark:text-gray-400 flex items-center gap-2">
-                            <span className="material-symbols-outlined text-[18px]">person</span>
+                            <span className="app-icon-glyph text-[18px]"><AppIcon name={"person"}/></span>
                             From
                           </span>
                           <span className="font-medium">
@@ -1632,7 +1653,7 @@ const LoveLock: React.FC = () => {
 
                         <div className="flex items-center justify-between text-sm">
                           <span className="text-gray-500 dark:text-gray-400 flex items-center gap-2">
-                            <span className="material-symbols-outlined text-[18px]">category</span>
+                            <span className="app-icon-glyph text-[18px]"><AppIcon name={"category"}/></span>
                             Type
                           </span>
                           <span className="font-medium capitalize">{messageInfoNote.type}</span>
@@ -1641,7 +1662,7 @@ const LoveLock: React.FC = () => {
                         {messageInfoNote.is_forwarded && (
                           <div className="flex items-center justify-between text-sm">
                             <span className="text-gray-500 dark:text-gray-400 flex items-center gap-2">
-                              <span className="material-symbols-outlined text-[18px]">forward</span>
+                              <span className="app-icon-glyph text-[18px]"><AppIcon name={"forward"}/></span>
                               Forwarded
                             </span>
                             <span className="font-medium text-amber-500">Yes</span>
@@ -1651,7 +1672,7 @@ const LoveLock: React.FC = () => {
                         {(messageInfoNote.starred_by?.length ?? 0) > 0 && (
                           <div className="flex items-center justify-between text-sm">
                             <span className="text-gray-500 dark:text-gray-400 flex items-center gap-2">
-                              <span className="material-symbols-outlined text-[18px] text-amber-400">star</span>
+                              <span className="app-icon-glyph text-[18px] text-amber-400"><AppIcon name={"star"}/></span>
                               Starred by
                             </span>
                             <span className="font-medium">{messageInfoNote.starred_by?.includes(user?.id ?? '') ? 'You' : ''}{messageInfoNote.starred_by?.includes(user?.id ?? '') && (messageInfoNote.starred_by?.length ?? 0) > 1 ? ' & Partner' : ''}{!messageInfoNote.starred_by?.includes(user?.id ?? '') ? 'Partner' : ''}</span>
@@ -1681,7 +1702,7 @@ const LoveLock: React.FC = () => {
                       Close
                     </button>
                   </motion.div>
-                </motion.div>
+                </motion.div></MotionPortal>
               )}
             </AnimatePresence>
         </div>

@@ -1,5 +1,5 @@
 import { GoogleAuth } from 'npm:google-auth-library@9.4.1';
-import { adminClient, consumeBudget, corsHeaders, isInternal, json, readBody, requireUser } from '../_shared/security.ts';
+import { adminClient, consumeBudget, corsHeaders, isInternal, json, readBody, requireUser, RequestBodyError } from '../_shared/security.ts';
 
 const SITE = 'https://twilight-mocha.vercel.app';
 
@@ -76,6 +76,7 @@ Deno.serve(async (req: Request) => {
     // FCM acceptance is not device delivery. Receipts are acknowledged by clients.
     return json({success:accepted>0,accepted,failed:results.length-accepted},accepted>0?200:502);
   } catch (err) {
+    if (err instanceof RequestBodyError) return json({ error: err.message }, err.status);
     console.error('Push request failed',err instanceof Error?err.name:'UnknownError');
     return json({error:err instanceof SyntaxError?'Invalid JSON body':'Push delivery failed'},err instanceof SyntaxError?400:502);
   }

@@ -99,11 +99,15 @@ docs/                # Audit, evidence, and upgrade priorities
 
 | Color       | Hex       | Usage                    |
 | ----------- | --------- | ------------------------ |
-| **Primary** | `#984369` | Main Buttons, Highlights |
+| **Primary** | `#C33367` | Main buttons and highlights |
 | **Teal**    | `#4ECDC4` | Fertility Window         |
-| **Yellow**  | `#FFE66D` | Ovulation Day            |
+| **Lavender** | `#BA90F8` | Ovulation estimates |
 | **Purple**  | `#7C3AED` | Insights & Magic         |
-| **Dark Bg** | `#121014` | Main Background          |
+| **Dark Bg** | `#19101E` | Dark-mode background |
+
+UI icons are local SVGs in `components/ui/Icons.tsx`. Shared motion presets live in `lib/motion.ts`; reference palettes and surface rules live in `styles/`. White mode is the default.
+
+Run `npm run design:preview` for 56 static page layouts in both appearances and `npm run verify:ui` to inspect the CSS served by localhost. The opt-in `npm run verify:api` creates and cleans synthetic accounts and requires the server-only service role key. See [the latest UI/API verification](docs/DARK_MOTION_AND_API_2026-10-27.md) for evidence and limits.
 
 ## 📄 License
 

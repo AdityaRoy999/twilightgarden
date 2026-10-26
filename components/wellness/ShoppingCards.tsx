@@ -1,3 +1,4 @@
+import { AppIcon } from '../ui/Icons';
 import React from 'react';
 import { motion } from 'framer-motion';
 import { Product } from '../../lib/wellnessAI';
@@ -61,7 +62,7 @@ export const ShoppingCard: React.FC<ShoppingCardProps> = ({ product, index }) =>
                     />
                 ) : (
                     <div className="w-full h-full flex flex-col items-center justify-center gap-1 opacity-40">
-                        <span className={`material-symbols-outlined text-3xl ${getSourceColor(product.source)}`}>{getSourceIcon(product.source)}</span>
+                        <span className={`app-icon-glyph text-3xl ${getSourceColor(product.source)}`}><AppIcon name={getSourceIcon(product.source)}/></span>
                         <span className="text-[10px] text-center px-2 line-clamp-2">{product.title || 'No preview'}</span>
                     </div>
                 )}
@@ -74,9 +75,7 @@ export const ShoppingCard: React.FC<ShoppingCardProps> = ({ product, index }) =>
 
             <div className="p-3 flex flex-col flex-grow">
                 <div className="flex items-center gap-1.5 mb-1.5 text-[10px] font-bold uppercase tracking-wider shrink-0">
-                    <span className={`material-symbols-outlined text-[14px] ${getSourceColor(product.source)}`}>
-                        {getSourceIcon(product.source)}
-                    </span>
+                    <span className={`app-icon-glyph text-[14px] ${getSourceColor(product.source)}`}><AppIcon name={getSourceIcon(product.source)}/></span>
                     <span className={getSourceColor(product.source)}>{product.source}</span>
                 </div>
                 <h4 className={`text-[12px] md:text-sm font-bold line-clamp-2 md:line-clamp-3 leading-snug group-hover:text-primary transition-colors flex-grow ${
@@ -106,7 +105,7 @@ export const ShoppingGrid: React.FC<{ products: Product[]; loading: boolean }> =
     if (products.length === 0) {
         return (
             <div className="text-center py-8 opacity-40">
-                <span className="material-symbols-outlined text-4xl mb-2 flex items-center justify-center">sentiment_dissatisfied</span>
+                <span className="app-icon-glyph text-4xl mb-2 flex items-center justify-center"><AppIcon name={"sentiment_dissatisfied"}/></span>
                 <p className="text-sm">No live products found. Try refreshing.</p>
             </div>
         );

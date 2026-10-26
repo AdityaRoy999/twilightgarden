@@ -27,8 +27,7 @@ export async function generateLoveNote(mood: AIMood, customPrompt?: string): Pro
         console.log('[AI] Calling ai-generate with mood:', mood);
 
         // Add a 30s timeout
-        const controller = new AbortController();
-        const timeout = setTimeout(() => controller.abort(), 30000);
+        const signal = AbortSignal.timeout(30000);
 
         const res = await fetch(
             `${SUPABASE_URL}/functions/v1/ai-generate`,
@@ -40,11 +39,10 @@ export async function generateLoveNote(mood: AIMood, customPrompt?: string): Pro
                     'apikey': SUPABASE_ANON_KEY,
                 },
                 body: JSON.stringify({ mood, customPrompt }),
-                signal: controller.signal,
+                signal,
             }
         );
 
-        clearTimeout(timeout);
 
         console.log('[AI] Response status:', res.status);
 
@@ -63,7 +61,7 @@ export async function generateLoveNote(mood: AIMood, customPrompt?: string): Pro
         console.log('[AI] Generated text:', data.text?.substring(0, 50) + '...');
         return { text: data.text };
     } catch (error: any) {
-        if (error.name === 'AbortError') {
+        if (error.name === 'AbortError' || error.name === 'TimeoutError') {
             console.error('[AI] Request timed out after 30s');
             return { text: '', error: 'Request timed out. Please try again.' };
         }

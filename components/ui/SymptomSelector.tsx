@@ -1,3 +1,4 @@
+import { AppIcon } from './Icons';
 import React from 'react';
 
 export interface SymptomOption {
@@ -50,13 +51,9 @@ export const SymptomSelector: React.FC<SymptomSelectorProps> = ({
                   : 'bg-primary/5 text-gray-500 hover:bg-primary/10'
               }`}
             >
-              <div
-                className={`text-[26px] ${
-                  isSelected ? 'material-symbols-filled' : 'material-symbols-outlined'
-                }`}
-              >
-                {option.icon}
-              </div>
+              <div className={`text-[26px] ${
+                  isSelected ? 'app-icon-glyph' : 'app-icon-glyph'
+                }`}><AppIcon name={option.icon}/></div>
             </div>
             <span
               className={`text-[11px] font-medium transition-colors ${

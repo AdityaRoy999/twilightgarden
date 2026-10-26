@@ -18,7 +18,8 @@
     "release:desktop": "node scripts/release-desktop.js",
     "tauri": "tauri",
     "design:preview": "vitest run --config scripts/design-preview.config.ts",
-    "verify:ui": "node scripts/verify-ui-theme.mjs"
+    "verify:ui": "node scripts/verify-ui-theme.mjs",
+    "verify:api": "node --experimental-strip-types scripts/verify-api.mjs"
   },
   "dependencies": {
     "@capacitor/android": "^8.1.0",
@@ -49,7 +50,6 @@
     "html5-qrcode": "^2.3.8",
     "jspdf": "^4.2.0",
     "leaflet": "^1.9.4",
-    "lucide-react": "^0.575.0",
     "react": "^19.2.4",
     "react-dom": "^19.2.4",
     "react-is": "^19.2.4",

@@ -1,3 +1,5 @@
+import { MotionPortal } from '../ui/MotionPortal';
+import { AppIcon } from '../ui/Icons';
 import React, { useState, useEffect } from 'react';
 import { useLocation } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -28,7 +30,7 @@ export const GlobalGameTutorial: React.FC = () => {
             {/* The Tutorial Video Modal */}
             <AnimatePresence>
                 {isOpen && config && (
-                    <motion.div
+                    <MotionPortal><motion.div
                         initial={{ opacity: 0 }}
                         animate={{ opacity: 1 }}
                         exit={{ opacity: 0 }}
@@ -42,7 +44,7 @@ export const GlobalGameTutorial: React.FC = () => {
                                 onClick={closeTutorial}
                                 className="absolute top-4 right-4 z-[110] w-10 h-10 rounded-full flex items-center justify-center bg-black/40 hover:bg-black/60 backdrop-blur-md transition-all active:scale-95"
                             >
-                                <span className="material-symbols-outlined text-white">close</span>
+                                <span className="app-icon-glyph text-white"><AppIcon name={"close"}/></span>
                             </button>
                             
                             <video
@@ -53,7 +55,7 @@ export const GlobalGameTutorial: React.FC = () => {
                                 onEnded={closeTutorial}
                             />
                         </div>
-                    </motion.div>
+                    </motion.div></MotionPortal>
                 )}
             </AnimatePresence>
         </>

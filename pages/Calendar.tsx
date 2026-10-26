@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { CalendarDays, ChevronLeft, ChevronRight, Droplet, Heart } from 'lucide-react';
+import { CalendarDays, ChevronLeft, ChevronRight, Droplet, Heart } from '../components/ui/Icons';
 import { calendarDayDifference, localDateKey } from '../lib/dates';
 import { useToday } from '../hooks/useToday';
 import { useData } from '../contexts/DataContext';
@@ -44,11 +44,11 @@ export function CalendarScreen({ logs, cycleSettings, getCyclePhase, readOnly = 
           const predicted = !period && ((state.hasEstimate !== false && state.phase === 'Menstrual') || futurePeriod);
           const label = [date, period ? 'Period logged' : predicted ? 'Predicted period' : state.isOvulation ? 'Estimated ovulation' : state.isFertile ? 'Estimated fertile window' : '', log ? 'Has a journal entry' : '', date > today ? 'Future date' : ''].filter(Boolean).join(', ');
           return <button key={date} type="button" aria-label={label} aria-current={date === today ? 'date' : undefined} disabled={date > today || outside || (readOnly && !log)} onClick={() => openDate(date)} className={`reference-day ${outside ? 'outside' : ''}`} data-period={period} data-predicted={predicted} data-ovulation={state.isOvulation} data-today={date === today}>
-            <span className="reference-day-number">{new Date(year, month, number).getDate()}</span>
+            <span className="reference-day-number">{period && !outside && <svg className="reference-day-drop" viewBox="0 0 40 48" aria-hidden="true"><path d="M20 1C16 10 2 20 2 30A18 18 0 0 0 38 30C38 20 24 10 20 1Z" fill="currentColor"/></svg>}<span>{new Date(year, month, number).getDate()}</span></span>
             {!outside && (period ? <span className="reference-day-marker"/> : state.isOvulation ? <span className="reference-day-marker ovulation"/> : state.isFertile ? <Heart className="reference-day-heart" size={10} fill="currentColor"/> : log ? <span className="reference-day-marker"/> : null)}
           </button>;
         })}</div>
-        <div className="reference-legend"><span><i/>Period</span><span><Heart size={13} fill="#f58fb1" stroke="#f58fb1"/>Fertile estimate</span><span><i className="ovulation"/>Ovulation estimate</span><span><i className="predicted"/>Predicted</span></div>
+        <div className="reference-legend"><span><Droplet size={15} fill="currentColor"/>Period</span><span><Heart size={13} fill="#f58fb1" stroke="#f58fb1"/>Fertile estimate</span><span><i className="ovulation"/>Ovulation estimate</span><span><i className="predicted"/>Predicted</span></div>
       </section>
       <section className="reference-card"><ReferenceArt kind="leaves" className="reference-card-art"/><div className="reference-phase-heading"><span className="reference-icon"><Droplet size={27} fill="currentColor"/></span><div><h2>Current phase</h2><strong>{phase.phase === 'Unknown' ? 'Your own rhythm' : phase.phase}</strong>{phase.currentDay > 0 && <small>· Day {phase.currentDay}</small>}</div></div><p className="reference-description">{phaseDescriptions[phase.phase] || 'Log a period start and your daily symptoms to get to know your own patterns.'}</p><div className="reference-phase-footer"><CalendarDays size={17}/>{phase.hasEstimate === false ? 'No period estimate available' : phase.nextPeriodIn < 0 ? <>Period estimate passed <strong>{Math.abs(phase.nextPeriodIn)} days ago</strong></> : <>Next period in <strong>{phase.nextPeriodIn} days</strong></>}</div></section>
       <section className="reference-card"><div className="reference-glance-heading"><h2>Cycle at a glance</h2><button onClick={() => navigate(readOnly ? '/partner/insights' : '/insights')}>View details <ChevronRight size={14} className="inline"/></button></div><div className="reference-glance-stats"><div><strong>{cycleSettings.avgCycleLength}</strong><span>Typical cycle length</span></div><div><strong>{cycleSettings.avgPeriodLength}</strong><span>Typical period duration</span></div></div></section>

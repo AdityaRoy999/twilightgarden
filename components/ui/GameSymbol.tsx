@@ -1,5 +1,5 @@
 import React from 'react';
-import { Gamepad2, Hand } from 'lucide-react';
+import { Gamepad2, Hand } from './Icons';
 export function GameSymbol({ id }: { id: string }) {
   if (id === 'rps') return <Hand size={37} strokeWidth={1.8}/>;
   if (!['tictactoe', 'dots-boxes', 'connect-four', 'hangman'].includes(id)) return <Gamepad2 size={36}/>;

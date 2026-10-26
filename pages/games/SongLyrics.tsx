@@ -1,3 +1,4 @@
+import { AppIcon } from '../../components/ui/Icons';
 import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -297,9 +298,9 @@ const SongLyrics: React.FC = () => {
             {/* Header */}
             <div className={`p-4 flex items-center justify-between border-b ${isDark ? 'border-white/10' : 'border-gray-200'}`}>
                 <button onClick={async () => { try { if (session?.id) await endSession(session.id); } catch {} navigate('/games'); }} className="p-2 -ml-2 rounded-full hover:bg-white/10 active:scale-95 transition-transform">
-                    <span className="material-symbols-outlined text-2xl">arrow_back</span>
+                    <span className="app-icon-glyph text-2xl"><AppIcon name={"arrow_back"}/></span>
                 </button>
-                <h1 className="text-lg font-bold">🎵 Finish the Lyrics</h1>
+                <h1 className="text-lg font-bold"><AppIcon name={"🎵"}/> Finish the Lyrics</h1>
                 <button
                     onClick={async () => {
                         if (!couple || !user || ringCooldown) return;
@@ -310,7 +311,7 @@ const SongLyrics: React.FC = () => {
                     disabled={ringCooldown}
                     className={`p-2 rounded-full transition-all ${ringCooldown ? 'opacity-30' : 'hover:bg-white/10 active:scale-90'}`}
                 >
-                    <span className="material-symbols-outlined text-2xl">{ringCooldown ? 'notifications_off' : 'notifications_active'}</span>
+                    <span className="app-icon-glyph text-2xl"><AppIcon name={ringCooldown ? 'notifications_off' : 'notifications_active'}/></span>
                 </button>
             </div>
 
@@ -347,7 +348,8 @@ const SongLyrics: React.FC = () => {
                                     animate={{ y: [0, -8, 0] }}
                                     transition={{ repeat: Infinity, duration: 2 }}
                                 >
-                                    🎤
+
+                                    <AppIcon name={"🎤"}/>
                                 </motion.div>
                                 <h2 className="text-2xl font-bold mb-2">Finish the Lyrics!</h2>
                                 <p className="opacity-60 mb-2">{TOTAL_ROUNDS} rounds • Multiple choice</p>
@@ -358,7 +360,8 @@ const SongLyrics: React.FC = () => {
                                         onClick={startGame}
                                         className="on-brand w-full py-4 rounded-2xl bg-gradient-to-r from-pink-500 to-fuchsia-500 text-white font-bold text-lg shadow-lg active:scale-95 transition-transform"
                                     >
-                                        🎶 Start Game
+
+                                        <AppIcon name={"🎶"}/> Start Game
                                     </button>
                                 ) : (
                                     <div className="flex flex-col items-center gap-6">
@@ -378,7 +381,8 @@ const SongLyrics: React.FC = () => {
                                     {/* Song info */}
                                     <div className="text-center mb-6">
                                         <span className={`text-xs px-3 py-1 rounded-full ${isDark ? 'bg-white/10' : 'bg-gray-200'}`}>
-                                            🎵 {currentQ.artist} — {currentQ.song}
+
+                                            <AppIcon name={"🎵"}/> {currentQ.artist} — {currentQ.song}
                                         </span>
                                     </div>
 
@@ -417,7 +421,8 @@ const SongLyrics: React.FC = () => {
                             ) : (
                                 <div className="text-center">
                                     <motion.div className="text-6xl mb-4" animate={{ scale: [1, 1.1, 1] }} transition={{ repeat: Infinity, duration: 1.5 }}>
-                                        🎧
+
+                                        <AppIcon name={"🎧"}/>
                                     </motion.div>
                                     <h2 className="text-xl font-bold mb-2">Partner is playing...</h2>
                                     <p className="opacity-50">Question {board_state.currentIndex + 1} of {board_state.questions.length}</p>
@@ -444,9 +449,9 @@ const SongLyrics: React.FC = () => {
                             </div>
 
                             <div className={`p-5 rounded-2xl mb-4 ${isDark ? 'bg-white/5' : 'bg-white shadow-lg'}`}>
-                                <p className="text-sm opacity-50 mb-2">🎵 {currentQ.artist} — {currentQ.song}</p>
+                                <p className="text-sm opacity-50 mb-2"><AppIcon name={"🎵"}/> {currentQ.artist} — {currentQ.song}</p>
                                 <p className="italic opacity-70 mb-2">"{currentQ.lyric_start}"</p>
-                                <p className="font-bold text-green-400">✅ {board_state.correctAnswer}</p>
+                                <p className="font-bold text-green-400"><AppIcon name={"✅"}/> {board_state.correctAnswer}</p>
                                 {board_state.selectedAnswer !== board_state.correctAnswer && (
                                     <p className="text-red-400 text-sm mt-1">Your answer: {board_state.selectedAnswer}</p>
                                 )}
@@ -465,7 +470,8 @@ const SongLyrics: React.FC = () => {
                     {board_state.phase === 'finished' && (
                         <motion.div key="finished" initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="w-full text-center">
                             <motion.div className="text-6xl mb-4" animate={{ rotate: [0, 10, -10, 0] }} transition={{ repeat: Infinity, duration: 2 }}>
-                                🏆
+
+                                <AppIcon name={"🏆"}/>
                             </motion.div>
                             <h2 className="text-2xl font-bold mb-6">Final Scores</h2>
 
@@ -482,7 +488,8 @@ const SongLyrics: React.FC = () => {
                                 onClick={newGame}
                                 className="on-brand w-full py-4 rounded-2xl bg-gradient-to-r from-pink-500 to-fuchsia-500 text-white font-bold shadow-lg active:scale-95 transition-transform"
                             >
-                                🔄 Play Again
+
+                                <AppIcon name={"🔄"}/> Play Again
                             </button>
                         </motion.div>
                     )}

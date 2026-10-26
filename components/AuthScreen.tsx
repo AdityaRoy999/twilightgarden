@@ -7,7 +7,7 @@ import {
   EyeOff,
   Heart,
   LockKeyhole,
-} from "lucide-react";
+} from './ui/Icons';
 import { Capacitor } from "@capacitor/core";
 import { supabase } from "../lib/supabase";
 

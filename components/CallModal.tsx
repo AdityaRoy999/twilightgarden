@@ -1,6 +1,7 @@
+import { MotionPortal } from './ui/MotionPortal';
 import React, { useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Phone, PhoneOff, Mic, MicOff, Video, VideoOff, User } from 'lucide-react';
+import { Phone, PhoneOff, Mic, MicOff, Video, VideoOff, User } from './ui/Icons';
 import { useCall } from '../contexts/CallContext';
 
 export const CallModal: React.FC = () => {
@@ -52,7 +53,7 @@ export const CallModal: React.FC = () => {
 
     return (
         <AnimatePresence>
-            <motion.div 
+            <MotionPortal><motion.div
                 initial={{ opacity: 0, scale: 0.95 }}
                 animate={{ opacity: 1, scale: 1 }}
                 exit={{ opacity: 0, scale: 1.05 }}
@@ -171,7 +172,7 @@ export const CallModal: React.FC = () => {
                         )}
                     </div>
                 </div>
-            </motion.div>
+            </motion.div></MotionPortal>
         </AnimatePresence>
     );
 };

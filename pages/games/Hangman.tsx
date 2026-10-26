@@ -1,3 +1,4 @@
+import { AppIcon } from '../../components/ui/Icons';
 import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -250,7 +251,7 @@ const Hangman: React.FC = () => {
     return (
         <div className={`min-h-screen flex flex-col font-display transition-colors ${isDark ? 'bg-background-dark text-white' : 'bg-background-dark text-[var(--text-primary)]'}`}>
             <header className={`flex items-center justify-between px-5 py-4 sticky top-0 z-20 backdrop-blur-sm border-b ${isDark ? 'bg-background-dark/95 border-white/5' : 'bg-background-dark/95 border-gray-100'}`}>
-                <button onClick={handleExit} className="w-10 h-10 rounded-full flex items-center justify-center hover:bg-white/10"><span className="material-symbols-outlined">arrow_back</span></button>
+                <button onClick={handleExit} className="w-10 h-10 rounded-full flex items-center justify-center hover:bg-white/10"><span className="app-icon-glyph"><AppIcon name={"arrow_back"}/></span></button>
                 <h1 className="text-lg font-bold">Hangman</h1>
                 <div className="flex items-center">
                     <button
@@ -258,7 +259,7 @@ const Hangman: React.FC = () => {
                         className="w-10 h-10 rounded-full flex items-center justify-center hover:bg-white/10 transition-all active:scale-90 mr-1"
                         title="Watch Tutorial"
                     >
-                        <span className="material-symbols-outlined text-xl" style={{ color: primaryColor }}>play_circle</span>
+                        <span className="app-icon-glyph text-xl" style={{ color: primaryColor }}><AppIcon name={"play_circle"}/></span>
                     </button>
                     <button
                         onClick={async () => {
@@ -271,7 +272,7 @@ const Hangman: React.FC = () => {
                         className={`w-10 h-10 rounded-full flex items-center justify-center transition-all ${ringCooldown ? 'opacity-30' : 'hover:bg-white/10 active:scale-90'}`}
                         title="Ring Partner"
                     >
-                        <span className="material-symbols-outlined text-xl">{ringCooldown ? 'notifications_off' : 'notifications_active'}</span>
+                        <span className="app-icon-glyph text-xl"><AppIcon name={ringCooldown ? 'notifications_off' : 'notifications_active'}/></span>
                     </button>
                 </div>
             </header>
@@ -303,7 +304,8 @@ const Hangman: React.FC = () => {
                                     disabled={game.status !== 'active'}
                                     className={`w-full py-4 rounded-2xl font-bold text-white active:scale-95 transition-transform ${game.status !== 'active' ? 'opacity-50 grayscale pointer-events-none' : ''}`}
                                     style={{ backgroundColor: primaryColor }}>
-                                    🎲 Random Word
+
+                                    <AppIcon name={"🎲"}/> Random Word
                                 </button>
                                 <div className="flex items-center gap-2 w-full">
                                     <div className="flex-1 h-px bg-gray-300 dark:bg-gray-700" />
@@ -374,10 +376,10 @@ const Hangman: React.FC = () => {
                         {/* Result message */}
                         {state.phase === 'finished' && (
                             <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="text-center">
-                                {state.result === 'win' && amGuesser && <p className="text-xl font-bold text-green-500">You guessed it! 🎉</p>}
-                                {state.result === 'win' && amPicker && <p className="text-xl font-bold text-red-400">They guessed it! 😅</p>}
-                                {state.result === 'lose' && amGuesser && <p className="text-xl font-bold text-red-400">You didn't get it 💀</p>}
-                                {state.result === 'lose' && amPicker && <p className="text-xl font-bold text-green-500">They couldn't get it! 🎯</p>}
+                                {state.result === 'win' && amGuesser && <p className="text-xl font-bold text-green-500">You guessed it! <AppIcon name={"🎉"}/></p>}
+                                {state.result === 'win' && amPicker && <p className="text-xl font-bold text-red-400">They guessed it! <AppIcon name={"😅"}/></p>}
+                                {state.result === 'lose' && amGuesser && <p className="text-xl font-bold text-red-400">You didn't get it <AppIcon name={"💀"}/></p>}
+                                {state.result === 'lose' && amPicker && <p className="text-xl font-bold text-green-500">They couldn't get it! <AppIcon name={"🎯"}/></p>}
                             </motion.div>
                         )}
 
@@ -409,7 +411,7 @@ const Hangman: React.FC = () => {
                         {/* Next round / exit */}
                         {state.phase === 'finished' && (
                             <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="flex flex-col items-center gap-3 w-full max-w-xs mt-2">
-                                <button onClick={handleNextRound} className="on-brand w-full px-6 py-4 rounded-2xl font-bold text-white shadow-lg active:scale-95" style={{ backgroundColor: primaryColor }}>Next Round (swap roles) 🔄</button>
+                                <button onClick={handleNextRound} className="on-brand w-full px-6 py-4 rounded-2xl font-bold text-white shadow-lg active:scale-95" style={{ backgroundColor: primaryColor }}>Next Round (swap roles) <AppIcon name={"🔄"}/></button>
                                 <button onClick={handleExit} className={`w-full px-6 py-3 rounded-2xl font-bold ${isDark ? 'bg-white/5 text-gray-300' : 'bg-gray-100 text-gray-600'}`}>Exit Game</button>
                             </motion.div>
                         )}

@@ -1,3 +1,4 @@
+import { AppIcon } from '../components/ui/Icons';
 import { uploadAvatar } from '../lib/media';
 import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
@@ -117,7 +118,7 @@ const EditProfile: React.FC = () => {
           onClick={() => navigate(-1)}
           className="flex items-center justify-center p-2 -ml-2 rounded-full hover:bg-black/5 dark:hover:bg-white/10 transition-colors"
         >
-          <span className="material-symbols-outlined text-[var(--text-primary)] dark:text-white text-2xl">arrow_back</span>
+          <span className="app-icon-glyph text-[var(--text-primary)] dark:text-white text-2xl"><AppIcon name={"arrow_back"}/></span>
         </button>
         <h2 className="text-[17px] font-bold text-[var(--text-primary)] dark:text-white">Edit Profile</h2>
         <div className="w-10"></div>
@@ -143,7 +144,7 @@ const EditProfile: React.FC = () => {
             disabled={uploading}
             className="on-brand absolute bottom-1 right-1 flex items-center justify-center bg-primary text-white p-2.5 rounded-full shadow-lg border-[3px] border-[#FDFCF8] dark:border-background-dark active:scale-95 transition-all cursor-pointer hover:scale-105"
            >
-             <span className="material-symbols-outlined text-[18px]">photo_camera</span>
+             <span className="app-icon-glyph text-[18px]"><AppIcon name={"photo_camera"}/></span>
           </button>
           <input
             type="file"
@@ -167,7 +168,7 @@ const EditProfile: React.FC = () => {
                     className="w-full h-14 pl-4 pr-12 rounded-2xl bg-white dark:bg-surface-dark border border-gray-200 dark:border-white/10 text-[var(--text-primary)] dark:text-white font-medium focus:ring-1 focus:ring-primary focus:border-primary transition-all shadow-sm outline-none"
                     placeholder="Enter your name"
                  />
-                 <span className="material-symbols-outlined absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none">person</span>
+                 <span className="app-icon-glyph absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none"><AppIcon name={"person"}/></span>
               </div>
            </div>
 
@@ -181,7 +182,7 @@ const EditProfile: React.FC = () => {
                     disabled
                     className="w-full h-14 pl-4 pr-12 rounded-2xl bg-gray-50 dark:bg-white/5 border border-gray-200 dark:border-white/5 text-gray-500 dark:text-gray-400 font-medium cursor-not-allowed shadow-none outline-none"
                  />
-                 <span className="material-symbols-outlined absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none">mail</span>
+                 <span className="app-icon-glyph absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none"><AppIcon name={"mail"}/></span>
               </div>
            </div>
 
@@ -214,7 +215,7 @@ const EditProfile: React.FC = () => {
           ) : (
             <>
               <span>Save Changes</span>
-              <span className="material-symbols-outlined text-[20px]">check</span>
+              <span className="app-icon-glyph text-[20px]"><AppIcon name={"check"}/></span>
             </>
           )}
         </button>

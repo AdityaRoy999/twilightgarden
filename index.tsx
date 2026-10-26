@@ -1,6 +1,9 @@
 import './index.css';
 import './styles/bloom.css';
 import './styles/reference.css';
+import './styles/spring.css';
+import './styles/dark.css';
+import './styles/refinements.css';
 import React from 'react';
 import ReactDOM from 'react-dom/client';
 import App from './App';

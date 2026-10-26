@@ -1,3 +1,4 @@
+import { AppIcon } from '../../components/ui/Icons';
 import React from 'react';
 import { useCouples } from '../../contexts/CouplesContext';
 import { useTheme } from '../../contexts/ThemeContext';
@@ -31,7 +32,7 @@ const PartnerInsights: React.FC = () => {
         />
       ) : (
         <div className="text-center py-20 bg-white dark:bg-surface-dark rounded-[2rem] border border-dashed border-gray-200 dark:border-white/10 mt-10">
-          <span className="material-symbols-outlined text-4xl text-gray-400 mb-4 block">lock</span>
+          <span className="app-icon-glyph text-4xl text-gray-400 mb-4 block"><AppIcon name={"lock"}/></span>
           <p className="text-gray-500 dark:text-gray-400 font-medium">Insights are hidden by partner</p>
           <p className="text-xs text-gray-400 mt-1">Ghost Mode is currently active.</p>
         </div>

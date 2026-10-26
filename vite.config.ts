@@ -16,7 +16,7 @@ export default defineConfig(({ mode }) => {
             output: {
                 manualChunks: {
                     'vendor-react': ['react', 'react-dom', 'react-router-dom'],
-                    'vendor-ui': ['framer-motion', 'lucide-react', 'recharts'],
+                    'vendor-ui': ['framer-motion', 'recharts'],
                     'vendor-utils': ['date-fns', 'html2canvas', 'jspdf'],
                     'vendor-capacitor': ['@capacitor/core', '@capacitor/app', '@capacitor/filesystem', '@capacitor/local-notifications', '@capacitor/push-notifications', '@capacitor/share', '@capacitor/splash-screen'],
                     'vendor-supabase': ['@supabase/supabase-js']

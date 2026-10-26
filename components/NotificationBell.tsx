@@ -1,3 +1,4 @@
+import { AppIcon } from './ui/Icons';
 import React, { useState, useRef, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
@@ -115,7 +116,7 @@ const NotificationBell: React.FC = () => {
                         <div className="overflow-y-auto flex-1 custom-scrollbar">
                             {notifications.length === 0 ? (
                                 <div className="p-8 text-center flex flex-col items-center justify-center text-gray-400">
-                                    <span className="material-symbols-outlined text-4xl mb-2 opacity-30">notifications_off</span>
+                                    <span className="app-icon-glyph text-4xl mb-2 opacity-30"><AppIcon name={"notifications_off"}/></span>
                                     <p className="text-sm">No notifications yet</p>
                                 </div>
                             ) : (

@@ -1,9 +1,13 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
-import { consumeBudget, json, readBody, requireUser } from '../_shared/security.ts';
+import { consumeBudget, json, readBody, requireUser, RequestBodyError } from '../_shared/security.ts';
 
 const NVIDIA_API_KEY = Deno.env.get('NVIDIA_API_KEY');
 const SERPER_API_KEY = Deno.env.get('SERPER_API_KEY') || Deno.env.get('VITE_SERPER_API');
 const NVIDIA_URL = "https://integrate.api.nvidia.com/v1/chat/completions";
+const NVIDIA_MODEL = Deno.env.get('NVIDIA_MODEL') || 'nvidia/nemotron-3.5-lightning-30b-a3b';
+class ProviderError extends Error {
+    constructor(public providerStatus: number) { super('Generation provider rejected the request'); }
+}
 
 const corsHeaders = {
     'Access-Control-Allow-Origin': '*',
@@ -162,7 +166,7 @@ serve(async (req) => {
 
         // ── AI Text Generation Mode ──
         if (!NVIDIA_API_KEY) {
-            throw new Error('NVIDIA_API_KEY is not set');
+            return json({ error: 'AI generation is not configured.', code: 'AI_NOT_CONFIGURED' }, 503);
         }
 
         const prompts: Record<string, string> = {
@@ -184,7 +188,7 @@ serve(async (req) => {
                 'Authorization': `Bearer ${NVIDIA_API_KEY}`,
             },
             body: JSON.stringify({
-                model: 'meta/llama-3.1-8b-instruct',
+                model: NVIDIA_MODEL,
                 messages: [{ role: 'user', content: prompt }],
                 max_tokens: 1024,
                 temperature: 0.7,
@@ -194,18 +198,24 @@ serve(async (req) => {
         });
 
         if (!response.ok) {
-            const errText = await response.text();
-            throw new Error(`NVIDIA API error ${response.status}: ${errText}`);
+            await response.body?.cancel();
+            throw new ProviderError(response.status);
         }
 
         const data = await response.json();
-        const text = data.choices?.[0]?.message?.content || "I'm sorry, I couldn't generate a response right now.";
+        const text = data.choices?.[0]?.message?.content;
+        if (typeof text !== 'string' || !text.trim()) throw new Error('Empty generation response');
 
         return new Response(JSON.stringify({ text }), {
             headers: { ...corsHeaders, 'Content-Type': 'application/json' },
             status: 200,
         });
     } catch (error) {
+        if (error instanceof RequestBodyError) return json({ error: error.message }, error.status);
+        if (error instanceof ProviderError) {
+            console.error('Generation provider rejected request', { model: NVIDIA_MODEL, status: error.providerStatus });
+            return json({ error: 'AI generation is temporarily unavailable.', code: 'AI_UPSTREAM_REJECTED', providerStatus: error.providerStatus }, 502);
+        }
         console.error('AI request failed', error instanceof Error ? error.name : 'UnknownError');
         return json({ error: error instanceof SyntaxError ? 'Invalid JSON body' : 'The request could not be completed. Please retry.' }, error instanceof SyntaxError ? 400 : 502);
     }

@@ -1,3 +1,4 @@
+import { AppIcon } from '../../components/ui/Icons';
 import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -245,7 +246,7 @@ const ThisOrThat: React.FC = () => {
             <div className={`min-h-screen flex flex-col ${isDark ? 'bg-background-dark text-white' : 'bg-gray-50 text-gray-900'}`}>
                 <div className={`p-4 flex items-center justify-between border-b ${isDark ? 'border-white/10' : 'border-gray-200'}`}>
                     <button onClick={async () => { try { if (session?.id) await endSession(session.id); } catch {} navigate('/games'); }} className="p-2 -ml-2 rounded-full hover:bg-white/10 active:scale-95 transition-transform">
-                        <span className="material-symbols-outlined text-2xl">arrow_back</span>
+                        <span className="app-icon-glyph text-2xl"><AppIcon name={"arrow_back"}/></span>
                     </button>
                     <h1 className="text-lg font-bold">This or That</h1>
                     <button
@@ -253,7 +254,7 @@ const ThisOrThat: React.FC = () => {
                         className="w-10 h-10 rounded-full flex items-center justify-center hover:bg-white/10 transition-all active:scale-90"
                         title="Watch Tutorial"
                     >
-                        <span className="material-symbols-outlined text-xl" style={{ color: primaryColor }}>play_circle</span>
+                        <span className="app-icon-glyph text-xl" style={{ color: primaryColor }}><AppIcon name={"play_circle"}/></span>
                     </button>
                 </div>
                 <main className="flex-1 p-6 pt-12 flex flex-col justify-center items-center max-w-md mx-auto w-full">
@@ -300,7 +301,8 @@ const ThisOrThat: React.FC = () => {
                                             disabled={ringCooldown}
                                             className={`on-brand px-4 py-3 rounded-2xl bg-gradient-to-r from-emerald-500 to-green-500 text-white font-bold transition-all active:scale-95 ${ringCooldown ? 'opacity-50' : ''}`}
                                         >
-                                            🔔 Ring Partner
+
+                                            <AppIcon name={"🔔"}/> Ring Partner
                                         </button>
                                         <button onClick={async () => { try { if (session?.id) await endSession(session.id); } catch {} navigate('/games'); }} className="px-6 py-3 rounded-2xl border border-gray-200 dark:border-white/10 hover:bg-black/5 dark:hover:bg-white/5 transition-all">
                                             Back
@@ -349,7 +351,7 @@ const ThisOrThat: React.FC = () => {
         <div className={`min-h-screen flex flex-col ${isDark ? 'bg-background-dark text-white' : 'bg-gray-50 text-gray-900'}`}>
             <div className={`p-4 flex items-center justify-between border-b ${isDark ? 'border-white/10' : 'border-gray-200'}`}>
                 <button onClick={async () => { try { if (session?.id) await endSession(session.id); } catch {} navigate('/games'); }} className="p-2 -ml-2 rounded-full hover:bg-white/10 active:scale-95 transition-transform">
-                    <span className="material-symbols-outlined text-2xl">arrow_back</span>
+                    <span className="app-icon-glyph text-2xl"><AppIcon name={"arrow_back"}/></span>
                 </button>
                 <h1 className="text-lg font-bold">This or That</h1>
                 <div className="flex items-center">
@@ -358,7 +360,7 @@ const ThisOrThat: React.FC = () => {
                         className="w-10 h-10 rounded-full flex items-center justify-center hover:bg-white/10 transition-all active:scale-90 mr-1"
                         title="Watch Tutorial"
                     >
-                        <span className="material-symbols-outlined text-xl" style={{ color: primaryColor }}>play_circle</span>
+                        <span className="app-icon-glyph text-xl" style={{ color: primaryColor }}><AppIcon name={"play_circle"}/></span>
                     </button>
                     <button
                         onClick={async () => {
@@ -371,7 +373,7 @@ const ThisOrThat: React.FC = () => {
                         className={`p-2 rounded-full transition-all ${ringCooldown ? 'opacity-30' : 'hover:bg-white/10 active:scale-90'}`}
                         title="Ring Partner"
                     >
-                        <span className="material-symbols-outlined text-2xl">{ringCooldown ? 'notifications_off' : 'notifications_active'}</span>
+                        <span className="app-icon-glyph text-2xl"><AppIcon name={ringCooldown ? 'notifications_off' : 'notifications_active'}/></span>
                     </button>
                 </div>
             </div>
@@ -398,7 +400,8 @@ const ThisOrThat: React.FC = () => {
                         </motion.div>
                     ) : (myVote && !partnerVote) ? (
                          <div className="bg-yellow-500/20 text-yellow-500 px-4 py-2 rounded-lg text-sm font-medium">
-                            ✅ You picked! Waiting for partner...
+
+                            <AppIcon name={"✅"}/> You picked! Waiting for partner...
                         </div>
                     ) : (
                          <div className="text-gray-500 text-sm">Pick your favorite!</div>

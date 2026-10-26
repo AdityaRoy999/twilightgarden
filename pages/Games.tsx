@@ -1,6 +1,9 @@
+import { useAppMotion } from '../hooks/useAppMotion';
+import { springs, motionTransition } from '../lib/motion';
 import { GameSymbol } from '../components/ui/GameSymbol';
+import { AppIcon } from '../components/ui/Icons';
 import { ReferenceArt, ReferenceHeading } from '../components/ui/ReferenceArt';
-import { Play, HelpCircle, Grid2X2, List } from 'lucide-react';
+import { Play, HelpCircle, Grid2X2, List } from '../components/ui/Icons';
 import React, { useState, useEffect } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { motion } from 'framer-motion';
@@ -233,6 +236,7 @@ const categories: Category[] = [
 
 /* ────────────── component ────────────── */
 const Games: React.FC = () => {
+    const { reduced } = useAppMotion();
     const navigate = useNavigate();
     const location = useLocation();
     const { couple } = useCouples();
@@ -325,10 +329,10 @@ const Games: React.FC = () => {
 
     return <div className="reference-page reference-games font-display">
       <ReferenceHeading title="Mini Games" description="Make a moment for the two of you. Pick a favorite and play together." action={<button aria-label={viewMode === 'list' ? 'Show grid view' : 'Show list view'} onClick={() => setViewMode(viewMode === 'list' ? 'card' : 'list')}>{viewMode === 'list' ? <Grid2X2 size={18}/> : <List size={18}/>}</button>}/>
-      <nav className="reference-game-tabs" aria-label="Game categories">{categories.map(category => <button key={category.key} aria-pressed={category.key === activeTab} onClick={() => setActiveTab(category.key)}><span aria-hidden="true">{category.emoji}</span>{category.label}</button>)}</nav>
+      <nav className="reference-game-tabs" aria-label="Game categories">{categories.map(category => <button key={category.key} aria-pressed={category.key === activeTab} onClick={() => setActiveTab(category.key)}><AppIcon name={category.emoji} size={20}/>{category.label}</button>)}</nav>
       {!isPaired && <p className="reference-card reference-description mb-4">Pair with your partner first to play games together.</p>}
       <main className={`reference-game-list ${viewMode === 'card' ? 'reference-game-grid' : ''}`}>
-        {activeCategory.games.map((game, index) => <motion.div key={game.id} className="reference-card reference-game-card" initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: .2, delay: Math.min(index * .025, .1) }}>
+        {activeCategory.games.map((game, index) => <motion.div key={game.id} className="reference-card reference-game-card" initial={reduced ? false : { y: 8 }} animate={{ y: 0 }} transition={motionTransition(springs.section, reduced)}>
           <ReferenceArt kind="leaves" className="reference-card-art"/>
           <button className="reference-game-button" onClick={() => handleGameClick(game)} disabled={!isPaired || !game.available} aria-label={`Play ${game.title}`}>
             <span className="reference-game-symbol"><GameSymbol id={game.id}/></span>

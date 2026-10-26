@@ -1,6 +1,7 @@
+import { MotionPortal } from './ui/MotionPortal';
 import React from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Download, AlertCircle, RefreshCw, X } from 'lucide-react';
+import { Download, AlertCircle, RefreshCw, X } from './ui/Icons';
 import { useAppUpdate } from '../hooks/useAppUpdate';
 
 export default function UpdateModal() {
@@ -25,7 +26,7 @@ export default function UpdateModal() {
 
   return (
     <AnimatePresence>
-      <motion.div
+      <MotionPortal><motion.div
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
         exit={{ opacity: 0 }}
@@ -115,7 +116,7 @@ export default function UpdateModal() {
             )}
           </div>
         </motion.div>
-      </motion.div>
+      </motion.div></MotionPortal>
     </AnimatePresence>
   );
 }

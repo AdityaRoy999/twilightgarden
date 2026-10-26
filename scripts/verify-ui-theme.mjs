@@ -9,7 +9,7 @@ async function get(path) {
 }
 const html = await get('/');
 const productionStyles = [...html.matchAll(/href="(\/assets\/[^"\s]+\.css)"/g)].map(match => match[1]);
-const paths = productionStyles.length ? productionStyles : ['/index.css?direct', '/styles/bloom.css?direct', '/styles/reference.css?direct'];
+const paths = productionStyles.length ? productionStyles : ['/index.css?direct', '/styles/bloom.css?direct', '/styles/reference.css?direct', '/styles/spring.css?direct', '/styles/dark.css?direct', '/styles/refinements.css?direct'];
 const sheets = await Promise.all(paths.map(get));
 const light = {}, dark = {};
 let surfaceBindings = 0;
@@ -27,6 +27,14 @@ for (const sheet of sheets) {
 }
 if (surfaceBindings < 2) throw new Error('Missing generated surface utilities');
 if (light['--bg-surface-rgb'] !== '255 255 255' || light['--text-primary'] !== '#101333') throw new Error('White surface and text tokens do not match');
-if (dark['--bg-surface-rgb'] !== '42 33 47' || dark['--text-primary'] !== '#fff4f9') throw new Error('Dark surface and text tokens do not match');
+if (dark['--bg-surface-rgb'] !== '33 25 43' || dark['--text-primary'] !== '#fbf8ff') throw new Error('Dark surface and text tokens do not match');
+if (!dark['--dark-card']?.includes('linear-gradient') || !dark['--dark-action']?.includes('linear-gradient')) throw new Error('Missing dark reference gradients');
+let shadowReset = false;
+for (const sheet of sheets) postcss.parse(sheet).walkRules(rule => {
+  if (rule.selector.includes('*')) rule.walkDecls('box-shadow', declaration => { if (declaration.value === 'none' && declaration.important) shadowReset = true; });
+});
+if (!shadowReset) throw new Error('Shadow-free surface rules were not served');
+if (!sheets.some(sheet => sheet.includes('data-chat') && sheet.includes('max-width:none') || sheet.includes('data-chat') && sheet.includes('max-width: none'))) throw new Error('Full-pane chat styles were not served');
 if (!(await get('/art/bloom-background.svg')).includes('<svg')) throw new Error('Botanical background asset was not served');
-console.log(`PASS ${origin.origin}: generated colors, paired light/dark tokens, and botanical asset`);
+if (!(await get('/art/bloom-background-dark.svg')).includes('<svg')) throw new Error('Dark botanical background asset was not served');
+console.log(`PASS ${origin.origin}: generated colors, paired light/dark tokens, dark gradients, full-pane chat, and both botanical assets`);

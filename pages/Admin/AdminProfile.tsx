@@ -1,3 +1,4 @@
+import { AppIcon } from '../../components/ui/Icons';
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../../contexts/AuthContext';
@@ -64,7 +65,7 @@ const AdminProfile: React.FC = () => {
                             <div className={`flex items-center justify-center rounded-xl w-10 h-10 group-hover:scale-105 transition-transform ${
                                 isDark ? 'bg-white/5 text-purple-300' : 'bg-gray-50 text-orange-500'
                             }`}>
-                                <span className="material-symbols-outlined">{isDark ? 'dark_mode' : 'light_mode'}</span>
+                                <span className="app-icon-glyph"><AppIcon name={isDark ? 'dark_mode' : 'light_mode'}/></span>
                             </div>
                             <div className="flex flex-col">
                                 <span className={`font-medium ${isDark ? 'text-gray-200' : 'text-[var(--text-primary)]'}`}>Dark Mode</span>
@@ -91,14 +92,14 @@ const AdminProfile: React.FC = () => {
                                 }`}
                                 style={{ backgroundColor: primaryColor }}
                             >
-                                 <span className="material-symbols-outlined text-white text-lg drop-shadow-md">palette</span>
+                                 <span className="app-icon-glyph text-white text-lg drop-shadow-md"><AppIcon name={"palette"}/></span>
                             </div>
                             <div className="flex flex-col">
                                 <span className={`font-medium ${isDark ? 'text-gray-200' : 'text-[var(--text-primary)]'}`}>App Theme Color</span>
                                 <span className={`text-xs ${isDark ? 'text-gray-500' : 'text-gray-400'}`}>Customize appearance</span>
                             </div>
                         </div>
-                        <span className={`material-symbols-outlined text-sm ${isDark ? 'text-gray-600' : 'text-gray-400'}`}>arrow_forward_ios</span>
+                        <span className={`app-icon-glyph text-sm ${isDark ? 'text-gray-600' : 'text-gray-400'}`}><AppIcon name={"arrow_forward_ios"}/></span>
                     </div>
                 </div>
             </div>
@@ -113,7 +114,7 @@ const AdminProfile: React.FC = () => {
                         <div className={`flex items-center justify-center rounded-xl w-10 h-10 ${
                             isDark ? 'bg-blue-500/20 text-blue-400' : 'bg-blue-50 text-blue-500'
                         }`}>
-                            <span className="material-symbols-outlined">badge</span>
+                            <span className="app-icon-glyph"><AppIcon name={"badge"}/></span>
                         </div>
                         <div className="flex flex-col">
                             <span className={`font-medium ${isDark ? 'text-gray-200' : 'text-[var(--text-primary)]'}`}>Role</span>
@@ -124,7 +125,7 @@ const AdminProfile: React.FC = () => {
                         <div className={`flex items-center justify-center rounded-xl w-10 h-10 ${
                             isDark ? 'bg-green-500/20 text-green-400' : 'bg-green-50 text-green-500'
                         }`}>
-                            <span className="material-symbols-outlined">verified_user</span>
+                            <span className="app-icon-glyph"><AppIcon name={"verified_user"}/></span>
                         </div>
                         <div className="flex flex-col">
                             <span className={`font-medium ${isDark ? 'text-gray-200' : 'text-[var(--text-primary)]'}`}>Access Level</span>
@@ -144,7 +145,7 @@ const AdminProfile: React.FC = () => {
                             : 'bg-red-50 hover:bg-red-100 text-red-500 border border-red-100'
                     }`}
                 >
-                    <span className="material-symbols-outlined text-lg">logout</span>
+                    <span className="app-icon-glyph text-lg"><AppIcon name={"logout"}/></span>
                     Sign Out
                 </button>
             </div>

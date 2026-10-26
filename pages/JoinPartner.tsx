@@ -1,3 +1,4 @@
+import { AppIcon } from '../components/ui/Icons';
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useCouples } from '../contexts/CouplesContext';
@@ -40,7 +41,7 @@ const JoinPartner: React.FC = () => {
           onClick={() => navigate('/welcome')} 
           className="text-white flex size-12 shrink-0 items-center justify-center cursor-pointer hover:bg-white/5 rounded-full transition-colors"
         >
-          <span className="material-symbols-outlined">arrow_back_ios_new</span>
+          <span className="app-icon-glyph"><AppIcon name={"arrow_back_ios_new"}/></span>
         </button>
         <h2 className="text-white text-lg font-bold flex-1 text-center pr-12">
           Connect with Partner
@@ -54,13 +55,14 @@ const JoinPartner: React.FC = () => {
           animate={{ scale: 1, opacity: 1 }}
           className="relative w-24 h-24 bg-blue-500/20 rounded-full flex items-center justify-center mb-8"
         >
-          <span className="material-symbols-outlined text-5xl text-blue-400">favorite</span>
+          <span className="app-icon-glyph text-5xl text-blue-400"><AppIcon name={"favorite"}/></span>
           <motion.div 
             animate={{ scale: [1, 1.2, 1] }}
             transition={{ repeat: Infinity, duration: 2 }}
             className="absolute -top-1 -right-1 text-2xl"
           >
-            💙
+
+            <AppIcon name={"💙"}/>
           </motion.div>
         </motion.div>
 
@@ -106,7 +108,7 @@ const JoinPartner: React.FC = () => {
               </>
             ) : (
               <>
-                <span className="material-symbols-outlined">link</span>
+                <span className="app-icon-glyph"><AppIcon name={"link"}/></span>
                 <span>Connect Now</span>
               </>
             )}

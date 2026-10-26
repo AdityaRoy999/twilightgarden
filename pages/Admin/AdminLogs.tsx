@@ -1,3 +1,4 @@
+import { AppIcon } from '../../components/ui/Icons';
 import React, { useEffect, useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { supabase } from '../../lib/supabase';
@@ -128,7 +129,7 @@ const AdminLogs: React.FC = () => {
                                     : (isDark ? 'text-gray-400 hover:text-white' : 'text-gray-400 hover:text-gray-600')
                             }`}
                         >
-                            <span className="material-symbols-outlined text-[20px]">view_list</span>
+                            <span className="app-icon-glyph text-[20px]"><AppIcon name={"view_list"}/></span>
                         </button>
                         <button 
                             onClick={() => setViewMode('grid')}
@@ -138,7 +139,7 @@ const AdminLogs: React.FC = () => {
                                     : (isDark ? 'text-gray-400 hover:text-white' : 'text-gray-400 hover:text-gray-600')
                             }`}
                         >
-                            <span className="material-symbols-outlined text-[20px]">grid_view</span>
+                            <span className="app-icon-glyph text-[20px]"><AppIcon name={"grid_view"}/></span>
                         </button>
                     </div>
                 </header>
@@ -148,7 +149,7 @@ const AdminLogs: React.FC = () => {
                         <div className={`text-center py-12 ${isDark ? 'text-gray-500' : 'text-gray-400'}`}>Loading logs...</div>
                     ) : logs.length === 0 ? (
                         <div className={`text-center py-12 ${isDark ? 'text-gray-500' : 'text-gray-400'}`}>
-                            <span className="material-symbols-outlined text-4xl mb-2 opacity-30">description</span>
+                            <span className="app-icon-glyph text-4xl mb-2 opacity-30"><AppIcon name={"description"}/></span>
                             <p>No logs found for this user.</p>
                         </div>
                     ) : (
@@ -232,7 +233,7 @@ const AdminLogs: React.FC = () => {
                                                 <div className={`flex items-center gap-3 text-sm truncate ${isDark ? 'text-gray-300' : 'text-gray-600'}`}>
                                                     {(log.moods || []).length > 0 && (
                                                         <span className="flex items-center gap-1">
-                                                            <span className="material-symbols-outlined text-[14px] text-teal-500">face</span>
+                                                            <span className="app-icon-glyph text-[14px] text-teal-500"><AppIcon name={"face"}/></span>
                                                             {log.moods[0]} {(log.moods || []).length > 1 ? `+${(log.moods || []).length - 1}` : ''}
                                                         </span>
                                                     )}
@@ -308,7 +309,7 @@ const AdminLogs: React.FC = () => {
             <main className="flex-1 px-6">
                 {users.length === 0 ? (
                     <div className={`text-center py-12 ${isDark ? 'text-gray-500' : 'text-gray-400'}`}>
-                        <span className="material-symbols-outlined text-4xl mb-2 opacity-30">group</span>
+                        <span className="app-icon-glyph text-4xl mb-2 opacity-30"><AppIcon name={"group"}/></span>
                         <p>No users found.</p>
                     </div>
                 ) : (
@@ -353,9 +354,7 @@ const AdminLogs: React.FC = () => {
                                             <h3 className={`font-medium truncate ${isDark ? 'text-white' : 'text-[var(--text-primary)]'}`}>{user.full_name || 'Anonymous'}</h3>
                                             <p className={`text-xs truncate ${isDark ? 'text-gray-500' : 'text-gray-400'}`}>{user.email}</p>
                                         </div>
-                                        <span className={`material-symbols-outlined text-sm ${isDark ? 'text-gray-600' : 'text-gray-300'}`}>
-                                            chevron_right
-                                        </span>
+                                        <span className={`app-icon-glyph text-sm ${isDark ? 'text-gray-600' : 'text-gray-300'}`}><AppIcon name={"chevron_right"}/></span>
                                     </motion.button>
                                 ))}
                             </motion.div>

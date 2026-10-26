@@ -1,3 +1,4 @@
+import { AppIcon } from '../components/ui/Icons';
 import React, { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
@@ -59,7 +60,7 @@ const SharedCard: React.FC = () => {
     if (error || !cardData) {
         return (
             <div className="min-h-screen bg-gradient-to-br from-[#1a1625] via-[#2d1f3d] to-[#1a1625] flex flex-col items-center justify-center p-6 text-center">
-                <span className="material-symbols-outlined text-6xl text-white/30 mb-4">link_off</span>
+                <span className="app-icon-glyph text-6xl text-white/30 mb-4"><AppIcon name={"link_off"}/></span>
                 <h1 className="text-2xl font-bold text-white mb-2">Card Not Found</h1>
                 <p className="text-white/60 mb-6">This share link may have expired or been deleted.</p>
                 <button
@@ -149,12 +150,12 @@ const SharedCard: React.FC = () => {
                     {/* Stats Row */}
                     <div className="grid grid-cols-2 gap-4 mb-6">
                         <div className="bg-white/5 rounded-2xl p-4 text-center border border-white/10">
-                            <span className="material-symbols-outlined text-primary text-2xl mb-1">water_drop</span>
+                            <span className="app-icon-glyph text-primary text-2xl mb-1"><AppIcon name={"water_drop"}/></span>
                             <p className="text-lg font-bold text-white">{Math.abs(cardData.nextPeriodIn)}</p>
                             <p className="text-xs text-white/50">{cardData.nextPeriodIn < 0 ? 'Days past estimate' : 'Days to period'}</p>
                         </div>
                         <div className="bg-white/5 rounded-2xl p-4 text-center border border-white/10">
-                            <span className="material-symbols-outlined text-teal-400 text-2xl mb-1">favorite</span>
+                            <span className="app-icon-glyph text-teal-400 text-2xl mb-1"><AppIcon name={"favorite"}/></span>
                             <p className="text-lg font-bold text-white capitalize">{cardData.flow || 'None'}</p>
                             <p className="text-xs text-white/50">Flow Today</p>
                         </div>
@@ -186,7 +187,7 @@ const SharedCard: React.FC = () => {
 
                     {/* Footer Branding */}
                     <div className="mt-8 pt-6 border-t border-white/10 flex items-center justify-center gap-2">
-                        <span className="material-symbols-outlined text-primary text-lg">eco</span>
+                        <span className="app-icon-glyph text-primary text-lg"><AppIcon name={"eco"}/></span>
                         <span className="text-sm font-medium text-white/60">Twilight Garden</span>
                     </div>
                 </div>

@@ -1,5 +1,6 @@
+import { springs } from '../lib/motion';
 import React, { createContext, useContext, useEffect, useState } from 'react';
-import { MotionConfig } from 'framer-motion';
+import { MotionConfig, useReducedMotion } from 'framer-motion';
 import { accentAppearance } from '../lib/colorUtils';
 
 type Theme = 'dark' | 'light';
@@ -47,6 +48,7 @@ const adjustColor = (color: string, amount: number) => {
 }
 
 export const ThemeProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+  const systemReduced = useReducedMotion();
   const [theme, setTheme] = useState<Theme>(() => {
     try {
       const saved = localStorage.getItem('theme');
@@ -151,7 +153,7 @@ export const ThemeProvider: React.FC<{ children: React.ReactNode }> = ({ childre
       theme, toggleTheme, primaryColor, updatePrimaryColor, resetTheme,
       animationsEnabled, updateAnimationsEnabled, solidNavBg, updateSolidNavBg
     }}>
-      <MotionConfig reducedMotion={animationsEnabled ? "user" : "always"} transition={{ duration: 0.24, ease: [0.22, 1, 0.36, 1] }}>
+      <MotionConfig reducedMotion={animationsEnabled ? "user" : "always"} skipAnimations={!animationsEnabled || systemReduced === true} transition={{ ...springs.modal, opacity: { duration: animationsEnabled && !systemReduced ? .14 : 0 } }}>
         {children}
       </MotionConfig>
     </ThemeContext.Provider>
