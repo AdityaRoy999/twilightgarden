@@ -7,7 +7,8 @@
 :is(input, textarea, select):focus-visible { border-color: var(--color-primary); }
 .nav-spring-pill, :root.dark .nav-spring-pill { border: 0; }
 [aria-pressed='true'], [aria-selected='true'], a[aria-current='page'] { border-color: transparent !important; }
-.bloom-sidebar { overflow: hidden; }
+.bloom-sidebar { overflow: hidden; width: 240px; }
+.bloom-sidebar[data-collapsed='true'] { width: 80px; }
 .bloom-sidebar nav { overflow-x: hidden; }
 .bloom-sidebar footer, .sidebar-brand, .sidebar-link-label { overflow: hidden; }
 .sidebar-brand, .sidebar-link-label { white-space: nowrap; min-width: 0; }
