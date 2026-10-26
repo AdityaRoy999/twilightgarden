@@ -20,7 +20,7 @@ _Twilight Garden is a beautifully designed menstrual cycle tracking and couples 
 
 - **End-to-End Encryption (E2EE)**: All Love Notes (text messages, images, voice messages) between partners are encrypted using **ECDH P-256 key exchange** with AES-GCM. Private keys never leave the device in plaintext. Supabase only stores encrypted blobs.
 - **History Unlock**: A device without the account’s canonical identity can browse the app, but must restore that identity before reading encrypted chat or making calls.
-- **Cloud Key Backup**: A recovery passphrase protects the identity with AES-GCM and PBKDF2-SHA256. New backups use 600,000 iterations; legacy backups remain readable. This is an application backup, not hardware-backed key storage.
+- **Optional Chat Backup**: Messaging, attachments and calls work on an initialized device without a cloud backup. Settings → Chat backup offers a short password/confirmation flow; device linking is under More options. The backup still uses AES-GCM and PBKDF2-SHA256 with 600,000 iterations for new backups. Existing passphrases/PIN backups remain readable. This is an application backup, not hardware-backed key storage.
 - **Multi-Device Support**: Devices restore the same account identity using a passphrase or a same-account trusted-device code. Removing a device registration does not revoke its auth session or erase copied keys.
 - **Identity Lockdown**: `IdentityLockdownPrompt.tsx` opens history recovery when a chat device cannot use the canonical identity.
 - **Security Verification**: Partners compare a 60-digit fingerprint or scan a QR code. The UI shows verified only after a matching comparison.
