@@ -1,7 +1,8 @@
+import ChartEmptyState from '../components/ui/ChartEmptyState';
 import { localDateKey } from '../lib/dates';
 import React, { useState, useEffect, useMemo, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { motion, AnimatePresence } from 'framer-motion';
+import { motion, AnimatePresence, useReducedMotion } from 'framer-motion';
 import {
   BarChart,
   Bar,
@@ -40,10 +41,12 @@ const Insights: React.FC = () => {
       style.innerHTML = RECHARTS_SUPPRESS_STYLES;
       document.head.appendChild(style);
     }
-    // Intentionally not removing — shared across mounts, harmless singleton
+    // Intentionally not removing â€” shared across mounts, harmless singleton
   }, []);
 
-  const { theme } = useTheme();
+  const { theme, animationsEnabled } = useTheme();
+  const reducedMotion = useReducedMotion();
+  const animateCharts = animationsEnabled !== false && !reducedMotion;
   const { user } = useAuth();
   const navigate = useNavigate();
   const { cycleSettings, getCyclePhase, logs } = useData();
@@ -148,7 +151,7 @@ const Insights: React.FC = () => {
   // 1. Calculate History & Real Averages
   const { historyData, stats } = React.useMemo(() => {
     if (!logs.length) return {
-      historyData: [{ value: cycleSettings.avgCycleLength, label: 'Avg' }],
+      historyData: [],
       stats: { avgCycle: cycleSettings.avgCycleLength, avgPeriod: cycleSettings.avgPeriodLength }
     };
 
@@ -201,7 +204,7 @@ const Insights: React.FC = () => {
     const calculatedAvgPeriod = periods.length ? Math.round(totalPeriodLength / periods.length) : cycleSettings.avgPeriodLength;
     const totalCycleLength = cycleLengths.reduce((sum, c) => sum + c.value, 0);
     const calculatedAvgCycle = cycleLengths.length ? Math.round(totalCycleLength / cycleLengths.length) : cycleSettings.avgCycleLength;
-    const finalHistory = cycleLengths.length > 0 ? cycleLengths.slice(-6) : [{ value: calculatedAvgCycle, label: 'Avg' }];
+    const finalHistory = cycleLengths.slice(-6);
 
     return {
       historyData: finalHistory,
@@ -299,15 +302,16 @@ const Insights: React.FC = () => {
   }, [logs]);
 
   return (
-    <div className="animate-slideIn font-display flex flex-col pb-24 bg-[#FDFCF8] dark:bg-background-dark min-h-screen transition-colors">
-      <header className="sticky top-0 z-10 flex items-center justify-between bg-[#FDFCF8] dark:bg-[#121014] backdrop-blur-md px-6 py-4 transition-all duration-200 border-b border-gray-100 dark:border-white/5">
-        <h1 className="text-3xl font-bold tracking-tight text-[#121014] dark:text-white">Insights</h1>
+    <div className="bloom-insights animate-slideIn font-display flex flex-col pb-24 bg-background-dark min-h-screen transition-colors">
+      <header className="sticky top-0 z-10 flex items-center justify-between bg-background-dark backdrop-blur-md px-6 py-4 transition-all duration-200 border-b border-gray-100 dark:border-white/5">
+        <h1 className="text-3xl font-bold tracking-tight text-[var(--text-primary)] dark:text-white">Insights</h1>
         <div className="flex items-center gap-2">
           <NotificationBell />
           <button
             onClick={handleShare}
+            aria-label="Share today’s insights"
             disabled={isSharing}
-            className="flex h-10 w-10 items-center justify-center rounded-full hover:bg-black/5 dark:hover:bg-white/10 transition-colors text-[#121014] dark:text-white disabled:opacity-50"
+            className="flex h-10 w-10 items-center justify-center rounded-full hover:bg-black/5 dark:hover:bg-white/10 transition-colors text-[var(--text-primary)] dark:text-white disabled:opacity-50"
           >
             {isSharing ? (
               <span className="material-symbols-outlined text-2xl animate-spin">hourglass_empty</span>
@@ -319,13 +323,13 @@ const Insights: React.FC = () => {
       </header>
 
       {/* Tabs */}
-      <div className="w-full overflow-x-auto no-scrollbar py-2 px-6 bg-[#FDFCF8] dark:bg-background-dark mb-4 transition-colors">
+      <div className="w-full overflow-x-auto no-scrollbar py-2 px-6 bg-background-dark mb-4 transition-colors">
         <div className="flex gap-3 min-w-max relative">
           <button
             onClick={() => setActiveTab('history')}
-            className={`relative z-10 flex h-10 items-center justify-center px-6 rounded-full text-sm font-semibold transition-all ${
+            aria-pressed={activeTab === 'history'} className={`relative z-10 flex h-10 items-center justify-center px-6 rounded-full text-sm font-semibold transition-all ${
               activeTab === 'history'
-                ? 'text-white'
+                ? 'on-brand text-white'
                 : 'bg-white/5 dark:bg-white/5 text-gray-400 hover:bg-white/10'
             }`}
           >
@@ -333,16 +337,17 @@ const Insights: React.FC = () => {
               <motion.div
                 layoutId="activeInsightsTab"
                 className="absolute inset-0 bg-primary rounded-full shadow-md shadow-primary/20"
-                transition={{ type: 'spring', bounce: 0.2, duration: 0.6 }}
+                transition={{ type: 'spring', bounce: 0.2, duration: 0.28 }}
               />
             )}
             <span className="relative z-20">History</span>
           </button>
           <button
             onClick={() => setActiveTab('trends')}
+            aria-pressed={activeTab === 'trends'}
             className={`relative z-10 flex h-10 items-center justify-center px-6 rounded-full text-sm font-semibold transition-all ${
               activeTab === 'trends'
-                ? 'text-white'
+                ? 'on-brand text-white'
                 : 'bg-white/5 dark:bg-white/5 text-gray-400 hover:bg-white/10'
             }`}
           >
@@ -350,7 +355,7 @@ const Insights: React.FC = () => {
               <motion.div
                 layoutId="activeInsightsTab"
                 className="absolute inset-0 bg-primary rounded-full shadow-md shadow-primary/20"
-                transition={{ type: 'spring', bounce: 0.2, duration: 0.6 }}
+                transition={{ type: 'spring', bounce: 0.2, duration: 0.28 }}
               />
             )}
             <span className="relative z-20">Trends</span>
@@ -377,7 +382,7 @@ const Insights: React.FC = () => {
               <div className="flex justify-between items-start mb-6">
                 <div>
                   <p className="text-sm font-medium text-gray-500 dark:text-gray-400 mb-1">Prediction</p>
-                  <h2 className="text-2xl font-bold text-[#121014] dark:text-white mb-1">{cycleData.hasEstimate===false?'Prediction unavailable':cycleData.nextPeriodIn < 0 ? `Period estimate passed by ${Math.abs(cycleData.nextPeriodIn)} days` : `Period in ${cycleData.nextPeriodIn} days`}</h2>
+                  <h2 className="text-2xl font-bold text-[var(--text-primary)] dark:text-white mb-1">{cycleData.hasEstimate===false?'Prediction unavailable':cycleData.nextPeriodIn < 0 ? `Period estimate passed by ${Math.abs(cycleData.nextPeriodIn)} days` : `Period in ${cycleData.nextPeriodIn} days`}</h2>
                   <p className="text-sm text-gray-400">based on {cycleSettings.avgCycleLength}d cycle</p>
                 </div>
                 <div className="flex h-12 w-12 items-center justify-center rounded-full bg-pink-100 dark:bg-pink-500/20 text-primary">
@@ -401,39 +406,39 @@ const Insights: React.FC = () => {
                 <div className="flex h-12 w-12 items-center justify-center rounded-full bg-teal-100 dark:bg-teal-500/20 text-teal-600 dark:text-teal-400">
                   <span className="material-symbols-outlined text-2xl">refresh</span>
                 </div>
-                <h3 className="text-3xl font-bold text-[#121014] dark:text-white">{stats.avgCycle}</h3>
-                <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest max-w-[80px]">Avg Cycle Length</p>
+                <h3 className="text-3xl font-bold text-[var(--text-primary)] dark:text-white">{stats.avgCycle}</h3>
+                <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest max-w-[80px]">Typical Cycle Length</p>
               </div>
               <div className="flex flex-col items-center justify-center gap-3 rounded-[2rem] bg-white dark:bg-surface-dark p-6 shadow-soft border border-gray-100 dark:border-white/5 text-center h-48 transition-colors">
                 <div className="flex h-12 w-12 items-center justify-center rounded-full bg-orange-100 dark:bg-orange-500/20 text-orange-600 dark:text-orange-400">
                   <span className="material-symbols-outlined text-2xl">bar_chart</span>
                 </div>
-                <h3 className="text-3xl font-bold text-[#121014] dark:text-white">{stats.avgPeriod}</h3>
-                <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest max-w-[80px]">Avg Period Duration</p>
+                <h3 className="text-3xl font-bold text-[var(--text-primary)] dark:text-white">{stats.avgPeriod}</h3>
+                <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest max-w-[80px]">Typical Period Duration</p>
               </div>
             </section>
 
             <section className="rounded-[2rem] bg-white dark:bg-surface-dark p-6 shadow-soft border border-gray-100 dark:border-white/5 transition-colors">
               <div className="flex items-center justify-between mb-8">
                 <div>
-                  <h3 className="text-lg font-bold text-[#121014] dark:text-white">Cycle History</h3>
+                  <h3 className="text-lg font-bold text-[var(--text-primary)] dark:text-white">Cycle History</h3>
                   <p className="text-sm text-gray-400">Length variation over time</p>
                 </div>
                 <div className="flex items-center bg-white/5 rounded-xl p-1 gap-1 relative">
                   <div className="absolute inset-0 p-1 pointer-events-none">
                     <div className={`h-full w-1/2 rounded-lg bg-primary shadow-sm transition-all duration-300 ease-[cubic-bezier(0.23,1,0.32,1)] ${chartType === 'line' ? 'translate-x-full' : 'translate-x-0'}`}></div>
                   </div>
-                  <button onClick={() => setChartType('bar')} className={`relative z-10 flex-1 p-2 rounded-lg transition-colors duration-300 ${chartType === 'bar' ? 'text-white' : 'text-gray-400 hover:text-white'}`}>
+                  <button aria-label="Show bar chart" onClick={() => setChartType('bar')} className={`relative z-10 flex-1 p-2 rounded-lg transition-colors duration-300 ${chartType === 'bar' ? 'on-brand text-white' : 'text-gray-400 hover:text-white'}`}>
                     <span className="material-symbols-outlined text-lg block text-center">bar_chart</span>
                   </button>
-                  <button onClick={() => setChartType('line')} className={`relative z-10 flex-1 p-2 rounded-lg transition-colors duration-300 ${chartType === 'line' ? 'text-white' : 'text-gray-400 hover:text-white'}`}>
+                  <button aria-label="Show line chart" onClick={() => setChartType('line')} className={`relative z-10 flex-1 p-2 rounded-lg transition-colors duration-300 ${chartType === 'line' ? 'on-brand text-white' : 'text-gray-400 hover:text-white'}`}>
                     <span className="material-symbols-outlined text-lg block text-center">show_chart</span>
                   </button>
                 </div>
               </div>
 
-              <div className="relative h-48 mt-4 w-full">
-                <ResponsiveContainer width="100%" height="100%">
+              <div className={historyData.length > 0 ? "relative h-48 mt-4 w-full" : "relative  mt-4 w-full"}>
+                {historyData.length > 0 ? (<ResponsiveContainer width="100%" height="100%">
                   {chartType === 'bar' ? (
                     <BarChart data={historyData} margin={{ top: 20, right: 0, left: -20, bottom: 0 }} barCategoryGap="20%">
                       <YAxis hide domain={['dataMin - 5', 'dataMax + 5']} />
@@ -444,7 +449,7 @@ const Insights: React.FC = () => {
                         itemStyle={tooltipStyles.itemStyle}
                         labelStyle={tooltipStyles.labelStyle}
                       />
-                      <Bar dataKey="value" radius={[8, 8, 0, 0]} animationDuration={1500} animationEasing="ease-out" maxBarSize={40}>
+                      <Bar isAnimationActive={animateCharts} dataKey="value" radius={[8, 8, 0, 0]} animationDuration={350} animationEasing="ease-out" maxBarSize={40}>
                         {historyData.map((entry, index) => (
                           <Cell key={`cell-${index}`} fill={index >= historyData.length - 1 ? '#984369' : (theme === 'dark' ? '#ffffff1a' : '#E5E7EB')} />
                         ))}
@@ -461,15 +466,15 @@ const Insights: React.FC = () => {
                         itemStyle={tooltipStyles.itemStyle}
                         labelStyle={tooltipStyles.labelStyle}
                       />
-                      <Area type="monotone" dataKey="value" stroke="#984369" strokeWidth={3} fillOpacity={1} fill="url(#colorHistory)" dot={{ r: 4, fill: "#984369" }} activeDot={{ r: 6 }} />
+                      <Area isAnimationActive={animateCharts} type="monotone" dataKey="value" stroke="#984369" strokeWidth={3} fillOpacity={1} fill="url(#colorHistory)" dot={{ r: 4, fill: "#984369" }} activeDot={{ r: 6 }} />
                     </AreaChart>
                   )}
-                </ResponsiveContainer>
+                </ResponsiveContainer>) : <ChartEmptyState onLog={() => navigate('/log/details')} />}
               </div>
             </section>
 
             <section className="rounded-[2rem] bg-white dark:bg-surface-dark p-6 shadow-soft border border-gray-100 dark:border-white/5 transition-colors">
-              <h3 className="text-lg font-bold text-[#121014] dark:text-white mb-6 flex items-center gap-2">
+              <h3 className="text-lg font-bold text-[var(--text-primary)] dark:text-white mb-6 flex items-center gap-2">
                 <span className="material-symbols-filled text-primary text-xl">Auto_Awesome</span>
                 Common Symptoms
               </h3>
@@ -496,7 +501,7 @@ const Insights: React.FC = () => {
                 <div className="flex-1">
                   <h3 className="text-lg font-bold text-gray-900 dark:text-white mb-2">Did you know?</h3>
                   <p className="text-sm text-gray-600 dark:text-gray-300 leading-relaxed mb-3">
-                    Your cycle tends to be <span className="font-bold text-primary">2 days shorter</span> when you report higher sleep quality during the luteal phase.
+                    Your rhythm is personal. Log your sleep and energy to explore how you feel over time.
                   </p>
                   <button
                     onClick={() => {
@@ -514,7 +519,7 @@ const Insights: React.FC = () => {
             <div className="mt-2 text-center">
               <button
                 onClick={() => setShowTodayReport(true)}
-                className="w-full bg-[#984369] hover:bg-[#984369]/90 text-white font-bold py-4 rounded-2xl shadow-lg shadow-[#984369]/20 transition-all flex items-center justify-center gap-2 mb-3"
+                className="on-brand w-full bg-primary hover:bg-primary/90 text-white font-bold py-4 rounded-2xl shadow-lg shadow-primary/20 transition-all flex items-center justify-center gap-2 mb-3"
               >
                 <span className="material-symbols-outlined">today</span>
                 Generate Today's Report Card
@@ -537,14 +542,14 @@ const Insights: React.FC = () => {
               <button
                 onClick={() => setTrendsSubTab('sleep')}
                 className={`relative z-10 flex h-9 items-center justify-center px-6 rounded-xl text-xs font-bold transition-all ${
-                  trendsSubTab === 'sleep' ? 'text-[#121014] dark:text-white' : 'text-gray-400 hover:text-gray-600 dark:hover:text-gray-200'
+                  trendsSubTab === 'sleep' ? 'text-[var(--text-primary)] dark:text-white' : 'text-gray-400 hover:text-gray-600 dark:hover:text-gray-200'
                 }`}
               >
                 {trendsSubTab === 'sleep' && (
                   <motion.div
                     layoutId="activeSubTab"
                     className="absolute inset-0 bg-white dark:bg-white/10 rounded-xl shadow-sm"
-                    transition={{ type: 'spring', bounce: 0.1, duration: 0.5 }}
+                    transition={{ type: 'spring', bounce: 0.1, duration: 0.24 }}
                   />
                 )}
                 <span className="relative z-20">Sleep</span>
@@ -552,14 +557,14 @@ const Insights: React.FC = () => {
               <button
                 onClick={() => setTrendsSubTab('energy')}
                 className={`relative z-10 flex h-9 items-center justify-center px-6 rounded-xl text-xs font-bold transition-all ${
-                  trendsSubTab === 'energy' ? 'text-[#121014] dark:text-white' : 'text-gray-400 hover:text-gray-600 dark:hover:text-gray-200'
+                  trendsSubTab === 'energy' ? 'text-[var(--text-primary)] dark:text-white' : 'text-gray-400 hover:text-gray-600 dark:hover:text-gray-200'
                 }`}
               >
                 {trendsSubTab === 'energy' && (
                   <motion.div
                     layoutId="activeSubTab"
                     className="absolute inset-0 bg-white dark:bg-white/10 rounded-xl shadow-sm"
-                    transition={{ type: 'spring', bounce: 0.1, duration: 0.5 }}
+                    transition={{ type: 'spring', bounce: 0.1, duration: 0.24 }}
                   />
                 )}
                 <span className="relative z-20">Energy</span>
@@ -579,11 +584,11 @@ const Insights: React.FC = () => {
                   <div className="grid grid-cols-2 gap-4">
                     <div className="bg-indigo-500/10 dark:bg-indigo-500/20 p-5 rounded-[2rem] border border-indigo-500/20 dark:border-indigo-500/30 transition-colors backdrop-blur-sm">
                       <p className="text-[10px] uppercase font-bold text-indigo-500 mb-1 tracking-wider">Avg Quality</p>
-                      <h4 className="text-xl font-bold text-[#121014] dark:text-white">{sleepStats?.avgLabel || '--'}</h4>
+                      <h4 className="text-xl font-bold text-[var(--text-primary)] dark:text-white">{sleepStats?.avgLabel || '--'}</h4>
                     </div>
                     <div className="bg-rose-500/10 dark:bg-rose-500/20 p-5 rounded-[2rem] border border-rose-500/20 dark:border-rose-500/30 transition-colors backdrop-blur-sm">
-                      <p className="text-[10px] uppercase font-bold text-rose-500 mb-1 tracking-wider">Consistency</p>
-                      <h4 className="text-xl font-bold text-[#121014] dark:text-white">{sleepStats ? Math.round((sleepStats.distribution[0]?.value / sleepStats.count) * 100) : 0}%</h4>
+                      <p className="text-[10px] uppercase font-bold text-rose-500 mb-1 tracking-wider">Good nights</p>
+                      <h4 className="text-xl font-bold text-[var(--text-primary)] dark:text-white">{sleepStats ? Math.round(((sleepStats.distribution.find(d => d.name === 'Good')?.value || 0) / sleepStats.count) * 100) : 0}%</h4>
                     </div>
                   </div>
 
@@ -591,7 +596,7 @@ const Insights: React.FC = () => {
                   <section className="rounded-[2.5rem] bg-white dark:bg-surface-dark p-8 shadow-soft border border-gray-100 dark:border-white/5 transition-colors">
                     <div className="flex items-center justify-between mb-8">
                       <div>
-                        <h3 className="text-xl font-bold text-[#121014] dark:text-white">Sleep Timeline</h3>
+                        <h3 className="text-xl font-bold text-[var(--text-primary)] dark:text-white">Sleep Timeline</h3>
                         <p className="text-sm text-gray-400">Quality over the last 30 days</p>
                       </div>
                       <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-indigo-500/10 text-indigo-500">
@@ -599,8 +604,8 @@ const Insights: React.FC = () => {
                       </div>
                     </div>
 
-                    <div className="h-56 w-full">
-                      <ResponsiveContainer width="100%" height="100%">
+                    <div className={trendsData.some(d => d.sleep !== null) ? "h-56 w-full" : "w-full"}>
+                      {trendsData.some(d => d.sleep !== null) ? (<ResponsiveContainer width="100%" height="100%">
                         <AreaChart data={trendsData} margin={{ top: 10, right: 0, left: -20, bottom: 0 }}>
                           <defs>
                             <linearGradient id="colorSleep" x1="0" y1="0" x2="0" y2="1"><stop offset="5%" stopColor="#6366f1" stopOpacity={0.4} /><stop offset="95%" stopColor="#6366f1" stopOpacity={0} /></linearGradient>
@@ -612,30 +617,30 @@ const Insights: React.FC = () => {
                             labelStyle={tooltipStyles.labelStyle}
                             formatter={(value: any) => [value === 3 ? 'Good' : value === 2 ? 'Fair' : 'Poor', 'Quality']}
                           />
-                          <Area
+                          <Area isAnimationActive={animateCharts}
                             type="monotone"
                             dataKey="sleep"
                             stroke="#6366f1"
                             strokeWidth={5}
                             fillOpacity={1}
                             fill="url(#colorSleep)"
-                            animationDuration={1500}
+                            animationDuration={350}
                             dot={{ r: 4, fill: "#6366f1", strokeWidth: 2, stroke: theme === 'dark' ? '#121014' : '#fff' }}
                           />
                         </AreaChart>
-                      </ResponsiveContainer>
+                      </ResponsiveContainer>) : <ChartEmptyState onLog={() => navigate('/log/details')} />}
                     </div>
                   </section>
 
                   {/* Sleep Distribution Card */}
                   <section className="rounded-[2.5rem] bg-white dark:bg-surface-dark p-8 shadow-soft border border-gray-100 dark:border-white/5 transition-colors">
-                    <h3 className="text-xl font-bold text-[#121014] dark:text-white mb-2">Quality Split</h3>
+                    <h3 className="text-xl font-bold text-[var(--text-primary)] dark:text-white mb-2">Quality Split</h3>
                     <p className="text-sm text-gray-400 mb-6">Distribution of reported nights</p>
 
-                    <div className="flex items-center justify-center h-48">
-                      <ResponsiveContainer width="100%" height="100%">
+                    <div className={!!sleepStats ? "flex items-center justify-center h-48" : "flex items-center justify-center"}>
+                      {!!sleepStats ? (<ResponsiveContainer width="100%" height="100%">
                         <PieChart>
-                          <Pie
+                          <Pie isAnimationActive={animateCharts}
                             data={sleepStats?.distribution || []}
                             cx="50%"
                             cy="50%"
@@ -643,7 +648,7 @@ const Insights: React.FC = () => {
                             outerRadius={80}
                             paddingAngle={5}
                             dataKey="value"
-                            animationDuration={1500}
+                            animationDuration={350}
                           >
                             {(sleepStats?.distribution || []).map((entry, index) => (
                               <Cell key={`cell-${index}`} fill={entry.color} />
@@ -660,7 +665,7 @@ const Insights: React.FC = () => {
                           />
                           <Legend verticalAlign="middle" align="right" layout="vertical" iconType="circle" />
                         </PieChart>
-                      </ResponsiveContainer>
+                      </ResponsiveContainer>) : <ChartEmptyState onLog={() => navigate('/log/details')} />}
                     </div>
                   </section>
                 </motion.div>
@@ -676,11 +681,11 @@ const Insights: React.FC = () => {
                   <div className="grid grid-cols-2 gap-4">
                     <div className="bg-amber-500/10 dark:bg-amber-500/20 p-5 rounded-[2rem] border border-amber-500/20 dark:border-amber-500/30 transition-colors backdrop-blur-sm">
                       <p className="text-[10px] uppercase font-bold text-amber-500 mb-1 tracking-wider">Avg Level</p>
-                      <h4 className="text-xl font-bold text-[#121014] dark:text-white">{energyStats?.avgLabel || '--'}</h4>
+                      <h4 className="text-xl font-bold text-[var(--text-primary)] dark:text-white">{energyStats?.avgLabel || '--'}</h4>
                     </div>
                     <div className="bg-teal-500/10 dark:bg-teal-500/20 p-5 rounded-[2rem] border border-teal-500/20 dark:border-teal-500/30 transition-colors backdrop-blur-sm">
-                      <p className="text-[10px] uppercase font-bold text-teal-500 mb-1 tracking-wider">Record Streak</p>
-                      <h4 className="text-xl font-bold text-[#121014] dark:text-white">{energyStats?.count || 0}d</h4>
+                      <p className="text-[10px] uppercase font-bold text-teal-500 mb-1 tracking-wider">Days logged</p>
+                      <h4 className="text-xl font-bold text-[var(--text-primary)] dark:text-white">{energyStats?.count || 0}d</h4>
                     </div>
                   </div>
 
@@ -688,7 +693,7 @@ const Insights: React.FC = () => {
                   <section className="rounded-[2.5rem] bg-white dark:bg-surface-dark p-8 shadow-soft border border-gray-100 dark:border-white/5 transition-colors">
                     <div className="flex items-center justify-between mb-8">
                       <div>
-                        <h3 className="text-xl font-bold text-[#121014] dark:text-white">Energy Flow</h3>
+                        <h3 className="text-xl font-bold text-[var(--text-primary)] dark:text-white">Energy Flow</h3>
                         <p className="text-sm text-gray-400">Vitality patterns recently</p>
                       </div>
                       <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-amber-500/10 text-amber-500">
@@ -696,8 +701,8 @@ const Insights: React.FC = () => {
                       </div>
                     </div>
 
-                    <div className="h-56 w-full">
-                      <ResponsiveContainer width="100%" height="100%">
+                    <div className={trendsData.some(d => d.energy !== null) ? "h-56 w-full" : "w-full"}>
+                      {trendsData.some(d => d.energy !== null) ? (<ResponsiveContainer width="100%" height="100%">
                         <AreaChart data={trendsData} margin={{ top: 10, right: 0, left: -20, bottom: 0 }}>
                           <defs>
                             <linearGradient id="colorEnergy" x1="0" y1="0" x2="0" y2="1"><stop offset="5%" stopColor="#f59e0b" stopOpacity={0.4} /><stop offset="95%" stopColor="#f59e0b" stopOpacity={0} /></linearGradient>
@@ -709,30 +714,30 @@ const Insights: React.FC = () => {
                             labelStyle={tooltipStyles.labelStyle}
                             formatter={(value: any) => [value === 3 ? 'High' : value === 2 ? 'Medium' : 'Low', 'Level']}
                           />
-                          <Area
+                          <Area isAnimationActive={animateCharts}
                             type="monotone"
                             dataKey="energy"
                             stroke="#f59e0b"
                             strokeWidth={5}
                             fillOpacity={1}
                             fill="url(#colorEnergy)"
-                            animationDuration={1500}
+                            animationDuration={350}
                             dot={{ r: 4, fill: "#f59e0b", strokeWidth: 2, stroke: theme === 'dark' ? '#121014' : '#fff' }}
                           />
                         </AreaChart>
-                      </ResponsiveContainer>
+                      </ResponsiveContainer>) : <ChartEmptyState onLog={() => navigate('/log/details')} />}
                     </div>
                   </section>
 
                   {/* Energy Distribution Card */}
                   <section className="rounded-[2.5rem] bg-white dark:bg-surface-dark p-8 shadow-soft border border-gray-100 dark:border-white/5 transition-colors">
-                    <h3 className="text-xl font-bold text-[#121014] dark:text-white mb-2">Energy Split</h3>
+                    <h3 className="text-xl font-bold text-[var(--text-primary)] dark:text-white mb-2">Energy Split</h3>
                     <p className="text-sm text-gray-400 mb-6">Proportion of energy levels reported</p>
 
-                    <div className="flex items-center justify-center h-48">
-                      <ResponsiveContainer width="100%" height="100%">
+                    <div className={!!energyStats ? "flex items-center justify-center h-48" : "flex items-center justify-center"}>
+                      {!!energyStats ? (<ResponsiveContainer width="100%" height="100%">
                         <PieChart>
-                          <Pie
+                          <Pie isAnimationActive={animateCharts}
                             data={energyStats?.distribution || []}
                             cx="50%"
                             cy="50%"
@@ -740,7 +745,7 @@ const Insights: React.FC = () => {
                             outerRadius={80}
                             paddingAngle={5}
                             dataKey="value"
-                            animationDuration={1500}
+                            animationDuration={350}
                           >
                             {(energyStats?.distribution || []).map((entry, index) => (
                               <Cell key={`cell-${index}`} fill={entry.color} />
@@ -757,7 +762,7 @@ const Insights: React.FC = () => {
                           />
                           <Legend verticalAlign="middle" align="right" layout="vertical" iconType="circle" />
                         </PieChart>
-                      </ResponsiveContainer>
+                      </ResponsiveContainer>) : <ChartEmptyState onLog={() => navigate('/log/details')} />}
                     </div>
                   </section>
                 </motion.div>
@@ -807,17 +812,17 @@ const Insights: React.FC = () => {
               <div className="flex items-center justify-between mb-4">
                 <div className="flex items-center gap-3">
                   <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center"><span className="material-symbols-outlined text-primary">share</span></div>
-                  <h3 className="text-lg font-bold text-[#121014] dark:text-white">Share Your Card</h3>
+                  <h3 className="text-lg font-bold text-[var(--text-primary)] dark:text-white">Share Your Card</h3>
                 </div>
                 <button onClick={() => setShowShareModal(false)} className="w-8 h-8 rounded-full hover:bg-black/5 dark:hover:bg-white/10 flex items-center justify-center"><span className="material-symbols-outlined text-gray-400">close</span></button>
               </div>
               <p className="text-sm text-gray-500 dark:text-gray-400 mb-4">Anyone with this link can view your card for 24 hours. Creating a new link replaces the previous one.</p>
               <div className="flex items-center gap-2 bg-gray-100 dark:bg-white/5 rounded-xl p-3 border border-gray-200 dark:border-white/10">
-                <input type="text" value={shareUrl} readOnly className="flex-1 bg-transparent text-sm text-[#121014] dark:text-white truncate outline-none" />
-                <button onClick={handleCopyLink} className={`shrink-0 w-10 h-10 rounded-xl flex items-center justify-center transition-all ${copied ? 'bg-green-500 text-white' : 'bg-primary hover:bg-primary/90 text-white'}`}><span className="material-symbols-outlined text-lg">{copied ? 'check' : 'content_copy'}</span></button>
+                <input type="text" value={shareUrl} readOnly className="flex-1 bg-transparent text-sm text-[var(--text-primary)] dark:text-white truncate outline-none" />
+                <button onClick={handleCopyLink} className={`shrink-0 w-10 h-10 rounded-xl flex items-center justify-center transition-all ${copied ? 'on-brand bg-green-500 text-white' : 'bg-primary hover:bg-primary/90 text-white'}`}><span className="material-symbols-outlined text-lg">{copied ? 'check' : 'content_copy'}</span></button>
               </div>
-              {copied && <motion.p initial={{ opacity: 0, y: -5 }} animate={{ opacity: 1, y: 0 }} className="text-center text-sm text-green-500 font-medium mt-3">✓ Link copied to clipboard!</motion.p>}
-              <div className="mt-6 pt-4 border-t border-gray-100 dark:border-white/5"><button onClick={() => setShowShareModal(false)} className="w-full py-3 rounded-xl bg-primary hover:bg-primary/90 text-white font-semibold transition-colors">Done</button></div>
+              {copied && <motion.p initial={{ opacity: 0, y: -5 }} animate={{ opacity: 1, y: 0 }} className="text-center text-sm text-green-500 font-medium mt-3">âœ“ Link copied to clipboard!</motion.p>}
+              <div className="mt-6 pt-4 border-t border-gray-100 dark:border-white/5"><button onClick={() => setShowShareModal(false)} className="on-brand w-full py-3 rounded-xl bg-primary hover:bg-primary/90 text-white font-semibold transition-colors">Done</button></div>
             </motion.div>
           </motion.div>
         )}

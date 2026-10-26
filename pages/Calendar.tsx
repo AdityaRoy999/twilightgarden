@@ -80,7 +80,7 @@ const CalendarView: React.FC = () => {
   };
 
   return (
-    <div className="animate-slideIn font-display">
+    <div className="bloom-calendar animate-slideIn font-display">
       <LogDetailsModal
          isOpen={isModalOpen}
          onClose={() => setIsModalOpen(false)}
@@ -104,7 +104,7 @@ const CalendarView: React.FC = () => {
           {/* Header */}
           <div className="flex items-center justify-between mb-8 relative z-20">
             <button
-                onClick={handlePrevMonth}
+                aria-label="Previous month" onClick={handlePrevMonth}
                 className="p-2 -ml-2 text-white hover:bg-white/5 rounded-full transition-colors"
             >
               <span className="material-symbols-outlined">chevron_left</span>
@@ -119,7 +119,7 @@ const CalendarView: React.FC = () => {
               </div>
             </div>
             <button
-                onClick={handleNextMonth}
+                aria-label="Next month" onClick={handleNextMonth}
                 className="p-2 -mr-2 text-white hover:bg-white/5 rounded-full transition-colors"
             >
               <span className="material-symbols-outlined">chevron_right</span>
@@ -155,6 +155,7 @@ const CalendarView: React.FC = () => {
               return (
                 <button
                   key={day}
+                  aria-label={dateStr}
                   disabled={isFuture}
                   onClick={() => {
                     if (isFuture) return;

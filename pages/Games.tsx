@@ -1,3 +1,4 @@
+import { Gamepad2 } from 'lucide-react';
 import React, { useState, useRef, useEffect } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -362,7 +363,7 @@ const Games: React.FC = () => {
 
     return (
         <div className={`min-h-screen flex flex-col font-display pb-24 transition-colors duration-300 ${
-            isDark ? 'bg-background-dark text-white' : 'bg-[#FDFCF8] text-[#121014]'
+            isDark ? 'bg-background-dark text-white' : 'bg-background-dark text-[var(--text-primary)]'
         }`}>
             {/* Header */}
             <header className="px-6 pt-8 pb-2">
@@ -387,7 +388,7 @@ const Games: React.FC = () => {
                             onClick={() => setViewMode('list')}
                             className={`relative z-10 w-8 h-8 rounded-lg flex items-center justify-center transition-colors ${
                                 viewMode === 'list'
-                                    ? 'text-white'
+                                    ? 'on-brand text-white'
                                     : isDark ? 'text-gray-500 hover:text-gray-300' : 'text-gray-400 hover:text-gray-600'
                             }`}
                         >
@@ -397,7 +398,7 @@ const Games: React.FC = () => {
                             onClick={() => setViewMode('card')}
                             className={`relative z-10 w-8 h-8 rounded-lg flex items-center justify-center transition-colors ${
                                 viewMode === 'card'
-                                    ? 'text-white'
+                                    ? 'on-brand text-white'
                                     : isDark ? 'text-gray-500 hover:text-gray-300' : 'text-gray-400 hover:text-gray-600'
                             }`}
                         >
@@ -407,6 +408,7 @@ const Games: React.FC = () => {
                 </div>
             </header>
 
+            <div className="px-6 pt-4"><section className="bloom-game-intro"><h2>A little play. A little closer.</h2><p>Make a moment for the two of you. Pick a favorite and play together.</p><Gamepad2 size={48}/></section></div>
             {/* Tabs */}
             <div className="px-6 pt-3 pb-1">
                 <div
@@ -432,7 +434,7 @@ const Games: React.FC = () => {
                                 onClick={() => setActiveTab(cat.key)}
                                 className={`relative z-10 flex items-center gap-1.5 px-4 py-2 rounded-xl text-sm font-semibold whitespace-nowrap transition-colors ${
                                     isActive
-                                        ? 'text-white'
+                                        ? 'on-brand text-white'
                                         : isDark ? 'text-gray-400 hover:text-gray-200' : 'text-gray-500 hover:text-gray-700'
                                 }`}
                             >
@@ -566,7 +568,7 @@ const Games: React.FC = () => {
                                         ? isDark ? 'bg-white/[0.03] opacity-40' : 'bg-gray-100/80 opacity-40'
                                         : isDark
                                             ? 'bg-white/5 hover:bg-white/10 active:scale-[0.97]'
-                                            : 'bg-[#F3F2EF] hover:bg-[#EDECEA] active:scale-[0.97] border border-gray-200/60'
+                                            : 'bg-background-dark hover:bg-background-dark active:scale-[0.97] border border-gray-200/60'
                                 }`}
                             >
                                 {/* Content */}

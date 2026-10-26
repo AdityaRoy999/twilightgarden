@@ -73,7 +73,7 @@ export const AudioPlayer: React.FC<AudioPlayerProps> = ({ src, isMe }) => {
         <div className={`flex items-center gap-3 p-2 rounded-xl min-w-[240px] ${isMe ? 'bg-pink-600' : 'bg-gray-100 dark:bg-gray-800'}`}>
             <button 
                 onClick={togglePlay}
-                className={`w-10 h-10 rounded-full flex items-center justify-center transition-all ${isMe ? 'bg-white text-pink-600' : 'bg-pink-500 text-white'}`}
+                className={`w-10 h-10 rounded-full flex items-center justify-center transition-all ${isMe ? 'bg-white text-pink-600' : 'on-brand bg-pink-500 text-white'}`}
             >
                 <span className="material-symbols-outlined text-2xl">
                     {isPlaying ? 'pause' : 'play_arrow'}

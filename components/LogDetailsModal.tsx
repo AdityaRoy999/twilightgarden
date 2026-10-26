@@ -39,7 +39,7 @@ const LogDetailsModal: React.FC<LogDetailsModalProps> = ({ isOpen, onClose, log,
               animate={{ opacity: 1, scale: 1, y: 0 }}
               exit={{ opacity: 0, scale: 0.95, y: 20 }}
               onClick={(e) => e.stopPropagation()}
-              className="w-full max-w-sm bg-[#FDFCF8] dark:bg-[#1E1E1E] rounded-[32px] overflow-hidden shadow-2xl border border-gray-100 dark:border-white/10 relative"
+              className="w-full max-w-sm bg-background-dark dark:bg-surface-dark rounded-[32px] overflow-hidden shadow-2xl border border-gray-100 dark:border-white/10 relative"
             >
               {/* Header Image/Gradient */}
               <div className="h-24 bg-gradient-to-br from-primary/20 via-purple-500/10 to-teal-500/10 relative">
@@ -54,7 +54,7 @@ const LogDetailsModal: React.FC<LogDetailsModalProps> = ({ isOpen, onClose, log,
               {/* Content */}
               <div className="px-6 pb-6 -mt-10 relative">
                 {/* Date Badge */}
-                <div className="inline-flex items-center gap-2 bg-white dark:bg-[#2A2A2A] px-4 py-2 rounded-full shadow-sm mb-4 border border-gray-100 dark:border-white/5">
+                <div className="inline-flex items-center gap-2 bg-white dark:bg-surface-dark px-4 py-2 rounded-full shadow-sm mb-4 border border-gray-100 dark:border-white/5">
                   <span className="material-symbols-outlined text-primary text-sm">calendar_today</span>
                   <span className="text-sm font-bold text-gray-900 dark:text-white">{formatDate(date)}</span>
                 </div>
@@ -152,7 +152,7 @@ const LogDetailsModal: React.FC<LogDetailsModalProps> = ({ isOpen, onClose, log,
                       navigate(`/log/details?date=${date}`);
                       onClose();
                     }}
-                    className="w-full mt-6 bg-primary hover:bg-primary/90 text-white font-bold py-3.5 rounded-2xl shadow-lg shadow-primary/20 transition-all flex items-center justify-center gap-2"
+                    className="on-brand w-full mt-6 bg-primary hover:bg-primary/90 text-white font-bold py-3.5 rounded-2xl shadow-lg shadow-primary/20 transition-all flex items-center justify-center gap-2"
                   >
                     <span className="material-symbols-outlined text-lg">edit</span>
                     Edit Log

@@ -54,12 +54,12 @@ const NotificationBell: React.FC = () => {
 
     return (
         <div ref={dropdownRef} className="relative z-50">
-            <button
+            <button aria-label="Notifications" aria-expanded={isOpen}
                 onClick={() => {
                     setIsOpen(!isOpen);
                     bellRef.current?.startAnimation();
                 }}
-                className={`relative p-2 rounded-full transition-colors flex items-center justify-center ${
+                className={`relative min-h-11 min-w-11 p-2 rounded-full transition-colors flex items-center justify-center ${
                     isDark ? 'hover:bg-white/10 text-white' : 'hover:bg-gray-100 text-gray-700'
                 }`}
             >
@@ -75,7 +75,7 @@ const NotificationBell: React.FC = () => {
                             initial={{ scale: 0 }}
                             animate={{ scale: 1 }}
                             exit={{ scale: 0 }}
-                            className="absolute top-1 right-1 min-w-[16px] h-4 px-1 bg-red-500 text-white text-[10px] font-bold flex items-center justify-center rounded-full border-2 border-white dark:border-[#121014]"
+                            className="on-brand absolute top-1 right-1 min-w-[16px] h-4 px-1 bg-red-500 text-white text-[10px] font-bold flex items-center justify-center rounded-full border-2 border-white dark:border-[#121014]"
                         >
                             {unreadCount > 9 ? '9+' : unreadCount}
                         </motion.span>
@@ -91,7 +91,7 @@ const NotificationBell: React.FC = () => {
                         exit={{ opacity: 0, y: 10, scale: 0.95 }}
                         transition={{ duration: 0.2 }}
                         className={`fixed md:absolute left-4 right-4 md:left-auto md:right-0 top-[75px] md:top-full mt-2 md:w-80 max-h-[400px] overflow-hidden rounded-2xl shadow-xl border flex flex-col z-[100] ${
-                            isDark ? 'bg-[#1E1E1E] border-white/10' : 'bg-white border-gray-100'
+                            isDark ? 'bg-surface-dark border-white/10' : 'bg-white border-gray-100'
                         }`}
                         style={{
                             maxHeight: 'min(400px, 80vh)'
@@ -103,7 +103,7 @@ const NotificationBell: React.FC = () => {
                             {unreadCount > 0 && (
                                 <button
                                     onClick={() => markAllAsRead()}
-                                    className="text-xs text-[#984369] font-semibold hover:underline"
+                                    className="text-xs text-primary font-semibold hover:underline"
                                 >
                                     Mark all read
                                 </button>
@@ -130,7 +130,7 @@ const NotificationBell: React.FC = () => {
                                         >
                                             <div className="flex gap-3 items-start">
                                                 {!notification.is_read && (
-                                                    <div className="mt-1.5 w-2 h-2 rounded-full bg-[#984369] shrink-0" />
+                                                    <div className="mt-1.5 w-2 h-2 rounded-full bg-primary shrink-0" />
                                                 )}
                                                 <div className="flex-1 min-w-0">
                                                     <p className={`text-sm leading-snug break-words ${isDark ? 'text-gray-200' : 'text-gray-800'}`}>

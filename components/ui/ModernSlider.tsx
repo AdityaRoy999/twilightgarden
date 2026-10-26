@@ -31,7 +31,7 @@ export const ModernSlider: React.FC<ModernSliderProps> = ({
 
       <div className="relative w-full h-12 flex items-center">
         {/* Track Background */}
-        <div className="absolute w-full h-2 bg-[#2a2a2e] rounded-full overflow-hidden">
+        <div className="absolute w-full h-2 bg-surface-dark rounded-full overflow-hidden">
             {/* Active Track */}
             <div 
                 className="h-full bg-gradient-to-r from-[#D14D72] to-[#FF8FA3] transition-all duration-100 ease-out"

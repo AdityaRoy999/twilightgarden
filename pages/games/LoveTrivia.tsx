@@ -385,7 +385,7 @@ const LoveTrivia: React.FC = () => {
     const hasPartner = !!session.player_o;
 
     return (
-        <div className={`min-h-screen flex flex-col ${isDark ? 'bg-[#121014] text-white' : 'bg-gray-50 text-gray-900'}`}>
+        <div className={`min-h-screen flex flex-col ${isDark ? 'bg-background-dark text-white' : 'bg-gray-50 text-gray-900'}`}>
             <div className={`p-4 flex items-center justify-between border-b ${isDark ? 'border-white/10' : 'border-gray-200'}`}>
                 <button onClick={async () => { try { if (session?.id) await endSession(session.id); } catch {} navigate('/games'); }} className="p-2 -ml-2 rounded-full hover:bg-white/10 active:scale-95 transition-transform">
                     <span className="material-symbols-outlined text-2xl">arrow_back</span>
@@ -463,7 +463,7 @@ const LoveTrivia: React.FC = () => {
                                             ringCooldownRef.current = setTimeout(() => setRingCooldown(false), 30000);
                                         }}
                                         disabled={ringCooldown}
-                                        className={`px-4 py-3 rounded-2xl bg-gradient-to-r from-emerald-500 to-green-500 text-white font-bold transition-all active:scale-95 ${ringCooldown ? 'opacity-50' : ''}`}
+                                        className={`on-brand px-4 py-3 rounded-2xl bg-gradient-to-r from-emerald-500 to-green-500 text-white font-bold transition-all active:scale-95 ${ringCooldown ? 'opacity-50' : ''}`}
                                     >
                                         🔔 Ring Partner
                                     </button>
@@ -510,7 +510,7 @@ const LoveTrivia: React.FC = () => {
                                         initial={{ rotateY: 90, opacity: 0 }}
                                         animate={{ rotateY: 0, opacity: 1 }}
                                         exit={{ rotateY: -90, opacity: 0 }}
-                                        className="w-full aspect-[3/4] max-h-[500px] rounded-3xl shadow-2xl p-8 flex flex-col items-center justify-center text-center relative bg-gradient-to-br from-pink-500 to-rose-600 text-white"
+                                        className="on-brand w-full aspect-[3/4] max-h-[500px] rounded-3xl shadow-2xl p-8 flex flex-col items-center justify-center text-center relative bg-gradient-to-br from-pink-500 to-rose-600 text-white"
                                     >
                                         <span className="bg-white/20 px-4 py-1 rounded-full text-sm font-medium mb-6">
                                             {currentCard.category}

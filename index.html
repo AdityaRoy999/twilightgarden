@@ -1,7 +1,9 @@
 <!DOCTYPE html>
-<html lang="en" class="dark">
+<html lang="en">
   <head>
     <meta charset="utf-8" />
+    <meta name="theme-color" content="#fff7fa" />
+    <script>try { if(localStorage.getItem('twilight-design-version') === 'bloom-1' && localStorage.getItem('theme') === 'dark') document.documentElement.classList.add('dark'); } catch {}</script>
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Twilight Garden</title>
     <meta name="description" content="Twilight Garden - Your Personal menstrual health companion" />
@@ -40,16 +42,16 @@
         color: var(--text-primary);
       }
       html:not(.dark) .text-white\/60 {
-        color: rgba(18, 16, 20, 0.6);
+        color: var(--text-secondary);
       }
       html:not(.dark) .text-white\/80 {
-        color: rgba(18, 16, 20, 0.8);
+        color: var(--text-secondary);
       }
       html:not(.dark) .text-white\/40 {
-        color: rgba(18, 16, 20, 0.4);
+        color: var(--text-secondary);
       }
       html:not(.dark) .text-white\/30 {
-        color: rgba(18, 16, 20, 0.3);
+        color: var(--text-secondary);
       }
 
       html:not(.dark) .text-gray-400 {
@@ -107,7 +109,6 @@
         font-family: "Material Symbols Outlined";
       }
     </style>
-    <link rel="stylesheet" href="/index.css" />
   </head>
   <body>
     <div id="root"></div>

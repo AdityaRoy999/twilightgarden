@@ -5,7 +5,7 @@ const TOS: React.FC = () => {
     const navigate = useNavigate();
 
     return (
-        <div className="min-h-screen bg-[#121014] text-white p-6 pb-20">
+        <div className="min-h-screen bg-background-dark text-white p-6 pb-20">
             <div className="max-w-2xl mx-auto pt-10">
                 <button 
                     onClick={() => navigate(-1)} 

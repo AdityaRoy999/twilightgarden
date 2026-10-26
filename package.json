@@ -16,7 +16,8 @@
     "preview": "vite preview",
     "release": "node scripts/release.js",
     "release:desktop": "node scripts/release-desktop.js",
-    "tauri": "tauri"
+    "tauri": "tauri",
+    "design:preview": "vitest run --config scripts/design-preview.config.ts"
   },
   "dependencies": {
     "@capacitor/android": "^8.1.0",

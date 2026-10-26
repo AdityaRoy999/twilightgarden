@@ -38,14 +38,16 @@ export const SymptomSelector: React.FC<SymptomSelectorProps> = ({
         return (
           <button
             key={option.id}
+            type="button"
+            aria-pressed={isSelected}
             onClick={() => toggleSelection(option.id)}
             className="flex flex-col items-center gap-2 group"
           >
             <div
               className={`size-14 rounded-full flex items-center justify-center transition-all duration-200 ${
                 isSelected
-                  ? 'bg-[#FFE66D] text-black shadow-lg scale-105'
-                  : 'bg-white/5 text-gray-500 hover:bg-white/10'
+                  ? 'bg-primary/15 text-primary ring-2 ring-primary/40 scale-105'
+                  : 'bg-primary/5 text-gray-500 hover:bg-primary/10'
               }`}
             >
               <div

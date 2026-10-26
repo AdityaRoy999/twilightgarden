@@ -187,15 +187,15 @@ const ConnectFour: React.FC = () => {
         return isMyTurn ? 'Your turn — drop a disc!' : "Partner's turn";
     };
 
-    if (loading) return <div className={`min-h-screen flex items-center justify-center ${isDark ? 'bg-background-dark' : 'bg-[#FDFCF8]'}`}><motion.div animate={{ rotate: 360 }} transition={{ duration: 1, repeat: Infinity, ease: 'linear' }} className="w-10 h-10 rounded-full" style={{ borderWidth: 3, borderStyle: 'solid', borderColor: primaryColor, borderTopColor: 'transparent' }} /></div>;
+    if (loading) return <div className={`min-h-screen flex items-center justify-center bg-background-dark`}><motion.div animate={{ rotate: 360 }} transition={{ duration: 1, repeat: Infinity, ease: 'linear' }} className="w-10 h-10 rounded-full" style={{ borderWidth: 3, borderStyle: 'solid', borderColor: primaryColor, borderTopColor: 'transparent' }} /></div>;
     if (game?.status === 'ended') return <GameEndedScreen />;
     if (!game) return <GameEndedScreen />;
 
     const isWinCell = (r: number, c: number) => winCells.some(([wr, wc]) => wr === r && wc === c);
 
     return (
-        <div className={`min-h-screen flex flex-col font-display transition-colors ${isDark ? 'bg-background-dark text-white' : 'bg-[#FDFCF8] text-[#121014]'}`}>
-            <header className={`flex items-center justify-between px-5 py-4 sticky top-0 z-20 backdrop-blur-sm border-b ${isDark ? 'bg-[#121014]/95 border-white/5' : 'bg-[#FDFCF8]/95 border-gray-100'}`}>
+        <div className={`min-h-screen flex flex-col font-display transition-colors ${isDark ? 'bg-background-dark text-white' : 'bg-background-dark text-[var(--text-primary)]'}`}>
+            <header className={`flex items-center justify-between px-5 py-4 sticky top-0 z-20 backdrop-blur-sm border-b ${isDark ? 'bg-background-dark/95 border-white/5' : 'bg-background-dark/95 border-gray-100'}`}>
                 <button onClick={handleExit} className="w-10 h-10 rounded-full flex items-center justify-center hover:bg-white/10"><span className="material-symbols-outlined">arrow_back</span></button>
                 <h1 className="text-lg font-bold">Connect Four</h1>
                 <div className="flex items-center">
@@ -269,7 +269,7 @@ const ConnectFour: React.FC = () => {
                                             onMouseEnter={() => setHoverCol(c)}
                                             onMouseLeave={() => setHoverCol(null)}
                                             disabled={!isMyTurn || game.status !== 'active' || game.board_state[0][c] !== null}
-                                            className={`w-10 h-10 sm:w-11 sm:h-11 rounded-full transition-all ${isDark ? 'bg-[#121014]' : 'bg-white'} ${isMyTurn && game.status === 'active' && !game.board_state[0][c] ? 'cursor-pointer hover:brightness-110' : ''}`}
+                                            className={`w-10 h-10 sm:w-11 sm:h-11 rounded-full transition-all ${isDark ? 'bg-background-dark' : 'bg-white'} ${isMyTurn && game.status === 'active' && !game.board_state[0][c] ? 'cursor-pointer hover:brightness-110' : ''}`}
                                             style={win ? { boxShadow: `0 0 16px ${primaryColor}, 0 0 4px ${primaryColor}` } : {}}>
                                             <AnimatePresence>
                                                 {cell && (
@@ -301,7 +301,7 @@ const ConnectFour: React.FC = () => {
                     {game.status === 'finished' && (
                         <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="flex flex-col items-center gap-4 w-full max-w-xs">
                             <div className="text-5xl">{game.winner === user?.id ? '🏆' : game.winner === 'draw' ? '🤝' : '😢'}</div>
-                            <button onClick={handlePlayAgain} className="w-full px-6 py-4 rounded-2xl font-bold text-white shadow-lg active:scale-95" style={{ backgroundColor: primaryColor }}>Play Again 🔄</button>
+                            <button onClick={handlePlayAgain} className="on-brand w-full px-6 py-4 rounded-2xl font-bold text-white shadow-lg active:scale-95" style={{ backgroundColor: primaryColor }}>Play Again 🔄</button>
                             <button onClick={handleExit} className={`w-full px-6 py-3 rounded-2xl font-bold ${isDark ? 'bg-white/5 text-gray-300' : 'bg-gray-100 text-gray-600'}`}>Exit Game</button>
                         </motion.div>
                     )}

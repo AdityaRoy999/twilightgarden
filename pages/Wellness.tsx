@@ -405,7 +405,7 @@ const Wellness: React.FC = () => {
                                                 href={`https://www.google.com/maps/dir/?api=1&destination=${shop.lat},${shop.lon}`}
                                                 target="_blank"
                                                 rel="noopener noreferrer"
-                                                className="bg-primary text-white text-xs text-center font-bold py-1.5 mt-2 rounded-lg no-underline"
+                                                className="on-brand bg-primary text-white text-xs text-center font-bold py-1.5 mt-2 rounded-lg no-underline"
                                             >
                                                 Start Navigation
                                             </a>
@@ -432,22 +432,22 @@ const Wellness: React.FC = () => {
     };
 
     return (
-        <div className={`animate-slideIn font-display flex flex-col pb-24 min-h-screen transition-colors ${isDark ? 'bg-background-dark' : 'bg-[#FDFCF8]'}`}>
+        <div className={`animate-slideIn font-display flex flex-col pb-24 min-h-screen transition-colors bg-background-dark`}>
             {/* Header */}
-            <header className={`sticky top-0 z-10 flex items-center justify-between backdrop-blur-md px-6 py-4 border-b ${isDark ? 'bg-[#121014] border-white/5' : 'bg-[#FDFCF8] border-gray-100'}`}>
-                <h1 className={`text-3xl font-bold tracking-tight ${isDark ? 'text-white' : 'text-[#121014]'}`}>Wellness</h1>
+            <header className={`sticky top-0 z-10 flex items-center justify-between backdrop-blur-md px-6 py-4 border-b ${isDark ? 'bg-background-dark border-white/5' : 'bg-background-dark border-gray-100'}`}>
+                <h1 className={`text-3xl font-bold tracking-tight ${isDark ? 'text-white' : 'text-[var(--text-primary)]'}`}>Wellness</h1>
                 <NotificationBell />
             </header>
 
             {/* Tabs */}
-            <div className={`w-full overflow-x-auto no-scrollbar py-2 px-6 mb-4 ${isDark ? 'bg-background-dark' : 'bg-[#FDFCF8]'}`}>
+            <div className={`w-full overflow-x-auto no-scrollbar py-2 px-6 mb-4 bg-background-dark`}>
                 <div className="flex gap-2 min-w-max">
                     {tabs.map(tab => (
                         <button
                             key={tab.key}
                             onClick={() => setActiveTab(tab.key)}
                             className={`flex h-10 items-center gap-2 px-5 rounded-full text-sm font-semibold transition-all ${activeTab === tab.key
-                                ? 'bg-primary text-white shadow-md shadow-primary/20'
+                                ? 'on-brand bg-primary text-white shadow-md shadow-primary/20'
                                 : isDark ? 'bg-white/5 text-gray-400 hover:bg-white/10' : 'bg-gray-100 text-gray-500 hover:bg-gray-200'
                                 }`}
                         >
@@ -536,7 +536,7 @@ const ErrorCard = ({ message, onRetry, isDark }: { message: string; onRetry: () 
     <div className={`rounded-2xl p-6 text-center ${isDark ? 'bg-red-500/10 border border-red-500/20' : 'bg-red-50 border border-red-100'}`}>
         <span className="material-symbols-outlined text-3xl text-red-400 mb-2">error</span>
         <p className={`text-sm mb-3 ${isDark ? 'text-white/60' : 'text-gray-600'}`}>{message}</p>
-        <button onClick={onRetry} className="px-4 py-2 bg-primary text-white text-sm font-bold rounded-full">
+        <button onClick={onRetry} className="on-brand px-4 py-2 bg-primary text-white text-sm font-bold rounded-full">
             Try Again
         </button>
     </div>

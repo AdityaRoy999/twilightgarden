@@ -26,7 +26,7 @@ const ThemeSettings: React.FC = () => {
   };
   
   const presets = [
-    '#984369', // Default Pink
+    '#c33367', // Rose
     '#ec4899', // Hot Pink
     '#d946ef', // Fuchsia
     '#8b5cf6', // Violet
@@ -39,7 +39,7 @@ const ThemeSettings: React.FC = () => {
   ];
 
   return (
-    <div className="animate-slideIn font-display flex flex-col min-h-screen bg-[#FDFCF8] dark:bg-background-dark transition-colors duration-300 pb-24">
+    <div className="animate-slideIn font-display flex flex-col min-h-screen bg-background-dark transition-colors duration-300 pb-24">
         <Toast 
             message={toast.message}
             subMessage={toast.subMessage}
@@ -56,7 +56,7 @@ const ThemeSettings: React.FC = () => {
             >
                 <span className="material-symbols-outlined font-bold">arrow_back</span>
             </button>
-            <h1 className="text-2xl font-bold text-[#121014] dark:text-white">App Theme</h1>
+            <h1 className="text-2xl font-bold text-[var(--text-primary)] dark:text-white">App Theme</h1>
         </div>
 
         <div className="px-6 flex-1 overflow-y-auto">
@@ -66,7 +66,7 @@ const ThemeSettings: React.FC = () => {
                 <h3 className="text-sm font-bold text-gray-500 uppercase tracking-widest mb-3 px-1">Live Preview</h3>
                 <div className="bg-white dark:bg-surface-dark rounded-3xl p-6 shadow-xl border border-gray-100 dark:border-white/5 flex flex-col gap-4">
                     <div className="flex items-center gap-4">
-                         <div className="w-12 h-12 rounded-full bg-primary flex items-center justify-center text-white shadow-lg shadow-primary/30">
+                         <div className="on-brand w-12 h-12 rounded-full bg-primary flex items-center justify-center text-white shadow-lg shadow-primary/30">
                              <span className="material-symbols-outlined">palette</span>
                          </div>
                          <div>
@@ -77,7 +77,7 @@ const ThemeSettings: React.FC = () => {
                     <div className="h-2 w-full bg-gray-100 dark:bg-white/5 rounded-full overflow-hidden">
                         <div className="h-full bg-primary w-2/3 rounded-full" />
                     </div>
-                    <button className="w-full py-3 bg-primary text-white rounded-xl font-bold hover:brightness-110 transition-all shadow-lg shadow-primary/20">
+                    <button className="on-brand w-full py-3 bg-primary text-white rounded-xl font-bold hover:brightness-110 transition-all shadow-lg shadow-primary/20">
                         Sample Button
                     </button>
                 </div>

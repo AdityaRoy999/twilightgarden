@@ -1,3 +1,4 @@
+import { useTheme } from '../contexts/ThemeContext';
 import { localDateKey, parseDateKey } from '../lib/dates';
 import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
@@ -21,6 +22,14 @@ const LogDetails: React.FC = () => {
 
 
   const [searchParams] = useSearchParams();
+  const { animationsEnabled } = useTheme();
+  const section = searchParams.get('section');
+  useEffect(() => {
+    if (!section || !['cramps', 'mood', 'sleep', 'flow', 'symptoms'].includes(section)) return;
+    const target = document.getElementById(`log-${section === 'cramps' ? 'symptoms' : section}`);
+    const reduced = window.matchMedia?.('(prefers-reduced-motion: reduce)').matches;
+    target?.scrollIntoView({ behavior: animationsEnabled && !reduced ? 'smooth' : 'instant', block: 'start' });
+  }, [section, animationsEnabled]);
   const today = localDateKey();
   const dateParam = searchParams.get('date');
   const targetDate = dateParam || today;
@@ -152,7 +161,7 @@ const LogDetails: React.FC = () => {
   ];
 
   return (
-    <div className="animate-slideIn font-display flex flex-col min-h-screen bg-background-dark pb-6">
+    <div className="bloom-journal animate-slideIn font-display flex flex-col min-h-screen bg-background-dark pb-6">
       {/* Header */}
       <header className="sticky top-0 z-30 flex items-center justify-between px-5 py-4 bg-background-dark/95 backdrop-blur-md">
         <button
@@ -190,7 +199,7 @@ const LogDetails: React.FC = () => {
       <main onChangeCapture={() => { dirty.current = true; }} onClickCapture={() => { dirty.current = true; }} className="flex-1 px-5 flex flex-col gap-5 pb-32">
         <label className="mb-5 flex cursor-pointer items-start gap-3 rounded-2xl border border-primary/20 bg-primary/5 p-4"><input type="checkbox" checked={periodStarted} onChange={event=>setPeriodStarted(event.target.checked)} className="mt-1 h-5 w-5 rounded text-primary focus:ring-primary"/><span><span className="block text-sm font-semibold text-gray-900 dark:text-white">A new period started on this date</span><span className="mt-1 block text-xs leading-relaxed text-gray-500">Mark the first day only. Your cycle dates and your partner's calendar will update together.</span></span></label>
         {/* Flow Intensity */}
-        <div className="bg-surface-dark rounded-[24px] p-5 shadow-sm border border-white/5">
+        <div id="log-flow" className="bg-surface-dark rounded-[24px] p-5 shadow-sm border border-white/5">
           <div className="flex items-center gap-2.5 mb-5">
             <span className="material-symbols-filled text-[#D14D72] text-[20px]">water_drop</span>
             <h3 className="text-[15px] font-bold text-white">Flow Intensity</h3>
@@ -204,7 +213,7 @@ const LogDetails: React.FC = () => {
         </div>
 
         {/* Mood */}
-        <div className="bg-surface-dark rounded-[24px] p-5 shadow-sm border border-white/5">
+        <div id="log-mood" className="bg-surface-dark rounded-[24px] p-5 shadow-sm border border-white/5">
           <div className="flex items-center justify-between mb-6">
             <div className="flex items-center gap-2.5">
               <span className="material-symbols-outlined text-[#4ECDC4] text-[20px]">face</span>
@@ -238,7 +247,7 @@ const LogDetails: React.FC = () => {
             />
           </div>
 
-          <div className="bg-surface-dark rounded-[24px] p-5 shadow-sm border border-white/5">
+          <div id="log-sleep" className="bg-surface-dark rounded-[24px] p-5 shadow-sm border border-white/5">
             <div className="flex items-center justify-between mb-6">
               <div className="flex items-center gap-2.5">
                 <span className="material-symbols-outlined text-indigo-400 text-[20px]">bedtime</span>
@@ -288,7 +297,7 @@ const LogDetails: React.FC = () => {
         {/* Physical & Digestion Container */}
         <div className="bg-surface-dark rounded-[24px] p-6 shadow-sm border border-white/5 flex flex-col gap-8">
           {/* Physical Section */}
-          <div>
+          <div id="log-symptoms">
             <div className="flex items-center gap-2.5 mb-4">
               <span className="material-symbols-outlined text-[#D14D72] text-[20px]">accessibility_new</span>
               <h3 className="text-[13px] font-bold text-white uppercase tracking-wider">Physical</h3>
@@ -344,7 +353,7 @@ const LogDetails: React.FC = () => {
             <span className="material-symbols-outlined text-gray-400 text-[20px]">edit_note</span>
             <h3 className="text-[15px] font-bold text-white">Daily Notes</h3>
           </div>
-          <div className="relative bg-[#27272a]/50 rounded-[18px] border border-white/5 focus-within:border-white/10 transition-colors">
+          <div className="relative bg-surface-dark/50 rounded-[18px] border border-white/5 focus-within:border-white/10 transition-colors">
             <textarea
               aria-label="Daily notes"
               maxLength={500}
@@ -362,7 +371,7 @@ const LogDetails: React.FC = () => {
 
       {/* Save Button */}
       <div className="fixed bottom-0 left-0 right-0 z-40 p-6 bg-gradient-to-t from-background-dark via-background-dark to-transparent max-w-md mx-auto pointer-events-none">
-        {saveError && <p role="alert" className="pointer-events-auto mb-3 rounded-xl bg-red-950 p-3 text-sm text-white">{saveError}</p>}
+        {saveError && <p role="alert" className="on-brand pointer-events-auto mb-3 rounded-xl bg-red-950 p-3 text-sm text-white">{saveError}</p>}
         <button
           onClick={handleSave}
           disabled={saving}

@@ -113,7 +113,7 @@ export function SecurityVerification({
   return (
     <div
       ref={dialog}
-      className="fixed inset-0 z-[260] overflow-y-auto bg-[#fdfcf8] text-gray-900 dark:bg-[#121014] dark:text-white"
+      className="fixed inset-0 z-[260] overflow-y-auto bg-background-dark text-gray-900 dark:bg-background-dark dark:text-white"
       role="dialog"
       aria-modal="true"
       aria-labelledby="security-title"
@@ -121,7 +121,7 @@ export function SecurityVerification({
         if (event.key === "Escape") onClose();
       }}
     >
-      <header className="sticky top-0 z-10 flex items-center justify-between border-b border-black/10 bg-[#fdfcf8] p-4 dark:border-white/10 dark:bg-[#121014]">
+      <header className="sticky top-0 z-10 flex items-center justify-between border-b border-black/10 bg-background-dark p-4 dark:border-white/10 dark:bg-background-dark">
         <h2
           id="security-title"
           className="flex items-center gap-2 text-lg font-semibold"
@@ -244,7 +244,7 @@ export function SecurityVerification({
                 rows={3}
                 className="w-full rounded-xl border border-gray-200 bg-transparent p-3 font-mono text-sm dark:border-white/10"
               />
-              <button className="min-h-12 w-full rounded-xl bg-primary text-sm font-semibold text-white">
+              <button className="on-brand min-h-12 w-full rounded-xl bg-primary text-sm font-semibold text-white">
                 Compare codes
               </button>
             </form>

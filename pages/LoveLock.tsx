@@ -13,7 +13,7 @@ import { AudioPlayer } from '../components/ui/AudioPlayer';
 import { AudioRecorder } from '../components/AudioRecorder';
 import { SecureImage, SecureAudio } from '../components/SecureMedia';
 import { generateLoveNote, AI_MOODS, AIMood } from '../lib/ai';
-import { Shield, Phone, Video } from 'lucide-react';
+import { Shield, Phone, Video, EllipsisVertical } from 'lucide-react';
 import { useCall } from '../contexts/CallContext';
 import { SecurityVerification } from '../components/SecurityVerification';
 import MessageContextMenu, { MessageAction } from '../components/MessageContextMenu';
@@ -712,14 +712,14 @@ const LoveLock: React.FC = () => {
                     <p className="text-gray-500 dark:text-gray-400">A private space for just the two of us.</p>
                 </div>
 
-                <div className="w-full max-w-sm bg-white dark:bg-[#1E1C24] p-6 rounded-2xl shadow-lg border border-gray-100 dark:border-gray-800">
+                <div className="w-full max-w-sm bg-white dark:bg-surface-dark p-6 rounded-2xl shadow-lg border border-gray-100 dark:border-gray-800">
                     {/* Mode Toggle */}
                     <div className="flex rounded-xl overflow-hidden mb-6 border border-gray-200 dark:border-gray-700">
                         <button
                             onClick={() => setConnectMode('generate')}
                             className={`flex-1 py-2.5 text-sm font-bold transition-all ${
                                 connectMode === 'generate'
-                                    ? 'bg-pink-500 text-white'
+                                    ? 'on-brand bg-pink-500 text-white'
                                     : 'bg-transparent text-gray-400 hover:text-gray-600'
                             }`}
                         >
@@ -729,7 +729,7 @@ const LoveLock: React.FC = () => {
                             onClick={() => setConnectMode('enter')}
                             className={`flex-1 py-2.5 text-sm font-bold transition-all ${
                                 connectMode === 'enter'
-                                    ? 'bg-pink-500 text-white'
+                                    ? 'on-brand bg-pink-500 text-white'
                                     : 'bg-transparent text-gray-400 hover:text-gray-600'
                             }`}
                         >
@@ -756,7 +756,7 @@ const LoveLock: React.FC = () => {
                             ) : (
                                 <button
                                     onClick={handleGenerateCode}
-                                    className="w-full py-4 bg-pink-500 hover:bg-pink-600 active:bg-pink-700 text-white rounded-xl font-bold font-display text-base transition-all shadow-lg shadow-pink-500/30 flex items-center justify-center gap-2"
+                                    className="on-brand w-full py-4 bg-pink-500 hover:bg-pink-600 active:bg-pink-700 text-white rounded-xl font-bold font-display text-base transition-all shadow-lg shadow-pink-500/30 flex items-center justify-center gap-2"
                                 >
                                     <span className="material-symbols-outlined text-xl">key</span>
                                     Generate Access Code
@@ -779,7 +779,7 @@ const LoveLock: React.FC = () => {
                             <button
                                 onClick={handleJoinCouple}
                                 disabled={inputCode.length !== 6}
-                                className="w-full py-4 bg-gradient-to-r from-pink-500 to-rose-500 disabled:opacity-50 disabled:cursor-not-allowed text-white rounded-xl font-bold transition-all shadow-lg shadow-pink-500/30"
+                                className="on-brand w-full py-4 bg-gradient-to-r from-pink-500 to-rose-500 disabled:opacity-50 disabled:cursor-not-allowed text-white rounded-xl font-bold transition-all shadow-lg shadow-pink-500/30"
                             >
                                 Unlock My Heart 💖
                             </button>
@@ -792,9 +792,9 @@ const LoveLock: React.FC = () => {
 
     // STATE: Active (Chat Interface) — couple is paired and active, show chat directly
     return (
-        <div className="flex flex-col h-full max-h-full relative overflow-hidden bg-[#FAF9FB] dark:bg-[#0F0E13]">
+        <div className="bloom-chat flex flex-col h-full max-h-full relative overflow-hidden bg-background-dark">
              {/* Header - Fixed at top */}
-            <div className="relative z-30 shrink-0 bg-white/80 dark:bg-[#0F0E13]/80 backdrop-blur-xl border-b dark:border-white/5 px-4 h-16 flex items-center justify-between">
+            <div className="bloom-chat-header relative z-30 shrink-0 bg-white/80 dark:bg-background-dark/80 backdrop-blur-xl border-b dark:border-white/5 px-4 h-16 flex items-center justify-between">
                 <div className="flex items-center gap-3">
                     <div className="w-10 h-10 rounded-full bg-pink-100 dark:bg-pink-900/20 overflow-hidden border-2 border-primary/20">
                         {partnerProfile?.avatar_url ? (
@@ -805,7 +805,7 @@ const LoveLock: React.FC = () => {
                             </div>
                         )}
                     </div>
-                    <div className="flex flex-col">
+                    <div className="flex min-w-0 flex-col">
                         <h3 className="text-sm font-bold truncate max-w-[120px]">
                             {partnerProfile?.full_name || 'Partner'}
                         </h3>
@@ -822,7 +822,7 @@ const LoveLock: React.FC = () => {
                                 </>
                             ) : (
                                 <>
-                                    <div className="w-1.5 h-1.5 rounded-full bg-green-500 animate-pulse" />
+                                    <div className="w-1.5 h-1.5 rounded-full bg-green-500" />
                                     <span className="text-[10px] text-gray-400 font-medium uppercase tracking-wider">{chatConnected?'Connected · encrypted':'Reconnecting…'}</span>
                                 </>
                             )}
@@ -830,7 +830,7 @@ const LoveLock: React.FC = () => {
                     </div>
                 </div>
 
-                <div className="flex items-center gap-1 bg-gray-100 dark:bg-white/5 p-1 rounded-full border dark:border-white/5">
+                <div className="hidden md:flex items-center gap-1 bg-gray-100 dark:bg-white/5 p-1 rounded-full border dark:border-white/5">
                     <button
                         onClick={() => setViewFilter(viewFilter === 'starred' ? 'all' : 'starred')}
                         className={`w-10 h-10 rounded-full flex items-center justify-center transition-all active:scale-90 ${
@@ -870,6 +870,18 @@ const LoveLock: React.FC = () => {
                         <span className="material-symbols-outlined text-[20px]">link_off</span>
                     </button>
                 </div>
+                <div className="flex items-center gap-1 md:hidden">
+                    <button aria-label="Voice call" onClick={() => initiateCall(false)} className="flex h-11 w-11 items-center justify-center rounded-full text-primary hover:bg-primary/10"><Phone size={19}/></button>
+                    <button aria-label="Video call" onClick={() => initiateCall(true)} className="flex h-11 w-11 items-center justify-center rounded-full text-primary hover:bg-primary/10"><Video size={21}/></button>
+                    <details className="bloom-chat-menu relative">
+                        <summary aria-label="Chat options" className="flex h-11 w-11 cursor-pointer list-none items-center justify-center rounded-full text-gray-500 hover:bg-primary/10"><EllipsisVertical size={20}/></summary>
+                        <div onClick={event => event.currentTarget.closest('details')?.removeAttribute('open')} className="absolute right-0 top-12 z-50 w-56 overflow-hidden rounded-2xl border border-[var(--border-color)] bg-surface-dark p-2 shadow-medium">
+                            <button onClick={() => setViewFilter(viewFilter === 'starred' ? 'all' : 'starred')} className="flex min-h-11 w-full items-center rounded-xl px-3 text-left text-sm hover:bg-primary/10">{viewFilter === 'starred' ? 'All messages' : 'Starred messages'}</button>
+                            <button onClick={() => setShowSecurity(true)} className="flex min-h-11 w-full items-center rounded-xl px-3 text-left text-sm hover:bg-primary/10">Verify encryption</button>
+                            <button onClick={handleDisconnect} className="flex min-h-11 w-full items-center rounded-xl px-3 text-left text-sm text-red-600 hover:bg-red-500/10">Disconnect partner</button>
+                        </div>
+                    </details>
+                </div>
             </div>
 
             {/* Notes List - Adjusted padding for fixed header */}
@@ -880,7 +892,7 @@ const LoveLock: React.FC = () => {
             >
                 {/* View filter bar */}
                 {viewFilter !== 'all' && (
-                  <div className="flex items-center justify-between bg-white dark:bg-[#1E1C24] rounded-xl px-3 py-2 border border-gray-100 dark:border-gray-800 mb-2">
+                  <div className="flex items-center justify-between bg-white dark:bg-surface-dark rounded-xl px-3 py-2 border border-gray-100 dark:border-gray-800 mb-2">
                     <span className="text-xs font-bold text-gray-500 dark:text-gray-400 flex items-center gap-1.5">
                       <span className="material-symbols-outlined text-[16px]">{viewFilter === 'starred' ? 'star' : 'keep'}</span>
                       {viewFilter === 'starred' ? 'Starred messages' : 'Pinned messages'}
@@ -892,7 +904,7 @@ const LoveLock: React.FC = () => {
 
                 {/* Select mode bar */}
                 {selectMode && (
-                  <div className="flex items-center justify-between bg-white dark:bg-[#1E1C24] rounded-xl px-3 py-2 border border-gray-100 dark:border-gray-800 mb-2">
+                  <div className="flex items-center justify-between bg-white dark:bg-surface-dark rounded-xl px-3 py-2 border border-gray-100 dark:border-gray-800 mb-2">
                     <span className="text-xs font-bold text-gray-500 dark:text-gray-400">
                       {selectedNoteIds.size} selected
                     </span>
@@ -975,8 +987,8 @@ const LoveLock: React.FC = () => {
                                     isImage
                                         ? 'rounded-2xl overflow-hidden'
                                         : isMe
-                                            ? 'bg-primary text-white rounded-2xl rounded-br-sm shadow-sm'
-                                            : 'bg-white dark:bg-[#1E1C24] text-gray-800 dark:text-gray-100 border border-gray-100 dark:border-gray-800 rounded-2xl rounded-bl-sm shadow-sm'
+                                            ? 'on-brand bg-primary text-white rounded-2xl rounded-br-sm shadow-sm'
+                                            : 'bg-white dark:bg-surface-dark text-gray-800 dark:text-gray-100 border border-gray-100 dark:border-gray-800 rounded-2xl rounded-bl-sm shadow-sm'
                                 }`}>
                                     {/* Forwarded label */}
                                     {note.is_forwarded && (
@@ -1094,7 +1106,7 @@ const LoveLock: React.FC = () => {
                                                 className={`flex items-center justify-center gap-[2px] px-1.5 py-0.5 rounded-full shadow-sm border transition-all hover:scale-105 active:scale-95 ${
                                                     hasReacted(emoji)
                                                         ? 'bg-pink-50 dark:bg-pink-500/10 border-pink-200 dark:border-pink-500/30'
-                                                        : 'bg-white dark:bg-[#2A2730] border-gray-100 dark:border-gray-700/50 hover:bg-gray-50 dark:hover:bg-[#34303B]'
+                                                        : 'bg-white dark:bg-surface-dark border-gray-100 dark:border-gray-700/50 hover:bg-gray-50 dark:hover:bg-surface-dark'
                                                 }`}
                                             >
                                                 <span className="text-xs">{emoji}</span>
@@ -1108,7 +1120,7 @@ const LoveLock: React.FC = () => {
                                         <div className="relative" onClick={(e) => e.stopPropagation()}>
                                             <button
                                                 onClick={() => setEmojiPickerNoteId(emojiPickerNoteId === note.id ? null : note.id)}
-                                                className="w-5 h-5 flex items-center justify-center rounded-full text-gray-400 hover:text-pink-500 hover:bg-gray-100 dark:hover:bg-white/5 transition-all outline-none bg-white dark:bg-[#2A2730] shadow-sm border border-gray-100 dark:border-gray-700/50 ml-0.5"
+                                                className="w-5 h-5 flex items-center justify-center rounded-full text-gray-400 hover:text-pink-500 hover:bg-gray-100 dark:hover:bg-white/5 transition-all outline-none bg-white dark:bg-surface-dark shadow-sm border border-gray-100 dark:border-gray-700/50 ml-0.5"
                                             >
                                                 <span className="material-symbols-outlined text-[14px]">add</span>
                                             </button>
@@ -1120,7 +1132,7 @@ const LoveLock: React.FC = () => {
                                                         animate={{ opacity: 1, scale: 1, y: 0 }}
                                                         exit={{ opacity: 0, scale: 0.8, y: 5 }}
                                                         transition={{ type: "spring", stiffness: 400, damping: 25 }}
-                                                        className={`absolute bottom-full mb-1.5 ${isMe ? 'right-0 origin-bottom-right' : 'left-0 origin-bottom-left'} p-1.5 bg-white/95 dark:bg-[#232029]/95 backdrop-blur-md rounded-[20px] shadow-[0_4px_20px_-4px_rgba(0,0,0,0.15)] dark:shadow-[0_4px_20px_-4px_rgba(0,0,0,0.4)] border border-gray-200 dark:border-gray-700/50 z-50 flex items-center gap-1 w-max`}
+                                                        className={`absolute bottom-full mb-1.5 ${isMe ? 'right-0 origin-bottom-right' : 'left-0 origin-bottom-left'} p-1.5 bg-white/95 dark:bg-surface-dark/95 backdrop-blur-md rounded-[20px] shadow-[0_4px_20px_-4px_rgba(0,0,0,0.15)] dark:shadow-[0_4px_20px_-4px_rgba(0,0,0,0.4)] border border-gray-200 dark:border-gray-700/50 z-50 flex items-center gap-1 w-max`}
                                                     >
                                                         {reactionEmojis.slice(0, 6).map((emoji) => (
                                                             <button
@@ -1159,7 +1171,7 @@ const LoveLock: React.FC = () => {
                 onChange={handleFileSelected}
             />
 
-            <div className="relative z-30 mx-auto flex w-full shrink-0 flex-col border-t border-black/5 bg-white p-3 dark:border-white/5 dark:bg-[#0F0E13]">
+            <div className="relative z-30 mx-auto flex w-full shrink-0 flex-col border-t border-black/5 bg-white p-3 dark:border-white/5 dark:bg-background-dark">
             {notes.some(note=>note.localStatus==='failed')&&<div role="status" className="mb-2 flex items-center justify-between rounded-xl bg-amber-500/10 px-4 py-2 text-sm text-amber-600"><span>Some messages have not been sent.</span><button onClick={()=>{for(const note of notes.filter(n=>n.localStatus==='failed'))void retryNote(note.id).catch(()=>{});}} className="min-h-11 px-3 font-semibold">Retry messages</button></div>}
             {/* Reply bar */}
             <AnimatePresence>
@@ -1170,7 +1182,7 @@ const LoveLock: React.FC = () => {
                   exit={{ height: 0, opacity: 0 }}
                   className="overflow-hidden"
                 >
-                  <div className="flex items-center gap-2 px-4 py-2.5 bg-white dark:bg-[#1E1C24] rounded-t-2xl border border-b-0 border-gray-100 dark:border-gray-800">
+                  <div className="flex items-center gap-2 px-4 py-2.5 bg-white dark:bg-surface-dark rounded-t-2xl border border-b-0 border-gray-100 dark:border-gray-800">
                     <div className="flex-1 min-w-0 border-l-[3px] border-pink-500 pl-2.5">
                       <p className="text-[11px] font-bold text-pink-500 truncate">
                         {replyNote.sender_id === user?.id ? 'You' : (partnerProfile?.full_name?.split(' ')[0] || 'Partner')}
@@ -1190,7 +1202,7 @@ const LoveLock: React.FC = () => {
               )}
             </AnimatePresence>
 
-            <div className={`p-1.5 bg-white/95 dark:bg-[#121014]/95 backdrop-blur-md border border-gray-100 dark:border-white/5 shadow-2xl shadow-black/20 transition-all ${replyNote ? 'rounded-b-[32px] rounded-t-none' : 'rounded-[32px]'}`}>
+            <div className={`p-1.5 bg-white/95 dark:bg-background-dark/95 backdrop-blur-md border border-gray-100 dark:border-white/5 shadow-2xl shadow-black/20 transition-all ${replyNote ? 'rounded-b-[32px] rounded-t-none' : 'rounded-[32px]'}`}>
                 <AnimatePresence mode="wait">
                 {showRecorder ? (
                     <motion.div
@@ -1217,7 +1229,7 @@ const LoveLock: React.FC = () => {
                         <div className="flex items-center gap-2 shrink-0">
                             <button
                                 onClick={handlePickImage}
-                                className="w-[44px] h-[44px] flex items-center justify-center rounded-full bg-gray-100 dark:bg-[#1E1C24] text-gray-500 hover:text-pink-500 hover:bg-white dark:hover:bg-white/10 transition-all border border-transparent hover:border-pink-500/20 active:scale-95 shadow-sm dark:shadow-none"
+                                className="w-[44px] h-[44px] flex items-center justify-center rounded-full bg-gray-100 dark:bg-surface-dark text-gray-500 hover:text-pink-500 hover:bg-white dark:hover:bg-white/10 transition-all border border-transparent hover:border-pink-500/20 active:scale-95 shadow-sm dark:shadow-none"
                                 title="Photos"
                             >
                                 <span className="material-symbols-outlined text-[22px]">add_a_photo</span>
@@ -1225,7 +1237,7 @@ const LoveLock: React.FC = () => {
 
                             <button
                                 onClick={() => setShowGifPicker(true)}
-                                className="w-[44px] h-[44px] flex items-center justify-center rounded-full bg-gray-100 dark:bg-[#1E1C24] text-gray-500 hover:text-purple-500 hover:bg-white dark:hover:bg-white/10 transition-all border border-transparent hover:border-purple-500/20 active:scale-95 shadow-sm dark:shadow-none"
+                                className="w-[44px] h-[44px] flex items-center justify-center rounded-full bg-gray-100 dark:bg-surface-dark text-gray-500 hover:text-purple-500 hover:bg-white dark:hover:bg-white/10 transition-all border border-transparent hover:border-purple-500/20 active:scale-95 shadow-sm dark:shadow-none"
                                 title="GIFs"
                             >
                                 <span className="material-symbols-outlined text-[23px]">gif_box</span>
@@ -1270,7 +1282,7 @@ const LoveLock: React.FC = () => {
                                     onClick={handleSendText}
                                     aria-label="Send message"
                                     disabled={isSubmitting}
-                                    className="w-[44px] h-[44px] flex items-center justify-center bg-primary text-white rounded-full hover:brightness-110 active:scale-95 disabled:opacity-50 transition-all shadow-md shadow-primary/20"
+                                    className="on-brand w-[44px] h-[44px] flex items-center justify-center bg-primary text-white rounded-full hover:brightness-110 active:scale-95 disabled:opacity-50 transition-all shadow-md shadow-primary/20"
                                 >
                                     <span className="material-symbols-outlined text-[22px] ml-0.5">arrow_upward</span>
                                 </button>
@@ -1278,7 +1290,7 @@ const LoveLock: React.FC = () => {
                                 <button
                                     onClick={() => setShowRecorder(true)}
                                     aria-label="Record voice message"
-                                    className="w-[44px] h-[44px] flex items-center justify-center rounded-full bg-gray-100 dark:bg-[#1E1C24] text-gray-500 hover:text-primary hover:bg-white dark:hover:bg-white/10 transition-all border border-transparent hover:border-primary/20 active:scale-95 shadow-sm dark:shadow-none"
+                                    className="w-[44px] h-[44px] flex items-center justify-center rounded-full bg-gray-100 dark:bg-surface-dark text-gray-500 hover:text-primary hover:bg-white dark:hover:bg-white/10 transition-all border border-transparent hover:border-primary/20 active:scale-95 shadow-sm dark:shadow-none"
                                 >
                                     <span className="material-symbols-outlined text-[22px]">mic</span>
                                 </button>
@@ -1333,7 +1345,7 @@ const LoveLock: React.FC = () => {
                                 </button>
                                 <button
                                     onClick={() => { confirmDialog.onConfirm(); setConfirmDialog(null); }}
-                                    className="flex-1 py-2.5 rounded-xl bg-red-500 text-white text-sm font-medium"
+                                    className="on-brand flex-1 py-2.5 rounded-xl bg-red-500 text-white text-sm font-medium"
                                 >
                                     {confirmDialog.confirmLabel || 'Confirm'}
                                 </button>
@@ -1384,7 +1396,7 @@ const LoveLock: React.FC = () => {
                                 </button>
                                 <button
                                     onClick={() => handleDownloadImage(selectedImage)}
-                                    className="px-8 py-3 bg-primary hover:brightness-110 active:scale-95 text-white rounded-full font-bold shadow-lg shadow-primary/30 flex items-center gap-2 transition-all"
+                                    className="on-brand px-8 py-3 bg-primary hover:brightness-110 active:scale-95 text-white rounded-full font-bold shadow-lg shadow-primary/30 flex items-center gap-2 transition-all"
                                 >
                                     <span className="material-symbols-outlined">download</span>
                                     <span>Download</span>
@@ -1410,7 +1422,7 @@ const LoveLock: React.FC = () => {
                             animate={{ y: 0 }}
                             exit={{ y: '100%' }}
                             transition={{ type: 'spring', damping: 25, stiffness: 300 }}
-                            className="w-full max-w-md bg-white dark:bg-[#1a1720] rounded-t-3xl p-6 pb-8"
+                            className="w-full max-w-md bg-white dark:bg-surface-dark rounded-t-3xl p-6 pb-8"
                             onClick={(e) => e.stopPropagation()}
                         >
                             {/* Handle bar */}
@@ -1491,7 +1503,7 @@ const LoveLock: React.FC = () => {
                             animate={{ y: 0 }}
                             exit={{ y: '100%' }}
                             transition={{ type: 'spring', damping: 25, stiffness: 300 }}
-                            className="w-full max-w-lg bg-white dark:bg-[#1a1720] rounded-t-3xl p-4 h-[70vh] flex flex-col"
+                            className="w-full max-w-lg bg-white dark:bg-surface-dark rounded-t-3xl p-4 h-[70vh] flex flex-col"
                             onClick={(e) => e.stopPropagation()}
                         >
                             <div className="w-12 h-1 bg-gray-300 dark:bg-gray-600 rounded-full mx-auto mb-4" />
@@ -1567,7 +1579,7 @@ const LoveLock: React.FC = () => {
                     animate={{ y: 0 }}
                     exit={{ y: '100%' }}
                     transition={{ type: 'spring', damping: 25, stiffness: 300 }}
-                    className="w-full max-w-md bg-white dark:bg-[#1a1720] rounded-t-3xl p-6 pb-8"
+                    className="w-full max-w-md bg-white dark:bg-surface-dark rounded-t-3xl p-6 pb-8"
                     onClick={(e) => e.stopPropagation()}
                   >
                     <div className="w-10 h-1 bg-gray-300 dark:bg-gray-600 rounded-full mx-auto mb-5" />
@@ -1664,7 +1676,7 @@ const LoveLock: React.FC = () => {
 
                     <button
                       onClick={() => setMessageInfoNote(null)}
-                      className="w-full mt-6 py-3 rounded-2xl font-bold text-white bg-gradient-to-r from-pink-500 to-rose-500 shadow-lg shadow-pink-500/30 hover:brightness-110 active:scale-[0.98] transition-all"
+                      className="on-brand w-full mt-6 py-3 rounded-2xl font-bold text-white bg-gradient-to-r from-pink-500 to-rose-500 shadow-lg shadow-pink-500/30 hover:brightness-110 active:scale-[0.98] transition-all"
                     >
                       Close
                     </button>

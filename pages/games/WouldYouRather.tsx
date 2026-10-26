@@ -215,14 +215,14 @@ const WouldYouRather: React.FC = () => {
 
     if (game?.status === 'ended') return <GameEndedScreen />;
 
-    if (loading) return <div className={`min-h-screen flex items-center justify-center ${isDark ? 'bg-background-dark' : 'bg-[#FDFCF8]'}`}><motion.div animate={{ rotate: 360 }} transition={{ duration: 1, repeat: Infinity, ease: 'linear' }} className="w-10 h-10 rounded-full" style={{ borderWidth: 3, borderStyle: 'solid', borderColor: primaryColor, borderTopColor: 'transparent' }} /></div>;
+    if (loading) return <div className={`min-h-screen flex items-center justify-center bg-background-dark`}><motion.div animate={{ rotate: 360 }} transition={{ duration: 1, repeat: Infinity, ease: 'linear' }} className="w-10 h-10 rounded-full" style={{ borderWidth: 3, borderStyle: 'solid', borderColor: primaryColor, borderTopColor: 'transparent' }} /></div>;
     if (!game) return <GameEndedScreen />;
 
     const matchPct = state && state.rounds.length > 0 ? Math.round((state.matchCount / Math.max(1, state.rounds.filter(r => r.revealed).length)) * 100) : 0;
 
     return (
-        <div className={`min-h-screen flex flex-col font-display transition-colors ${isDark ? 'bg-background-dark text-white' : 'bg-[#FDFCF8] text-[#121014]'}`}>
-            <header className={`flex items-center justify-between px-5 py-4 sticky top-0 z-20 backdrop-blur-sm border-b ${isDark ? 'bg-[#121014]/95 border-white/5' : 'bg-[#FDFCF8]/95 border-gray-100'}`}>
+        <div className={`min-h-screen flex flex-col font-display transition-colors ${isDark ? 'bg-background-dark text-white' : 'bg-background-dark text-[var(--text-primary)]'}`}>
+            <header className={`flex items-center justify-between px-5 py-4 sticky top-0 z-20 backdrop-blur-sm border-b ${isDark ? 'bg-background-dark/95 border-white/5' : 'bg-background-dark/95 border-gray-100'}`}>
                 <button onClick={handleExit} className="w-10 h-10 rounded-full flex items-center justify-center hover:bg-white/10"><span className="material-symbols-outlined">arrow_back</span></button>
                 <h1 className="text-lg font-bold">Would You Rather 🤔</h1>
                 <div className="flex items-center">
@@ -409,7 +409,7 @@ const WouldYouRather: React.FC = () => {
                                             {myChoice === partnerChoice ? 'You both agree!' : 'Different choices!'}
                                         </p>
                                         <button onClick={nextRound}
-                                            className="w-full max-w-xs px-6 py-4 rounded-2xl font-bold text-white shadow-lg active:scale-95" style={{ backgroundColor: primaryColor }}>
+                                            className="on-brand w-full max-w-xs px-6 py-4 rounded-2xl font-bold text-white shadow-lg active:scale-95" style={{ backgroundColor: primaryColor }}>
                                             {(state!.currentRound + 1) >= state!.totalRounds ? 'See Results 🏆' : 'Next Question ➡️'}
                                         </button>
                                     </motion.div>
@@ -433,7 +433,7 @@ const WouldYouRather: React.FC = () => {
                                 </div>
 
                                 <div className="flex flex-col items-center gap-3 w-full max-w-xs mt-4">
-                                    <button onClick={handlePlayAgain} className="w-full px-6 py-4 rounded-2xl font-bold text-white shadow-lg active:scale-95" style={{ backgroundColor: primaryColor }}>Play Again 🔄</button>
+                                    <button onClick={handlePlayAgain} className="on-brand w-full px-6 py-4 rounded-2xl font-bold text-white shadow-lg active:scale-95" style={{ backgroundColor: primaryColor }}>Play Again 🔄</button>
                                     <button onClick={handleExit} className={`w-full px-6 py-3 rounded-2xl font-bold ${isDark ? 'bg-white/5 text-gray-300' : 'bg-gray-100 text-gray-600'}`}>Exit Game</button>
                                 </div>
                             </motion.div>

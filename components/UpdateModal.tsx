@@ -97,7 +97,7 @@ export default function UpdateModal() {
               <div className="flex flex-col space-y-3">
                 <button
                   onClick={handleUpdate}
-                  className="w-full bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-500 hover:to-purple-500 text-white font-semibold py-3.5 px-6 rounded-xl transition-all shadow-lg active:scale-[0.98] flex items-center justify-center space-x-2"
+                  className="on-brand w-full bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-500 hover:to-purple-500 text-white font-semibold py-3.5 px-6 rounded-xl transition-all shadow-lg active:scale-[0.98] flex items-center justify-center space-x-2"
                 >
                   <RefreshCw className="w-5 h-5" />
                   <span>Download & Install</span>

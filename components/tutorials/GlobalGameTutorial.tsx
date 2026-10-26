@@ -36,7 +36,7 @@ export const GlobalGameTutorial: React.FC = () => {
                     >
 
 
-                        <div className="relative w-full max-w-[380px] aspect-[9/16] rounded-[32px] overflow-hidden shadow-2xl border border-white/10 bg-[#121014]">
+                        <div className="relative w-full max-w-[380px] aspect-[9/16] rounded-[32px] overflow-hidden shadow-2xl border border-white/10 bg-background-dark">
                             {/* Close Button */}
                             <button
                                 onClick={closeTutorial}

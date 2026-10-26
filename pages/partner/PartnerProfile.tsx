@@ -34,7 +34,7 @@ const PartnerProfile: React.FC = () => {
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const presets = [
-    '#984369', // Default Pink
+    '#c33367', // Rose
     '#ec4899', // Hot Pink
     '#d946ef', // Fuchsia
     '#8b5cf6', // Violet
@@ -161,11 +161,11 @@ const PartnerProfile: React.FC = () => {
   };
 
   return (
-    <div className={`animate-slideIn font-display flex flex-col min-h-screen transition-colors duration-300 pb-24 relative overflow-x-hidden ${isDark ? 'bg-[#121014]' : 'bg-[#FDFCF8]'}`}>
+    <div className={`animate-slideIn font-display flex flex-col min-h-screen transition-colors duration-300 pb-24 relative overflow-x-hidden bg-background-dark`}>
       {/* Header */}
-      <header className={`sticky top-0 z-20 px-6 pt-6 pb-2 transition-colors duration-300 ${isDark ? 'bg-[#121014]/95' : 'bg-[#FDFCF8]/95'}`}>
+      <header className={`sticky top-0 z-20 px-6 pt-6 pb-2 transition-colors duration-300 bg-background-dark/95`}>
          <div className="flex items-center justify-between mb-4">
-            <h2 className={`text-2xl font-bold ${isDark ? 'text-white' : 'text-[#121014]'}`}>
+            <h2 className={`text-2xl font-bold ${isDark ? 'text-white' : 'text-[var(--text-primary)]'}`}>
                 {activeTab === 'profile' ? 'Public Profile' : 'Settings'}
             </h2>
              {/* Dynamic Icon based on tab? Or just spacer */}
@@ -177,7 +177,7 @@ const PartnerProfile: React.FC = () => {
          </div>
 
          {/* Tabs */}
-         <div className={`flex p-1 rounded-2xl mb-6 ${isDark ? 'bg-[#1E1E1E]' : 'bg-gray-100'}`}>
+         <div className={`flex p-1 rounded-2xl mb-6 ${isDark ? 'bg-surface-dark' : 'bg-gray-100'}`}>
             <button
                 onClick={() => setActiveTab('profile')}
                 className={`flex-1 py-3 rounded-xl text-sm font-bold transition-all relative ${
@@ -238,7 +238,7 @@ const PartnerProfile: React.FC = () => {
                     <button
                         onClick={handleAvatarClick}
                         disabled={uploading}
-                        className={`absolute bottom-1 right-1 flex items-center justify-center p-2.5 rounded-full shadow-lg border-[3px] active:scale-95 transition-all cursor-pointer hover:scale-105 bg-primary text-white ${isDark ? 'border-[#121014]' : 'border-[#FDFCF8]'}`}
+                        className={`on-brand absolute bottom-1 right-1 flex items-center justify-center p-2.5 rounded-full shadow-lg border-[3px] active:scale-95 transition-all cursor-pointer hover:scale-105 bg-primary text-white ${isDark ? 'border-[#121014]' : 'border-[#FDFCF8]'}`}
                     >
                         <span className="material-symbols-outlined text-[18px]">photo_camera</span>
                     </button>
@@ -261,7 +261,7 @@ const PartnerProfile: React.FC = () => {
                                 value={fullName}
                                 onChange={(e) => setFullName(e.target.value)}
                                 className={`w-full h-14 pl-4 pr-12 rounded-2xl border font-medium focus:ring-1 focus:ring-primary focus:border-primary transition-all outline-none ${
-                                    isDark ? 'bg-[#1E1E1E] border-white/10 text-white' : 'bg-white border-gray-200 text-[#121014]'
+                                    isDark ? 'bg-surface-dark border-white/10 text-white' : 'bg-white border-gray-200 text-[var(--text-primary)]'
                                 }`}
                                 placeholder="Enter your name"
                              />
@@ -275,7 +275,7 @@ const PartnerProfile: React.FC = () => {
                                 value={bio}
                                 onChange={(e) => setBio(e.target.value)}
                                 className={`w-full h-32 pl-4 pr-4 py-4 rounded-2xl border font-medium focus:ring-1 focus:ring-primary focus:border-primary transition-all outline-none resize-none leading-relaxed ${
-                                    isDark ? 'bg-[#1E1E1E] border-white/10 text-white' : 'bg-white border-gray-200 text-[#121014]'
+                                    isDark ? 'bg-surface-dark border-white/10 text-white' : 'bg-white border-gray-200 text-[var(--text-primary)]'
                                 }`}
                                 placeholder="Write a short bio..."
                              />
@@ -284,7 +284,7 @@ const PartnerProfile: React.FC = () => {
                          <button
                             onClick={handleSave}
                             disabled={isLoading || uploading}
-                            className="w-full h-14 bg-primary hover:bg-primary/90 text-white font-bold rounded-2xl shadow-lg shadow-primary/20 transition-all active:scale-[0.98] flex items-center justify-center gap-2 mt-4 disabled:opacity-70 disabled:pointer-events-none"
+                            className="on-brand w-full h-14 bg-primary hover:bg-primary/90 text-white font-bold rounded-2xl shadow-lg shadow-primary/20 transition-all active:scale-[0.98] flex items-center justify-center gap-2 mt-4 disabled:opacity-70 disabled:pointer-events-none"
                          >
                             {isLoading ? (
                                 <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin"></div>
@@ -310,7 +310,7 @@ const PartnerProfile: React.FC = () => {
                     {/* General Section */}
                     <section>
                         <h3 className={`text-sm font-bold uppercase tracking-widest mb-4 ${isDark ? 'text-gray-500' : 'text-gray-400'}`}>General</h3>
-                        <div className={`p-4 rounded-2xl shadow-sm border mb-6 flex flex-col gap-4 ${isDark ? 'bg-[#1E1E1E] border-white/5' : 'bg-white border-gray-100'}`}>
+                        <div className={`p-4 rounded-2xl shadow-sm border mb-6 flex flex-col gap-4 ${isDark ? 'bg-surface-dark border-white/5' : 'bg-white border-gray-100'}`}>
                              <div className="flex flex-col gap-2">
                                 <label className={`text-sm font-bold ${isDark ? 'text-gray-300' : 'text-gray-700'}`}>Partner Nickname</label>
                                 <div className="relative">
@@ -330,7 +330,7 @@ const PartnerProfile: React.FC = () => {
                             </div>
                         </div>
 
-                         <div className={`rounded-2xl overflow-hidden shadow-sm border mb-6 ${isDark ? 'bg-[#1E1E1E] border-white/5' : 'bg-white border-gray-100'}`}>
+                         <div className={`rounded-2xl overflow-hidden shadow-sm border mb-6 ${isDark ? 'bg-surface-dark border-white/5' : 'bg-white border-gray-100'}`}>
                             <div
                                 className={`flex items-center justify-between p-4 hover:bg-black/5 dark:hover:bg-white/5 transition-colors cursor-pointer group`}
                                 onClick={() => navigate('/partner/notifications')}
@@ -354,7 +354,7 @@ const PartnerProfile: React.FC = () => {
                         <h3 className={`text-sm font-bold uppercase tracking-widest mb-4 ${isDark ? 'text-gray-500' : 'text-gray-400'}`}>Appearance</h3>
 
                         {/* Dark Mode Toggle */}
-                        <div className={`p-4 rounded-2xl flex items-center justify-between shadow-sm border mb-4 ${isDark ? 'bg-[#1E1E1E] border-white/5' : 'bg-white border-gray-100'}`}>
+                        <div className={`p-4 rounded-2xl flex items-center justify-between shadow-sm border mb-4 ${isDark ? 'bg-surface-dark border-white/5' : 'bg-white border-gray-100'}`}>
                             <div className="flex items-center gap-3">
                                 <div className={`w-10 h-10 rounded-full flex items-center justify-center ${isDark ? 'bg-white/5 text-purple-400' : 'bg-purple-50 text-purple-600'}`}>
                                     <span className="material-symbols-outlined">dark_mode</span>
@@ -373,7 +373,7 @@ const PartnerProfile: React.FC = () => {
                         </div>
 
                         {/* Animations Toggle */}
-                        <div className={`p-4 rounded-2xl flex items-center justify-between shadow-sm border mb-4 ${isDark ? 'bg-[#1E1E1E] border-white/5' : 'bg-white border-gray-100'}`}>
+                        <div className={`p-4 rounded-2xl flex items-center justify-between shadow-sm border mb-4 ${isDark ? 'bg-surface-dark border-white/5' : 'bg-white border-gray-100'}`}>
                             <div className="flex items-center gap-3">
                                 <div className={`w-10 h-10 rounded-full flex items-center justify-center ${isDark ? 'bg-white/5 text-blue-400' : 'bg-blue-50 text-blue-600'}`}>
                                     <span className="material-symbols-outlined">{animationsEnabled ? 'animation' : 'stop_circle'}</span>
@@ -392,7 +392,7 @@ const PartnerProfile: React.FC = () => {
                         </div>
 
                         {/* Solid Nav Bg Toggle */}
-                        <div className={`p-4 rounded-2xl flex items-center justify-between shadow-sm border mb-4 ${isDark ? 'bg-[#1E1E1E] border-white/5' : 'bg-white border-gray-100'}`}>
+                        <div className={`p-4 rounded-2xl flex items-center justify-between shadow-sm border mb-4 ${isDark ? 'bg-surface-dark border-white/5' : 'bg-white border-gray-100'}`}>
                             <div className="flex items-center gap-3">
                                 <div className={`w-10 h-10 rounded-full flex items-center justify-center ${isDark ? 'bg-white/5 text-teal-400' : 'bg-teal-50 text-teal-600'}`}>
                                     <span className="material-symbols-outlined">{solidNavBg ? 'layers_clear' : 'blur_on'}</span>
@@ -411,7 +411,7 @@ const PartnerProfile: React.FC = () => {
                         </div>
 
                         {/* Accent Color */}
-                         <div className={`p-5 rounded-2xl shadow-sm border ${isDark ? 'bg-[#1E1E1E] border-white/5' : 'bg-white border-gray-100'}`}>
+                         <div className={`p-5 rounded-2xl shadow-sm border ${isDark ? 'bg-surface-dark border-white/5' : 'bg-white border-gray-100'}`}>
                             <h4 className={`font-bold mb-4 ${isDark ? 'text-white' : 'text-gray-900'}`}>Accent Color</h4>
                             <div className="grid grid-cols-5 gap-4 sm:gap-5">
                                 {presets.map(color => (
@@ -437,7 +437,7 @@ const PartnerProfile: React.FC = () => {
                     {/* Security Section */}
                     <section>
                          <h3 className={`text-sm font-bold uppercase tracking-widest mb-4 ${isDark ? 'text-gray-500' : 'text-gray-400'}`}>Security</h3>
-                         <div className={`rounded-2xl overflow-hidden shadow-sm border ${isDark ? 'bg-[#1E1E1E] border-white/5' : 'bg-white border-gray-100'}`}>
+                         <div className={`rounded-2xl overflow-hidden shadow-sm border ${isDark ? 'bg-surface-dark border-white/5' : 'bg-white border-gray-100'}`}>
                             <div
                                 className="flex items-center justify-between p-4 hover:bg-black/5 dark:hover:bg-white/5 transition-colors cursor-pointer group"
                                 onClick={() => setShowSyncModal(true)}
@@ -469,7 +469,7 @@ const PartnerProfile: React.FC = () => {
                     <section>
                          <h3 className={`text-sm font-bold uppercase tracking-widest mb-4 ${isDark ? 'text-gray-500' : 'text-gray-400'}`}>Account</h3>
 
-                         <div className={`p-1 rounded-2xl overflow-hidden shadow-sm border ${isDark ? 'bg-[#1E1E1E] border-white/5' : 'bg-white border-gray-100'}`}>
+                         <div className={`p-1 rounded-2xl overflow-hidden shadow-sm border ${isDark ? 'bg-surface-dark border-white/5' : 'bg-white border-gray-100'}`}>
                              <button
                                 onClick={handleSignOut}
                                 className={`w-full p-4 flex items-center justify-between transition-colors ${isDark ? 'hover:bg-white/5' : 'hover:bg-gray-50'}`}

@@ -152,7 +152,7 @@ const LogHistory: React.FC = () => {
               animate={{ scale: 1, opacity: 1, y: 0 }}
               exit={{ scale: 0.95, opacity: 0, y: 20 }}
               onClick={(e) => e.stopPropagation()}
-              className="bg-[#FDFCF8] dark:bg-surface-dark w-full max-w-sm rounded-[2.5rem] p-6 shadow-2xl relative border border-gray-100 dark:border-white/5 max-h-[90vh] overflow-y-auto no-scrollbar"
+              className="bg-background-dark dark:bg-surface-dark w-full max-w-sm rounded-[2.5rem] p-6 shadow-2xl relative border border-gray-100 dark:border-white/5 max-h-[90vh] overflow-y-auto no-scrollbar"
             >
               <button 
                 onClick={() => setSelectedLog(null)}
@@ -164,7 +164,7 @@ const LogHistory: React.FC = () => {
                 <div className="w-16 h-16 bg-primary/10 rounded-full flex items-center justify-center mb-3">
                   <span className="text-3xl">{getMoodEmoji(selectedLog.moods?.[0] || '')}</span>
                 </div>
-                <h3 className="text-xl font-bold text-[#121014] dark:text-white capitalize">
+                <h3 className="text-xl font-bold text-[var(--text-primary)] dark:text-white capitalize">
                   {new Date(selectedLog.date).toLocaleDateString('default', { month: 'long', day: 'numeric', year: 'numeric' })}
                 </h3>
                 <p className="text-gray-500 dark:text-gray-400 capitalize">{selectedLog.moods?.[0] || 'No mood logged'}</p>

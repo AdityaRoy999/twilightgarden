@@ -76,7 +76,7 @@ const PeriodLengthSettings: React.FC = () => {
         <button
             onClick={handleSave}
             disabled={saving}
-            className="w-full bg-primary hover:bg-primary/90 text-white font-bold py-4 rounded-2xl shadow-lg shadow-primary/20 transition-all active:scale-[0.98]"
+            className="on-brand w-full bg-primary hover:bg-primary/90 text-white font-bold py-4 rounded-2xl shadow-lg shadow-primary/20 transition-all active:scale-[0.98]"
         >
             {saving ? 'Saving…' : 'Save Changes'}
         </button>

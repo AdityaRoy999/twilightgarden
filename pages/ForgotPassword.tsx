@@ -62,7 +62,7 @@ const ForgotPassword: React.FC = () => {
   };
 
   return (
-    <div className="min-h-screen bg-[#121014] text-white flex flex-col p-6 font-display">
+    <div className="min-h-screen bg-background-dark text-white flex flex-col p-6 font-display">
       <button
         onClick={() => step === 1 ? navigate('/login') : setStep(1)}
         className="self-start p-2 -ml-2 text-gray-400 hover:text-white transition-colors"
@@ -113,7 +113,7 @@ const ForgotPassword: React.FC = () => {
               <button
                 type="submit"
                 disabled={loading}
-                className="w-full bg-primary hover:bg-primary/90 text-white font-bold py-4 rounded-xl shadow-lg shadow-primary/20 transition-all active:scale-[0.98] disabled:opacity-50 disabled:cursor-not-allowed mt-4"
+                className="on-brand w-full bg-primary hover:bg-primary/90 text-white font-bold py-4 rounded-xl shadow-lg shadow-primary/20 transition-all active:scale-[0.98] disabled:opacity-50 disabled:cursor-not-allowed mt-4"
               >
                 {loading ? 'Sending...' : 'Send Code'}
               </button>
@@ -156,7 +156,7 @@ const ForgotPassword: React.FC = () => {
               <button
                 type="submit"
                 disabled={loading}
-                className="w-full bg-primary hover:bg-primary/90 text-white font-bold py-4 rounded-xl shadow-lg shadow-primary/20 transition-all active:scale-[0.98] disabled:opacity-50 disabled:cursor-not-allowed mt-4"
+                className="on-brand w-full bg-primary hover:bg-primary/90 text-white font-bold py-4 rounded-xl shadow-lg shadow-primary/20 transition-all active:scale-[0.98] disabled:opacity-50 disabled:cursor-not-allowed mt-4"
               >
                 {loading ? 'Resetting...' : 'Reset Password'}
               </button>

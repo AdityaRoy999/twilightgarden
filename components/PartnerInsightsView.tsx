@@ -1,5 +1,7 @@
+import ChartEmptyState from './ui/ChartEmptyState';
+import { useTheme } from '../contexts/ThemeContext';
 import React, { useState, useMemo } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
+import { motion, AnimatePresence, useReducedMotion } from 'framer-motion';
 import {
   BarChart,
   Bar,
@@ -34,6 +36,9 @@ const getMoodEmoji = (mood: string) => {
 };
 
 const PartnerInsightsView: React.FC<PartnerInsightsViewProps> = ({ logs, cycleSettings, theme }) => {
+  const { animationsEnabled } = useTheme();
+  const reducedMotion = useReducedMotion();
+  const animateCharts = animationsEnabled !== false && !reducedMotion;
   const [chartType, setChartType] = useState<'bar' | 'line'>('bar');
   const [activeTab, setActiveTab] = useState<'history' | 'trends'>('history');
   const [historyTab, setHistoryTab] = useState<'general' | 'logs'>('general');
@@ -49,7 +54,7 @@ const PartnerInsightsView: React.FC<PartnerInsightsViewProps> = ({ logs, cycleSe
       boxShadow: '0 20px 25px -5px rgba(0, 0, 0, 0.2)',
       padding: '12px 16px',
     },
-    itemStyle: { 
+    itemStyle: {
       color: theme === 'dark' ? '#fff' : '#121014',
       fontSize: '14px',
       fontWeight: '600',
@@ -67,7 +72,7 @@ const PartnerInsightsView: React.FC<PartnerInsightsViewProps> = ({ logs, cycleSe
   // 1. Calculate History & Real Averages
   const { historyData, stats } = useMemo(() => {
     if (!logs?.length) return {
-      historyData: [{ value: cycleSettings?.avgCycleLength || 28, label: 'Avg' }],
+      historyData: [],
       stats: { avgCycle: cycleSettings?.avgCycleLength || 28, avgPeriod: cycleSettings?.avgPeriodLength || 5 }
     };
 
@@ -120,7 +125,7 @@ const PartnerInsightsView: React.FC<PartnerInsightsViewProps> = ({ logs, cycleSe
     const calculatedAvgPeriod = periods.length ? Math.round(totalPeriodLength / periods.length) : (cycleSettings?.avgPeriodLength || 5);
     const totalCycleLength = cycleLengths.reduce((sum, c) => sum + c.value, 0);
     const calculatedAvgCycle = cycleLengths.length ? Math.round(totalCycleLength / cycleLengths.length) : (cycleSettings?.avgCycleLength || 28);
-    const finalHistory = cycleLengths.length > 0 ? cycleLengths.slice(-6) : [{ value: calculatedAvgCycle, label: 'Avg' }];
+    const finalHistory = cycleLengths.slice(-6);
 
     return {
       historyData: finalHistory,
@@ -218,11 +223,11 @@ const PartnerInsightsView: React.FC<PartnerInsightsViewProps> = ({ logs, cycleSe
     <div className="flex flex-col gap-6 w-full">
       {/* Tab Switcher (Styled like Insights.tsx) */}
       <div className="flex bg-gray-100/50 dark:bg-white/5 p-1 rounded-2xl w-full mb-2 relative">
-        <button 
+        <button
           onClick={() => setActiveTab('history')}
           className={`relative z-10 flex-1 flex h-10 items-center justify-center rounded-xl text-sm font-bold transition-all ${
-            activeTab === 'history' 
-              ? 'text-white' 
+            activeTab === 'history'
+              ? 'on-brand text-white'
               : 'text-gray-400 hover:text-gray-600 dark:hover:text-gray-200'
           }`}
         >
@@ -230,16 +235,16 @@ const PartnerInsightsView: React.FC<PartnerInsightsViewProps> = ({ logs, cycleSe
             <motion.div
               layoutId="activePartnerInsightsTab"
               className="absolute inset-0 bg-primary rounded-xl shadow-md"
-              transition={{ type: 'spring', bounce: 0.2, duration: 0.6 }}
+              transition={{ type: 'spring', bounce: 0.2, duration: 0.28 }}
             />
           )}
           <span className="relative z-20">History</span>
         </button>
-        <button 
+        <button
           onClick={() => setActiveTab('trends')}
           className={`relative z-10 flex-1 flex h-10 items-center justify-center rounded-xl text-sm font-bold transition-all ${
-            activeTab === 'trends' 
-              ? 'text-white' 
+            activeTab === 'trends'
+              ? 'on-brand text-white'
               : 'text-gray-400 hover:text-gray-600 dark:hover:text-gray-200'
           }`}
         >
@@ -247,7 +252,7 @@ const PartnerInsightsView: React.FC<PartnerInsightsViewProps> = ({ logs, cycleSe
             <motion.div
               layoutId="activePartnerInsightsTab"
               className="absolute inset-0 bg-primary rounded-xl shadow-md"
-              transition={{ type: 'spring', bounce: 0.2, duration: 0.6 }}
+              transition={{ type: 'spring', bounce: 0.2, duration: 0.28 }}
             />
           )}
           <span className="relative z-20">Trends</span>
@@ -256,7 +261,7 @@ const PartnerInsightsView: React.FC<PartnerInsightsViewProps> = ({ logs, cycleSe
 
       <AnimatePresence mode="wait">
         {activeTab === 'history' ? (
-          <motion.div 
+          <motion.div
             key="history"
             initial={{ opacity: 0, x: -20 }}
             animate={{ opacity: 1, x: 0 }}
@@ -266,7 +271,7 @@ const PartnerInsightsView: React.FC<PartnerInsightsViewProps> = ({ logs, cycleSe
              {/* History Sub-tabs */}
              <div className="flex justify-center mb-2">
                 <div className="flex bg-gray-100/50 dark:bg-white/5 p-1 rounded-xl relative">
-                  <button 
+                  <button
                    onClick={() => setHistoryTab('general')}
                    className={`relative z-10 px-6 py-1.5 rounded-lg text-xs font-bold transition-all ${
                      historyTab === 'general' ? 'text-primary' : 'text-gray-400 hover:text-gray-600 dark:hover:text-gray-200'
@@ -276,12 +281,12 @@ const PartnerInsightsView: React.FC<PartnerInsightsViewProps> = ({ logs, cycleSe
                       <motion.div
                         layoutId="activePartnerHistoryTab"
                         className="absolute inset-0 bg-white dark:bg-white/10 rounded-lg shadow-sm"
-                        transition={{ type: 'spring', bounce: 0.2, duration: 0.6 }}
+                        transition={{ type: 'spring', bounce: 0.2, duration: 0.28 }}
                       />
                     )}
                     <span className="relative z-20">General Info</span>
                   </button>
-                  <button 
+                  <button
                    onClick={() => setHistoryTab('logs')}
                    className={`relative z-10 px-6 py-1.5 rounded-lg text-xs font-bold transition-all ${
                      historyTab === 'logs' ? 'text-primary' : 'text-gray-400 hover:text-gray-600 dark:hover:text-gray-200'
@@ -291,7 +296,7 @@ const PartnerInsightsView: React.FC<PartnerInsightsViewProps> = ({ logs, cycleSe
                       <motion.div
                         layoutId="activePartnerHistoryTab"
                         className="absolute inset-0 bg-white dark:bg-white/10 rounded-lg shadow-sm"
-                        transition={{ type: 'spring', bounce: 0.2, duration: 0.6 }}
+                        transition={{ type: 'spring', bounce: 0.2, duration: 0.28 }}
                       />
                     )}
                     <span className="relative z-20">Log History</span>
@@ -314,14 +319,14 @@ const PartnerInsightsView: React.FC<PartnerInsightsViewProps> = ({ logs, cycleSe
                       <div className="flex h-10 w-10 items-center justify-center rounded-full bg-teal-100 dark:bg-teal-500/20 text-teal-600 dark:text-teal-400">
                         <span className="material-symbols-outlined text-xl">refresh</span>
                       </div>
-                      <h3 className="text-2xl font-bold text-[#121014] dark:text-white">{stats.avgCycle}</h3>
+                      <h3 className="text-2xl font-bold text-[var(--text-primary)] dark:text-white">{stats.avgCycle}</h3>
                       <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Avg Cycle</p>
                     </div>
                     <div className="flex flex-col items-center justify-center gap-3 rounded-[2rem] bg-white dark:bg-surface-dark p-6 shadow-soft border border-gray-100 dark:border-white/5 text-center h-44 transition-colors md:col-span-2">
                       <div className="flex h-10 w-10 items-center justify-center rounded-full bg-orange-100 dark:bg-orange-500/20 text-orange-600 dark:text-orange-400">
                         <span className="material-symbols-outlined text-xl">bar_chart</span>
                       </div>
-                      <h3 className="text-2xl font-bold text-[#121014] dark:text-white">{stats.avgPeriod}</h3>
+                      <h3 className="text-2xl font-bold text-[var(--text-primary)] dark:text-white">{stats.avgPeriod}</h3>
                       <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Avg Period</p>
                     </div>
                   </section>
@@ -331,32 +336,32 @@ const PartnerInsightsView: React.FC<PartnerInsightsViewProps> = ({ logs, cycleSe
                       <section className="rounded-[2rem] bg-white dark:bg-surface-dark p-6 shadow-soft border border-gray-100 dark:border-white/5 transition-colors h-full flex flex-col">
                         <div className="flex items-center justify-between mb-8">
                           <div>
-                            <h3 className="text-lg font-bold text-[#121014] dark:text-white">Cycle History</h3>
+                            <h3 className="text-lg font-bold text-[var(--text-primary)] dark:text-white">Cycle History</h3>
                             <p className="text-sm text-gray-400">Variation over time</p>
                           </div>
                           <div className="flex items-center bg-gray-100 dark:bg-white/5 rounded-xl p-1 gap-1 relative">
-                            <button onClick={() => setChartType('bar')} className={`relative z-10 p-2 rounded-lg transition-colors ${chartType === 'bar' ? 'bg-primary text-white' : 'text-gray-400'}`}>
+                            <button aria-label="Show bar chart" onClick={() => setChartType('bar')} className={`relative z-10 p-2 rounded-lg transition-colors ${chartType === 'bar' ? 'on-brand bg-primary text-white' : 'text-gray-400'}`}>
                               <span className="material-symbols-outlined text-lg block">bar_chart</span>
                             </button>
-                            <button onClick={() => setChartType('line')} className={`relative z-10 p-2 rounded-lg transition-colors ${chartType === 'line' ? 'bg-primary text-white' : 'text-gray-400'}`}>
+                            <button aria-label="Show line chart" onClick={() => setChartType('line')} className={`relative z-10 p-2 rounded-lg transition-colors ${chartType === 'line' ? 'on-brand bg-primary text-white' : 'text-gray-400'}`}>
                               <span className="material-symbols-outlined text-lg block">show_chart</span>
                             </button>
                           </div>
                         </div>
 
-                        <div className="relative h-48 md:h-64 w-full mt-2">
-                          <ResponsiveContainer width="100%" height="100%">
+                        <div className={historyData.length > 0 ? "relative h-48 md:h-64 w-full mt-2" : "relative  md:h-64 w-full mt-2"}>
+                          {historyData.length > 0 ? (<ResponsiveContainer width="100%" height="100%">
                             {chartType === 'bar' ? (
                               <BarChart data={historyData} margin={{ top: 20, right: 0, left: -20, bottom: 0 }}>
                                 <YAxis hide domain={['dataMin - 5', 'dataMax + 5']} />
                                 <ReferenceLine y={stats.avgCycle} stroke={theme === 'dark' ? 'rgba(255,255,255,0.2)' : '#E5E7EB'} strokeDasharray="3 3" />
-                                <Tooltip 
-                                  cursor={{ fill: theme === 'dark' ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.05)' }} 
+                                <Tooltip
+                                  cursor={{ fill: theme === 'dark' ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.05)' }}
                                   contentStyle={tooltipStyles.contentStyle}
                                   itemStyle={tooltipStyles.itemStyle}
                                   labelStyle={tooltipStyles.labelStyle}
                                 />
-                                <Bar dataKey="value" radius={[8, 8, 0, 0]} maxBarSize={40}>
+                                <Bar isAnimationActive={animateCharts} dataKey="value" radius={[8, 8, 0, 0]} maxBarSize={40}>
                                   {historyData.map((_entry, index) => (
                                     <Cell key={`cell-${index}`} fill={index >= historyData.length - 1 ? '#984369' : (theme === 'dark' ? '#ffffff1a' : '#E5E7EB')} />
                                   ))}
@@ -368,21 +373,21 @@ const PartnerInsightsView: React.FC<PartnerInsightsViewProps> = ({ logs, cycleSe
                                   <linearGradient id="colorHistoryP" x1="0" y1="0" x2="0" y2="1"><stop offset="5%" stopColor="#984369" stopOpacity={0.6} /><stop offset="95%" stopColor="#984369" stopOpacity={0} /></linearGradient>
                                 </defs>
                                 <YAxis hide domain={['dataMin - 5', 'dataMax + 5']} />
-                                <Tooltip 
+                                <Tooltip
                                   contentStyle={tooltipStyles.contentStyle}
                                   itemStyle={tooltipStyles.itemStyle}
                                   labelStyle={tooltipStyles.labelStyle}
                                 />
-                                <Area type="monotone" dataKey="value" stroke="#984369" strokeWidth={3} fillOpacity={1} fill="url(#colorHistoryP)" dot={{ r: 4, fill: "#984369" }} activeDot={{ r: 6 }} />
+                                <Area isAnimationActive={animateCharts} type="monotone" dataKey="value" stroke="#984369" strokeWidth={3} fillOpacity={1} fill="url(#colorHistoryP)" dot={{ r: 4, fill: "#984369" }} activeDot={{ r: 6 }} />
                               </AreaChart>
                             )}
-                          </ResponsiveContainer>
+                          </ResponsiveContainer>) : <ChartEmptyState message="Your partner’s shared check-ins will appear here as they log them." />}
                         </div>
                       </section>
 
                       {/* Symptoms Card */}
                       <section className="rounded-[2rem] bg-white dark:bg-surface-dark p-6 shadow-soft border border-gray-100 dark:border-white/5 transition-colors h-full flex flex-col justify-center">
-                        <h3 className="text-lg font-bold text-[#121014] dark:text-white mb-6 flex items-center gap-2">
+                        <h3 className="text-lg font-bold text-[var(--text-primary)] dark:text-white mb-6 flex items-center gap-2">
                           <span className="material-symbols-filled text-primary text-xl">Auto_Awesome</span>
                           Common Symptoms
                         </h3>
@@ -411,30 +416,30 @@ const PartnerInsightsView: React.FC<PartnerInsightsViewProps> = ({ logs, cycleSe
                   className="flex flex-col gap-4"
                 >
                   <div className="flex items-center justify-between px-2">
-                    <h3 className="text-lg font-bold text-[#121014] dark:text-white">Log History</h3>
+                    <h3 className="text-lg font-bold text-[var(--text-primary)] dark:text-white">Log History</h3>
                     <div className="flex items-center bg-gray-100 dark:bg-white/5 rounded-xl p-1 gap-1 relative">
-                      <button 
-                        onClick={() => setLogViewMode('card')} 
+                      <button
+                        onClick={() => setLogViewMode('card')}
                         className={`relative z-10 p-1.5 rounded-lg transition-all ${logViewMode === 'card' ? 'text-primary' : 'text-gray-400 hover:text-gray-600 dark:hover:text-gray-200'}`}
                       >
                         {logViewMode === 'card' && (
                           <motion.div
                             layoutId="logViewToggle"
                             className="absolute inset-0 bg-white dark:bg-white/10 rounded-lg shadow-sm"
-                            transition={{ type: 'spring', bounce: 0.2, duration: 0.6 }}
+                            transition={{ type: 'spring', bounce: 0.2, duration: 0.28 }}
                           />
                         )}
                         <span className="material-symbols-outlined text-sm block relative z-20">grid_view</span>
                       </button>
-                      <button 
-                        onClick={() => setLogViewMode('list')} 
+                      <button
+                        onClick={() => setLogViewMode('list')}
                         className={`relative z-10 p-1.5 rounded-lg transition-all ${logViewMode === 'list' ? 'text-primary' : 'text-gray-400 hover:text-gray-600 dark:hover:text-gray-200'}`}
                       >
                         {logViewMode === 'list' && (
                           <motion.div
                             layoutId="logViewToggle"
                             className="absolute inset-0 bg-white dark:bg-white/10 rounded-lg shadow-sm"
-                            transition={{ type: 'spring', bounce: 0.2, duration: 0.6 }}
+                            transition={{ type: 'spring', bounce: 0.2, duration: 0.28 }}
                           />
                         )}
                         <span className="material-symbols-outlined text-sm block relative z-20">view_list</span>
@@ -446,17 +451,17 @@ const PartnerInsightsView: React.FC<PartnerInsightsViewProps> = ({ logs, cycleSe
                     <div className={logViewMode === 'card' ? "grid grid-cols-2 sm:grid-cols-3 gap-3" : "flex flex-col gap-3"}>
                       {[...logs].sort((a,b) => new Date(b.date).getTime() - new Date(a.date).getTime()).map((log) => (
                         logViewMode === 'card' ? (
-                          <div 
-                            key={log.id} 
+                          <div
+                            key={log.id}
                             onClick={() => setSelectedLog(log)}
-                            className="bg-white dark:bg-[#1C1A1F] p-4 rounded-[2rem] border border-gray-100 dark:border-white/5 shadow-soft flex flex-col gap-4 transition-colors relative cursor-pointer hover:border-primary/30 dark:hover:border-primary/50"
+                            className="bg-white dark:bg-surface-dark p-4 rounded-[2rem] border border-gray-100 dark:border-white/5 shadow-soft flex flex-col gap-4 transition-colors relative cursor-pointer hover:border-primary/30 dark:hover:border-primary/50"
                           >
                             <div className="flex items-start justify-between">
                               <div className="flex flex-col items-center justify-center bg-gray-100 dark:bg-white/5 w-12 h-14 rounded-2xl">
                                 <span className="text-[10px] uppercase font-bold text-gray-400">
                                   {new Date(log.date).toLocaleDateString('default', { month: 'short' })}
                                 </span>
-                                <span className="text-lg font-bold text-[#121014] dark:text-white">
+                                <span className="text-lg font-bold text-[var(--text-primary)] dark:text-white">
                                   {new Date(log.date).getDate()}
                                 </span>
                               </div>
@@ -478,21 +483,21 @@ const PartnerInsightsView: React.FC<PartnerInsightsViewProps> = ({ logs, cycleSe
                             </div>
                           </div>
                         ) : (
-                          <div 
-                            key={log.id} 
+                          <div
+                            key={log.id}
                             onClick={() => setSelectedLog(log)}
-                            className="bg-white dark:bg-[#1C1A1F] p-4 rounded-[2rem] border border-gray-100 dark:border-white/5 shadow-soft flex items-center justify-between transition-colors cursor-pointer hover:border-primary/30 dark:hover:border-primary/50"
+                            className="bg-white dark:bg-surface-dark p-4 rounded-[2rem] border border-gray-100 dark:border-white/5 shadow-soft flex items-center justify-between transition-colors cursor-pointer hover:border-primary/30 dark:hover:border-primary/50"
                           >
                             <div className="flex items-center gap-4">
                               <div className="flex flex-col items-center justify-center bg-gray-100 dark:bg-white/5 w-12 h-14 rounded-2xl">
                                 <span className="text-[10px] uppercase font-bold text-gray-400">
                                   {new Date(log.date).toLocaleDateString('default', { month: 'short' })}
                                 </span>
-                                <span className="text-lg font-bold text-[#121014] dark:text-white">
+                                <span className="text-lg font-bold text-[var(--text-primary)] dark:text-white">
                                   {new Date(log.date).getDate()}
                                 </span>
                               </div>
-                              
+
                               <div className="flex flex-col gap-1.5">
                                 {log.flow && (
                                   <span className="px-2 py-0.5 bg-pink-500/10 text-pink-500 text-[10px] font-bold rounded-lg uppercase self-start">
@@ -513,7 +518,7 @@ const PartnerInsightsView: React.FC<PartnerInsightsViewProps> = ({ logs, cycleSe
                                 </div>
                               </div>
                             </div>
-                            
+
                             <span className="material-symbols-outlined text-gray-300">chevron_right</span>
                           </div>
                         )
@@ -529,7 +534,7 @@ const PartnerInsightsView: React.FC<PartnerInsightsViewProps> = ({ logs, cycleSe
             </AnimatePresence>
           </motion.div>
         ) : (
-          <motion.div 
+          <motion.div
             key="trends"
             initial={{ opacity: 0, x: 20 }}
             animate={{ opacity: 1, x: 0 }}
@@ -539,7 +544,7 @@ const PartnerInsightsView: React.FC<PartnerInsightsViewProps> = ({ logs, cycleSe
              {/* Trends Sub-tabs */}
              <div className="flex justify-center mb-2">
                 <div className="flex bg-gray-100/50 dark:bg-white/5 p-1 rounded-xl relative">
-                  <button 
+                  <button
                    onClick={() => setTrendsSubTab('sleep')}
                    className={`relative z-10 px-6 py-1.5 rounded-lg text-xs font-bold transition-all ${
                      trendsSubTab === 'sleep' ? 'text-primary' : 'text-gray-400 hover:text-gray-600 dark:hover:text-gray-200'
@@ -549,12 +554,12 @@ const PartnerInsightsView: React.FC<PartnerInsightsViewProps> = ({ logs, cycleSe
                       <motion.div
                         layoutId="activePartnerTrendsTab"
                         className="absolute inset-0 bg-white dark:bg-white/10 rounded-lg shadow-sm"
-                        transition={{ type: 'spring', bounce: 0.2, duration: 0.6 }}
+                        transition={{ type: 'spring', bounce: 0.2, duration: 0.28 }}
                       />
                     )}
                     <span className="relative z-20">Sleep</span>
                   </button>
-                  <button 
+                  <button
                    onClick={() => setTrendsSubTab('energy')}
                    className={`relative z-10 px-6 py-1.5 rounded-lg text-xs font-bold transition-all ${
                      trendsSubTab === 'energy' ? 'text-primary' : 'text-gray-400 hover:text-gray-600 dark:hover:text-gray-200'
@@ -564,7 +569,7 @@ const PartnerInsightsView: React.FC<PartnerInsightsViewProps> = ({ logs, cycleSe
                       <motion.div
                         layoutId="activePartnerTrendsTab"
                         className="absolute inset-0 bg-white dark:bg-white/10 rounded-lg shadow-sm"
-                        transition={{ type: 'spring', bounce: 0.2, duration: 0.6 }}
+                        transition={{ type: 'spring', bounce: 0.2, duration: 0.28 }}
                       />
                     )}
                     <span className="relative z-20">Energy</span>
@@ -574,7 +579,7 @@ const PartnerInsightsView: React.FC<PartnerInsightsViewProps> = ({ logs, cycleSe
 
             <AnimatePresence mode="wait">
               {trendsSubTab === 'sleep' ? (
-                 <motion.div 
+                 <motion.div
                   key="sleep-trends"
                   initial={{ opacity: 0, scale: 0.98 }}
                   animate={{ opacity: 1, scale: 1 }}
@@ -586,51 +591,51 @@ const PartnerInsightsView: React.FC<PartnerInsightsViewProps> = ({ logs, cycleSe
                        <div className="grid grid-cols-2 md:grid-cols-1 md:grid-rows-2 gap-4 h-full">
                         <div className="bg-indigo-500/10 dark:bg-indigo-500/20 p-5 rounded-[2rem] border border-indigo-500/20 shadow-sm flex flex-col justify-center h-full">
                           <p className="text-[10px] uppercase font-bold text-indigo-500 mb-1 tracking-wider">Avg Quality</p>
-                          <h4 className="text-xl font-bold text-[#121014] dark:text-white">{sleepStats?.avgLabel || '--'}</h4>
+                          <h4 className="text-xl font-bold text-[var(--text-primary)] dark:text-white">{sleepStats?.avgLabel || '--'}</h4>
                         </div>
                         <div className="bg-rose-500/10 dark:bg-rose-500/20 p-5 rounded-[2rem] border border-rose-500/20 shadow-sm flex flex-col justify-center h-full">
                           <p className="text-[10px] uppercase font-bold text-rose-500 mb-1 tracking-wider">Consistency</p>
-                          <h4 className="text-xl font-bold text-[#121014] dark:text-white">{sleepStats ? Math.round((sleepStats.distribution[0]?.value / sleepStats.count) * 100) : 0}%</h4>
+                          <h4 className="text-xl font-bold text-[var(--text-primary)] dark:text-white">{sleepStats ? Math.round((sleepStats.distribution[0]?.value / sleepStats.count) * 100) : 0}%</h4>
                         </div>
                       </div>
 
                       <section className="rounded-[2.5rem] bg-white dark:bg-surface-dark p-6 shadow-soft border border-gray-100 dark:border-white/5 transition-colors h-full flex flex-col min-w-0">
                         <div className="flex items-center justify-between mb-8">
-                           <h3 className="text-lg font-bold text-[#121014] dark:text-white">Sleep Timeline</h3>
+                           <h3 className="text-lg font-bold text-[var(--text-primary)] dark:text-white">Sleep Timeline</h3>
                            <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-indigo-500/10 text-indigo-500">
                             <span className="material-symbols-outlined">bedtime</span>
                           </div>
                         </div>
-                        <div className="relative h-48 md:h-64 w-full mt-2">
-                          <ResponsiveContainer width="100%" height="100%">
+                        <div className={trendsData.some(d => d.sleep !== null) ? "relative h-48 md:h-64 w-full mt-2" : "relative  md:h-64 w-full mt-2"}>
+                          {trendsData.some(d => d.sleep !== null) ? (<ResponsiveContainer width="100%" height="100%">
                             <AreaChart data={trendsData} margin={{ top: 10, right: 0, left: -20, bottom: 0 }}>
                               <defs>
                                 <linearGradient id="colorSleepP" x1="0" y1="0" x2="0" y2="1"><stop offset="5%" stopColor="#6366f1" stopOpacity={0.4} /><stop offset="95%" stopColor="#6366f1" stopOpacity={0} /></linearGradient>
                               </defs>
                               <YAxis hide domain={[0, 4]} />
-                               <Tooltip 
+                               <Tooltip
                                 contentStyle={tooltipStyles.contentStyle}
                                 itemStyle={tooltipStyles.itemStyle}
                                 labelStyle={tooltipStyles.labelStyle}
                                 formatter={(value: any) => [value === 3 ? 'Good' : value === 2 ? 'Fair' : 'Poor', 'Quality']}
                               />
-                              <Area 
-                                type="monotone" 
-                                dataKey="sleep" 
-                                stroke="#6366f1" 
-                                strokeWidth={4} 
-                                fillOpacity={1} 
-                                fill="url(#colorSleepP)" 
+                              <Area isAnimationActive={animateCharts}
+                                type="monotone"
+                                dataKey="sleep"
+                                stroke="#6366f1"
+                                strokeWidth={4}
+                                fillOpacity={1}
+                                fill="url(#colorSleepP)"
                                 dot={{ r: 3, fill: "#6366f1", strokeWidth: 2, stroke: theme === 'dark' ? '#121014' : '#fff' }}
                               />
                             </AreaChart>
-                          </ResponsiveContainer>
+                          </ResponsiveContainer>) : <ChartEmptyState message="Your partner’s shared check-ins will appear here as they log them." />}
                         </div>
                       </section>
                    </div>
                 </motion.div>
               ) : (
-                <motion.div 
+                <motion.div
                   key="energy-trends"
                   initial={{ opacity: 0, scale: 0.98 }}
                   animate={{ opacity: 1, scale: 1 }}
@@ -642,45 +647,45 @@ const PartnerInsightsView: React.FC<PartnerInsightsViewProps> = ({ logs, cycleSe
                        <div className="grid grid-cols-2 md:grid-cols-1 md:grid-rows-2 gap-4 h-full">
                         <div className="bg-amber-500/10 dark:bg-amber-500/20 p-5 rounded-[2rem] border border-amber-500/20 shadow-sm flex flex-col justify-center h-full">
                           <p className="text-[10px] uppercase font-bold text-amber-500 mb-1 tracking-wider">Avg Level</p>
-                          <h4 className="text-xl font-bold text-[#121014] dark:text-white">{energyStats?.avgLabel || '--'}</h4>
+                          <h4 className="text-xl font-bold text-[var(--text-primary)] dark:text-white">{energyStats?.avgLabel || '--'}</h4>
                         </div>
                         <div className="bg-teal-500/10 dark:bg-teal-500/20 p-5 rounded-[2rem] border border-teal-500/20 shadow-sm flex flex-col justify-center h-full">
                           <p className="text-[10px] uppercase font-bold text-teal-500 mb-1 tracking-wider">Record Streak</p>
-                          <h4 className="text-xl font-bold text-[#121014] dark:text-white">{energyStats?.count || 0}d</h4>
+                          <h4 className="text-xl font-bold text-[var(--text-primary)] dark:text-white">{energyStats?.count || 0}d</h4>
                         </div>
                       </div>
 
                       <section className="rounded-[2.5rem] bg-white dark:bg-surface-dark p-6 shadow-soft border border-gray-100 dark:border-white/5 transition-colors h-full flex flex-col min-w-0">
                         <div className="flex items-center justify-between mb-8">
-                           <h3 className="text-lg font-bold text-[#121014] dark:text-white">Energy Flow</h3>
+                           <h3 className="text-lg font-bold text-[var(--text-primary)] dark:text-white">Energy Flow</h3>
                            <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-amber-500/10 text-amber-500">
                             <span className="material-symbols-outlined">bolt</span>
                           </div>
                         </div>
-                        <div className="relative h-48 md:h-64 w-full mt-2">
-                          <ResponsiveContainer width="100%" height="100%">
+                        <div className={trendsData.some(d => d.energy !== null) ? "relative h-48 md:h-64 w-full mt-2" : "relative  md:h-64 w-full mt-2"}>
+                          {trendsData.some(d => d.energy !== null) ? (<ResponsiveContainer width="100%" height="100%">
                             <AreaChart data={trendsData} margin={{ top: 10, right: 0, left: -20, bottom: 0 }}>
                               <defs>
                                 <linearGradient id="colorEnergyP" x1="0" y1="0" x2="0" y2="1"><stop offset="5%" stopColor="#f59e0b" stopOpacity={0.4} /><stop offset="95%" stopColor="#f59e0b" stopOpacity={0} /></linearGradient>
                               </defs>
                               <YAxis hide domain={[0, 4]} />
-                              <Tooltip 
+                              <Tooltip
                                 contentStyle={tooltipStyles.contentStyle}
                                 itemStyle={tooltipStyles.itemStyle}
                                 labelStyle={tooltipStyles.labelStyle}
                                 formatter={(value: any) => [value === 3 ? 'High' : value === 2 ? 'Medium' : 'Low', 'Level']}
                               />
-                              <Area 
-                                type="monotone" 
-                                dataKey="energy" 
-                                stroke="#f59e0b" 
-                                strokeWidth={4} 
-                                fillOpacity={1} 
-                                fill="url(#colorEnergyP)" 
+                              <Area isAnimationActive={animateCharts}
+                                type="monotone"
+                                dataKey="energy"
+                                stroke="#f59e0b"
+                                strokeWidth={4}
+                                fillOpacity={1}
+                                fill="url(#colorEnergyP)"
                                 dot={{ r: 3, fill: "#f59e0b", strokeWidth: 2, stroke: theme === 'dark' ? '#121014' : '#fff' }}
                               />
                             </AreaChart>
-                          </ResponsiveContainer>
+                          </ResponsiveContainer>) : <ChartEmptyState message="Your partner’s shared check-ins will appear here as they log them." />}
                         </div>
                       </section>
                    </div>
@@ -694,21 +699,21 @@ const PartnerInsightsView: React.FC<PartnerInsightsViewProps> = ({ logs, cycleSe
       {/* Log Details Modal */}
       <AnimatePresence>
         {selectedLog && (
-          <motion.div 
+          <motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
             className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/40 backdrop-blur-sm"
             onClick={() => setSelectedLog(null)}
           >
-            <motion.div 
+            <motion.div
               initial={{ scale: 0.95, opacity: 0, y: 20 }}
               animate={{ scale: 1, opacity: 1, y: 0 }}
               exit={{ scale: 0.95, opacity: 0, y: 20 }}
               onClick={(e) => e.stopPropagation()}
-              className="bg-[#FDFCF8] dark:bg-[#1C1A1F] w-full max-w-sm rounded-[2.5rem] p-6 shadow-2xl relative border border-gray-100 dark:border-white/5 max-h-[90vh] overflow-y-auto no-scrollbar"
+              className="bg-background-dark dark:bg-surface-dark w-full max-w-sm rounded-[2.5rem] p-6 shadow-2xl relative border border-gray-100 dark:border-white/5 max-h-[90vh] overflow-y-auto no-scrollbar"
             >
-              <button 
+              <button
                 onClick={() => setSelectedLog(null)}
                 className="absolute top-4 right-4 p-2 bg-gray-100 dark:bg-white/5 rounded-full text-gray-500 hover:bg-gray-200 dark:hover:bg-white/10 transition-colors"
               >
@@ -718,7 +723,7 @@ const PartnerInsightsView: React.FC<PartnerInsightsViewProps> = ({ logs, cycleSe
                 <div className="w-16 h-16 bg-primary/10 rounded-full flex items-center justify-center mb-3">
                   <span className="text-3xl">{getMoodEmoji(selectedLog.moods?.[0] || '')}</span>
                 </div>
-                <h3 className="text-xl font-bold text-[#121014] dark:text-white capitalize">
+                <h3 className="text-xl font-bold text-[var(--text-primary)] dark:text-white capitalize">
                   {new Date(selectedLog.date).toLocaleDateString('default', { month: 'long', day: 'numeric', year: 'numeric' })}
                 </h3>
                 <p className="text-gray-500 dark:text-gray-400 capitalize">{selectedLog.moods?.[0] || 'No mood logged'}</p>
@@ -731,7 +736,7 @@ const PartnerInsightsView: React.FC<PartnerInsightsViewProps> = ({ logs, cycleSe
                     <span className="text-sm font-bold text-pink-700 dark:text-pink-300 capitalize">{selectedLog.flow}</span>
                   </div>
                 )}
-                
+
                 {selectedLog.symptoms && selectedLog.symptoms.length > 0 && (
                   <div className="p-4 rounded-2xl bg-gray-50 dark:bg-white/5">
                     <span className="text-xs font-bold text-gray-400 uppercase tracking-wider block mb-2">Symptoms</span>
