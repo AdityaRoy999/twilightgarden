@@ -93,7 +93,16 @@ Release records/assets and the dataset revision record remain. Roles are retaine
 in trusted auth metadata for existing logins. Newly created QA accounts are removed
 separately. Verification counts are recorded after the reset below.
 
-Reset execution: pending final deployment and operational verification.
+Reset completed on 2026-10-26 after production deployment of merged
+[PR #2](https://github.com/AdityaRoy999/twilightgarden/pull/2)
+(application commit `032722eb60102d2906375b3976b5ecdd408d3c2f`). Exact verification
+found **zero rows in all 18 application/activity tables**, including the two
+private budget/reminder tables. Removed **11 avatar files and 20 chat attachments**;
+both user storage buckets now contain zero objects. Preserved **11 existing login
+accounts**, **3 release records**, **4 release files** and the dataset revision
+configuration. All three synthetic QA accounts were removed before the reset.
+Scheduled monitoring can create new operational checks after this verification;
+new sign-ins intentionally recreate only that account's fresh profile/onboarding.
 
 ## Remaining boundaries
 
