@@ -1,3 +1,4 @@
+import { ReactionChips } from '../components/ReactionChips';
 import { useAppMotion } from '../hooks/useAppMotion';
 import { springs, motionTransition, newlyAppended, type MessageStamp } from '../lib/motion';
 import { MotionPortal } from '../components/ui/MotionPortal';
@@ -1107,41 +1108,14 @@ const LoveLock: React.FC = () => {
                                 </div>
                                 {/* Reactions - Slightly offset */}
                                 <div className={`flex items-center flex-wrap gap-1 mt-1 px-1 relative ${isMe ? 'mr-1' : 'ml-1'}`}>
-                                    {(() => {
-                                        if (!Array.isArray(note.reactions) || note.reactions.length === 0) return null;
-
-                                        // Group reactions by emoji
-                                        const counts = (note.reactions as any[]).reduce((acc, r) => {
-                                            acc[r.emoji] = (acc[r.emoji] || 0) + 1;
-                                            return acc;
-                                        }, {} as Record<string, number>);
-
-                                        const hasReacted = (emoji: string) => (note.reactions as any[]).some(r => r.emoji === emoji && r.user_id === user?.id);
-
-                                        return Object.entries(counts).map(([emoji, count]) => (
-                                            <button
-                                                key={emoji}
-                                                onClick={(e) => {
-                                                    e.stopPropagation();
-                                                    if (navigator.vibrate) navigator.vibrate(50);
-                                                    handleReaction(note.id, emoji);
-                                                }}
-                                                className={`flex items-center justify-center gap-[2px] px-1.5 py-0.5 rounded-full shadow-sm border transition-all hover:scale-105 active:scale-95 ${
-                                                    hasReacted(emoji)
-                                                        ? 'bg-pink-50 dark:bg-pink-500/10 border-pink-200 dark:border-pink-500/30'
-                                                        : 'bg-white dark:bg-surface-dark border-gray-100 dark:border-gray-700/50 hover:bg-gray-50 dark:hover:bg-surface-dark'
-                                                }`}
-                                            >
-                                                <span className="text-xs">{emoji}</span>
-                                                {(count as number) > 1 && <span className="font-semibold text-gray-500 dark:text-gray-400 text-[10px] min-w-[8px] text-center">{count as number}</span>}
-                                            </button>
-                                        ));
-                                    })()}
+                                    <ReactionChips reactions={note.reactions as any} userId={user?.id} onReact={emoji => void handleReaction(note.id, emoji)}/>
 
                                     {/* Add Reaction Button */}
                                     {!isMe && (
                                         <div className="relative" onClick={(e) => e.stopPropagation()}>
                                             <button
+                                                aria-label="Add reaction"
+                                                aria-expanded={emojiPickerNoteId === note.id}
                                                 onClick={() => setEmojiPickerNoteId(emojiPickerNoteId === note.id ? null : note.id)}
                                                 className="w-5 h-5 flex items-center justify-center rounded-full text-gray-400 hover:text-pink-500 hover:bg-gray-100 dark:hover:bg-white/5 transition-all outline-none bg-white dark:bg-surface-dark shadow-sm border border-gray-100 dark:border-gray-700/50 ml-0.5"
                                             >

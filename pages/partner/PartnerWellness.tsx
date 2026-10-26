@@ -1,7 +1,11 @@
+import { useGeneratedText } from '../../hooks/useGeneratedText';
+import { useAppMotion } from '../../hooks/useAppMotion';
+import { springs, motionTransition } from '../../lib/motion';
+import { ReferenceHeading, ReferenceArt } from '../../components/ui/ReferenceArt';
 import { AppIcon } from '../../components/ui/Icons';
-import { localDateKey } from '../../lib/dates';
+import { useToday } from '../../hooks/useToday';
 import React, { useState, useEffect, useMemo } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
+import { motion } from 'framer-motion';
 import { useCouples } from '../../contexts/CouplesContext';
 import { useTheme } from '../../contexts/ThemeContext';
 import { useAuth } from '../../contexts/AuthContext';
@@ -20,40 +24,21 @@ import {
 } from '../../lib/wellnessAI';
 import { ShoppingGrid } from '../../components/wellness/ShoppingCards';
 import { MapContainer, TileLayer, Marker, Popup, Polyline, useMap } from 'react-leaflet';
-import L from 'leaflet';
-
-// Fix Leaflet's default icon path issues in React
-delete (L.Icon.Default.prototype as any)._getIconUrl;
-L.Icon.Default.mergeOptions({
-    iconRetinaUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon-2x.png',
-    iconUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon.png',
-    shadowUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-shadow.png',
-});
-
-// Custom icons
-const userIcon = new L.Icon({
-    iconUrl: 'https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-2x-red.png',
-    shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/0.7.7/images/marker-shadow.png',
-    iconSize: [25, 41],
-    iconAnchor: [12, 41],
-    popupAnchor: [1, -34],
-    shadowSize: [41, 41]
-});
+import { pharmacyIcon, userIcon } from '../../lib/mapIcons';
 
 type Tab = 'care' | 'gifts' | 'shops';
 
 const PartnerWellness: React.FC = () => {
     const { theme } = useTheme();
+    const { reduced } = useAppMotion();
     const isDark = theme === 'dark';
     const { user } = useAuth();
     const { partnerProfile, partnerSettings, partnerLogs, couple } = useCouples();
 
     const [activeTab, setActiveTab] = useState<Tab>('care');
-    const [careText, setCareText] = useState('');
     const [gifts, setGifts] = useState<Product[]>([]);
     const [platformFilter, setPlatformFilter] = useState<'All' | 'Amazon' | 'Flipkart' | 'Nykaa' | 'Myntra' | 'Blinkit'>('All');
     const [categoryFilter, setCategoryFilter] = useState<'All' | 'Jewelry' | 'Fashion' | 'Toys' | 'Comfort' | 'Food' | 'Self-care'>('All');
-    const [loading, setLoading] = useState(false);
     const [shoppingLoading, setShoppingLoading] = useState(false);
     const [error, setError] = useState('');
 
@@ -65,26 +50,27 @@ const PartnerWellness: React.FC = () => {
     const [mapLoading, setMapLoading] = useState(false);
 
     // Get partner's cycle data
+    const todayStr = useToday();
     const partnerCycleData = useMemo(() => {
         if (!partnerSettings?.lastPeriodStart) return null;
         try {
             return calculateCyclePhase(
-                localDateKey(),
+                todayStr,
                 {
                     avgCycleLength: partnerSettings.avgCycleLength || 28,
                     avgPeriodLength: partnerSettings.avgPeriodLength || 5,
                     lastPeriodStart: partnerSettings.lastPeriodStart,
                     onboardingCompleted: true,
                     irregularCycle: partnerSettings.irregularCycle || false,
-                }
+                },
+                partnerLogs || []
             );
         } catch {
             return null;
         }
-    }, [partnerSettings]);
+    }, [partnerSettings, partnerLogs, todayStr]);
 
     // Build context
-    const todayStr = localDateKey();
     const todayLog = partnerLogs?.find((l: any) => l.date === todayStr);
     const partnerName = partnerProfile?.full_name || 'Your Partner';
 
@@ -98,14 +84,11 @@ const PartnerWellness: React.FC = () => {
         partnerName,
     };
 
-    const fetchCare = async () => {
-        setLoading(true);
-        setError('');
-        const result = await generateEmpathyAlerts(ctx);
-        if (result.error) setError(result.error);
-        else setCareText(result.text);
-        setLoading(false);
-    };
+    const guidance = useGeneratedText({ care: () => generateEmpathyAlerts(ctx) }, JSON.stringify([partnerProfile?.id, couple?.id, ctx]));
+    const careText = guidance.entries.care?.text || '';
+    const loading = guidance.entries.care?.status === 'loading';
+    const careError = guidance.entries.care?.error;
+    const fetchCare = () => void guidance.request('care', true);
 
     const fetchGifts = async () => {
         setShoppingLoading(true);
@@ -178,10 +161,11 @@ const PartnerWellness: React.FC = () => {
     }, [gifts, platformFilter, categoryFilter]);
 
     useEffect(() => {
-        if (activeTab === 'care' && !careText) fetchCare();
+        if (couple?.status !== 'active' || !partnerProfile) return;
+        if (activeTab === 'care') void guidance.request('care');
         if (activeTab === 'gifts' && gifts.length === 0) fetchGifts();
         if (activeTab === 'shops' && !userLocation) initShops();
-    }, [activeTab]);
+    }, [activeTab, guidance.request, couple?.status, partnerProfile?.id]);
 
     const initShops = () => {
         setMapLoading(true);
@@ -360,6 +344,7 @@ const PartnerWellness: React.FC = () => {
                                 <Marker
                                     key={shop.id}
                                     position={[shop.lat, shop.lon]}
+                                    icon={pharmacyIcon}
                                     eventHandlers={{
                                         click: () => handleShopSelect(shop),
                                     }}
@@ -398,12 +383,8 @@ const PartnerWellness: React.FC = () => {
     };
 
     return (
-        <div className={`animate-slideIn font-display flex flex-col pb-24 min-h-screen transition-colors bg-background-dark`}>
-            {/* Header */}
-            <header className={`sticky top-0 z-10 flex items-center justify-between backdrop-blur-md px-6 py-4 border-b ${isDark ? 'bg-background-dark border-white/5' : 'bg-background-dark border-gray-100'}`}>
-                <h1 className={`text-3xl font-bold tracking-tight ${isDark ? 'text-white' : 'text-[var(--text-primary)]'}`}>Wellness</h1>
-                <NotificationBell />
-            </header>
+        <div className="reference-page reference-wellness font-display flex flex-col">
+            <ReferenceHeading title="Wellness" description="Small moments of care, together." action={<NotificationBell/>}/>
 
             {/* Partner Context Banner */}
             {partnerCycleData && (
@@ -428,11 +409,12 @@ const PartnerWellness: React.FC = () => {
             )}
 
             {/* Tabs */}
-            <div className={`w-full overflow-x-auto no-scrollbar py-2 px-6 mt-2 mb-4 bg-background-dark`}>
-                <div className="flex gap-2 min-w-max">
+            <div className="wellness-tabs">
+                <div className="wellness-tab-list">
                     {tabs.map(tab => (
                         <button
                             key={tab.key}
+                            aria-pressed={activeTab === tab.key}
                             onClick={() => setActiveTab(tab.key)}
                             className={`flex h-10 items-center gap-2 px-5 rounded-full text-sm font-semibold transition-all ${activeTab === tab.key
                                 ? 'on-brand bg-primary text-white shadow-md shadow-primary/20'
@@ -447,21 +429,21 @@ const PartnerWellness: React.FC = () => {
             </div>
 
             {/* Content */}
-            <main className="flex flex-col gap-4 px-6">
-                <AnimatePresence mode="wait">
+            <main className="wellness-content flex flex-col gap-4">
+                <React.Fragment>
                     <motion.div
                         key={activeTab}
-                        initial={{ opacity: 0, y: 10 }}
+                        initial={reduced ? false : { y: 8 }}
                         animate={{ opacity: 1, y: 0 }}
-                        exit={{ opacity: 0, y: -10 }}
-                        transition={{ duration: 0.2 }}
+
+                        transition={motionTransition(springs.section, reduced)}
                     >
                         {activeTab === 'care' && (
                             <div className="flex flex-col gap-4 max-w-4xl mx-auto w-full">
                                 {loading ? (
                                     <LoadingSkeleton isDark={isDark} />
-                                ) : error ? (
-                                    <ErrorCard message={error} onRetry={fetchCare} isDark={isDark} />
+                                ) : careError ? (
+                                    <ErrorCard message={careError} onRetry={fetchCare} isDark={isDark} />
                                 ) : (
                                     <div className={`rounded-2xl p-6 md:p-8 ${isDark ? 'bg-surface-dark border border-white/5' : 'bg-white border border-gray-100'} shadow-soft`}>
                                         <div className="flex items-center justify-between mb-6">
@@ -571,7 +553,7 @@ const PartnerWellness: React.FC = () => {
 
                         {activeTab === 'shops' && renderShopsContent()}
                     </motion.div>
-                </AnimatePresence>
+                </React.Fragment>
             </main>
         </div>
     );
@@ -598,17 +580,7 @@ const FormattedText = ({ text }: { text: string }) => {
     );
 };
 
-const LoadingSkeleton = ({ isDark }: { isDark: boolean }) => (
-    <div className="flex flex-col gap-4">
-        {[1, 2, 3].map(i => (
-            <div key={i} className={`rounded-2xl p-5 animate-pulse ${isDark ? 'bg-white/5' : 'bg-gray-100'}`}>
-                <div className={`h-4 rounded w-3/4 mb-3 ${isDark ? 'bg-white/10' : 'bg-gray-200'}`} />
-                <div className={`h-3 rounded w-full mb-2 ${isDark ? 'bg-white/5' : 'bg-gray-150'}`} />
-                <div className={`h-3 rounded w-5/6 ${isDark ? 'bg-white/5' : 'bg-gray-150'}`} />
-            </div>
-        ))}
-    </div>
-);
+const LoadingSkeleton = ({ isDark }: { isDark: boolean }) => <section className="reference-card wellness-loading" role="status"><ReferenceArt kind="hearts"/><div><h2>A little care is on its way</h2><p>Putting together your partner's care guide.</p></div></section>;
 
 const ErrorCard = ({ message, onRetry, isDark }: { message: string; onRetry: () => void; isDark: boolean }) => (
     <div className={`rounded-2xl p-6 text-center ${isDark ? 'bg-red-500/10 border border-red-500/20' : 'bg-red-50 border border-red-100'}`}>

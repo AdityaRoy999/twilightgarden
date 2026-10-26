@@ -191,6 +191,9 @@ serve(async (req) => {
                 model: NVIDIA_MODEL,
                 messages: [{ role: 'user', content: prompt }],
                 max_tokens: 1024,
+                // Short user-facing guidance must receive an answer within this
+                // budget, rather than consume it entirely on a reasoning trace.
+                ...(NVIDIA_MODEL.startsWith('nvidia/nemotron-') ? { chat_template_kwargs: { enable_thinking: false } } : {}),
                 temperature: 0.7,
                 top_p: 0.9,
                 stream: false,

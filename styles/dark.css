@@ -85,3 +85,16 @@
 :root.dark .bloom-icon svg .icon-highlight, :root.dark .reference-icon svg .icon-highlight { stroke: #fff3fa; }
 :root.dark .custom-scrollbar::-webkit-scrollbar-thumb { background: #6d456b; }
 @media (prefers-reduced-motion: reduce) { :root.dark .reference-button { transition: none; } }
+
+/* Journal controls in the matching dark palette. */
+:root.dark .journal-date h2, :root.dark .journal-section-title { color: #ff79aa; }
+:root.dark .journal-period { background: linear-gradient(125deg, #412039, #24172e); border-color: #5c3153; }
+:root.dark .symptom-option-symbol { background: linear-gradient(135deg, #49213e, #2c1b35); color: #f775b0; }
+:root.dark .symptom-option:nth-child(2n) .symptom-option-symbol { background: linear-gradient(135deg, #3f284d, #2b1b38); color: #c0a4ef; }
+:root.dark .symptom-option[aria-pressed='true'] .symptom-option-symbol { background: #723454; color: #ffb4d0; }
+:root.dark .symptom-option[aria-pressed='true'] { color: #ff9fc6; }
+:root.dark .journal-sleep-scale { background: #312038; }
+:root.dark .journal-sleep-ticks i { background: #60334d; }
+:root.dark .journal-sleep-ticks i[data-filled='true'] { background: #f56da5; }
+:root.dark .journal-chips button { background: #35243e; color: #c0b8db; }
+:root.dark .journal-chips button[aria-pressed='true'] { background: #743653; color: #ffd3e7; }

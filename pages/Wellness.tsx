@@ -1,7 +1,11 @@
+import { useGeneratedText } from '../hooks/useGeneratedText';
+import { useAppMotion } from '../hooks/useAppMotion';
+import { springs, motionTransition } from '../lib/motion';
+import { ReferenceHeading, ReferenceArt } from '../components/ui/ReferenceArt';
 import { AppIcon } from '../components/ui/Icons';
-import { localDateKey } from '../lib/dates';
+import { useToday } from '../hooks/useToday';
 import React, { useState, useEffect, useMemo } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
+import { motion } from 'framer-motion';
 import { useData } from '../contexts/DataContext';
 import { useTheme } from '../contexts/ThemeContext';
 import NotificationBell from '../components/NotificationBell';
@@ -16,25 +20,7 @@ import {
     RouteGeometry,
 } from '../lib/wellnessAI';
 import { MapContainer, TileLayer, Marker, Popup, Polyline, useMap } from 'react-leaflet';
-import L from 'leaflet';
-
-// Fix Leaflet's default icon path issues in React
-delete (L.Icon.Default.prototype as any)._getIconUrl;
-L.Icon.Default.mergeOptions({
-    iconRetinaUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon-2x.png',
-    iconUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon.png',
-    shadowUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-shadow.png',
-});
-
-// Custom icons
-const userIcon = new L.Icon({
-    iconUrl: 'https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-2x-red.png',
-    shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/0.7.7/images/marker-shadow.png',
-    iconSize: [25, 41],
-    iconAnchor: [12, 41],
-    popupAnchor: [1, -34],
-    shadowSize: [41, 41]
-});
+import { pharmacyIcon, userIcon } from '../lib/mapIcons';
 
 type Tab = 'tips' | 'sleep' | 'empathy' | 'shops';
 
@@ -45,10 +31,8 @@ const Wellness: React.FC = () => {
     const cycleData = getCyclePhase();
 
     const [activeTab, setActiveTab] = useState<Tab>('tips');
-    const [tipsText, setTipsText] = useState('');
-    const [empathyText, setEmpathyText] = useState('');
-    const [loading, setLoading] = useState(false);
-    const [error, setError] = useState('');
+    const [locationError, setError] = useState('');
+    const { reduced } = useAppMotion();
 
     // Nearest Shops State
     const [shops, setShops] = useState<NearbyShop[]>([]);
@@ -58,7 +42,7 @@ const Wellness: React.FC = () => {
     const [mapLoading, setMapLoading] = useState(false);
 
     // Build context for AI
-    const todayStr = localDateKey();
+    const todayStr = useToday();
     const todayLog = logs.find(l => l.date === todayStr);
 
     // Get last 15 logs for history context
@@ -67,9 +51,9 @@ const Wellness: React.FC = () => {
             .filter(l => l.date !== todayStr) // Exclude today
             .sort((a, b) => b.date.localeCompare(a.date)) // Most recent first
             .slice(0, 15)
-            .map(l => `- ${l.date}: Phase=${getCyclePhase(l.date).phase}, Moods=[${l.moods?.join(', ') || ''}], Symptoms=[${l.symptoms?.join(', ') || ''}], Energy=${l.energyLevel || 'N/A'}, Sleep=${l.sleepQuality || 'N/A'}`)
+            .map(l => `- ${l.date}${l.notes?.startsWith('[Sample history:') ? ' (fictional sample)' : ''}: Phase=${getCyclePhase(l.date).phase}, Moods=[${l.moods?.join(', ') || ''}], Symptoms=[${l.symptoms?.join(', ') || ''}], Energy=${l.energyLevel || 'N/A'}, Sleep=${l.sleepQuality || 'N/A'}`)
             .join('\n');
-    }, [logs, todayStr]);
+    }, [logs, todayStr, cycleSettings]);
 
     const ctx: WellnessContext = {
         phase: cycleData.phase,
@@ -84,30 +68,18 @@ const Wellness: React.FC = () => {
     // Sleep/Energy correlations (client-side)
     const sleepData = useMemo(() => analyzeSleepEnergyCorrelations(logs), [logs]);
 
-    // Fetch AI tips
-    const fetchTips = async () => {
-        setLoading(true);
-        setError('');
-        const result = await generateWellnessTips(ctx);
-        if (result.error) setError(result.error);
-        else setTipsText(result.text);
-        setLoading(false);
-    };
-
-    const fetchEmpathy = async () => {
-        setLoading(true);
-        setError('');
-        const result = await generateEmpathyAlerts(ctx);
-        if (result.error) setError(result.error);
-        else setEmpathyText(result.text);
-        setLoading(false);
-    };
-
+    const guidance = useGeneratedText({ tips: () => generateWellnessTips(ctx), empathy: () => generateEmpathyAlerts(ctx) }, JSON.stringify(ctx));
+    const tipsText = guidance.entries.tips?.text || '';
+    const empathyText = guidance.entries.empathy?.text || '';
+    const activeGuidance = activeTab === 'tips' || activeTab === 'empathy' ? guidance.entries[activeTab] : undefined;
+    const loading = activeGuidance?.status === 'loading';
+    const error = activeTab === 'shops' ? locationError : activeGuidance?.error || '';
+    const fetchTips = () => void guidance.request('tips', true);
+    const fetchEmpathy = () => void guidance.request('empathy', true);
     useEffect(() => {
-        if (activeTab === 'tips' && !tipsText) fetchTips();
-        if (activeTab === 'empathy' && !empathyText) fetchEmpathy();
+        if (activeTab === 'tips' || activeTab === 'empathy') void guidance.request(activeTab);
         if (activeTab === 'shops' && !userLocation) initShops();
-    }, [activeTab]);
+    }, [activeTab, guidance.request]);
 
     const initShops = () => {
         setMapLoading(true);
@@ -158,24 +130,6 @@ const Wellness: React.FC = () => {
 
         return (
             <div className="flex flex-col gap-4">
-                {/* Phase Context Header */}
-                <div className={`rounded-2xl p-5 ${isDark ? 'bg-gradient-to-br from-purple-500/20 to-pink-500/10 border border-purple-500/20' : 'bg-gradient-to-br from-purple-50 to-pink-50 border border-purple-100'}`}>
-                    <div className="flex items-center gap-3 mb-2">
-                        <div className={`w-10 h-10 rounded-full flex items-center justify-center ${isDark ? 'bg-purple-500/30' : 'bg-purple-100'}`}>
-                            <span className="app-icon-glyph text-purple-400 text-xl"><AppIcon name={"cycle"}/></span>
-                        </div>
-                        <div>
-                            <p className={`text-sm font-bold ${isDark ? 'text-purple-300' : 'text-purple-700'}`}>{cycleData.phase} Phase</p>
-                            <p className={`text-xs ${isDark ? 'text-purple-400/70' : 'text-purple-500'}`}>Day {cycleData.currentDay} of {cycleSettings.avgCycleLength}</p>
-                        </div>
-                    </div>
-                    {todayLog?.moods && todayLog.moods.length > 0 && (
-                        <p className={`text-xs mt-2 ${isDark ? 'text-white/50' : 'text-gray-500'}`}>
-                            Today's mood: {todayLog.moods.join(', ')}
-                        </p>
-                    )}
-                </div>
-
                 {/* AI Tips */}
                 <div className={`rounded-2xl p-5 ${isDark ? 'bg-surface-dark border border-white/5' : 'bg-white border border-gray-100'} shadow-soft`}>
                     <div className="flex items-center justify-between mb-4">
@@ -395,6 +349,7 @@ const Wellness: React.FC = () => {
                                 <Marker
                                     key={shop.id}
                                     position={[shop.lat, shop.lon]}
+                                    icon={pharmacyIcon}
                                     eventHandlers={{
                                         click: () => handleShopSelect(shop),
                                     }}
@@ -433,19 +388,17 @@ const Wellness: React.FC = () => {
     };
 
     return (
-        <div className={`animate-slideIn font-display flex flex-col pb-24 min-h-screen transition-colors bg-background-dark`}>
-            {/* Header */}
-            <header className={`sticky top-0 z-10 flex items-center justify-between backdrop-blur-md px-6 py-4 border-b ${isDark ? 'bg-background-dark border-white/5' : 'bg-background-dark border-gray-100'}`}>
-                <h1 className={`text-3xl font-bold tracking-tight ${isDark ? 'text-white' : 'text-[var(--text-primary)]'}`}>Wellness</h1>
-                <NotificationBell />
-            </header>
+        <div className="reference-page reference-wellness font-display flex flex-col">
+            <ReferenceHeading title="Wellness" description="A little care, at your own pace." action={<NotificationBell/>}/>
+            <section className="reference-card wellness-overview"><ReferenceArt kind={activeTab === 'sleep' ? 'moon' : 'leaves'} className="reference-card-art"/><span className="reference-icon"><AppIcon name={activeTab === 'sleep' ? 'bedtime' : 'spa'} size={26}/></span><div><span className="bloom-eyebrow">Your daily rhythm</span><h2>{cycleData.phase === 'Unknown' ? 'One day at a time' : `${cycleData.phase} phase`}</h2><p>{cycleData.currentDay > 0 ? `Cycle day ${cycleData.currentDay}` : 'Start with a daily check-in'}{todayLog?.sleepHours !== undefined ? ` · ${todayLog.sleepHours}h of sleep logged` : ''}</p></div></section>
 
             {/* Tabs */}
-            <div className={`w-full overflow-x-auto no-scrollbar py-2 px-6 mb-4 bg-background-dark`}>
-                <div className="flex gap-2 min-w-max">
+            <div className="wellness-tabs">
+                <div className="wellness-tab-list">
                     {tabs.map(tab => (
                         <button
                             key={tab.key}
+                            aria-pressed={activeTab === tab.key}
                             onClick={() => setActiveTab(tab.key)}
                             className={`flex h-10 items-center gap-2 px-5 rounded-full text-sm font-semibold transition-all ${activeTab === tab.key
                                 ? 'on-brand bg-primary text-white shadow-md shadow-primary/20'
@@ -460,21 +413,21 @@ const Wellness: React.FC = () => {
             </div>
 
             {/* Content */}
-            <main className="flex flex-col gap-4 px-6">
-                <AnimatePresence mode="wait">
+            <main className="wellness-content flex flex-col gap-4">
+                <React.Fragment>
                     <motion.div
                         key={activeTab}
-                        initial={{ opacity: 0, y: 10 }}
+                        initial={reduced ? false : { y: 8 }}
                         animate={{ opacity: 1, y: 0 }}
-                        exit={{ opacity: 0, y: -10 }}
-                        transition={{ duration: 0.2 }}
+
+                        transition={motionTransition(springs.section, reduced)}
                     >
                         {activeTab === 'tips' && renderTipsContent()}
                         {activeTab === 'sleep' && renderSleepContent()}
                         {activeTab === 'empathy' && renderEmpathyContent()}
                         {activeTab === 'shops' && renderShopsContent()}
                     </motion.div>
-                </AnimatePresence>
+                </React.Fragment>
             </main>
         </div>
     );
@@ -513,7 +466,7 @@ const SleepBar = ({ label, count, total, color, isDark }: { label: string; count
                 <motion.div
                     className={`h-full rounded-full ${color}`}
                     initial={{ width: 0 }}
-                    animate={{ width: `${Math.max(pct, 2)}%` }}
+                    animate={{ width: `${pct}%` }}
                     transition={{ duration: 0.8, ease: 'easeOut' }}
                 />
             </div>
@@ -522,15 +475,7 @@ const SleepBar = ({ label, count, total, color, isDark }: { label: string; count
 };
 
 const LoadingSkeleton = () => (
-    <div className="flex flex-col gap-4">
-        {[1, 2, 3].map(i => (
-            <div key={i} className="rounded-2xl bg-white/5 p-5 animate-pulse">
-                <div className="h-4 bg-white/10 rounded w-3/4 mb-3" />
-                <div className="h-3 bg-white/5 rounded w-full mb-2" />
-                <div className="h-3 bg-white/5 rounded w-5/6" />
-            </div>
-        ))}
-    </div>
+    <section className="reference-card wellness-loading" role="status"><ReferenceArt kind="leaves"/><div><h2>Putting together a little care…</h2><p>Your daily guidance is on its way. You can explore Sleep & Energy while it loads.</p></div><span className="wellness-loading-dots" aria-hidden="true"><i/><i/><i/></span></section>
 );
 
 const ErrorCard = ({ message, onRetry, isDark }: { message: string; onRetry: () => void; isDark: boolean }) => (
