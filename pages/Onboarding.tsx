@@ -5,11 +5,13 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { useData } from '../contexts/DataContext';
 import { useAuth } from '../contexts/AuthContext';
 import { ModernSlider } from '../components/ui/ModernSlider';
+import {useToday} from '../hooks/useToday';
 
 const Onboarding: React.FC = () => {
   const navigate = useNavigate();
   const { updateSettings } = useData();
   const { user } = useAuth();
+  const today=useToday();
 
   // Safety net: partners should never see onboarding (they don't track periods)
   React.useEffect(() => {
@@ -40,6 +42,7 @@ const Onboarding: React.FC = () => {
 
   const handleFinish = async () => {
     if (!lastPeriodDate) return;
+    if(localDateKey(lastPeriodDate)>today){setStep(1);setSaveError('Choose a period start date that is today or earlier.');return;}
     setLoading(true);
     setSaveError(null);
     try {
@@ -142,9 +145,9 @@ const Onboarding: React.FC = () => {
                 <div className="bg-surface-dark rounded-3xl p-6 border border-white/5 shadow-soft">
                     {/* Calendar Header */}
                     <div className="flex justify-between items-center mb-6">
-                        <button onClick={() => setViewDate(new Date(viewDate.getFullYear(), viewDate.getMonth()-1, 1))} className="p-2 hover:bg-white/5 rounded-full"><span className="material-symbols-outlined">chevron_left</span></button>
+                        <button aria-label="Previous month" onClick={() => setViewDate(new Date(viewDate.getFullYear(), viewDate.getMonth()-1, 1))} className="p-2 hover:bg-white/5 rounded-full"><span className="material-symbols-outlined">chevron_left</span></button>
                         <span className="font-bold text-lg">{currentMonth} {currentYear}</span>
-                        <button onClick={() => setViewDate(new Date(viewDate.getFullYear(), viewDate.getMonth()+1, 1))} className="p-2 hover:bg-white/5 rounded-full"><span className="material-symbols-outlined">chevron_right</span></button>
+                        <button aria-label="Next month" disabled={localDateKey(new Date(currentYear,viewDate.getMonth()+1,1))>today} onClick={() => setViewDate(new Date(viewDate.getFullYear(), viewDate.getMonth()+1, 1))} className="p-2 hover:bg-white/5 rounded-full disabled:cursor-not-allowed disabled:opacity-30"><span className="material-symbols-outlined">chevron_right</span></button>
                     </div>
 
                     {/* Grid */}
@@ -155,11 +158,17 @@ const Onboarding: React.FC = () => {
                         {Array.from({ length: firstDayOfMonth }).map((_, i) => <div key={`empty-${i}`} />)}
                         {days.map(day => {
                             const selected = isSelected(day);
+                            const date=localDateKey(new Date(currentYear,viewDate.getMonth(),day));
+                            const future=date>today;
                             return (
                                 <button
                                     key={day}
-                                    onClick={() => handleDayClick(day)}
-                                    className={`h-10 w-10 mx-auto rounded-full flex items-center justify-center text-sm font-bold transition-all ${selected ? 'bg-primary text-white shadow-lg shadow-primary/40 scale-110' : 'text-gray-300 hover:bg-white/5'}`}
+                                    aria-label={date}
+                                    aria-pressed={selected}
+                                    disabled={future}
+                                    title={future?'Choose today or an earlier date':undefined}
+                                    onClick={() => {setSaveError(null);handleDayClick(day);}}
+                                    className={`h-10 w-10 mx-auto rounded-full flex items-center justify-center text-sm font-bold transition-all disabled:cursor-not-allowed disabled:opacity-25 ${selected ? 'bg-primary text-white shadow-lg shadow-primary/40 scale-110' : 'text-gray-300 hover:bg-white/5'}`}
                                 >
                                     {day}
                                 </button>

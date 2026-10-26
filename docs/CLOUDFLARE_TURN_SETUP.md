@@ -3,7 +3,7 @@
 Twilight now asks its authenticated Supabase `call-credentials` function for expiring
 Cloudflare ICE credentials. The Cloudflare API token stays on the backend. The function
 checks active relationship membership and limits credential requests to 30 per user per
-hour. Credentials default to one hour and refresh during longer calls.
+UTC clock hour. Credentials default to one hour and refresh during longer calls.
 
 ## Create the credentials
 
@@ -42,10 +42,25 @@ the new code does not read them. Local legacy TURN variables have been removed.
 
 ## Verification
 
-The endpoint is deployed and checked for anonymous rejection, relationship access,
-and an explicit missing-configuration response. Cloudflare relay connectivity has
-not yet been tested because the Cloudflare credentials have not been supplied.
-Until configured, direct peer connections can work; restrictive networks may fail.
+Cloudflare credentials were configured and published to Supabase on 2026-10-26.
+The authenticated endpoint now returns expiring Cloudflare ICE credentials.
+Anonymous calls return 401 and unrelated relationship requests return 403.
+
+The first configured test exposed an internal budget helper that accepted only
+`ai` and `push` actions. Migration `allow_cloudflare_turn_request_budget` adds the
+TURN action with an hourly window, preserving existing AI/push minute windows and
+service-only grants. A rollback-only database test verifies the 30-request limit,
+window boundaries, argument rejection and client permission denial.
+
+Forced-relay Node WebRTC tests passed over UDP, TCP and TLS, with both selected
+candidates verified as relay. Each transport carried 20 encrypted bidirectional
+data-channel echoes. Observed median round-trip times were 60ms (UDP), 99ms (TCP)
+and 100ms (TLS). These are measurements on this connection, not a latency guarantee.
+See [verification details](RELAY_AND_ONBOARDING_VERIFICATION_2026-10-26.md).
+
+The browser-control tool could not initialize during this verification, so the
+current test does not establish browser microphone/camera playback or physical
+device quality. Those acceptance checks remain required.
 
 For a repeatable relay check, run `npm run dev:local` and open the development-only
 `/tests/browser/calls.html?relay=1` harness on two isolated browser profiles/origins,
