@@ -6,7 +6,7 @@ const Welcome: React.FC = () => {
   const navigate = useNavigate();
 
   return (
-    <div className="relative flex h-dvh min-h-0 w-full flex-col bg-background-dark text-white font-display overflow-y-auto overflow-x-hidden">
+    <div className="relative flex min-h-dvh w-full flex-col bg-background-dark text-white font-display overflow-x-clip">
       {/* Fixed Background Layer */}
       <div className="fixed inset-0 overflow-hidden pointer-events-none">
         <div className="absolute top-[-10%] right-[-10%] w-[350px] h-[350px] bg-accent-teal/10 rounded-full blur-[100px]"></div>
@@ -15,16 +15,12 @@ const Welcome: React.FC = () => {
       </div>
 
       {/* Scrollable Content */}
-      <div className="flex-1 flex flex-col justify-between pt-4 pb-6 px-6 z-10 w-full">
-        <div className="flex justify-center w-full py-1 shrink-0">
-          {/* Logo or Spacer */}
-        </div>
-
-        <div className="flex-1 flex flex-col justify-center items-center my-2 w-full">
+      <div className="relative z-10 mx-auto flex min-h-dvh w-full max-w-xl flex-col justify-center gap-8 px-6 py-8 pb-[max(2rem,env(safe-area-inset-bottom))] sm:py-12">
+        <div className="flex w-full shrink-0 flex-col items-center">
             <FeatureCarousel />
         </div>
 
-        <div className="w-full px-4 pb-2 z-10 shrink-0 mt-4">
+        <div className="w-full shrink-0">
           <div className="flex flex-col gap-4 max-w-sm mx-auto">
             {/* Primary CTA - For cycle tracking */}
             <button
