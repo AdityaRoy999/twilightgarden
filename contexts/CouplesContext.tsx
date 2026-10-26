@@ -74,8 +74,6 @@ interface CouplesContextType {
   restoreFromCloudBackup: (pin: string) => Promise<void>;
   completeSyncHandshake: (token: string) => Promise<void>;
   refreshE2EE: () => Promise<void>;
-  showPinSetup: boolean;
-  setShowPinSetup: (v: boolean) => void;
   keyVersion: number;
   restorationState: { isRestoring: boolean; progress: number; status: string };
 }
@@ -119,7 +117,6 @@ export const CouplesProvider: React.FC<{ children: React.ReactNode }> = ({ child
   const [hasCloudBackup, setHasCloudBackup] = useState(false);
   const [isHistorySynced, setIsHistorySynced] = useState(true);
   const [isSyncRequired, setIsSyncRequired] = useState(false);
-  const [showPinSetup, setShowPinSetup] = useState(false);
   const [e2eeReady, setE2eeReady] = useState(false); // Prevents PIN popup race condition
   const [keyVersion, setKeyVersion] = useState(0);
   const [restorationState, setRestorationState] = useState({ isRestoring: false, progress: 0, status: '' });
@@ -156,11 +153,6 @@ export const CouplesProvider: React.FC<{ children: React.ReactNode }> = ({ child
     partnerLogsRef.current = partnerLogs;
   }, [partnerLogs]);
 
-  // Ref for hasCloudBackup to avoid stale closure in Realtime handler
-  const hasCloudBackupRef = React.useRef(hasCloudBackup);
-  useEffect(() => {
-    hasCloudBackupRef.current = hasCloudBackup;
-  }, [hasCloudBackup]);
 
   // Cache for partner's public key (Latest Active)
   const partnerPublicKeyRef = React.useRef<string | null>(null);
@@ -210,7 +202,7 @@ export const CouplesProvider: React.FC<{ children: React.ReactNode }> = ({ child
         if(error)throw error;
       }
       if(!aliveRef.current)return;
-      setE2eeReady(true);setShowPinSetup(!identity.needsRestore&&!backup.data);
+      setE2eeReady(true);
       await fetchCoupleData();
     }catch(error){if(aliveRef.current){setIsLoading(false);console.error('Identity initialization failed',error);}}
   };
@@ -223,13 +215,6 @@ export const CouplesProvider: React.FC<{ children: React.ReactNode }> = ({ child
   };
   useEffect(()=>{if(!authLoading)void refreshE2EE();},[user?.id,authLoading]);
 
-  // Auto-prompt PIN setup when couple is active but no backup exists
-  // GATED on e2eeReady to prevent false triggering before backup check completes
-  useEffect(() => {
-    if (e2eeReady && couple && couple.status === 'active' && !hasCloudBackup) {
-      setShowPinSetup(true);
-    }
-  }, [couple, hasCloudBackup, e2eeReady]);
 
   const fetchCoupleData = async () => {
     if(!user)return;
@@ -408,10 +393,6 @@ export const CouplesProvider: React.FC<{ children: React.ReactNode }> = ({ child
                     fetchCoupleData();
                 }
 
-                // Trigger PIN setup if this is a newly active couple and no backup exists
-                if (newCouple.status === 'active' && !hasCloudBackupRef.current) {
-                    setShowPinSetup(true);
-                }
             }
             if (payload.eventType === 'DELETE') {
                 import.meta.env.DEV && console.log('[Realtime] Couple deleted — cleaning up keys and state');
@@ -423,7 +404,6 @@ export const CouplesProvider: React.FC<{ children: React.ReactNode }> = ({ child
                 partnerPublicKeyRef.current = null;
                 setPartnerPubKey(null);
                 setIsSyncRequired(false);
-                setShowPinSetup(false);
             }
         }
       )
@@ -598,15 +578,11 @@ export const CouplesProvider: React.FC<{ children: React.ReactNode }> = ({ child
   if (error) throw error;
 
   setCouple(data as any);
-  // Trigger PIN setup prompt for the joining user
-  if (!hasCloudBackup) {
-    setShowPinSetup(true);
-  }
 };
 
   const uploadMedia = async (file: File): Promise<string> => {
     if (!user || !couple) throw new Error('Not authenticated');
-    if(!identityUsableRef.current||!hasCloudBackup)throw new Error('Unlock and protect your chat history before sending an attachment.');
+    if(!e2eeReady||!identityUsableRef.current)throw new Error('Restore your chats on this device before sending an attachment.');
 
     if (couple.status !== 'active') throw new Error('Connect to your partner first.');
     if (!file.size || file.size > 20 * 1024 * 1024) throw new Error('Attachments must be smaller than 20 MB.');
@@ -663,8 +639,7 @@ export const CouplesProvider: React.FC<{ children: React.ReactNode }> = ({ child
 
   const createNote = async (content:string,type:'text'|'image'|'audio'|'gif'='text',mediaUrl?:string,replyToId?:string)=>{
     if(!user||!couple||couple.status!=='active')throw new Error('Connect to your partner first.');
-    if(!identityUsableRef.current)throw new Error('Unlock your history before sending messages.');
-    if(!hasCloudBackup){setShowPinSetup(true);throw new Error('Set a recovery passphrase to protect your chat history first.');}
+    if(!e2eeReady||!identityUsableRef.current)throw new Error('Restore your chats on this device before sending messages.');
     if(content.length>8000)throw new Error('Message is too long.');
     if(outboxRef.current.length>=30)throw new Error('Reconnect or retry your pending messages first.');
     const id=crypto.randomUUID(),createdAt=new Date().toISOString();
@@ -1031,7 +1006,7 @@ export const CouplesProvider: React.FC<{ children: React.ReactNode }> = ({ child
   const setupCloudBackup = async (pin: string) => {
     if (!user) return;
     if(!identityUsableRef.current)throw new Error('Restore your existing identity first.');
-    if(pin.length<8)throw new Error('Use a recovery passphrase of at least 8 characters.');
+    if(pin.length<8)throw new Error('Use at least 8 characters for your backup password.');
     const { value: privKey } = await Preferences.get({ key: `${user.id}_private_key` });
     const { value: pubKey } = await Preferences.get({ key: `${user.id}_public_key` }); // Get public key too
 
@@ -1057,7 +1032,7 @@ export const CouplesProvider: React.FC<{ children: React.ReactNode }> = ({ child
         throw error;
     }
     import.meta.env.DEV && console.log('[E2EE] Cloud Backup successfully enabled.');
-    setHasCloudBackup(true);setShowPinSetup(false);
+    setHasCloudBackup(true);
   };
 
   const restoreFromCloudBackup=async(passphrase:string)=>{
@@ -1129,15 +1104,13 @@ export const CouplesProvider: React.FC<{ children: React.ReactNode }> = ({ child
     restoreFromCloudBackup,
     completeSyncHandshake,
     refreshE2EE,
-    showPinSetup,
-    setShowPinSetup,
     keyVersion,
     restorationState,
   }), [
     couple, notes, chatConnected, isLoading, authLoading, hasMoreNotes, loadingOlder,
     isSupporter, partnerProfile, partnerSettings, partnerLogs, partnerPubKey,
     partnerData, deviceId, hasCloudBackup, isHistorySynced, isSyncRequired,
-    showPinSetup, keyVersion, restorationState, e2eeReady
+    keyVersion, restorationState, e2eeReady
   ]);
 
   return (

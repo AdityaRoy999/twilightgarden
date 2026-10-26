@@ -441,21 +441,23 @@ const PartnerProfile: React.FC = () => {
                             <div
                                 className="flex items-center justify-between p-4 hover:bg-black/5 dark:hover:bg-white/5 transition-colors cursor-pointer group"
                                 onClick={() => setShowSyncModal(true)}
+                                role="button" tabIndex={0} aria-label="Chat backup"
+                                onKeyDown={event=>{if(event.key==='Enter'||event.key===' '){event.preventDefault();setShowSyncModal(true);}}}
                             >
                                 <div className="flex items-center gap-3">
                                     <div className={`w-10 h-10 rounded-xl flex items-center justify-center transition-transform group-hover:scale-105 ${isDark ? 'bg-white/5 text-pink-400' : 'bg-pink-50 text-pink-500'}`}>
                                         <Shield className="w-5 h-5" />
                                     </div>
                                     <div>
-                                        <h4 className={`font-bold ${isDark ? 'text-white' : 'text-gray-900'}`}>Encryption & Backup</h4>
+                                        <h4 className={`font-bold ${isDark ? 'text-white' : 'text-gray-900'}`}>Chat backup</h4>
                                         <p className={`text-xs ${isDark ? 'text-gray-500' : 'text-gray-400'}`}>
-                                        {hasCloudBackup ? 'Keys Backed Up' : 'Action Required'}
+                                        {hasCloudBackup ? 'Backup on' : 'Optional · restore chats on a new device'}
                                         </p>
                                     </div>
                                 </div>
                                 <div className="flex items-center gap-2">
                                     {!hasCloudBackup && (
-                                        <span className="px-2 py-0.5 bg-pink-500 text-white text-[10px] font-bold rounded-full animate-pulse">SET PIN</span>
+                                        <span className="px-2 py-0.5 bg-primary/10 text-primary dark:text-pink-300 text-[10px] font-bold rounded-full">Set up</span>
                                     )}
                                     <span className="material-symbols-outlined text-gray-400">chevron_right</span>
                                 </div>

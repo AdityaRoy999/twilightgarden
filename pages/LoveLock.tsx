@@ -34,7 +34,7 @@ const LoveLock: React.FC = () => {
         addReaction, replyToNote, markAsRead, setIsChatOpen, uploadMedia,
         isSupporter, partnerProfile, disconnectCouple, hasMoreNotes,
         loadingOlder, loadOlderNotes, partnerPubKey,
-        isSyncRequired, hasCloudBackup, showPinSetup,
+        isSyncRequired,
         toggleStar, togglePin, deleteNote, forwardNote
     } = useCouples();
     const { user } = useAuth();
@@ -631,7 +631,7 @@ const LoveLock: React.FC = () => {
     // Handle sending text with reply-to support
     const handleSendText = async () => {
         if (!noteContent.trim() || isSubmitting) return;
-        if(isSyncRequired||!hasCloudBackup){window.dispatchEvent(new CustomEvent('recheck-lockdown'));return;}
+        if(isSyncRequired){window.dispatchEvent(new CustomEvent('recheck-lockdown'));return;}
         const draft=noteContent;setNoteContent('');
         setIsSubmitting(true);
         try {
@@ -817,17 +817,7 @@ const LoveLock: React.FC = () => {
                                         onClick={() => window.dispatchEvent(new CustomEvent('recheck-lockdown'))}
                                         className="text-[10px] text-amber-500 font-bold uppercase tracking-wider cursor-pointer hover:underline"
                                     >
-                                        Identity Locked
-                                    </span>
-                                </>
-                            ) : (!hasCloudBackup && showPinSetup) ? (
-                                <>
-                                    <div className="w-1.5 h-1.5 rounded-full bg-pink-500 animate-pulse" />
-                                    <span
-                                        onClick={() => window.dispatchEvent(new CustomEvent('recheck-lockdown'))}
-                                        className="text-[10px] text-pink-500 font-bold uppercase tracking-wider cursor-pointer hover:underline"
-                                    >
-                                        Protect history
+                                        Restore chats
                                     </span>
                                 </>
                             ) : (

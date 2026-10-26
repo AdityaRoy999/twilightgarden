@@ -52,7 +52,7 @@ export const CallProvider: React.FC<{ children: React.ReactNode }> = ({
     partnerProfile,
     partnerPubKey,
     isSyncRequired,
-    hasCloudBackup,
+    identityReady,
   } = useCouples();
   const [callError, setCallError] = useState<string | null>(null);
   const [callLatencyMs, setCallLatencyMs] = useState<number | null>(null);
@@ -474,7 +474,7 @@ export const CallProvider: React.FC<{ children: React.ReactNode }> = ({
       )
       .subscribe((state) => {
         ready.current = state === "SUBSCRIBED";
-        if (ready.current && !isSyncRequired && hasCloudBackup)
+        if (ready.current && identityReady && !isSyncRequired)
           void getIce().catch(() => {});
       });
     window.addEventListener("online", recoverConnection);
@@ -493,7 +493,7 @@ export const CallProvider: React.FC<{ children: React.ReactNode }> = ({
     partnerId,
     partnerPubKey,
     isSyncRequired,
-    hasCloudBackup,
+    identityReady,
     cleanup,
   ]);
 
@@ -531,8 +531,12 @@ export const CallProvider: React.FC<{ children: React.ReactNode }> = ({
       );
       return;
     }
-    if (isSyncRequired || !hasCloudBackup || !partnerPubKey) {
-      setCallError("Unlock and protect your chat history before calling.");
+    if (!identityReady || isSyncRequired || !partnerPubKey) {
+      setCallError(
+        isSyncRequired
+          ? "Restore your chats on this device before calling."
+          : "Preparing your encrypted connection. Please try again shortly.",
+      );
       return;
     }
     setCallError(null);
@@ -560,7 +564,7 @@ export const CallProvider: React.FC<{ children: React.ReactNode }> = ({
   };
   const acceptCall = async () => {
     if (status.current !== "incoming" || !offerRef.current) return;
-    if (isSyncRequired || !hasCloudBackup || !partnerPubKey || !ready.current) {
+    if (!identityReady || isSyncRequired || !partnerPubKey || !ready.current) {
       setCallError(
         "Unlock your chat history and wait for the private connection before accepting.",
       );

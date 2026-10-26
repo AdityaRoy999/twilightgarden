@@ -40,6 +40,11 @@ security audited.
   backups use versioned PBKDF2-SHA256 with 600,000 iterations and AES-GCM; older
   backups remain readable. Device registrations now load independently of cached
   profile data. Removing a registration is explicitly not session revocation.
+- Backup setup is now optional for daily chat: initialized devices can message,
+  send encrypted attachments and call without a recovery form. Settings → Chat
+  backup uses one password field at a time; device linking is under More options.
+  Existing/new-device identity checks and backup encryption are preserved. See
+  [the simplified backup flow](SIMPLE_CHAT_BACKUP.md).
 - Identity fingerprints normalize JWK metadata and match in either partner order.
   Verification no longer shows a verified badge before a matching comparison.
   Camera scanning uses lifecycle cleanup and inline failures; pasted-code
@@ -60,7 +65,7 @@ security audited.
 
 ## Verification evidence
 
-- TypeScript, 45 automated tests, production build, all five Edge Function type
+- TypeScript, 56 automated tests, production build, all five Edge Function type
   checks, secret scan and dependency audit. Dependency audit reports zero known
   vulnerabilities at verification time.
 - Live synthetic accounts: private pairing completion; canonical identity guards;

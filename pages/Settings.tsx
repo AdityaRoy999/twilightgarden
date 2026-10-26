@@ -493,21 +493,23 @@ const Settings: React.FC = () => {
                   <div
                       className="flex items-center justify-between p-4 border-b border-gray-100 dark:border-white/5 hover:bg-gray-50 dark:hover:bg-white/5 transition-colors cursor-pointer group"
                       onClick={() => setShowSyncModal(true)}
+                      role="button" tabIndex={0} aria-label="Chat backup"
+                      onKeyDown={event=>{if(event.key==='Enter'||event.key===' '){event.preventDefault();setShowSyncModal(true);}}}
                   >
                     <div className="flex items-center gap-3">
                       <div className="flex items-center justify-center rounded-xl bg-pink-100 dark:bg-pink-900/20 text-pink-500 w-10 h-10 group-hover:scale-105 transition-transform">
                         <Shield size={20} />
                       </div>
                       <div className="flex flex-col">
-                        <span className="font-medium text-[#121014] dark:text-gray-200">Encryption & Sync</span>
+                        <span className="font-medium text-[#121014] dark:text-gray-200">Chat backup</span>
                         <span className="text-xs text-gray-500">
-                          {hasCloudBackup ? 'Keys Backed Up' : 'Backup required'}
+                          {hasCloudBackup ? 'Backup on' : 'Optional · restore chats on a new device'}
                         </span>
                       </div>
                     </div>
                     <div className="flex items-center gap-2">
                       {!hasCloudBackup && (
-                        <span className="px-2 py-0.5 bg-pink-500 text-white text-[10px] font-bold rounded-full animate-pulse uppercase">Set Pin</span>
+                        <span className="px-2 py-0.5 bg-primary/10 text-primary dark:text-pink-300 text-[10px] font-bold rounded-full">Set up</span>
                       )}
                       <span className="material-symbols-outlined text-gray-400 dark:text-gray-600 text-sm">arrow_forward_ios</span>
                     </div>

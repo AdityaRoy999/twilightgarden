@@ -145,7 +145,7 @@ function Harness() {
         Account: {auth.user?.role || "signed out"} · identity:{" "}
         {couples.isSyncRequired
           ? "locked"
-          : couples.hasCloudBackup
+          : couples.identityReady
             ? "ready"
             : "initializing"}{" "}
         · call: {call.callStatus}
