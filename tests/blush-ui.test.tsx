@@ -19,6 +19,9 @@ import Dashboard from '../pages/Dashboard';
 import Insights from '../pages/Insights';
 import LogDetails from '../pages/LogDetails';
 import { CycleBloom } from '../components/ui/CycleBloom';
+import { CalendarScreen } from '../pages/Calendar';
+import { calculateCyclePhase } from '../lib/cycleUtils';
+import { CustomColorPicker } from '../components/ui/CustomColorPicker';
 
 function Destination() { const { pathname, search } = useLocation(); return <p>{pathname}{search}</p>; }
 beforeEach(() => { vi.useFakeTimers(); vi.setSystemTime(new Date('2026-10-26T10:00:00')); fixture.cycle = { currentDay: 25, phase: 'Luteal', hasEstimate: true, nextPeriodIn: 8, isFertile: false, isOvulation: false }; fixture.logs = []; });
@@ -74,5 +77,31 @@ describe('blush frontend data and navigation', () => {
     expect(scroll).toHaveBeenCalledWith({ behavior: 'instant', block: 'start' });
     expect(document.getElementById('log-sleep')).toBeTruthy();
     fixture.animations = true;
+  });
+  it('shows upcoming periods as disabled predictions rather than logged activity', () => {
+    const settings = { avgCycleLength: 32, avgPeriodLength: 5, lastPeriodStart: '2026-10-02', irregularCycle: false, onboardingCompleted: true };
+    render(<MemoryRouter><CalendarScreen logs={[]} cycleSettings={settings} getCyclePhase={date => calculateCyclePhase(date || '2026-10-26', settings)}/></MemoryRouter>);
+    fireEvent.click(screen.getByRole('button', { name: 'Next month' }));
+    const predicted = screen.getByRole('button', { name: '2026-11-03, Predicted period, Future date' }) as HTMLButtonElement;
+    expect(predicted.disabled).toBe(true);
+    expect(screen.getByText('November 2026')).toBeTruthy();
+  });
+  it('keeps the partner calendar read-only', () => {
+    const settings = { avgCycleLength: 32, avgPeriodLength: 5, lastPeriodStart: '2026-10-02', irregularCycle: false, onboardingCompleted: true };
+    const log = { id: 'sample', user_id: 'partner', date: '2026-10-26', moods: ['calm' as const] };
+    render(<MemoryRouter><CalendarScreen readOnly logs={[log]} cycleSettings={settings} getCyclePhase={date => calculateCyclePhase(date || '2026-10-26', settings)}/></MemoryRouter>);
+    expect((screen.getByRole('button', { name: '2026-10-25' }) as HTMLButtonElement).disabled).toBe(true);
+    fireEvent.click(screen.getByRole('button', { name: '2026-10-26, Has a journal entry' }));
+    expect(screen.queryByRole('button', { name: 'Edit Log' })).toBeNull();
+  });
+  it('lets the color field be edited one character at a time', () => {
+    const onChange = vi.fn();
+    render(<CustomColorPicker color="#c33367" onChange={onChange}/>);
+    const input = screen.getByRole('textbox', { name: 'Hex color' }) as HTMLInputElement;
+    fireEvent.change(input, { target: { value: 'F0' } });
+    expect(input.value).toBe('F0');
+    expect(onChange).not.toHaveBeenCalled();
+    fireEvent.change(input, { target: { value: 'F0E1D2' } });
+    expect(onChange).toHaveBeenCalledWith('#F0E1D2');
   });
 });

@@ -792,7 +792,7 @@ const LoveLock: React.FC = () => {
 
     // STATE: Active (Chat Interface) — couple is paired and active, show chat directly
     return (
-        <div className="bloom-chat flex flex-col h-full max-h-full relative overflow-hidden bg-background-dark">
+        <div className="reference-chat bloom-chat flex flex-col h-full max-h-full relative overflow-hidden bg-background-dark">
              {/* Header - Fixed at top */}
             <div className="bloom-chat-header relative z-30 shrink-0 bg-white/80 dark:bg-background-dark/80 backdrop-blur-xl border-b dark:border-white/5 px-4 h-16 flex items-center justify-between">
                 <div className="flex items-center gap-3">
@@ -888,7 +888,7 @@ const LoveLock: React.FC = () => {
             <div
                 ref={chatContainerRef}
                 onScroll={handleChatScroll}
-                className="flex-1 min-h-0 overflow-y-auto overscroll-contain p-4 space-y-4"
+                className="reference-chat-messages flex-1 min-h-0 overflow-y-auto overscroll-contain p-4 space-y-4"
             >
                 {/* View filter bar */}
                 {viewFilter !== 'all' && (
@@ -983,7 +983,7 @@ const LoveLock: React.FC = () => {
                                     onTouchStart={handleLongPressStart(note.id, isMe)}
                                     onTouchEnd={handleLongPressEnd}
                                     onTouchMove={handleLongPressEnd}
-                                    className={`relative max-w-[85%] group ${
+                                    className={`reference-message-bubble ${isMe ? 'is-mine' : ''} relative max-w-[85%] group ${
                                     isImage
                                         ? 'rounded-2xl overflow-hidden'
                                         : isMe
@@ -1171,7 +1171,7 @@ const LoveLock: React.FC = () => {
                 onChange={handleFileSelected}
             />
 
-            <div className="relative z-30 mx-auto flex w-full shrink-0 flex-col border-t border-black/5 bg-white p-3 dark:border-white/5 dark:bg-background-dark">
+            <div className="reference-chat-composer relative z-30 mx-auto flex w-full shrink-0 flex-col border-t border-black/5 bg-white p-3 dark:border-white/5 dark:bg-background-dark">
             {notes.some(note=>note.localStatus==='failed')&&<div role="status" className="mb-2 flex items-center justify-between rounded-xl bg-amber-500/10 px-4 py-2 text-sm text-amber-600"><span>Some messages have not been sent.</span><button onClick={()=>{for(const note of notes.filter(n=>n.localStatus==='failed'))void retryNote(note.id).catch(()=>{});}} className="min-h-11 px-3 font-semibold">Retry messages</button></div>}
             {/* Reply bar */}
             <AnimatePresence>

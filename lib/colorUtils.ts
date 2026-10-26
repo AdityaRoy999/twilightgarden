@@ -52,7 +52,8 @@ export const hsvToHex = (h: number, s: number, v: number) => {
     let r = 0, g = 0, b = 0;
     let i, f, p, q, t;
     
-    h /= 60; // sector 0 to 5
+    h = ((h % 360) + 360) % 360;
+    h /= 60; // sector 0 to 5; the right end of the hue strip wraps to red
     s /= 100;
     v /= 100;
 
@@ -78,3 +79,20 @@ export const hsvToHex = (h: number, s: number, v: number) => {
   
     return `#${toHex(r)}${toHex(g)}${toHex(b)}`;
 };
+
+/** Keep user-selected pastel accents readable on white surfaces and buttons. */
+export function accentAppearance(color: string) {
+    const hex = /^#[\da-f]{6}$/i.test(color) ? color : '#c33367';
+    const channels = [1, 3, 5].map(i => parseInt(hex.slice(i, i + 2), 16));
+    const toHex = (values: number[]) => '#' + values.map(v => Math.round(v).toString(16).padStart(2, '0')).join('');
+    const luminance = (values: number[]) => values.map(v => { const x = v / 255; return x <= .04045 ? x / 12.92 : ((x + .055) / 1.055) ** 2.4; }).reduce((sum, v, i) => sum + v * [.2126, .7152, .0722][i], 0);
+    const ratio = (a: number[], b: number[]) => (Math.max(luminance(a), luminance(b)) + .05) / (Math.min(luminance(a), luminance(b)) + .05);
+    const white = [255, 255, 255], ink = [16, 19, 51], black = [0, 0, 0];
+    let start = channels.map(v => v + (255 - v) * .05);
+    let foreground = white;
+    if (Math.min(ratio(channels, white), ratio(start, white)) < 4.6) foreground = Math.min(ratio(channels, ink), ratio(start, ink)) >= 4.6 ? ink : black;
+    if (Math.min(ratio(channels, foreground), ratio(start, foreground)) < 4.6) { start = channels; foreground = ratio(channels, white) >= 4.6 ? white : black; }
+    let text = channels;
+    while (ratio(text, white) < 4.6) text = text.map(v => v * .9);
+    return { foreground: toHex(foreground), start: toHex(start), ink: toHex(text), light: toHex(channels.map(v => v * .08 + 255 * .92)) };
+}

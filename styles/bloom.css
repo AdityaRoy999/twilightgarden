@@ -1,16 +1,43 @@
 /* Twilight's shared visual language: soft surfaces, clear type, quiet motion. */
 :root {
+  color-scheme: light;
+  --on-primary: #ffffff;
+  --color-primary-ink: #c33367;
+  --action-start: #c63d6f;
+  --bg-base: #fff1f7;
+  --bg-surface: #ffffff;
+  --text-primary: #101333;
+  --text-secondary: #6e6b8f;
+  --border-color: #fae2ed;
+  --color-bg-surface: #ffffff;
+  --color-bg-dark: #1d1721;
+  --color-bg-surface-dark: #2a212f;
+  --color-text-light: #fff4f9;
+  --color-border-dark: #423349;
+  --teal-rgb: 78 205 196;
+  --purple-rgb: 124 58 237;
+  --amber-rgb: 245 158 11;
+  --yellow-rgb: 186 144 248;
+  --color-accent-teal: #4ecdc4;
+  --color-accent-yellow: #ba90f8;
+  --color-accent-purple: #7c3aed;
+  --color-status-success: #22c55e;
+  --color-status-error: #ef4444;
+  --color-status-warning: #f59e0b;
+  --scrollbar-thumb: #e5bacd;
+  --scrollbar-thumb-hover: #c88ca8;
+
   --primary-rgb: 195 51 103;
   --primary-light-rgb: 255 232 240;
-  --bg-light-rgb: 255 247 250;
-  --bg-base-rgb: 255 247 250;
+  --bg-light-rgb: 255 241 247;
+  --bg-base-rgb: 255 241 247;
   --bg-surface-rgb: 255 255 255;
   --color-primary: #c33367;
   --color-primary-dark: #a82454;
   --color-primary-light: #ffe8f0;
-  --color-bg-light: #fff7fa;
-  --color-text-primary: #211b37;
-  --color-text-secondary: #70647c;
+  --color-bg-light: #fff1f7;
+  --color-text-primary: #101333;
+  --color-text-secondary: #6e6b8f;
   --color-text-muted: #82748d;
   --color-border-light: #f4e5ed;
   --shadow-soft: 0 8px 32px -14px rgb(166 73 113 / .14);
@@ -24,7 +51,14 @@
   --ease-bloom: cubic-bezier(.22, 1, .36, 1);
   --ease-press: cubic-bezier(.2, .8, .2, 1);
 }
-.dark {
+:root.dark {
+  color-scheme: dark;
+  --bg-base: #1d1721;
+  --bg-surface: #2a212f;
+  --text-primary: #fff4f9;
+  --text-secondary: #c4b4cb;
+  --border-color: #423349;
+
   --bg-base-rgb: 29 23 33;
   --bg-surface-rgb: 42 33 47;
   --color-bg-dark: #1d1721;

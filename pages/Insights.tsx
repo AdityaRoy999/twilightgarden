@@ -1,3 +1,5 @@
+import { ReferenceArt, ReferenceHeading } from '../components/ui/ReferenceArt';
+import { ArrowRight, CalendarDays, Sparkles, Lightbulb, Ellipsis } from 'lucide-react';
 import ChartEmptyState from '../components/ui/ChartEmptyState';
 import { localDateKey } from '../lib/dates';
 import React, { useState, useEffect, useMemo, useRef } from 'react';
@@ -302,28 +304,11 @@ const Insights: React.FC = () => {
   }, [logs]);
 
   return (
-    <div className="bloom-insights animate-slideIn font-display flex flex-col pb-24 bg-background-dark min-h-screen transition-colors">
-      <header className="sticky top-0 z-10 flex items-center justify-between bg-background-dark backdrop-blur-md px-6 py-4 transition-all duration-200 border-b border-gray-100 dark:border-white/5">
-        <h1 className="text-3xl font-bold tracking-tight text-[var(--text-primary)] dark:text-white">Insights</h1>
-        <div className="flex items-center gap-2">
-          <NotificationBell />
-          <button
-            onClick={handleShare}
-            aria-label="Share today’s insights"
-            disabled={isSharing}
-            className="flex h-10 w-10 items-center justify-center rounded-full hover:bg-black/5 dark:hover:bg-white/10 transition-colors text-[var(--text-primary)] dark:text-white disabled:opacity-50"
-          >
-            {isSharing ? (
-              <span className="material-symbols-outlined text-2xl animate-spin">hourglass_empty</span>
-            ) : (
-              <ShareIcon ref={shareIconRef} size={24} />
-            )}
-          </button>
-        </div>
-      </header>
+    <div className="reference-page reference-insights font-display">
+      <ReferenceHeading title="Insights" description="Learn more about your cycle and how to feel your best." action={<details className="relative"><summary className="reference-round-action cursor-pointer list-none" aria-label="Insight options"><Ellipsis size={24}/></summary><div className="absolute right-0 top-14 z-50 flex items-center gap-2 rounded-2xl bg-surface-dark p-3 shadow-medium"><NotificationBell/><button onClick={handleShare} disabled={isSharing} aria-label="Share today’s insights" className="min-h-11 px-3 text-sm text-primary">{isSharing ? 'Creating link…' : 'Share summary'}</button></div></details>}/>
 
       {/* Tabs */}
-      <div className="w-full overflow-x-auto no-scrollbar py-2 px-6 bg-background-dark mb-4 transition-colors">
+      <div className="reference-insight-tabs w-full overflow-x-auto no-scrollbar mb-4">
         <div className="flex gap-3 min-w-max relative">
           <button
             onClick={() => setActiveTab('history')}
@@ -376,9 +361,28 @@ const Insights: React.FC = () => {
             initial={{ opacity: 0, x: -20 }}
             animate={{ opacity: 1, x: 0 }}
             exit={{ opacity: 0, x: -20 }}
-            className="flex flex-col gap-6 px-6"
+            className="reference-stack"
           >
-            <section className="relative overflow-hidden rounded-[2rem] bg-white dark:bg-surface-dark p-6 shadow-soft border border-gray-100 dark:border-white/5 transition-colors">
+            <section className="reference-card"><div className="reference-title"><span className="reference-icon"><Sparkles size={22}/></span><h2>Common Symptoms</h2></div>
+              {topSymptoms[0]?.name === 'No Data' ? <div className="reference-common-empty"><ReferenceArt kind="clipboard"/><h3>No Data Yet</h3><p>Log your symptoms to see your most common symptoms over time.</p></div> : (              <div className="flex flex-col gap-5">
+                {topSymptoms.map((s) => (
+                  <div key={s.name} className="flex flex-col gap-2">
+                    <div className="flex justify-between text-sm font-semibold">
+                      <span className="capitalize text-gray-700 dark:text-gray-300">{s.name}</span>
+                      <span className="text-gray-400">{s.level}</span>
+                    </div>
+                    <div className="h-2.5 w-full rounded-full bg-gray-100 dark:bg-white/5">
+                      <div className={`h-full rounded-full ${s.color}`} style={{ width: s.width }}></div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+)}
+            </section>
+
+            <section className="reference-card reference-sleep-card"><ReferenceArt kind="moon"/><div className="reference-title"><span className="reference-icon"><Lightbulb size={22}/></span><h2>Did you know?</h2></div><p className="reference-description">Your rhythm is personal. Log your sleep and energy to explore how you feel over time.</p><button onClick={() => { setActiveTab('trends'); setTrendsSubTab('sleep'); }}>View Sleep Trends <ArrowRight size={17}/></button></section>
+            <section className="reference-card reference-report"><button onClick={() => setShowTodayReport(true)} className="reference-button"><CalendarDays size={20}/>Generate Today’s Report Card <ArrowRight size={18}/></button><p>Creates a shareable card of today’s symptoms and cycle status.</p></section>
+            <details className="reference-history"><summary>Cycle history &amp; averages</summary><div>            <section className="relative overflow-hidden rounded-[2rem] bg-white dark:bg-surface-dark p-6 shadow-soft border border-gray-100 dark:border-white/5 transition-colors">
               <div className="flex justify-between items-start mb-6">
                 <div>
                   <p className="text-sm font-medium text-gray-500 dark:text-gray-400 mb-1">Prediction</p>
@@ -473,61 +477,7 @@ const Insights: React.FC = () => {
               </div>
             </section>
 
-            <section className="rounded-[2rem] bg-white dark:bg-surface-dark p-6 shadow-soft border border-gray-100 dark:border-white/5 transition-colors">
-              <h3 className="text-lg font-bold text-[var(--text-primary)] dark:text-white mb-6 flex items-center gap-2">
-                <span className="material-symbols-filled text-primary text-xl">Auto_Awesome</span>
-                Common Symptoms
-              </h3>
-              <div className="flex flex-col gap-5">
-                {topSymptoms.map((s) => (
-                  <div key={s.name} className="flex flex-col gap-2">
-                    <div className="flex justify-between text-sm font-semibold">
-                      <span className="capitalize text-gray-700 dark:text-gray-300">{s.name}</span>
-                      <span className="text-gray-400">{s.level}</span>
-                    </div>
-                    <div className="h-2.5 w-full rounded-full bg-gray-100 dark:bg-white/5">
-                      <div className={`h-full rounded-full ${s.color}`} style={{ width: s.width }}></div>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </section>
-
-            <section className="rounded-[2rem] bg-[#F9F7F2] dark:bg-[#2C2A24] p-6 shadow-sm border border-transparent">
-              <div className="flex items-start gap-4">
-                <div className="text-orange-300 dark:text-orange-400 mt-1">
-                  <span className="material-symbols-filled text-2xl">lightbulb</span>
-                </div>
-                <div className="flex-1">
-                  <h3 className="text-lg font-bold text-gray-900 dark:text-white mb-2">Did you know?</h3>
-                  <p className="text-sm text-gray-600 dark:text-gray-300 leading-relaxed mb-3">
-                    Your rhythm is personal. Log your sleep and energy to explore how you feel over time.
-                  </p>
-                  <button
-                    onClick={() => {
-                      setActiveTab('trends');
-                      setTrendsSubTab('sleep');
-                    }}
-                    className="text-primary text-sm font-bold flex items-center gap-1 hover:gap-2 transition-all"
-                  >
-                    View Sleep Trends <span className="material-symbols-outlined text-sm">arrow_forward</span>
-                  </button>
-                </div>
-              </div>
-            </section>
-
-            <div className="mt-2 text-center">
-              <button
-                onClick={() => setShowTodayReport(true)}
-                className="on-brand w-full bg-primary hover:bg-primary/90 text-white font-bold py-4 rounded-2xl shadow-lg shadow-primary/20 transition-all flex items-center justify-center gap-2 mb-3"
-              >
-                <span className="material-symbols-outlined">today</span>
-                Generate Today's Report Card
-              </button>
-              <p className="text-xs text-gray-400 px-4 leading-relaxed">
-                Creates a shareable card of your today's symptoms and cycle status.
-              </p>
-            </div>
+</div></details>
           </motion.main>
         ) : (
           <motion.main
@@ -535,7 +485,7 @@ const Insights: React.FC = () => {
             initial={{ opacity: 0, x: 20 }}
             animate={{ opacity: 1, x: 0 }}
             exit={{ opacity: 0, x: 20 }}
-            className="flex flex-col gap-6 px-6"
+            className="reference-stack"
           >
             {/* Trends Sub-navigation */}
             <div className="flex bg-gray-100/50 dark:bg-white/5 p-1 rounded-2xl self-center mb-2 relative">
