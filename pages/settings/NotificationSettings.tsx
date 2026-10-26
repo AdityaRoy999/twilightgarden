@@ -91,15 +91,15 @@ const NotificationSettings: React.FC = () => {
   };
 
   return (
-    <div className="animate-slideIn font-display flex flex-col pb-24 bg-[#FDFCF8] dark:bg-background-dark min-h-screen transition-colors duration-300">
+    <div className="animate-slideIn font-display flex flex-col pb-24 bg-background-dark min-h-screen transition-colors duration-300">
       <header className="flex items-center px-6 pt-8 pb-4 gap-4 bg-transparent">
         <button
           onClick={() => navigate(-1)}
           className="p-2 rounded-full bg-white dark:bg-surface-dark shadow-sm border border-gray-100 dark:border-white/5"
         >
-          <span className="material-symbols-outlined text-[#121014] dark:text-white text-xl">arrow_back</span>
+          <span className="material-symbols-outlined text-[var(--text-primary)] dark:text-white text-xl">arrow_back</span>
         </button>
-        <h2 className="text-[#121014] dark:text-white text-2xl font-bold leading-tight tracking-tight">Notifications</h2>
+        <h2 className="text-[var(--text-primary)] dark:text-white text-2xl font-bold leading-tight tracking-tight">Notifications</h2>
       </header>
 
       {error && <p role="alert" className="px-6 py-3 text-red-600">{error}</p>}
@@ -142,7 +142,7 @@ const NotificationSettings: React.FC = () => {
                 <span className="material-symbols-outlined">cycle</span>
               </div>
               <div className="flex flex-col">
-                <span className="font-medium text-[#121014] dark:text-gray-200">Period Predictions</span>
+                <span className="font-medium text-[var(--text-primary)] dark:text-gray-200">Period Predictions</span>
                 <span className="text-xs text-gray-500">Get notified before your estimated period</span>
               </div>
             </div>
@@ -165,7 +165,7 @@ const NotificationSettings: React.FC = () => {
                 <span className="material-symbols-outlined">edit_note</span>
               </div>
               <div className="flex flex-col">
-                <span className="font-medium text-[#121014] dark:text-gray-200">Daily Reminders</span>
+                <span className="font-medium text-[var(--text-primary)] dark:text-gray-200">Daily Reminders</span>
                 <span className="text-xs text-gray-500">Alerts at 9AM, 10AM, 12PM, 3PM, 6PM & 11PM</span>
               </div>
             </div>
@@ -188,7 +188,7 @@ const NotificationSettings: React.FC = () => {
         <button
           className={`w-full py-3 px-4 rounded-xl font-semibold text-sm transition-colors flex items-center justify-center gap-2 ${
             testSent
-              ? 'bg-green-500 text-white'
+              ? 'on-brand bg-green-500 text-white'
               : 'bg-primary/10 hover:bg-primary/20 text-primary'
           }`}
           onClick={sendTestNotification}

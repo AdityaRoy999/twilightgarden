@@ -242,7 +242,7 @@ const ThisOrThat: React.FC = () => {
 
     if (!currentCard) {
         return (
-            <div className={`min-h-screen flex flex-col ${isDark ? 'bg-[#121014] text-white' : 'bg-gray-50 text-gray-900'}`}>
+            <div className={`min-h-screen flex flex-col ${isDark ? 'bg-background-dark text-white' : 'bg-gray-50 text-gray-900'}`}>
                 <div className={`p-4 flex items-center justify-between border-b ${isDark ? 'border-white/10' : 'border-gray-200'}`}>
                     <button onClick={async () => { try { if (session?.id) await endSession(session.id); } catch {} navigate('/games'); }} className="p-2 -ml-2 rounded-full hover:bg-white/10 active:scale-95 transition-transform">
                         <span className="material-symbols-outlined text-2xl">arrow_back</span>
@@ -298,7 +298,7 @@ const ThisOrThat: React.FC = () => {
                                                 ringCooldownRef.current = setTimeout(() => setRingCooldown(false), 30000);
                                             }}
                                             disabled={ringCooldown}
-                                            className={`px-4 py-3 rounded-2xl bg-gradient-to-r from-emerald-500 to-green-500 text-white font-bold transition-all active:scale-95 ${ringCooldown ? 'opacity-50' : ''}`}
+                                            className={`on-brand px-4 py-3 rounded-2xl bg-gradient-to-r from-emerald-500 to-green-500 text-white font-bold transition-all active:scale-95 ${ringCooldown ? 'opacity-50' : ''}`}
                                         >
                                             🔔 Ring Partner
                                         </button>
@@ -323,7 +323,7 @@ const ThisOrThat: React.FC = () => {
                                     <h2 className="text-3xl font-bold mb-2">Ready to start?</h2>
                                     <p className="opacity-70 text-center">Your partner is here! Tap start to begin This or That.</p>
                                 </div>
-                                <button onClick={() => { if (items.length > 0) pickNewCard(session.board_state, items); }} className="w-full py-4 rounded-2xl text-white font-bold shadow-lg active:scale-95 transition-transform" style={{ backgroundColor: primaryColor }}>Start Game</button>
+                                <button onClick={() => { if (items.length > 0) pickNewCard(session.board_state, items); }} className="on-brand w-full py-4 rounded-2xl text-white font-bold shadow-lg active:scale-95 transition-transform" style={{ backgroundColor: primaryColor }}>Start Game</button>
                             </>
                         ) : (
                             <div className="text-center">
@@ -346,7 +346,7 @@ const ThisOrThat: React.FC = () => {
     const match = showResult && myVote === partnerVote;
 
     return (
-        <div className={`min-h-screen flex flex-col ${isDark ? 'bg-[#121014] text-white' : 'bg-gray-50 text-gray-900'}`}>
+        <div className={`min-h-screen flex flex-col ${isDark ? 'bg-background-dark text-white' : 'bg-gray-50 text-gray-900'}`}>
             <div className={`p-4 flex items-center justify-between border-b ${isDark ? 'border-white/10' : 'border-gray-200'}`}>
                 <button onClick={async () => { try { if (session?.id) await endSession(session.id); } catch {} navigate('/games'); }} className="p-2 -ml-2 rounded-full hover:bg-white/10 active:scale-95 transition-transform">
                     <span className="material-symbols-outlined text-2xl">arrow_back</span>
@@ -416,7 +416,7 @@ const ThisOrThat: React.FC = () => {
                 >
                     <span className="text-2xl font-bold block mb-2">{currentCard.optionA}</span>
                     {showResult && partnerVote === 'A' && (
-                        <div className="absolute top-2 right-2 text-xs bg-blue-500 text-white px-2 py-1 rounded-full">Partner</div>
+                        <div className="on-brand absolute top-2 right-2 text-xs bg-blue-500 text-white px-2 py-1 rounded-full">Partner</div>
                     )}
                 </button>
 

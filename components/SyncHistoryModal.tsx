@@ -261,7 +261,7 @@ export function SyncHistoryModal({
         <button
           disabled={busy}
           onClick={linkDevice}
-          className="h-12 w-full rounded-xl bg-primary text-sm font-semibold text-white disabled:opacity-50"
+          className="on-brand h-12 w-full rounded-xl bg-primary text-sm font-semibold text-white disabled:opacity-50"
         >
           {busy
             ? "Getting code…"
@@ -285,7 +285,7 @@ export function SyncHistoryModal({
         role="dialog"
         aria-modal="true"
         aria-labelledby="history-title"
-        className="relative max-h-[90dvh] w-full max-w-sm overflow-y-auto rounded-3xl bg-[#fdfcf8] p-6 text-gray-900 shadow-xl dark:bg-[#211e27] dark:text-white"
+        className="relative max-h-[90dvh] w-full max-w-sm overflow-y-auto rounded-3xl bg-background-dark p-6 text-gray-900 shadow-xl dark:bg-surface-dark dark:text-white"
         onClick={(event) => event.stopPropagation()}
       >
         <button
@@ -324,7 +324,7 @@ export function SyncHistoryModal({
             </p>
             <button
               onClick={onClose}
-              className="h-12 w-full rounded-xl bg-primary text-sm font-semibold text-white"
+              className="on-brand h-12 w-full rounded-xl bg-primary text-sm font-semibold text-white"
             >
               Done
             </button>
@@ -400,7 +400,7 @@ export function SyncHistoryModal({
                 </div>
                 <button
                   disabled={busy}
-                  className="h-12 w-full rounded-xl bg-primary text-sm font-semibold text-white disabled:opacity-50"
+                  className="on-brand h-12 w-full rounded-xl bg-primary text-sm font-semibold text-white disabled:opacity-50"
                 >
                   {busy
                     ? "Please wait…"

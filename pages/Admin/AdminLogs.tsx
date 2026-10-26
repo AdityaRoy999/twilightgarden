@@ -62,7 +62,7 @@ const AdminLogs: React.FC = () => {
 
     if (isContextLoading && users.length === 0 && !selectedUser) {
         return (
-            <div className={`min-h-screen flex flex-col items-center justify-center gap-4 transition-colors ${isDark ? 'bg-background-dark' : 'bg-[#FDFCF8]'}`}>
+            <div className={`min-h-screen flex flex-col items-center justify-center gap-4 transition-colors bg-background-dark`}>
                 <motion.div 
                     animate={{ rotate: 360 }}
                     transition={{ duration: 1, repeat: Infinity, ease: "linear" }}
@@ -77,9 +77,9 @@ const AdminLogs: React.FC = () => {
     // Show user's logs
     if (selectedUser) {
         return (
-            <div className={`animate-slideIn font-display flex flex-col pb-24 min-h-screen transition-colors duration-300 ${isDark ? 'bg-background-dark' : 'bg-[#FDFCF8]'}`}>
+            <div className={`animate-slideIn font-display flex flex-col pb-24 min-h-screen transition-colors duration-300 bg-background-dark`}>
                 <header className={`flex items-center gap-4 px-6 py-6 sticky top-0 z-20 backdrop-blur-sm transition-colors duration-300 ${
-                    isDark ? 'bg-[#121014]/95' : 'bg-[#FDFCF8]/95'
+                    isDark ? 'bg-background-dark/95' : 'bg-background-dark/95'
                 }`}>
                     <motion.button 
                         onClick={handleBack}
@@ -104,7 +104,7 @@ const AdminLogs: React.FC = () => {
                             )}
                         </div>
                         <div>
-                            <h2 className={`text-lg font-bold ${isDark ? 'text-white' : 'text-[#121014]'}`}>{selectedUser.full_name || 'Anonymous'}</h2>
+                            <h2 className={`text-lg font-bold ${isDark ? 'text-white' : 'text-[var(--text-primary)]'}`}>{selectedUser.full_name || 'Anonymous'}</h2>
                             <p className={`text-xs ${isDark ? 'text-gray-500' : 'text-gray-400'}`}>{logs.length} log entries</p>
                         </div>
                     </div>
@@ -171,7 +171,7 @@ const AdminLogs: React.FC = () => {
                                     {viewMode === 'list' ? (
                                         <>
                                             <div className="flex items-center justify-between mb-3">
-                                                <p className={`text-sm font-semibold ${isDark ? 'text-white' : 'text-[#121014]'}`}>
+                                                <p className={`text-sm font-semibold ${isDark ? 'text-white' : 'text-[var(--text-primary)]'}`}>
                                                     {date.toLocaleDateString('en-US', { 
                                                         weekday: 'short', 
                                                         month: 'short', 
@@ -252,9 +252,9 @@ const AdminLogs: React.FC = () => {
 
     // Show users list
     return (
-        <div className={`animate-slideIn font-display flex flex-col pb-24 min-h-screen transition-colors duration-300 ${isDark ? 'bg-background-dark' : 'bg-[#FDFCF8]'}`}>
+        <div className={`animate-slideIn font-display flex flex-col pb-24 min-h-screen transition-colors duration-300 bg-background-dark`}>
             <header className={`flex items-center justify-between px-6 pt-8 pb-4 ${isDark ? '' : ''}`}>
-                <h2 className={`text-2xl font-bold leading-tight tracking-tight ${isDark ? 'text-white' : 'text-[#121014]'}`}>User Logs</h2>
+                <h2 className={`text-2xl font-bold leading-tight tracking-tight ${isDark ? 'text-white' : 'text-[var(--text-primary)]'}`}>User Logs</h2>
                 
                 {/* View Toggle */}
                 <div className={`relative flex items-center rounded-xl p-1 ${isDark ? 'bg-white/5' : 'bg-gray-100'}`}>
@@ -350,7 +350,7 @@ const AdminLogs: React.FC = () => {
                                             )}
                                         </div>
                                         <div className="flex-1 min-w-0">
-                                            <h3 className={`font-medium truncate ${isDark ? 'text-white' : 'text-[#121014]'}`}>{user.full_name || 'Anonymous'}</h3>
+                                            <h3 className={`font-medium truncate ${isDark ? 'text-white' : 'text-[var(--text-primary)]'}`}>{user.full_name || 'Anonymous'}</h3>
                                             <p className={`text-xs truncate ${isDark ? 'text-gray-500' : 'text-gray-400'}`}>{user.email}</p>
                                         </div>
                                         <span className={`material-symbols-outlined text-sm ${isDark ? 'text-gray-600' : 'text-gray-300'}`}>
@@ -393,7 +393,7 @@ const AdminLogs: React.FC = () => {
                                                 </div>
                                             )}
                                         </div>
-                                        <h3 className={`font-medium text-sm truncate ${isDark ? 'text-white' : 'text-[#121014]'}`}>{user.full_name || 'Anonymous'}</h3>
+                                        <h3 className={`font-medium text-sm truncate ${isDark ? 'text-white' : 'text-[var(--text-primary)]'}`}>{user.full_name || 'Anonymous'}</h3>
                                         <p className={`text-[10px] truncate mt-0.5 ${isDark ? 'text-gray-500' : 'text-gray-400'}`}>{user.email}</p>
                                     </motion.button>
                                 ))}

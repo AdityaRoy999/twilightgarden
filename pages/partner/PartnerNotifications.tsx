@@ -37,16 +37,16 @@ const PartnerNotifications: React.FC = () => {
     };
 
     return (
-        <div className={`min-h-screen transition-colors duration-300 ${isDark ? 'bg-[#121014]' : 'bg-[#FDFCF8]'}`}>
+        <div className={`min-h-screen transition-colors duration-300 bg-background-dark`}>
             {/* Header */}
-            <header className={`sticky top-0 z-10 px-6 py-4 flex items-center gap-4 ${isDark ? 'bg-[#121014]/95' : 'bg-[#FDFCF8]/95'} backdrop-blur-sm`}>
+            <header className={`sticky top-0 z-10 px-6 py-4 flex items-center gap-4 bg-background-dark/95 backdrop-blur-sm`}>
                 <button
                     onClick={() => navigate(-1)}
                     className={`w-10 h-10 rounded-xl flex items-center justify-center transition-colors ${isDark ? 'bg-white/5 hover:bg-white/10 text-white' : 'bg-gray-100 hover:bg-gray-200 text-gray-900'}`}
                 >
                     <span className="material-symbols-outlined">arrow_back</span>
                 </button>
-                <h1 className={`text-xl font-bold flex-1 ${isDark ? 'text-white' : 'text-[#121014]'}`}>Notifications</h1>
+                <h1 className={`text-xl font-bold flex-1 ${isDark ? 'text-white' : 'text-[var(--text-primary)]'}`}>Notifications</h1>
                 <button
                     onClick={() => markAllAsRead()}
                     className={`w-10 h-10 rounded-xl flex items-center justify-center transition-colors ${isDark ? 'text-gray-400 hover:text-white' : 'text-gray-500 hover:text-gray-900'}`}
@@ -72,7 +72,7 @@ const PartnerNotifications: React.FC = () => {
                                     </span>
                                 </div>
                                 <h3 className={`text-lg font-bold mb-1 ${isDark ? 'text-white' : 'text-gray-900'}`}>No notifications</h3>
-                                <p className={`text-sm ${isDark ? 'text-gray-500' : 'text-gray-500'}`}>You're all caught up!</p>
+                                <p className={`text-sm text-gray-500`}>You're all caught up!</p>
                             </motion.div>
                         ) : (
                             notifications.map((notification) => (
@@ -85,12 +85,12 @@ const PartnerNotifications: React.FC = () => {
                                     onClick={() => handleNotificationClick(notification.id, notification.type)}
                                     className={`relative overflow-hidden rounded-2xl p-4 shadow-sm border cursor-pointer transition-all active:scale-[0.98] ${
                                         isDark
-                                            ? `bg-[#1E1E1E] border-white/5 ${!notification.is_read ? 'bg-white/5' : ''}`
+                                            ? `bg-surface-dark border-white/5 ${!notification.is_read ? 'bg-white/5' : ''}`
                                             : `bg-white border-gray-100 ${!notification.is_read ? 'bg-pink-50/30' : ''}`
                                     }`}
                                 >
                                     {!notification.is_read && (
-                                        <div className="absolute top-4 right-4 w-2 h-2 rounded-full bg-[#984369]" />
+                                        <div className="absolute top-4 right-4 w-2 h-2 rounded-full bg-primary" />
                                     )}
 
                                     <div className="flex gap-4">
@@ -99,7 +99,7 @@ const PartnerNotifications: React.FC = () => {
                                         }`}>
                                             <span className={`material-symbols-outlined ${
                                                 notification.type.startsWith('game_invite') ? 'text-purple-500' :
-                                                notification.type === 'log' ? 'text-[#984369]' : 'text-gray-500'
+                                                notification.type === 'log' ? 'text-primary' : 'text-gray-500'
                                             }`}>
                                                 {notification.type.startsWith('game_invite') ? 'sports_esports' :
                                                  notification.type === 'log' ? 'edit_calendar' : 'notifications'}

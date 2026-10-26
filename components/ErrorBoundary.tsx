@@ -47,7 +47,7 @@ class ErrorBoundary extends React.Component<ErrorBoundaryProps, ErrorBoundarySta
           </p>
           <button
             onClick={this.handleReset}
-            className="px-6 py-2.5 bg-[#984369] text-white rounded-full font-semibold text-sm hover:bg-[#7a3554] transition-colors"
+            className="on-brand px-6 py-2.5 bg-primary text-white rounded-full font-semibold text-sm hover:bg-[#7a3554] transition-colors"
           >
             {isChunkLoadError(this.state.error?.message||'')?'Reload app':'Try Again'}
           </button>

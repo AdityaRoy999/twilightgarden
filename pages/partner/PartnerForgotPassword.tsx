@@ -71,7 +71,7 @@ const PartnerForgotPassword: React.FC = () => {
             />
           </div>
 
-          <button type="submit" disabled={loading} className="w-full h-14 bg-blue-500 hover:bg-blue-600 rounded-xl font-bold text-white transition-all shadow-lg shadow-blue-500/20 flex items-center justify-center gap-2">
+          <button type="submit" disabled={loading} className="on-brand w-full h-14 bg-blue-500 hover:bg-blue-600 rounded-xl font-bold text-white transition-all shadow-lg shadow-blue-500/20 flex items-center justify-center gap-2">
             <span>{loading ? 'Sending Link...' : 'Send Reset Link'}</span>
           </button>
         </form>

@@ -14,6 +14,7 @@ import {
   Users,
   X,
   Ellipsis,
+  Flower2,
 } from "lucide-react";
 
 type Mode = "tracker" | "partner" | "admin";
@@ -106,7 +107,7 @@ export default function AppShell({ mode = "tracker" }: { mode?: Mode }) {
     );
   };
   return (
-    <div className="app-shell flex h-dvh min-h-0 w-full overflow-hidden bg-[#fdfcf8] text-gray-900 dark:bg-[#121014] dark:text-white">
+    <div className="app-shell flex h-dvh min-h-0 w-full overflow-hidden bg-background-dark text-gray-900 dark:bg-background-dark dark:text-white">
       <a
         href="#main-content"
         className="sr-only focus:not-sr-only focus:fixed focus:left-4 focus:top-4 focus:z-[100] focus:rounded-lg focus:bg-white focus:p-3 focus:text-black"
@@ -117,7 +118,7 @@ export default function AppShell({ mode = "tracker" }: { mode?: Mode }) {
         <aside
           aria-label="Sidebar"
           data-collapsed={collapsed}
-          className={`hidden h-full shrink-0 flex-col border-r border-black/5 bg-white/70 p-3 dark:border-white/5 dark:bg-[#1b1920] md:flex ${collapsed ? "w-20" : "w-60"}`}
+          className={`bloom-sidebar hidden h-full shrink-0 flex-col border-r md:flex ${collapsed ? "w-20" : "w-60"}`}
         >
           <div
             className={`mb-6 flex h-12 shrink-0 items-center ${collapsed ? "justify-center" : "justify-between gap-2 px-1"}`}
@@ -127,7 +128,7 @@ export default function AppShell({ mode = "tracker" }: { mode?: Mode }) {
                 to={items[0].to}
                 className="flex min-w-0 items-center gap-2 text-primary"
               >
-                <Heart size={24} aria-hidden="true" />
+                <Flower2 size={28} aria-hidden="true" />
                 <span className="font-display text-lg font-bold">Twilight</span>
               </Link>
             )}
@@ -147,11 +148,7 @@ export default function AppShell({ mode = "tracker" }: { mode?: Mode }) {
             {items.map((item) => renderLink(item))}
           </nav>
           {!collapsed && (
-            <p className="px-3 py-3 text-xs text-gray-400">
-              {mode === "partner"
-                ? "Your shared space"
-                : "A little closer, every day"}
-            </p>
+            <footer><Flower2 size={25}/><strong>A little closer, every day</strong><p>{mode === "partner" ? "Small moments of care make a difference." : "Your body. Your rhythm. A space that grows with you."}</p></footer>
           )}
         </aside>
       )}
@@ -162,7 +159,7 @@ export default function AppShell({ mode = "tracker" }: { mode?: Mode }) {
           id="main-content"
           className="min-h-0 min-w-0 flex-1 overflow-y-auto overscroll-contain"
         >
-          <div className="mx-auto h-full min-h-full w-full max-w-[1440px]">
+          <div key={location.pathname} className="bloom-route mx-auto h-full min-h-full w-full max-w-[1440px]">
             <Outlet />
           </div>
         </main>
@@ -170,7 +167,7 @@ export default function AppShell({ mode = "tracker" }: { mode?: Mode }) {
       {!hide && (
         <nav
           aria-label="Mobile navigation"
-          className="fixed inset-x-0 bottom-0 z-40 flex min-h-[68px] items-center border-t border-black/5 bg-white px-2 pb-[env(safe-area-inset-bottom)] dark:border-white/10 dark:bg-[#1b1920] md:hidden"
+          className="bloom-mobile-nav fixed inset-x-0 bottom-0 z-40 flex min-h-[68px] items-center px-2 pb-[env(safe-area-inset-bottom)] md:hidden"
         >
           {primary.map((item) => renderLink(item, true))}
           <button
@@ -195,7 +192,7 @@ export default function AppShell({ mode = "tracker" }: { mode?: Mode }) {
             aria-modal="true"
             aria-label="More destinations"
             onClick={(event) => event.stopPropagation()}
-            className="w-full rounded-t-3xl bg-white p-5 pb-[calc(24px+env(safe-area-inset-bottom))] dark:bg-[#211e27]"
+            className="bloom-sheet w-full rounded-t-3xl bg-white p-5 pb-[calc(24px+env(safe-area-inset-bottom))] dark:bg-surface-dark"
           >
             <div className="mb-3 flex items-center justify-between">
               <h2 className="text-lg font-semibold">More</h2>

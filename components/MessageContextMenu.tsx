@@ -111,7 +111,7 @@ const MessageContextMenu: React.FC<MessageContextMenuProps> = ({
               right: anchor === 'right' ? (window.innerWidth - x) : undefined,
               transformOrigin: anchor === 'right' ? 'top right' : 'top left',
             }}
-            className="z-[201] min-w-[200px] max-w-[240px] bg-white dark:bg-[#1E1C24] rounded-2xl shadow-[0_8px_40px_-8px_rgba(0,0,0,0.3)] dark:shadow-[0_8px_40px_-8px_rgba(0,0,0,0.6)] border border-gray-100 dark:border-gray-800 overflow-hidden"
+            className="z-[201] min-w-[200px] max-w-[240px] bg-white dark:bg-surface-dark rounded-2xl shadow-[0_8px_40px_-8px_rgba(0,0,0,0.3)] dark:shadow-[0_8px_40px_-8px_rgba(0,0,0,0.6)] border border-gray-100 dark:border-gray-800 overflow-hidden"
           >
             <div className="py-1.5">
               {visibleActions.map((action, i) => (

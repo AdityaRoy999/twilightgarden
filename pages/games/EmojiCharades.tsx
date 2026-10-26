@@ -410,7 +410,7 @@ const EmojiCharades: React.FC = () => {
     if (session?.status === 'ended') return <GameEndedScreen />;
 
     return (
-        <div className={`min-h-screen flex flex-col ${isDark ? 'bg-[#121014] text-white' : 'bg-gray-50 text-gray-900'}`}>
+        <div className={`min-h-screen flex flex-col ${isDark ? 'bg-background-dark text-white' : 'bg-gray-50 text-gray-900'}`}>
             <div className={`p-4 flex items-center justify-between border-b ${isDark ? 'border-white/10' : 'border-gray-200'}`}>
                 <button onClick={async () => { try { if (session?.id) await endSession(session.id); } catch {} navigate('/games'); }} className="p-2 -ml-2 rounded-full hover:bg-white/10 active:scale-95 transition-transform">
                     <span className="material-symbols-outlined text-2xl">arrow_back</span>
@@ -482,7 +482,7 @@ const EmojiCharades: React.FC = () => {
                                             ringCooldownRef.current = setTimeout(() => setRingCooldown(false), 30000);
                                         }}
                                         disabled={ringCooldown}
-                                        className={`px-4 py-3 rounded-2xl bg-gradient-to-r from-emerald-500 to-green-500 text-white font-bold transition-all active:scale-95 ${ringCooldown ? 'opacity-50' : ''}`}
+                                        className={`on-brand px-4 py-3 rounded-2xl bg-gradient-to-r from-emerald-500 to-green-500 text-white font-bold transition-all active:scale-95 ${ringCooldown ? 'opacity-50' : ''}`}
                                     >
                                         🔔 Ring Partner
                                     </button>
@@ -577,7 +577,7 @@ const EmojiCharades: React.FC = () => {
                             initial={{ height: 0, opacity: 0 }}
                             animate={{ height: 'auto', opacity: 1 }}
                             exit={{ height: 0, opacity: 0 }}
-                            className="bg-green-500 text-white rounded-2xl p-6 w-full mb-8"
+                            className="on-brand bg-green-500 text-white rounded-2xl p-6 w-full mb-8"
                         >
                             <h2 className="text-2xl font-bold">{currentCard.answer}</h2>
                         </motion.div>
@@ -624,7 +624,7 @@ const EmojiCharades: React.FC = () => {
                     </div>
                 ) : (
                     <div className="flex gap-4 w-full">
-                        <button onClick={() => { /* noop: revealed state will advance automatically */ }} className="flex-1 px-6 py-4 rounded-2xl font-bold bg-green-600 text-white">Answer revealed</button>
+                        <button onClick={() => { /* noop: revealed state will advance automatically */ }} className="on-brand flex-1 px-6 py-4 rounded-2xl font-bold bg-green-600 text-white">Answer revealed</button>
                     </div>
                 )}
                 </>
@@ -635,7 +635,7 @@ const EmojiCharades: React.FC = () => {
 };
 
 const Loading = () => (
-    <div className="flex h-screen items-center justify-center bg-[#121014]">
+    <div className="flex h-screen items-center justify-center bg-background-dark">
         <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-orange-500"></div>
     </div>
 );

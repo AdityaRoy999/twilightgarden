@@ -48,7 +48,7 @@ export const CallModal: React.FC = () => {
         }
     }, [remoteStream, isVideoCall]);
 
-    if(callStatus==='idle')return callError?<div role="alert" className="fixed bottom-24 left-4 right-4 z-[1000] mx-auto flex max-w-md items-center justify-between gap-3 rounded-2xl border border-amber-400/30 bg-[#211e27] p-4 text-sm text-white shadow-xl"><span>{callError}</span><button aria-label="Dismiss call error" onClick={dismissCallError} className="min-h-11 px-3">Close</button></div>:null;
+    if(callStatus==='idle')return callError?<div role="alert" className="fixed bottom-24 left-4 right-4 z-[1000] mx-auto flex max-w-md items-center justify-between gap-3 rounded-2xl border border-amber-400/30 bg-surface-dark p-4 text-sm text-white shadow-xl"><span>{callError}</span><button aria-label="Dismiss call error" onClick={dismissCallError} className="min-h-11 px-3">Close</button></div>:null;
 
     return (
         <AnimatePresence>
@@ -56,14 +56,14 @@ export const CallModal: React.FC = () => {
                 initial={{ opacity: 0, scale: 0.95 }}
                 animate={{ opacity: 1, scale: 1 }}
                 exit={{ opacity: 0, scale: 1.05 }}
-                className="fixed inset-0 z-[1000] flex flex-col items-center justify-center bg-[#121014] text-white overflow-hidden"
+                className="fixed inset-0 z-[1000] flex flex-col items-center justify-center bg-background-dark text-white overflow-hidden"
             >
                 {/* ALWAYS render remote audio element for ALL calls */}
                 <audio ref={remoteAudioRef} autoPlay playsInline className="hidden" />
 
                 {/* Background (Blurry Video or Dark Gradient) */}
                 <div className="absolute inset-0 z-0">
-                    <div className="absolute inset-0 bg-gradient-to-b from-[#1a161e] to-[#121014] opacity-90" />
+                    <div className="absolute inset-0 bg-gradient-to-b from-primary/10 to-background-dark opacity-90" />
                     {remoteStream && isVideoCall && (
                         <video 
                             ref={bgVideoRef} 
@@ -79,7 +79,7 @@ export const CallModal: React.FC = () => {
                 <div className="relative z-10 w-full max-w-md h-full flex flex-col items-center p-8">
                     
                     {/* Remote Screen */}
-                    <div className="relative flex-1 w-full rounded-3xl overflow-hidden bg-[#1e1b22] border border-white/10 shadow-2xl">
+                    <div className="relative flex-1 w-full rounded-3xl overflow-hidden bg-surface-dark border border-white/10 shadow-2xl">
                         <video 
                             ref={remoteVideoRef} 
                             autoPlay 
@@ -88,7 +88,7 @@ export const CallModal: React.FC = () => {
                         />
                         
                         {(!remoteStream || !isVideoCall) && (
-                            <div className="absolute inset-0 w-full h-full flex flex-col items-center justify-center space-y-4 bg-[#1e1b22]">
+                            <div className="absolute inset-0 w-full h-full flex flex-col items-center justify-center space-y-4 bg-surface-dark">
                                 <div className="p-8 rounded-full bg-purple-500/20 text-purple-400">
                                     <User size={64} />
                                 </div>
@@ -130,7 +130,7 @@ export const CallModal: React.FC = () => {
                                     whileHover={{ scale: 1.1 }}
                                     whileTap={{ scale: 0.9 }}
                                     aria-label="Decline call" onClick={rejectCall}
-                                    className="p-5 rounded-full bg-red-500 text-white shadow-lg shadow-red-500/30"
+                                    className="on-brand p-5 rounded-full bg-red-500 text-white shadow-lg shadow-red-500/30"
                                 >
                                     <PhoneOff size={32} />
                                 </motion.button>
@@ -138,7 +138,7 @@ export const CallModal: React.FC = () => {
                                     whileHover={{ scale: 1.1 }}
                                     whileTap={{ scale: 0.9 }}
                                     aria-label="Accept call" onClick={acceptCall}
-                                    className="p-5 rounded-full bg-green-500 text-white shadow-lg shadow-green-500/30 animate-pulse"
+                                    className="on-brand p-5 rounded-full bg-green-500 text-white shadow-lg shadow-green-500/30 animate-pulse"
                                 >
                                     <Phone size={32} />
                                 </motion.button>
@@ -163,7 +163,7 @@ export const CallModal: React.FC = () => {
 
                                 <button 
                                     aria-label="End call" onClick={endCall}
-                                    className="p-4 rounded-full bg-red-500 text-white shadow-lg shadow-red-500/40"
+                                    className="on-brand p-4 rounded-full bg-red-500 text-white shadow-lg shadow-red-500/40"
                                 >
                                     <PhoneOff size={28} />
                                 </button>

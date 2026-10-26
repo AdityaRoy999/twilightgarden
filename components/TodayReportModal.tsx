@@ -232,7 +232,7 @@ const TodayReportModal: React.FC<TodayReportModalProps> = ({
             animate={{ opacity: 1, scale: 1, y: 0 }}
             exit={{ opacity: 0, scale: 0.9, y: 20 }}
             transition={{ type: 'spring', duration: 0.4 }}
-            className="bg-white dark:bg-[#1a1a1f] rounded-2xl p-6 max-w-xs w-full shadow-2xl"
+            className="bg-white dark:bg-surface-dark rounded-2xl p-6 max-w-xs w-full shadow-2xl"
             onClick={(e) => e.stopPropagation()}
           >
             <h2 className="text-lg font-bold text-gray-900 dark:text-white text-center mb-2">
@@ -246,7 +246,7 @@ const TodayReportModal: React.FC<TodayReportModalProps> = ({
               <button
                 onClick={exportAsPNG}
                 disabled={isExporting}
-                className="flex items-center justify-center gap-3 py-4 px-6 bg-gradient-to-r from-pink-500 to-purple-600 text-white rounded-xl font-semibold hover:opacity-90 transition-all disabled:opacity-50"
+                className="on-brand flex items-center justify-center gap-3 py-4 px-6 bg-gradient-to-r from-pink-500 to-purple-600 text-white rounded-xl font-semibold hover:opacity-90 transition-all disabled:opacity-50"
               >
                 <span className="material-symbols-outlined">image</span>
                 {exportType === 'png' ? 'Generating...' : 'PNG Image'}
@@ -255,7 +255,7 @@ const TodayReportModal: React.FC<TodayReportModalProps> = ({
               <button
                 onClick={exportAsPDF}
                 disabled={isExporting}
-                className="flex items-center justify-center gap-3 py-4 px-6 bg-gradient-to-r from-blue-500 to-indigo-600 text-white rounded-xl font-semibold hover:opacity-90 transition-all disabled:opacity-50"
+                className="on-brand flex items-center justify-center gap-3 py-4 px-6 bg-gradient-to-r from-blue-500 to-indigo-600 text-white rounded-xl font-semibold hover:opacity-90 transition-all disabled:opacity-50"
               >
                 <span className="material-symbols-outlined">picture_as_pdf</span>
                 {exportType === 'pdf' ? 'Generating...' : 'PDF Document'}

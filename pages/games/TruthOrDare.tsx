@@ -239,7 +239,7 @@ const TruthOrDare: React.FC = () => {
     const partnerPresent = !!session.player_o;
 
     return (
-        <div className={`min-h-screen flex flex-col ${isDark ? 'bg-[#121014] text-white' : 'bg-gray-50 text-gray-900'}`}>
+        <div className={`min-h-screen flex flex-col ${isDark ? 'bg-background-dark text-white' : 'bg-gray-50 text-gray-900'}`}>
              {/* Header */}
              <div className={`p-4 flex items-center justify-between border-b ${isDark ? 'border-white/10' : 'border-gray-200'}`}>
                 <button onClick={async () => { try { if (session?.id) await endSession(session.id); } catch {} navigate('/games'); }} className="p-2 -ml-2 rounded-full hover:bg-white/10 active:scale-95 transition-transform">
@@ -373,13 +373,13 @@ const TruthOrDare: React.FC = () => {
                             <div className="flex gap-4 w-full">
                                 <button
                                     onClick={() => pickCard('Truth')}
-                                    className="flex-1 py-4 rounded-2xl bg-blue-500 hover:bg-blue-600 text-white font-bold text-lg shadow-lg active:scale-95 transition-transform"
+                                    className="on-brand flex-1 py-4 rounded-2xl bg-blue-500 hover:bg-blue-600 text-white font-bold text-lg shadow-lg active:scale-95 transition-transform"
                                 >
                                     Truth
                                 </button>
                                 <button
                                     onClick={() => pickCard('Dare')}
-                                    className="flex-1 py-4 rounded-2xl bg-rose-500 hover:bg-rose-600 text-white font-bold text-lg shadow-lg active:scale-95 transition-transform"
+                                    className="on-brand flex-1 py-4 rounded-2xl bg-rose-500 hover:bg-rose-600 text-white font-bold text-lg shadow-lg active:scale-95 transition-transform"
                                 >
                                     Dare
                                 </button>

@@ -50,7 +50,7 @@ const AdminDashboard: React.FC = () => {
 
     if (isLoading && users.length === 0) {
         return (
-            <div className={`min-h-screen flex flex-col items-center justify-center gap-4 transition-colors ${isDark ? 'bg-background-dark' : 'bg-[#FDFCF8]'}`}>
+            <div className={`min-h-screen flex flex-col items-center justify-center gap-4 transition-colors bg-background-dark`}>
                 <motion.div 
                     animate={{ rotate: 360 }}
                     transition={{ duration: 1, repeat: Infinity, ease: "linear" }}
@@ -63,10 +63,10 @@ const AdminDashboard: React.FC = () => {
     }
 
     return (
-        <div className={`animate-slideIn font-display flex flex-col pb-24 min-h-screen transition-colors duration-300 ${isDark ? 'bg-background-dark' : 'bg-[#FDFCF8]'}`}>
+        <div className={`animate-slideIn font-display flex flex-col pb-24 min-h-screen transition-colors duration-300 bg-background-dark`}>
             {/* Admin Header */}
             <header className={`flex items-center justify-between px-6 py-6 sticky top-0 z-20 backdrop-blur-sm transition-colors duration-300 ${
-                isDark ? 'bg-[#121014]/95' : 'bg-[#FDFCF8]/95'
+                isDark ? 'bg-background-dark/95' : 'bg-background-dark/95'
             }`}>
                 <div className="flex items-center gap-3">
                     <div className="relative">
@@ -80,7 +80,7 @@ const AdminDashboard: React.FC = () => {
                     </div>
                     <div className="flex flex-col">
                         <span className="text-sm font-medium text-gray-400">Welcome back,</span>
-                        <h2 className={`text-xl font-bold leading-tight ${isDark ? 'text-white' : 'text-[#121014]'}`}>Admin</h2>
+                        <h2 className={`text-xl font-bold leading-tight ${isDark ? 'text-white' : 'text-[var(--text-primary)]'}`}>Admin</h2>
                     </div>
                 </div>
                 <motion.button 
@@ -103,11 +103,11 @@ const AdminDashboard: React.FC = () => {
                         isDark ? 'bg-surface-dark border-white/5 shadow-none' : 'bg-white border-gray-100'
                     }`}>
                         <div className="flex items-center gap-2 mb-3">
-                            <span className="material-symbols-outlined text-[#984369] text-lg">group</span>
+                            <span className="material-symbols-outlined text-primary text-lg">group</span>
                             <span className="text-[10px] font-bold text-gray-400 uppercase tracking-wide">Total Users</span>
                         </div>
                         <div className="flex flex-col">
-                            <span className={`text-2xl font-bold mb-0.5 ${isDark ? 'text-white' : 'text-[#121014]'}`}>{stats.totalUsers}</span>
+                            <span className={`text-2xl font-bold mb-0.5 ${isDark ? 'text-white' : 'text-[var(--text-primary)]'}`}>{stats.totalUsers}</span>
                             <span className="text-xs font-medium text-gray-400">registered</span>
                         </div>
                     </div>
@@ -121,7 +121,7 @@ const AdminDashboard: React.FC = () => {
                             <span className="text-[10px] font-bold text-gray-400 uppercase tracking-wide">Active Today</span>
                         </div>
                         <div className="flex flex-col">
-                            <span className={`text-2xl font-bold mb-0.5 ${isDark ? 'text-white' : 'text-[#121014]'}`}>{stats.activeToday}</span>
+                            <span className={`text-2xl font-bold mb-0.5 ${isDark ? 'text-white' : 'text-[var(--text-primary)]'}`}>{stats.activeToday}</span>
                             <span className="text-xs font-medium text-gray-400">logged today</span>
                         </div>
                     </div>
@@ -130,7 +130,7 @@ const AdminDashboard: React.FC = () => {
                 {/* Love Lock Card - Full Width */}
                 {couple?.status === 'active' ? (
                     /* Couple is already paired - show connected status */
-                    <div className="w-full bg-gradient-to-r from-[#4ECDC4] to-[#44A08D] text-white p-6 rounded-[24px] shadow-lg shadow-[#4ECDC4]/20 flex items-center justify-between">
+                    <div className="on-brand w-full bg-gradient-to-r from-[#4ECDC4] to-[#44A08D] text-white p-6 rounded-[24px] shadow-lg shadow-[#4ECDC4]/20 flex items-center justify-between">
                         <div className="flex flex-col items-start gap-1">
                             <span className="text-lg font-bold">Love Lock</span>
                             <span className="text-sm text-white/80 flex items-center gap-2">
@@ -176,7 +176,7 @@ const AdminDashboard: React.FC = () => {
                 {/* Users List */}
                 <div>
                     <div className="flex items-center justify-between mb-4 px-1">
-                        <h3 className={`text-sm font-bold ${isDark ? 'text-white' : 'text-[#121014]'}`}>Registered Users</h3>
+                        <h3 className={`text-sm font-bold ${isDark ? 'text-white' : 'text-[var(--text-primary)]'}`}>Registered Users</h3>
                         <span className={`text-xs font-semibold ${isDark ? 'text-gray-500' : 'text-gray-400'}`}>
                             {users.length} total
                         </span>
@@ -212,7 +212,7 @@ const AdminDashboard: React.FC = () => {
                                 {/* Info */}
                                 <div className="flex-1 min-w-0">
                                     <div className="flex items-center gap-2">
-                                        <span className={`font-medium truncate ${isDark ? 'text-white' : 'text-[#121014]'}`}>
+                                        <span className={`font-medium truncate ${isDark ? 'text-white' : 'text-[var(--text-primary)]'}`}>
                                             {u.full_name || 'Anonymous'}
                                         </span>
                                         {u.role === 'admin' && (

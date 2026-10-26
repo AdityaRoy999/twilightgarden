@@ -99,7 +99,7 @@ const Onboarding: React.FC = () => {
       </header>
 
       <main className="flex-1 flex flex-col items-center justify-center p-6 z-10 w-full max-w-lg mx-auto">
-        {saveError && <p role="alert" className="mb-4 rounded-xl bg-red-950 p-3 text-white">{saveError}</p>}
+        {saveError && <p role="alert" className="on-brand mb-4 rounded-xl bg-red-950 p-3 text-white">{saveError}</p>}
         <AnimatePresence mode="wait">
 
           {/* STEP 0: WELCOME */}
@@ -168,7 +168,7 @@ const Onboarding: React.FC = () => {
                                     disabled={future}
                                     title={future?'Choose today or an earlier date':undefined}
                                     onClick={() => {setSaveError(null);handleDayClick(day);}}
-                                    className={`h-10 w-10 mx-auto rounded-full flex items-center justify-center text-sm font-bold transition-all disabled:cursor-not-allowed disabled:opacity-25 ${selected ? 'bg-primary text-white shadow-lg shadow-primary/40 scale-110' : 'text-gray-300 hover:bg-white/5'}`}
+                                    className={`h-10 w-10 mx-auto rounded-full flex items-center justify-center text-sm font-bold transition-all disabled:cursor-not-allowed disabled:opacity-25 ${selected ? 'on-brand bg-primary text-white shadow-lg shadow-primary/40 scale-110' : 'text-gray-300 hover:bg-white/5'}`}
                                 >
                                     {day}
                                 </button>
@@ -181,7 +181,7 @@ const Onboarding: React.FC = () => {
                      <button
                         onClick={handleNext}
                         disabled={!lastPeriodDate}
-                        className={`w-full py-4 rounded-2xl font-bold transition-all ${lastPeriodDate ? 'bg-primary text-white shadow-lg shadow-primary/20' : 'bg-white/5 text-gray-500 cursor-not-allowed'}`}
+                        className={`w-full py-4 rounded-2xl font-bold transition-all ${lastPeriodDate ? 'on-brand bg-primary text-white shadow-lg shadow-primary/20' : 'bg-white/5 text-gray-500 cursor-not-allowed'}`}
                       >
                           Continue
                       </button>
@@ -218,7 +218,7 @@ const Onboarding: React.FC = () => {
 
                 <button
                     onClick={handleNext}
-                    className="w-full bg-primary text-white font-bold py-4 rounded-2xl shadow-lg shadow-primary/20 transition-all hover:bg-primary/90"
+                    className="on-brand w-full bg-primary text-white font-bold py-4 rounded-2xl shadow-lg shadow-primary/20 transition-all hover:bg-primary/90"
                 >
                     Continue
                 </button>

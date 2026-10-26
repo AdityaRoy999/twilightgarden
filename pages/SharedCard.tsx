@@ -64,7 +64,7 @@ const SharedCard: React.FC = () => {
                 <p className="text-white/60 mb-6">This share link may have expired or been deleted.</p>
                 <button
                     onClick={() => navigate('/')}
-                    className="px-6 py-3 bg-primary rounded-full text-white font-semibold"
+                    className="on-brand px-6 py-3 bg-primary rounded-full text-white font-semibold"
                 >
                     Go to Twilight Garden
                 </button>
@@ -202,7 +202,7 @@ const SharedCard: React.FC = () => {
                 <p className="text-white/40 text-sm mb-3">Track your own cycle</p>
                 <button
                     onClick={() => navigate('/signup')}
-                    className="px-8 py-3 bg-primary hover:bg-primary/90 text-white font-bold rounded-full shadow-lg shadow-primary/30 transition-all"
+                    className="on-brand px-8 py-3 bg-primary hover:bg-primary/90 text-white font-bold rounded-full shadow-lg shadow-primary/30 transition-all"
                 >
                     Join Twilight Garden
                 </button>

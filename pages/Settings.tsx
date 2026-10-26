@@ -217,7 +217,7 @@ const Settings: React.FC = () => {
   };
 
   return (
-    <div className="animate-slideIn font-display flex flex-col pb-24 bg-[#FDFCF8] dark:bg-background-dark min-h-screen transition-colors duration-300">
+    <div className="animate-slideIn font-display flex flex-col pb-24 bg-background-dark min-h-screen transition-colors duration-300">
       {/* Global Toast */}
       <Toast
         message={toast.message}
@@ -235,14 +235,14 @@ const Settings: React.FC = () => {
             <p className="text-sm text-gray-600 dark:text-gray-300 mb-5">Remove this device's public-key registration? This does not sign the device out or erase its cached keys. It can register again while signed in.</p>
             <div className="flex gap-3">
               <button onClick={() => setUnlinkDeviceId(null)} className="flex-1 py-2.5 rounded-xl bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-200 text-sm font-medium">Cancel</button>
-              <button onClick={confirmUnlinkDevice} className="flex-1 py-2.5 rounded-xl bg-red-500 text-white text-sm font-medium">Remove key</button>
+              <button onClick={confirmUnlinkDevice} className="on-brand flex-1 py-2.5 rounded-xl bg-red-500 text-white text-sm font-medium">Remove key</button>
             </div>
           </div>
         </div>
       )}
 
       <header className="flex items-center px-6 pt-8 pb-4 bg-transparent">
-        <h2 className="text-[#121014] dark:text-white text-2xl font-bold leading-tight tracking-tight">Settings</h2>
+        <h2 className="text-[var(--text-primary)] dark:text-white text-2xl font-bold leading-tight tracking-tight">Settings</h2>
       </header>
 
       <div className="px-6 mb-8">
@@ -255,12 +255,12 @@ const Settings: React.FC = () => {
                   `url("${profile?.avatar_url || "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100' fill='%23ccc'%3E%3Ccircle cx='50' cy='40' r='20'/%3E%3Cellipse cx='50' cy='85' rx='30' ry='22'/%3E%3C/svg%3E"}")`,
               }}
             ></div>
-            <button className="absolute bottom-0 right-0 bg-primary text-white p-1.5 rounded-full border-2 border-white dark:border-[#1E1B24] flex items-center justify-center shadow-sm">
+            <button className="on-brand absolute bottom-0 right-0 bg-primary text-white p-1.5 rounded-full border-2 border-white dark:border-[#1E1B24] flex items-center justify-center shadow-sm">
               <span className="material-symbols-outlined text-[16px]">edit</span>
             </button>
           </div>
           <div className="text-center md:text-left flex-grow flex flex-col justify-center">
-            <h3 className="text-xl md:text-2xl font-bold text-[#121014] dark:text-white mb-1">{profile?.full_name || 'User'}</h3>
+            <h3 className="text-xl md:text-2xl font-bold text-[var(--text-primary)] dark:text-white mb-1">{profile?.full_name || 'User'}</h3>
             <p className="text-sm md:text-base text-gray-500 dark:text-gray-400 mb-4">{user?.email}</p>
             <button
               onClick={() => navigate('/settings/profile')}
@@ -278,7 +278,7 @@ const Settings: React.FC = () => {
           {/* Left Column Settings */}
           <div className="flex flex-col gap-6">
             <div>
-              <h3 className="text-[#121014] dark:text-white text-lg font-bold mb-3 px-1">App Preferences</h3>
+              <h3 className="text-[var(--text-primary)] dark:text-white text-lg font-bold mb-3 px-1">App Preferences</h3>
               <div className="bg-white dark:bg-surface-dark rounded-2xl border border-gray-100 dark:border-white/5 overflow-hidden shadow-soft transition-colors mb-4">
                 {/* Theme Toggle */}
                 <div className="flex items-center justify-between p-4 border-b border-gray-100 dark:border-white/5 hover:bg-gray-50 dark:hover:bg-white/5 transition-colors cursor-pointer group" onClick={toggleTheme}>
@@ -287,7 +287,7 @@ const Settings: React.FC = () => {
                       <span className="material-symbols-outlined">{theme === 'dark' ? 'dark_mode' : 'light_mode'}</span>
                     </div>
                     <div className="flex flex-col">
-                      <span className="font-medium text-[#121014] dark:text-gray-200">Dark Mode</span>
+                      <span className="font-medium text-[var(--text-primary)] dark:text-gray-200">Dark Mode</span>
                       <span className="text-xs text-gray-500">{theme === 'dark' ? 'On' : 'Off'}</span>
                     </div>
                   </div>
@@ -304,7 +304,7 @@ const Settings: React.FC = () => {
                       <span className="material-symbols-outlined">{animationsEnabled ? 'animation' : 'stop_circle'}</span>
                     </div>
                     <div className="flex flex-col">
-                      <span className="font-medium text-[#121014] dark:text-gray-200">Enable Animations</span>
+                      <span className="font-medium text-[var(--text-primary)] dark:text-gray-200">Enable Animations</span>
                       <span className="text-xs text-gray-500">{animationsEnabled ? 'Flowing interactions' : 'Reduced motion'}</span>
                     </div>
                   </div>
@@ -321,7 +321,7 @@ const Settings: React.FC = () => {
                       <span className="material-symbols-outlined">{solidNavBg ? 'layers_clear' : 'blur_on'}</span>
                     </div>
                     <div className="flex flex-col">
-                      <span className="font-medium text-[#121014] dark:text-gray-200">Solid Navbar Background</span>
+                      <span className="font-medium text-[var(--text-primary)] dark:text-gray-200">Solid Navbar Background</span>
                       <span className="text-xs text-gray-500">{solidNavBg ? 'Opaque (Solid Color)' : 'Glassmorphism (Blur)'}</span>
                     </div>
                   </div>
@@ -346,7 +346,7 @@ const Settings: React.FC = () => {
                                <span className="material-symbols-outlined text-white text-lg drop-shadow-md">palette</span>
                           </div>
                           <div className="flex flex-col">
-                              <span className="font-medium text-[#121014] dark:text-gray-200">App Theme Color</span>
+                              <span className="font-medium text-[var(--text-primary)] dark:text-gray-200">App Theme Color</span>
                               <span className="text-xs text-gray-500">Customize appearance</span>
                           </div>
                       </div>
@@ -356,7 +356,7 @@ const Settings: React.FC = () => {
             </div>
 
             <div>
-              <h3 className="text-[#121014] dark:text-white text-lg font-bold mb-3 px-1">App Settings</h3>
+              <h3 className="text-[var(--text-primary)] dark:text-white text-lg font-bold mb-3 px-1">App Settings</h3>
               <div className="bg-white dark:bg-surface-dark rounded-2xl border border-gray-100 dark:border-white/5 overflow-hidden shadow-soft transition-colors">
                   <div
                       className="flex items-center justify-between p-4 border-b border-gray-100 dark:border-white/5 hover:bg-gray-50 dark:hover:bg-white/5 transition-colors cursor-pointer group"
@@ -367,7 +367,7 @@ const Settings: React.FC = () => {
                               <span className="material-symbols-filled">favorite</span>
                           </div>
                           <div className="flex flex-col">
-                              <span className="font-medium text-[#121014] dark:text-gray-200">Love Lock</span>
+                              <span className="font-medium text-[var(--text-primary)] dark:text-gray-200">Love Lock</span>
                               <span className="text-xs text-gray-500">Couples Space</span>
                           </div>
                       </div>
@@ -382,7 +382,7 @@ const Settings: React.FC = () => {
                               <span className="material-symbols-outlined">notifications</span>
                           </div>
                           <div className="flex flex-col">
-                              <span className="font-medium text-[#121014] dark:text-gray-200">Manage Notifications</span>
+                              <span className="font-medium text-[var(--text-primary)] dark:text-gray-200">Manage Notifications</span>
                               <span className="text-xs text-gray-500">Period alerts & daily reminders</span>
                           </div>
                       </div>
@@ -392,7 +392,7 @@ const Settings: React.FC = () => {
             </div>
 
             <div>
-              <h3 className="text-[#121014] dark:text-white text-lg font-bold mb-3 px-1">Partner Settings</h3>
+              <h3 className="text-[var(--text-primary)] dark:text-white text-lg font-bold mb-3 px-1">Partner Settings</h3>
               <div className="bg-white dark:bg-surface-dark rounded-2xl border border-gray-100 dark:border-white/5 overflow-hidden shadow-soft transition-colors p-4">
                   <div className="flex flex-col gap-2">
                       <label className="text-sm font-medium text-gray-700 dark:text-gray-300">Partner Nickname</label>
@@ -414,7 +414,7 @@ const Settings: React.FC = () => {
                                       }
                                   }
                               }}
-                              className="w-full bg-gray-50 dark:bg-white/5 border border-gray-100 dark:border-white/10 rounded-xl px-4 py-3 text-[#121014] dark:text-white focus:ring-2 focus:ring-primary/20 outline-none transition-all"
+                              className="w-full bg-gray-50 dark:bg-white/5 border border-gray-100 dark:border-white/10 rounded-xl px-4 py-3 text-[var(--text-primary)] dark:text-white focus:ring-2 focus:ring-primary/20 outline-none transition-all"
                           />
                           <span className="material-symbols-outlined absolute right-3 top-3 text-gray-400 pointer-events-none">edit_note</span>
                       </div>
@@ -428,7 +428,7 @@ const Settings: React.FC = () => {
           <div className="flex flex-col gap-6">
 
             <div>
-              <h3 className="text-[#121014] dark:text-white text-lg font-bold mb-3 px-1">Cycle Preferences</h3>
+              <h3 className="text-[var(--text-primary)] dark:text-white text-lg font-bold mb-3 px-1">Cycle Preferences</h3>
               <div className="bg-white dark:bg-surface-dark rounded-2xl border border-gray-100 dark:border-white/5 overflow-hidden shadow-soft transition-colors">
                 {[
                   { icon: 'cached', label: 'Cycle Length', value: `${cycleSettings.avgCycleLength} days`, color: 'text-primary', link: '/settings/cycle-length' },
@@ -443,10 +443,10 @@ const Settings: React.FC = () => {
                       <div className={`flex items-center justify-center rounded-xl bg-gray-50 dark:bg-white/5 ${item.color} w-10 h-10 group-hover:scale-105 transition-transform`}>
                         <span className="material-symbols-outlined">{item.icon}</span>
                       </div>
-                      <span className="font-medium text-[#121014] dark:text-gray-200">{item.label}</span>
+                      <span className="font-medium text-[var(--text-primary)] dark:text-gray-200">{item.label}</span>
                     </div>
                     <div className="flex items-center gap-2">
-                      <span className="text-[#121014] dark:text-white font-semibold">{item.value}</span>
+                      <span className="text-[var(--text-primary)] dark:text-white font-semibold">{item.value}</span>
                       <span className="material-symbols-outlined text-gray-400 dark:text-gray-600 text-sm">arrow_forward_ios</span>
                     </div>
                   </div>
@@ -457,7 +457,7 @@ const Settings: React.FC = () => {
                       <span className="material-symbols-outlined">waves</span>
                     </div>
                     <div className="flex flex-col">
-                      <span className="font-medium text-[#121014] dark:text-gray-200">Irregular Cycle</span>
+                      <span className="font-medium text-[var(--text-primary)] dark:text-gray-200">Irregular Cycle</span>
                       <span className="text-xs text-gray-500">Don't predict future dates</span>
                     </div>
                   </div>
@@ -475,7 +475,7 @@ const Settings: React.FC = () => {
             </div>
 
             <div>
-              <h3 className="text-[#121014] dark:text-white text-lg font-bold mb-3 px-1">My Data</h3>
+              <h3 className="text-[var(--text-primary)] dark:text-white text-lg font-bold mb-3 px-1">My Data</h3>
               <div className="bg-white dark:bg-surface-dark rounded-2xl border border-gray-100 dark:border-white/5 overflow-hidden shadow-soft transition-colors">
                   <div
                       className="flex items-center justify-between p-4 border-b border-gray-100 dark:border-white/5 hover:bg-gray-50 dark:hover:bg-white/5 transition-colors cursor-pointer group"
@@ -485,7 +485,7 @@ const Settings: React.FC = () => {
                       <div className="flex items-center justify-center rounded-xl bg-gray-50 dark:bg-white/5 text-pink-500 w-10 h-10 group-hover:scale-105 transition-transform">
                         <span className="material-symbols-outlined">history</span>
                       </div>
-                      <span className="font-medium text-[#121014] dark:text-gray-200">Log History</span>
+                      <span className="font-medium text-[var(--text-primary)] dark:text-gray-200">Log History</span>
                     </div>
                     <span className="material-symbols-outlined text-gray-400 dark:text-gray-600 text-sm">arrow_forward_ios</span>
                   </div>
@@ -501,7 +501,7 @@ const Settings: React.FC = () => {
                         <Shield size={20} />
                       </div>
                       <div className="flex flex-col">
-                        <span className="font-medium text-[#121014] dark:text-gray-200">Chat backup</span>
+                        <span className="font-medium text-[var(--text-primary)] dark:text-gray-200">Chat backup</span>
                         <span className="text-xs text-gray-500">
                           {hasCloudBackup ? 'Backup on' : 'Optional · restore chats on a new device'}
                         </span>
@@ -518,7 +518,7 @@ const Settings: React.FC = () => {
             </div>
 
             <div>
-              <h3 className="text-[#121014] dark:text-white text-lg font-bold mb-3 px-1">Support & Data</h3>
+              <h3 className="text-[var(--text-primary)] dark:text-white text-lg font-bold mb-3 px-1">Support & Data</h3>
               <div className="bg-white dark:bg-surface-dark rounded-2xl border border-gray-100 dark:border-white/5 overflow-hidden flex flex-col shadow-soft transition-colors">
                 <button
                   onClick={handleExportPDF}
@@ -529,7 +529,7 @@ const Settings: React.FC = () => {
                       <span className="material-symbols-outlined">download</span>
                     </div>
                     <div className="flex flex-col">
-                      <span className="font-medium text-[#121014] dark:text-gray-200">Export Health Data</span>
+                      <span className="font-medium text-[var(--text-primary)] dark:text-gray-200">Export Health Data</span>
                       <span className="text-xs text-gray-500">Download PDF report</span>
                     </div>
                   </div>
@@ -544,7 +544,7 @@ const Settings: React.FC = () => {
                       <span className="material-symbols-outlined">medical_information</span>
                     </div>
                     <div className="flex flex-col">
-                      <span className="font-medium text-[#121014] dark:text-gray-200">Generate Doctor's Report</span>
+                      <span className="font-medium text-[var(--text-primary)] dark:text-gray-200">Generate Doctor's Report</span>
                       <span className="text-xs text-gray-500">Medical summary for healthcare providers</span>
                     </div>
                   </div>
@@ -559,7 +559,7 @@ const Settings: React.FC = () => {
                       <span className="material-symbols-outlined">today</span>
                     </div>
                     <div className="flex flex-col">
-                      <span className="font-medium text-[#121014] dark:text-gray-200">Today's Report Card</span>
+                      <span className="font-medium text-[var(--text-primary)] dark:text-gray-200">Today's Report Card</span>
                       <span className="text-xs text-gray-500">Download today's symptoms as PNG/PDF</span>
                     </div>
                   </div>
@@ -578,7 +578,7 @@ const Settings: React.FC = () => {
             </div>
 
             <div>
-              <h3 className="text-[#121014] dark:text-white text-lg font-bold mb-3 px-1">Linked Devices</h3>
+              <h3 className="text-[var(--text-primary)] dark:text-white text-lg font-bold mb-3 px-1">Linked Devices</h3>
               <p className="text-xs text-gray-500 mb-4 px-1">Registered encryption devices. Removing a registration does not sign that device out or erase its saved keys.</p>
               <div className="bg-white dark:bg-surface-dark rounded-2xl border border-gray-100 dark:border-white/5 overflow-hidden shadow-soft transition-colors">
                 {devices.map((device) => (
@@ -589,7 +589,7 @@ const Settings: React.FC = () => {
                         </div>
                         <div className="flex flex-col">
                           <div className="flex items-center gap-2">
-                            <span className="font-medium text-[#121014] dark:text-gray-200">{device.device_name || 'Unknown Device'}</span>
+                            <span className="font-medium text-[var(--text-primary)] dark:text-gray-200">{device.device_name || 'Unknown Device'}</span>
                             {device.device_id === deviceId && (
                               <span className="text-[10px] px-1.5 py-0.5 bg-primary/20 text-primary rounded-md font-bold uppercase tracking-wider">Current</span>
                             )}

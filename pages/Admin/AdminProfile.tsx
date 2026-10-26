@@ -17,9 +17,9 @@ const AdminProfile: React.FC = () => {
     };
 
     return (
-        <div className={`animate-slideIn font-display flex flex-col pb-24 min-h-screen transition-colors duration-300 ${isDark ? 'bg-background-dark' : 'bg-[#FDFCF8]'}`}>
+        <div className={`animate-slideIn font-display flex flex-col pb-24 min-h-screen transition-colors duration-300 bg-background-dark`}>
             <header className={`flex items-center px-6 pt-8 pb-4`}>
-                <h2 className={`text-2xl font-bold leading-tight tracking-tight ${isDark ? 'text-white' : 'text-[#121014]'}`}>Settings</h2>
+                <h2 className={`text-2xl font-bold leading-tight tracking-tight ${isDark ? 'text-white' : 'text-[var(--text-primary)]'}`}>Settings</h2>
             </header>
 
             {/* Profile Card */}
@@ -38,7 +38,7 @@ const AdminProfile: React.FC = () => {
                         </div>
                     </div>
                     <div className="text-center">
-                        <h3 className={`text-lg font-bold ${isDark ? 'text-white' : 'text-[#121014]'}`}>{user?.name || 'Administrator'}</h3>
+                        <h3 className={`text-lg font-bold ${isDark ? 'text-white' : 'text-[var(--text-primary)]'}`}>{user?.name || 'Administrator'}</h3>
                         <p className={`text-sm ${isDark ? 'text-gray-400' : 'text-gray-500'}`}>{user?.email}</p>
                     </div>
                     <span className="px-3 py-1 rounded-full text-xs font-semibold bg-primary/10 text-primary">
@@ -49,7 +49,7 @@ const AdminProfile: React.FC = () => {
 
             {/* App Preferences */}
             <div className="px-6 mb-8">
-                <h3 className={`text-lg font-bold mb-3 px-1 ${isDark ? 'text-white' : 'text-[#121014]'}`}>App Preferences</h3>
+                <h3 className={`text-lg font-bold mb-3 px-1 ${isDark ? 'text-white' : 'text-[var(--text-primary)]'}`}>App Preferences</h3>
                 <div className={`rounded-2xl border overflow-hidden shadow-soft transition-colors ${
                     isDark ? 'bg-surface-dark border-white/5 shadow-none' : 'bg-white border-gray-100'
                 }`}>
@@ -67,7 +67,7 @@ const AdminProfile: React.FC = () => {
                                 <span className="material-symbols-outlined">{isDark ? 'dark_mode' : 'light_mode'}</span>
                             </div>
                             <div className="flex flex-col">
-                                <span className={`font-medium ${isDark ? 'text-gray-200' : 'text-[#121014]'}`}>Dark Mode</span>
+                                <span className={`font-medium ${isDark ? 'text-gray-200' : 'text-[var(--text-primary)]'}`}>Dark Mode</span>
                                 <span className={`text-xs ${isDark ? 'text-gray-500' : 'text-gray-400'}`}>{isDark ? 'On' : 'Off'}</span>
                             </div>
                         </div>
@@ -94,7 +94,7 @@ const AdminProfile: React.FC = () => {
                                  <span className="material-symbols-outlined text-white text-lg drop-shadow-md">palette</span>
                             </div>
                             <div className="flex flex-col">
-                                <span className={`font-medium ${isDark ? 'text-gray-200' : 'text-[#121014]'}`}>App Theme Color</span>
+                                <span className={`font-medium ${isDark ? 'text-gray-200' : 'text-[var(--text-primary)]'}`}>App Theme Color</span>
                                 <span className={`text-xs ${isDark ? 'text-gray-500' : 'text-gray-400'}`}>Customize appearance</span>
                             </div>
                         </div>
@@ -105,7 +105,7 @@ const AdminProfile: React.FC = () => {
 
             {/* Account Info */}
             <div className="px-6 mb-8">
-                <h3 className={`text-lg font-bold mb-3 px-1 ${isDark ? 'text-white' : 'text-[#121014]'}`}>Account Info</h3>
+                <h3 className={`text-lg font-bold mb-3 px-1 ${isDark ? 'text-white' : 'text-[var(--text-primary)]'}`}>Account Info</h3>
                 <div className={`rounded-2xl border overflow-hidden shadow-soft transition-colors ${
                     isDark ? 'bg-surface-dark border-white/5 shadow-none' : 'bg-white border-gray-100'
                 }`}>
@@ -116,7 +116,7 @@ const AdminProfile: React.FC = () => {
                             <span className="material-symbols-outlined">badge</span>
                         </div>
                         <div className="flex flex-col">
-                            <span className={`font-medium ${isDark ? 'text-gray-200' : 'text-[#121014]'}`}>Role</span>
+                            <span className={`font-medium ${isDark ? 'text-gray-200' : 'text-[var(--text-primary)]'}`}>Role</span>
                             <span className={`text-xs ${isDark ? 'text-gray-500' : 'text-gray-400'}`}>System Administrator</span>
                         </div>
                     </div>
@@ -127,7 +127,7 @@ const AdminProfile: React.FC = () => {
                             <span className="material-symbols-outlined">verified_user</span>
                         </div>
                         <div className="flex flex-col">
-                            <span className={`font-medium ${isDark ? 'text-gray-200' : 'text-[#121014]'}`}>Access Level</span>
+                            <span className={`font-medium ${isDark ? 'text-gray-200' : 'text-[var(--text-primary)]'}`}>Access Level</span>
                             <span className={`text-xs ${isDark ? 'text-gray-500' : 'text-gray-400'}`}>Full Access</span>
                         </div>
                     </div>

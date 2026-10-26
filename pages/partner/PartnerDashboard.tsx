@@ -1,3 +1,4 @@
+import { CycleBloom, BotanicalSprig } from '../../components/ui/CycleBloom';
 import { localDateKey } from '../../lib/dates';
 import React from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -120,7 +121,7 @@ const PartnerDashboard: React.FC = () => {
                             <button
                                 onClick={handleJoin}
                                 disabled={pairingCode.length !== 6 || isPairing}
-                                className="w-full py-4 bg-primary hover:bg-primary/90 disabled:opacity-50 disabled:cursor-not-allowed text-white rounded-xl font-bold transition-all shadow-lg shadow-primary/30 flex items-center justify-center gap-2"
+                                className="on-brand w-full py-4 bg-primary hover:bg-primary/90 disabled:opacity-50 disabled:cursor-not-allowed text-white rounded-xl font-bold transition-all shadow-lg shadow-primary/30 flex items-center justify-center gap-2"
                             >
                                 {isPairing ? (
                                     <span className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin"/>
@@ -151,7 +152,7 @@ const PartnerDashboard: React.FC = () => {
                                 <button
                                     onClick={handleGenerate}
                                     disabled={isGenerating}
-                                    className="w-full py-4 bg-pink-500 hover:bg-pink-600 disabled:opacity-50 text-white rounded-xl font-bold transition-all shadow-lg shadow-pink-500/20 flex items-center justify-center gap-2"
+                                    className="on-brand w-full py-4 bg-pink-500 hover:bg-pink-600 disabled:opacity-50 text-white rounded-xl font-bold transition-all shadow-lg shadow-pink-500/20 flex items-center justify-center gap-2"
                                 >
                                     {isGenerating ? (
                                         <span className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin"/>
@@ -185,27 +186,7 @@ const PartnerDashboard: React.FC = () => {
 
     const cycleData = calculateCyclePhase(localDateKey(), cycleSettings,logs);
 
-    // Cycle Progress Calculation
-    const progress = Math.min((cycleData.currentDay / cycleSettings.avgCycleLength) * 100, 100);
-    const radius = 120;
-    const circumference = 2 * Math.PI * radius;
-    const strokeDashoffset = circumference - (progress / 100) * circumference;
-
-    // Determine colors
-    let primaryColor = '#984369'; // Default/Menstrual
-    let phaseLabel = cycleData.phase==='Unknown'?'Phase unavailable':'Menstrual Phase';
-
-    if (cycleData.phase === 'Follicular') {
-        primaryColor = '#4CAF50';
-        phaseLabel = 'Follicular Phase';
-    } else if (cycleData.phase === 'Ovulation') {
-        primaryColor = '#2196F3';
-        phaseLabel = 'Ovulation Phase';
-    } else if (cycleData.phase === 'Luteal') {
-        primaryColor = '#FF9800';
-        phaseLabel = 'Luteal Phase';
-    }
-
+    const phaseLabel = cycleData.phase === 'Unknown' ? 'Phase unavailable' : `${cycleData.phase} phase`;
     // Get today's log
     const todayStr = format(new Date(), 'yyyy-MM-dd');
     const todayLog = logs?.find(l => l.date === todayStr);
@@ -215,7 +196,7 @@ const PartnerDashboard: React.FC = () => {
     // Partner dashboard should show "Partner hasn't logged today" or "View Today's Update".
 
     return (
-        <div className="pb-24 pt-6 px-4 max-w-md md:max-w-5xl mx-auto min-h-screen">
+        <div className="bloom-partner pb-8 pt-6 px-5 max-w-md md:max-w-5xl mx-auto min-h-screen">
             {/* Header */}
             <div className="flex items-center justify-between mb-6">
                 <div className="flex items-center gap-3">
@@ -243,48 +224,11 @@ const PartnerDashboard: React.FC = () => {
 
             <div className="w-full">
             <div className="md:grid md:grid-cols-2 md:gap-8 md:items-start">
-             {/* Left Column: Cycle Wheel */}
-             <div className="flex flex-col items-center justify-center mb-10 md:mb-0 relative py-2 md:p-8">
-                 <div className="relative w-[300px] h-[300px] md:w-[360px] md:h-[360px]">
-                    {/* Background Circle */}
-                    <svg className="w-full h-full transform -rotate-90 overflow-visible" viewBox="0 0 300 300">
-                        <circle
-                            cx="150"
-                            cy="150"
-                            r={radius}
-                            stroke="currentColor"
-                            strokeWidth="20"
-                            fill="transparent"
-                            className="text-gray-100 dark:text-white/5"
-                        />
-                         {/* Progress Circle */}
-                        <motion.circle
-                            initial={{ strokeDashoffset: circumference }}
-                            animate={{ strokeDashoffset }}
-                            transition={{ duration: 1.5, ease: "easeOut" }}
-                            cx="150"
-                            cy="150"
-                            r={radius}
-                            stroke={primaryColor}
-                            strokeWidth="20"
-                            fill="transparent"
-                            strokeDasharray={`${circumference} ${circumference}`}
-                            strokeLinecap="round"
-                        />
-                    </svg>
-
-                    {/* Center Text */}
-                    <div className="absolute inset-0 flex flex-col items-center justify-center text-center px-8">
-                         <span className="text-[11px] font-bold tracking-[0.2em] uppercase mb-1" style={{ color: primaryColor }}>Cycle Day</span>
-                         <span className="text-[5.5rem] md:text-[6.5rem] leading-none font-bold text-[#121014] dark:text-white tracking-tighter mb-3">
-                             {cycleData.currentDay}
-                         </span>
-                         <span className="text-sm md:text-base font-bold text-gray-500 bg-white/50 dark:bg-black/20 px-4 py-1.5 rounded-full backdrop-blur-sm border border-gray-100 dark:border-white/5">
-                             {phaseLabel}
-                         </span>
-                    </div>
-                 </div>
-             </div>
+             <section className="bloom-cycle-hero mb-6 md:mb-0 md:col-span-2">
+               <BotanicalSprig className="bloom-hero-leaves"/>
+               <div className="bloom-cycle-copy"><p>Your partner’s rhythm</p><h2>{cycleData.currentDay ? `Day ${cycleData.currentDay}` : 'One day at a time'}</h2><h3>{phaseLabel}</h3><p className="bloom-muted">A little understanding goes a long way.</p></div>
+               <CycleBloom day={cycleData.currentDay} length={cycleSettings.avgCycleLength} hasEstimate={cycleData.hasEstimate !== false}/>
+             </section>
 
              {/* Right Column: Stats & Updates */}
              <div className="flex flex-col gap-6">
@@ -384,7 +328,7 @@ const PartnerDashboard: React.FC = () => {
                 </div>
 
                 {/* Daily Insight or Tip specific for Partners? */}
-                <div className="bg-gradient-to-r from-blue-500 to-indigo-600 rounded-[28px] p-6 text-white shadow-lg shadow-blue-500/20 mt-6 md:mt-0">
+                <div className="on-brand bg-gradient-to-r from-blue-500 to-indigo-600 rounded-[28px] p-6 text-white shadow-lg shadow-blue-500/20 mt-6 md:mt-0">
                     <div className="flex items-start gap-4">
                          <div className="w-10 h-10 rounded-full bg-white/20 flex items-center justify-center shrink-0">
                             <span className="material-symbols-outlined">tips_and_updates</span>

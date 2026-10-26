@@ -38,7 +38,7 @@ const Toast: React.FC<ToastProps> = ({
           transition={{ type: 'spring', damping: 20, stiffness: 300 }}
           className="fixed bottom-24 left-6 right-6 z-[100] flex justify-center pointer-events-none"
         >
-          <div className="bg-white/95 dark:bg-[#121014]/90 backdrop-blur-md text-[#121014] dark:text-white px-6 py-4 rounded-2xl shadow-2xl flex items-center gap-4 max-w-sm w-full pointer-events-auto border border-black/5 dark:border-white/10">
+          <div className="bg-white/95 dark:bg-background-dark/90 backdrop-blur-md text-[var(--text-primary)] dark:text-white px-6 py-4 rounded-2xl shadow-2xl flex items-center gap-4 max-w-sm w-full pointer-events-auto border border-black/5 dark:border-white/10">
             <div className={`shrink-0 w-10 h-10 rounded-full flex items-center justify-center ${
               type === 'success' ? 'bg-green-500/20 text-green-500' : 'bg-red-500/20 text-red-500'
             }`}>

@@ -295,7 +295,7 @@ const RapidFire: React.FC = () => {
     const timerColor = timer > 5 ? 'bg-green-500' : timer > 2 ? 'bg-yellow-500' : 'bg-red-500';
 
     return (
-        <div className={`min-h-screen flex flex-col ${isDark ? 'bg-[#121014] text-white' : 'bg-gray-50 text-gray-900'}`}>
+        <div className={`min-h-screen flex flex-col ${isDark ? 'bg-background-dark text-white' : 'bg-gray-50 text-gray-900'}`}>
             {/* Header */}
             <div className={`p-4 flex items-center justify-between border-b ${isDark ? 'border-white/10' : 'border-gray-200'}`}>
                 <button onClick={async () => { try { if (session?.id) await endSession(session.id); } catch {} navigate('/games'); }} className="p-2 -ml-2 rounded-full hover:bg-white/10 active:scale-95 transition-transform">
@@ -345,7 +345,7 @@ const RapidFire: React.FC = () => {
                                 {isMyTurn ? (
                                     <button
                                         onClick={startGame}
-                                        className="w-full py-4 rounded-2xl bg-gradient-to-r from-red-500 to-orange-500 text-white font-bold text-lg shadow-lg active:scale-95 transition-transform"
+                                        className="on-brand w-full py-4 rounded-2xl bg-gradient-to-r from-red-500 to-orange-500 text-white font-bold text-lg shadow-lg active:scale-95 transition-transform"
                                     >
                                         🔥 Start Round
                                     </button>
@@ -411,7 +411,7 @@ const RapidFire: React.FC = () => {
                                         />
                                         <button
                                             onClick={() => submitAnswer()}
-                                            className="px-6 py-3 rounded-2xl bg-gradient-to-r from-red-500 to-orange-500 text-white font-bold shadow-lg active:scale-95 transition-transform"
+                                            className="on-brand px-6 py-3 rounded-2xl bg-gradient-to-r from-red-500 to-orange-500 text-white font-bold shadow-lg active:scale-95 transition-transform"
                                         >
                                             →
                                         </button>
@@ -463,7 +463,7 @@ const RapidFire: React.FC = () => {
                                     return (
                                         <button
                                             onClick={newGame}
-                                            className="w-full py-4 rounded-2xl bg-gradient-to-r from-red-500 to-orange-500 text-white font-bold shadow-lg active:scale-95 transition-transform"
+                                            className="on-brand w-full py-4 rounded-2xl bg-gradient-to-r from-red-500 to-orange-500 text-white font-bold shadow-lg active:scale-95 transition-transform"
                                         >
                                             🔄 New Round
                                         </button>
@@ -472,7 +472,7 @@ const RapidFire: React.FC = () => {
                                     return (
                                         <button
                                             onClick={switchTurn}
-                                            className="w-full py-4 rounded-2xl bg-gradient-to-r from-violet-500 to-purple-600 text-white font-bold shadow-lg active:scale-95 transition-transform"
+                                            className="on-brand w-full py-4 rounded-2xl bg-gradient-to-r from-violet-500 to-purple-600 text-white font-bold shadow-lg active:scale-95 transition-transform"
                                         >
                                             ✨ Partner's Turn
                                         </button>

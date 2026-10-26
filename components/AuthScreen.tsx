@@ -139,7 +139,7 @@ export default function AuthScreen({
       ? "Make room for yourself"
       : "Welcome back";
   return (
-    <div className="min-h-dvh bg-[#fdfcf8] font-display text-gray-900 dark:bg-[#121014] dark:text-white">
+    <div className="bloom-auth min-h-dvh bg-background-dark font-display text-gray-900 dark:bg-background-dark dark:text-white">
       <header className="mx-auto flex h-20 max-w-6xl items-center justify-between px-4 sm:px-8">
         <button
           onClick={() =>
@@ -203,14 +203,14 @@ export default function AuthScreen({
               <Link
                 to="/signup"
                 aria-current={!partner ? "page" : undefined}
-                className={`rounded-xl px-3 py-3 text-center text-sm font-medium ${!partner ? "bg-white text-primary shadow-sm dark:bg-[#302634]" : "text-gray-500"}`}
+                className={`rounded-xl px-3 py-3 text-center text-sm font-medium ${!partner ? "bg-white text-primary shadow-sm dark:bg-surface-dark" : "text-gray-500"}`}
               >
                 Track my cycle
               </Link>
               <Link
                 to="/signup?mode=partner"
                 aria-current={partner ? "page" : undefined}
-                className={`rounded-xl px-3 py-3 text-center text-sm font-medium ${partner ? "bg-white text-primary shadow-sm dark:bg-[#302634]" : "text-gray-500"}`}
+                className={`rounded-xl px-3 py-3 text-center text-sm font-medium ${partner ? "bg-white text-primary shadow-sm dark:bg-surface-dark" : "text-gray-500"}`}
               >
                 Join my partner
               </Link>
@@ -338,7 +338,7 @@ export default function AuthScreen({
             )}
             <button
               disabled={busy}
-              className="flex h-12 w-full items-center justify-center gap-3 rounded-xl bg-primary px-5 text-sm font-semibold text-white transition-opacity hover:opacity-90 disabled:opacity-50"
+              className="on-brand flex h-12 w-full items-center justify-center gap-3 rounded-xl bg-primary px-5 text-sm font-semibold text-white transition-opacity hover:opacity-90 disabled:opacity-50"
             >
               {busy
                 ? "Please wait…"

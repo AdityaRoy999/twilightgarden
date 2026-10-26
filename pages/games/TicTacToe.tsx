@@ -337,7 +337,7 @@ const TicTacToe: React.FC = () => {
 
     if (loading) {
         return (
-            <div className={`min-h-screen flex items-center justify-center ${isDark ? 'bg-background-dark' : 'bg-[#FDFCF8]'}`}>
+            <div className={`min-h-screen flex items-center justify-center bg-background-dark`}>
                 <div className="flex flex-col items-center gap-4">
                     <motion.div animate={{ rotate: 360 }} transition={{ duration: 1, repeat: Infinity, ease: 'linear' }}
                         className="w-10 h-10 rounded-full" style={{ borderWidth: 3, borderStyle: 'solid', borderColor: primaryColor, borderTopColor: 'transparent' }} />
@@ -354,12 +354,12 @@ const TicTacToe: React.FC = () => {
     const strikeCoords = winLine ? getStrikeCoords(winLine) : null;
 
     return (
-        <div className={`min-h-screen flex flex-col font-display transition-colors duration-300 ${isDark ? 'bg-background-dark text-white' : 'bg-[#FDFCF8] text-[#121014]'}`}>
+        <div className={`min-h-screen flex flex-col font-display transition-colors duration-300 ${isDark ? 'bg-background-dark text-white' : 'bg-background-dark text-[var(--text-primary)]'}`}>
             {/* Confetti canvas — full-screen, above everything */}
             <canvas ref={confettiRef} className="fixed inset-0 z-50 pointer-events-none" style={{ display: showConfetti ? 'block' : 'none' }} />
 
             {/* Header */}
-            <header className={`flex items-center justify-between px-5 py-4 sticky top-0 z-20 backdrop-blur-sm border-b ${isDark ? 'bg-[#121014]/95 border-white/5' : 'bg-[#FDFCF8]/95 border-gray-100'}`}>
+            <header className={`flex items-center justify-between px-5 py-4 sticky top-0 z-20 backdrop-blur-sm border-b ${isDark ? 'bg-background-dark/95 border-white/5' : 'bg-background-dark/95 border-gray-100'}`}>
                 <button onClick={handleExit} className="w-10 h-10 rounded-full flex items-center justify-center hover:bg-white/10 transition-colors">
                     <span className="material-symbols-outlined">arrow_back</span>
                 </button>

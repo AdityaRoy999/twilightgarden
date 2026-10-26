@@ -16,17 +16,17 @@ const PartnerLogs: React.FC = () => {
 
     if (isCouplesLoading) {
         return (
-            <div className={`min-h-screen flex items-center justify-center ${isDark ? 'bg-background-dark text-white' : 'bg-[#FDFCF8] text-gray-800'}`}>
+            <div className={`min-h-screen flex items-center justify-center ${isDark ? 'bg-background-dark text-white' : 'bg-background-dark text-gray-800'}`}>
                 <div className="w-8 h-8 border-4 border-primary border-t-transparent rounded-full animate-spin"></div>
             </div>
         );
     }
 
     return (
-        <div className={`animate-slideIn font-display flex flex-col pb-24 min-h-screen transition-colors duration-300 ${isDark ? 'bg-background-dark' : 'bg-[#FDFCF8]'}`}>
+        <div className={`animate-slideIn font-display flex flex-col pb-24 min-h-screen transition-colors duration-300 bg-background-dark`}>
             <header className={`flex items-center justify-between px-6 pt-12 pb-6 ${isDark ? '' : ''}`}>
                 <div>
-                    <h2 className={`text-2xl font-bold leading-tight tracking-tight ${isDark ? 'text-white' : 'text-[#121014]'}`}>
+                    <h2 className={`text-2xl font-bold leading-tight tracking-tight ${isDark ? 'text-white' : 'text-[var(--text-primary)]'}`}>
                         {partnerProfile?.full_name ? `${partnerProfile.full_name}'s Logs` : 'Partner Logs'}
                     </h2>
                     <p className={`text-xs ${isDark ? 'text-gray-500' : 'text-gray-400'}`}>Last 30 days</p>
@@ -100,7 +100,7 @@ const PartnerLogs: React.FC = () => {
                                     {viewMode === 'list' ? (
                                         <>
                                             <div className="flex items-center justify-between mb-3">
-                                                <p className={`text-sm font-semibold ${isDark ? 'text-white' : 'text-[#121014]'}`}>
+                                                <p className={`text-sm font-semibold ${isDark ? 'text-white' : 'text-[var(--text-primary)]'}`}>
                                                     {date.toLocaleDateString('en-US', {
                                                         weekday: 'short',
                                                         month: 'short',

@@ -293,7 +293,7 @@ const SongLyrics: React.FC = () => {
     const progress = board_state.questions.length > 0 ? ((board_state.currentIndex + (board_state.phase === 'result' ? 1 : 0)) / board_state.questions.length) * 100 : 0;
 
     return (
-        <div className={`min-h-screen flex flex-col ${isDark ? 'bg-[#121014] text-white' : 'bg-gray-50 text-gray-900'}`}>
+        <div className={`min-h-screen flex flex-col ${isDark ? 'bg-background-dark text-white' : 'bg-gray-50 text-gray-900'}`}>
             {/* Header */}
             <div className={`p-4 flex items-center justify-between border-b ${isDark ? 'border-white/10' : 'border-gray-200'}`}>
                 <button onClick={async () => { try { if (session?.id) await endSession(session.id); } catch {} navigate('/games'); }} className="p-2 -ml-2 rounded-full hover:bg-white/10 active:scale-95 transition-transform">
@@ -356,7 +356,7 @@ const SongLyrics: React.FC = () => {
                                 {isMyTurn ? (
                                     <button
                                         onClick={startGame}
-                                        className="w-full py-4 rounded-2xl bg-gradient-to-r from-pink-500 to-fuchsia-500 text-white font-bold text-lg shadow-lg active:scale-95 transition-transform"
+                                        className="on-brand w-full py-4 rounded-2xl bg-gradient-to-r from-pink-500 to-fuchsia-500 text-white font-bold text-lg shadow-lg active:scale-95 transition-transform"
                                     >
                                         🎶 Start Game
                                     </button>
@@ -383,7 +383,7 @@ const SongLyrics: React.FC = () => {
                                     </div>
 
                                     {/* Lyric card */}
-                                    <div className="w-full p-6 rounded-3xl bg-gradient-to-br from-pink-500 to-fuchsia-600 text-white shadow-2xl mb-6 relative overflow-hidden">
+                                    <div className="on-brand w-full p-6 rounded-3xl bg-gradient-to-br from-pink-500 to-fuchsia-600 text-white shadow-2xl mb-6 relative overflow-hidden">
                                         <div className="absolute -top-8 -right-8 w-32 h-32 bg-white/10 rounded-full" />
                                         <div className="absolute -bottom-4 -left-4 w-20 h-20 bg-white/10 rounded-full" />
                                         <p className="text-lg italic relative z-10 leading-relaxed">
@@ -454,7 +454,7 @@ const SongLyrics: React.FC = () => {
 
                             <button
                                 onClick={nextQuestion}
-                                className="w-full py-4 rounded-2xl bg-gradient-to-r from-pink-500 to-fuchsia-500 text-white font-bold shadow-lg active:scale-95 transition-transform"
+                                className="on-brand w-full py-4 rounded-2xl bg-gradient-to-r from-pink-500 to-fuchsia-500 text-white font-bold shadow-lg active:scale-95 transition-transform"
                             >
                                 {board_state.currentIndex + 1 >= board_state.questions.length ? '🏁 See Results' : 'Next Song →'}
                             </button>
@@ -480,7 +480,7 @@ const SongLyrics: React.FC = () => {
 
                             <button
                                 onClick={newGame}
-                                className="w-full py-4 rounded-2xl bg-gradient-to-r from-pink-500 to-fuchsia-500 text-white font-bold shadow-lg active:scale-95 transition-transform"
+                                className="on-brand w-full py-4 rounded-2xl bg-gradient-to-r from-pink-500 to-fuchsia-500 text-white font-bold shadow-lg active:scale-95 transition-transform"
                             >
                                 🔄 Play Again
                             </button>

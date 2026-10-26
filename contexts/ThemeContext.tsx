@@ -25,7 +25,7 @@ export const useTheme = () => {
     return {
         theme: 'light' as Theme,
         toggleTheme: () => {},
-        primaryColor: '#984369',
+        primaryColor: '#c33367',
         updatePrimaryColor: (c: string) => {},
         resetTheme: () => {},
         animationsEnabled: true,
@@ -49,13 +49,13 @@ export const ThemeProvider: React.FC<{ children: React.ReactNode }> = ({ childre
   const [theme, setTheme] = useState<Theme>(() => {
     try {
       const saved = localStorage.getItem('theme');
-      return (saved === 'light') ? 'light' : 'dark';
-    } catch { return 'dark'; }
+      return localStorage.getItem('twilight-design-version') === 'bloom-1' && saved === 'dark' ? 'dark' : 'light';
+    } catch { return 'light'; }
   });
 
   const [primaryColor, setPrimaryColor] = useState<string>(() => {
-      try { return localStorage.getItem('theme-primary') || '#984369'; }
-      catch { return '#984369'; }
+      try { const saved = localStorage.getItem('theme-primary'); return !saved || (localStorage.getItem('twilight-design-version') !== 'bloom-1' && saved.toLowerCase() === '#984369') ? '#c33367' : saved; }
+      catch { return '#c33367'; }
   });
 
   const [animationsEnabled, setAnimationsEnabled] = useState<boolean>(() => {
@@ -75,7 +75,7 @@ export const ThemeProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     } else {
       root.classList.remove('dark');
     }
-    try { localStorage.setItem('theme', theme); } catch {}
+    try { localStorage.setItem('theme', theme); localStorage.setItem('twilight-design-version', 'bloom-1'); } catch {}
   }, [theme]);
 
   // Apply or remove body class for animations
@@ -135,8 +135,8 @@ export const ThemeProvider: React.FC<{ children: React.ReactNode }> = ({ childre
   };
 
   const resetTheme = () => {
-      setPrimaryColor('#984369');
-      setTheme('dark');
+      setPrimaryColor('#c33367');
+      setTheme('light');
       updateAnimationsEnabled(true);
       updateSolidNavBg(false);
   };
@@ -146,7 +146,7 @@ export const ThemeProvider: React.FC<{ children: React.ReactNode }> = ({ childre
       theme, toggleTheme, primaryColor, updatePrimaryColor, resetTheme,
       animationsEnabled, updateAnimationsEnabled, solidNavBg, updateSolidNavBg
     }}>
-      <MotionConfig reducedMotion={animationsEnabled ? "user" : "always"}>
+      <MotionConfig reducedMotion={animationsEnabled ? "user" : "always"} transition={{ duration: 0.24, ease: [0.22, 1, 0.36, 1] }}>
         {children}
       </MotionConfig>
     </ThemeContext.Provider>

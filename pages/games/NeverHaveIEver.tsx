@@ -319,7 +319,7 @@ const NeverHaveIEver: React.FC = () => {
     const isCreator = session.player_x === user?.id;
 
     return (
-        <div className={`min-h-screen flex flex-col ${isDark ? 'bg-[#121014] text-white' : 'bg-gray-50 text-gray-900'}`}>
+        <div className={`min-h-screen flex flex-col ${isDark ? 'bg-background-dark text-white' : 'bg-gray-50 text-gray-900'}`}>
             {/* Header */}
             <div className={`p-4 flex items-center justify-between border-b ${isDark ? 'border-white/10' : 'border-gray-200'}`}>
                 <button onClick={async () => { try { if (session?.id) await endSession(session.id); } catch {} navigate('/games'); }} className="p-2 -ml-2 rounded-full hover:bg-white/10 active:scale-95 transition-transform">
@@ -459,7 +459,7 @@ const NeverHaveIEver: React.FC = () => {
                                             <div className="flex-1">
                                                 <button
                                                     onClick={() => respond(true)}
-                                                    className="w-full py-4 rounded-2xl text-white font-bold text-lg shadow-lg active:scale-95 transition-transform bg-gradient-to-r from-green-500 to-emerald-600"
+                                                    className="on-brand w-full py-4 rounded-2xl text-white font-bold text-lg shadow-lg active:scale-95 transition-transform bg-gradient-to-r from-green-500 to-emerald-600"
                                                 >
                                                     ✋ I Have
                                                 </button>
@@ -467,7 +467,7 @@ const NeverHaveIEver: React.FC = () => {
                                             <div className="flex-1">
                                                 <button
                                                     onClick={() => respond(false)}
-                                                    className="w-full py-4 rounded-2xl text-white font-bold text-lg shadow-lg active:scale-95 transition-transform bg-gradient-to-r from-blue-500 to-indigo-600"
+                                                    className="on-brand w-full py-4 rounded-2xl text-white font-bold text-lg shadow-lg active:scale-95 transition-transform bg-gradient-to-r from-blue-500 to-indigo-600"
                                                 >
                                                     😇 Never
                                                 </button>
@@ -523,7 +523,7 @@ const NeverHaveIEver: React.FC = () => {
 
                                             <button
                                                 onClick={nextRound}
-                                                className="w-full mt-4 py-4 rounded-2xl bg-gradient-to-r from-violet-500 to-purple-600 text-white font-bold shadow-lg active:scale-95 transition-transform"
+                                                className="on-brand w-full mt-4 py-4 rounded-2xl bg-gradient-to-r from-violet-500 to-purple-600 text-white font-bold shadow-lg active:scale-95 transition-transform"
                                             >
                                                 {board_state.totalRounds && board_state.totalRounds > 0 && (board_state.roundNumber || 0) >= board_state.totalRounds ? 'Finish Game 🏆' : 'Next Statement →'}
                                             </button>

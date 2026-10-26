@@ -158,9 +158,9 @@ const BreathingExercises: React.FC = () => {
     };
 
     return (
-        <div className={`animate-slideIn font-display flex flex-col pb-24 min-h-screen transition-colors ${isDark ? 'bg-background-dark' : 'bg-[#FDFCF8]'}`}>
+        <div className={`animate-slideIn font-display flex flex-col pb-24 min-h-screen transition-colors bg-background-dark`}>
             {/* Header */}
-            <header className={`sticky top-0 z-10 flex items-center gap-3 backdrop-blur-md px-6 py-4 border-b ${isDark ? 'bg-[#121014] border-white/5' : 'bg-[#FDFCF8] border-gray-100'}`}>
+            <header className={`sticky top-0 z-10 flex items-center gap-3 backdrop-blur-md px-6 py-4 border-b ${isDark ? 'bg-background-dark border-white/5' : 'bg-background-dark border-gray-100'}`}>
                 <button 
                     onClick={() => {
                         if (selectedExercise || configuringExercise) resetExercise();
@@ -168,9 +168,9 @@ const BreathingExercises: React.FC = () => {
                     }} 
                     className={`w-10 h-10 rounded-full flex items-center justify-center ${isDark ? 'hover:bg-white/10' : 'hover:bg-black/5'}`}
                 >
-                    <span className={`material-symbols-outlined ${isDark ? 'text-white' : 'text-[#121014]'}`}>arrow_back</span>
+                    <span className={`material-symbols-outlined ${isDark ? 'text-white' : 'text-[var(--text-primary)]'}`}>arrow_back</span>
                 </button>
-                <h1 className={`text-2xl font-bold tracking-tight ${isDark ? 'text-white' : 'text-[#121014]'}`}>
+                <h1 className={`text-2xl font-bold tracking-tight ${isDark ? 'text-white' : 'text-[var(--text-primary)]'}`}>
                     {selectedExercise ? selectedExercise.name : configuringExercise ? 'Setup Session' : 'Breathing Exercises'}
                 </h1>
             </header>
@@ -293,7 +293,7 @@ const BreathingExercises: React.FC = () => {
 
                             <button
                                 onClick={startExercise}
-                                className="w-full py-5 bg-primary text-white font-black rounded-3xl shadow-xl shadow-primary/20 flex items-center justify-center gap-2 text-lg active:scale-95 transition-transform"
+                                className="on-brand w-full py-5 bg-primary text-white font-black rounded-3xl shadow-xl shadow-primary/20 flex items-center justify-center gap-2 text-lg active:scale-95 transition-transform"
                             >
                                 <span className="material-symbols-filled">play_arrow</span>
                                 START SESSION
@@ -324,7 +324,7 @@ const BreathingExercises: React.FC = () => {
                             </div>
                             <button
                                 onClick={resetExercise}
-                                className="px-8 py-3 bg-primary text-white font-bold rounded-2xl shadow-lg shadow-primary/20"
+                                className="on-brand px-8 py-3 bg-primary text-white font-bold rounded-2xl shadow-lg shadow-primary/20"
                             >
                                 Back to Exercises
                             </button>
