@@ -1,3 +1,4 @@
+import { Flower2 } from 'lucide-react';
 import { NotificationProvider } from './contexts/NotificationContext';
 import React, { useEffect } from 'react';
 import { HashRouter, Routes, Route, Navigate, useNavigate } from 'react-router-dom';
@@ -91,87 +92,11 @@ const NeverHaveIEver = React.lazy(() => import('./pages/games/NeverHaveIEver'));
 const RapidFire = React.lazy(() => import('./pages/games/RapidFire'));
 const SongLyrics = React.lazy(() => import('./pages/games/SongLyrics'));
 
-// Custom Twilight Garden loading spinner
+// Keep auth and route loading in the same palette as the destination screen.
 const LoadingScreen: React.FC = () => (
-  <div className="min-h-screen flex flex-col items-center justify-center bg-[#121014] overflow-hidden relative">
-    <style>{`
-      @keyframes tg-float { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-8px); } }
-      @keyframes tg-shimmer { 0% { background-position: -200% center; } 100% { background-position: 200% center; } }
-      @keyframes tg-orbit { 0% { transform: rotate(0deg) translateX(52px) rotate(0deg); opacity: 0; } 10% { opacity: 1; } 90% { opacity: 1; } 100% { transform: rotate(360deg) translateX(52px) rotate(-360deg); opacity: 0; } }
-      @keyframes tg-pulse-ring { 0% { transform: scale(0.8); opacity: 0.5; } 50% { transform: scale(1.15); opacity: 0; } 100% { transform: scale(0.8); opacity: 0; } }
-      @keyframes tg-fade-in { 0% { opacity: 0; transform: translateY(12px); } 100% { opacity: 1; transform: translateY(0); } }
-      @keyframes tg-dot { 0%, 80%, 100% { opacity: 0.2; transform: scale(0.8); } 40% { opacity: 1; transform: scale(1); } }
-      .tg-float { animation: tg-float 2.5s ease-in-out infinite; }
-      .tg-shimmer-text { background: linear-gradient(90deg, #984369 0%, #C77DBA 40%, #FF6B9D 50%, #C77DBA 60%, #984369 100%); background-size: 200% auto; -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; animation: tg-shimmer 3s linear infinite; }
-      .tg-ring { animation: tg-pulse-ring 2s ease-out infinite; }
-      .tg-orbit-dot { animation: tg-orbit 3s linear infinite; }
-      .tg-fade { animation: tg-fade-in 0.8s ease-out forwards; }
-      .tg-dot { animation: tg-dot 1.4s ease-in-out infinite; }
-    `}</style>
-
-    {/* Ambient glow */}
-    <div className="absolute inset-0 pointer-events-none">
-      <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[280px] h-[280px] rounded-full"
-           style={{ background: 'radial-gradient(circle, rgba(152,67,105,0.15) 0%, transparent 70%)' }} />
-    </div>
-
-    {/* Logo container */}
-    <div className="relative tg-float">
-      {/* Pulse ring */}
-      <div className="absolute inset-0 flex items-center justify-center">
-        <div className="tg-ring w-[88px] h-[88px] rounded-full border border-[#984369]/30" />
-      </div>
-
-      {/* Orbiting dots */}
-      <div className="absolute inset-0 flex items-center justify-center">
-        <div className="relative w-0 h-0">
-          <div className="tg-orbit-dot absolute w-[5px] h-[5px] rounded-full bg-[#FF6B9D]/80" style={{ animationDelay: '0s' }} />
-          <div className="tg-orbit-dot absolute w-[4px] h-[4px] rounded-full bg-[#C77DBA]/60" style={{ animationDelay: '1s' }} />
-          <div className="tg-orbit-dot absolute w-[3px] h-[3px] rounded-full bg-[#984369]/70" style={{ animationDelay: '2s' }} />
-        </div>
-      </div>
-
-      {/* Flower icon */}
-      <div style={{ width: 72, height: 72 }}>
-        <svg viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
-          <defs>
-            <linearGradient id="tg-g1" x1="0" y1="0" x2="100" y2="100" gradientUnits="userSpaceOnUse">
-              <stop offset="0%" stopColor="#984369"/>
-              <stop offset="100%" stopColor="#C77DBA"/>
-            </linearGradient>
-            <linearGradient id="tg-g2" x1="100" y1="0" x2="0" y2="100" gradientUnits="userSpaceOnUse">
-              <stop offset="0%" stopColor="#FF6B9D"/>
-              <stop offset="100%" stopColor="#984369"/>
-            </linearGradient>
-            <filter id="tg-glow">
-              <feGaussianBlur stdDeviation="2" result="glow"/>
-              <feMerge><feMergeNode in="glow"/><feMergeNode in="SourceGraphic"/></feMerge>
-            </filter>
-          </defs>
-          <g filter="url(#tg-glow)">
-            <ellipse cx="50" cy="30" rx="14" ry="22" fill="url(#tg-g1)" opacity="0.85"/>
-            <ellipse cx="70" cy="42" rx="14" ry="22" fill="url(#tg-g2)" opacity="0.75" transform="rotate(72 70 42)"/>
-            <ellipse cx="64" cy="66" rx="14" ry="22" fill="url(#tg-g1)" opacity="0.7" transform="rotate(144 64 66)"/>
-            <ellipse cx="36" cy="66" rx="14" ry="22" fill="url(#tg-g2)" opacity="0.75" transform="rotate(216 36 66)"/>
-            <ellipse cx="30" cy="42" rx="14" ry="22" fill="url(#tg-g1)" opacity="0.8" transform="rotate(288 30 42)"/>
-            <circle cx="50" cy="50" r="10" fill="#FFD700" opacity="0.9"/>
-            <circle cx="50" cy="50" r="6" fill="#FFF5CC" opacity="0.7"/>
-          </g>
-        </svg>
-      </div>
-    </div>
-
-    {/* Brand name */}
-    <p className="tg-shimmer-text tg-fade mt-5 text-sm font-bold tracking-[0.25em] uppercase" style={{ animationDelay: '0.2s' }}>
-      Twilight Garden
-    </p>
-
-    {/* Loading dots */}
-    <div className="tg-fade flex items-center gap-1.5 mt-6" style={{ animationDelay: '0.5s' }}>
-      <div className="tg-dot w-1.5 h-1.5 rounded-full bg-[#984369]" style={{ animationDelay: '0s' }} />
-      <div className="tg-dot w-1.5 h-1.5 rounded-full bg-[#984369]" style={{ animationDelay: '0.2s' }} />
-      <div className="tg-dot w-1.5 h-1.5 rounded-full bg-[#984369]" style={{ animationDelay: '0.4s' }} />
-    </div>
+  <div role="status" aria-label="Loading Twilight Garden" className="flex min-h-dvh flex-col items-center justify-center gap-5 bg-background-dark px-6 font-display text-[var(--text-primary)]">
+    <div className="flex h-20 w-20 items-center justify-center rounded-[28px] bg-primary/10 text-primary"><Flower2 size={38} className="animate-pulse" aria-hidden="true"/></div>
+    <div className="text-center"><p className="text-base font-semibold">Twilight Garden</p><p className="mt-2 text-sm text-[var(--text-secondary)]">Making a little space for you…</p></div>
   </div>
 );
 
