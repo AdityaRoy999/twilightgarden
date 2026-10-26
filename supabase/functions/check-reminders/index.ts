@@ -12,7 +12,7 @@ Deno.serve(async (req: Request) => {
     if(tokensError)throw tokensError;
     const userIds=[...new Set((tokens||[]).map(t=>t.user_id))];
     if(!userIds.length)return json({success:true,accepted:0});
-    const {data:settings,error}=await db.from('user_settings').select('user_id,last_period_start,avg_cycle_length,notifications_enabled,period_notifications,reminder_notifications,time_zone').in('user_id',userIds);
+    const {data:settings,error}=await db.from('user_settings').select('user_id,last_period_start,avg_cycle_length,irregular_cycle,notifications_enabled,period_notifications,reminder_notifications,time_zone').in('user_id',userIds);
     if(error)throw error;
     const accountJson=Deno.env.get('FCM_SERVICE_ACCOUNT');
     if(!accountJson)return json({error:'Push delivery is not configured'},503);
@@ -33,7 +33,7 @@ Deno.serve(async (req: Request) => {
         if(logError)throw logError;
         if(!log){kind='daily';message='A gentle reminder to log how you felt today.';}
       }
-      if(hour===13&&setting.period_notifications!==false&&setting.last_period_start){
+      if(hour===13&&!setting.irregular_cycle&&setting.period_notifications!==false&&setting.last_period_start){
         const expected=Date.parse(setting.last_period_start+'T00:00:00Z')+(setting.avg_cycle_length||28)*86400000;
         const days=Math.round((expected-Date.parse(day+'T00:00:00Z'))/86400000);
         if(days>=1&&days<=3){kind=`period-${days}`;type='period_start';message=`Your next period is estimated in ${days} day${days===1?'':'s'}.`;}

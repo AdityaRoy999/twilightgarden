@@ -38,6 +38,7 @@ const LogDetails: React.FC = () => {
   const isToday = targetDate === today;
   const headerDateString = isToday ? `Today, ${formattedDate}` : dateObj.toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' });
 
+  const [periodStarted,setPeriodStarted]=useState(existingLog?.periodStarted||false);
   const [flow, setFlow] = useState<FlowIntensity | undefined>(existingLog?.flow);
   const [moods, setMoods] = useState<string[]>(existingLog?.moods || []);
   const [physical, setPhysical] = useState<string[]>(
@@ -57,7 +58,7 @@ const LogDetails: React.FC = () => {
   useEffect(() => {
     if (formDate.current !== targetDate) { dirty.current = false; formDate.current = targetDate; }
     if (dirty.current) return;
-    setFlow(existingLog?.flow);
+    setFlow(existingLog?.flow);setPeriodStarted(existingLog?.periodStarted||false);
     setMoods(existingLog?.moods || []);
     setPhysical(existingLog?.symptoms?.filter(s => physicalOptions.map(o => o.toLowerCase()).includes(s)) || []);
     setDigestion(existingLog?.symptoms?.filter(s => digestionOptions.map(o => o.toLowerCase()).includes(s)) || []);
@@ -84,6 +85,7 @@ const LogDetails: React.FC = () => {
 
     await addLog({
       date: targetDate,
+      periodStarted,
       flow,
       moods: moods as any,
       symptoms: [...new Set([...physical, ...digestion])],
@@ -160,7 +162,7 @@ const LogDetails: React.FC = () => {
           <span className="material-symbols-outlined text-2xl">arrow_back</span>
         </button>
         <h2 className="text-[17px] font-bold text-white tracking-tight">Log Details</h2>
-        <button onClick={() => { setFlow(undefined); setMoods([]); setPhysical([]); setDigestion([]); setNotes(''); setEnergyLevel(undefined); setSleepQuality(undefined); setSleepHours(undefined); }} disabled={saving} className="text-[13px] font-medium text-gray-400 hover:text-white transition-colors px-2">
+        <button onClick={() => { setFlow(undefined); setPeriodStarted(false); setMoods([]); setPhysical([]); setDigestion([]); setNotes(''); setEnergyLevel(undefined); setSleepQuality(undefined); setSleepHours(undefined); }} disabled={saving} className="text-[13px] font-medium text-gray-400 hover:text-white transition-colors px-2">
           Reset
         </button>
       </header>
@@ -186,6 +188,7 @@ const LogDetails: React.FC = () => {
       </div>
 
       <main onChangeCapture={() => { dirty.current = true; }} onClickCapture={() => { dirty.current = true; }} className="flex-1 px-5 flex flex-col gap-5 pb-32">
+        <label className="mb-5 flex cursor-pointer items-start gap-3 rounded-2xl border border-primary/20 bg-primary/5 p-4"><input type="checkbox" checked={periodStarted} onChange={event=>setPeriodStarted(event.target.checked)} className="mt-1 h-5 w-5 rounded text-primary focus:ring-primary"/><span><span className="block text-sm font-semibold text-gray-900 dark:text-white">A new period started on this date</span><span className="mt-1 block text-xs leading-relaxed text-gray-500">Mark the first day only. Your cycle dates and your partner's calendar will update together.</span></span></label>
         {/* Flow Intensity */}
         <div className="bg-surface-dark rounded-[24px] p-5 shadow-sm border border-white/5">
           <div className="flex items-center gap-2.5 mb-5">

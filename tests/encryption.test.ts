@@ -18,6 +18,8 @@ describe('identity-key encryption', () => {
   });
   it('keeps two recipients separate even when their serialized keys have the same suffix', async () => {
     const own = await generateKeyPair(), a = await generateKeyPair(), b = await generateKeyPair();
+    a.publicKey=btoa(JSON.stringify({...JSON.parse(atob(a.publicKey)),key_ops:[],ext:true}));
+    b.publicKey=btoa(JSON.stringify({...JSON.parse(atob(b.publicKey)),key_ops:[],ext:true}));
     expect(a.publicKey.slice(-20)).toBe(b.publicKey.slice(-20));
     setCachedPrivateKey(own.privateKey);
     await encryptMessage('for the first recipient', a.publicKey);

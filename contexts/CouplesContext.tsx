@@ -1,10 +1,12 @@
+import { resolveDeviceIdentity, installRecoveredIdentity } from '../lib/identity';
+import { mergeChatNotes, cursorFilter } from '../lib/chat';
+import { readOutbox, writeOutbox, type QueuedChat } from '../lib/chatOutbox';
 import { localDateKey } from '../lib/dates';
 import React, { createContext, useContext, useEffect, useState, useMemo } from 'react';
 import { supabase } from '../lib/supabase';
 import { useAuth } from './AuthContext';
 import { Couple, SharedNote } from '../types';
 import {
-  initializeEncryptionKeys,
   encryptMessage,
   decryptMessage,
   encryptData,
@@ -13,9 +15,7 @@ import {
   decryptBlob,
   encryptIdentityWithPin,
   decryptIdentityWithPin,
-  setCachedPrivateKey,
   getCachedPrivateKey,
-  clearSharedKeyCache,
   isContentDecrypted,
   derivePublicKeyFromPrivate,
 } from '../lib/encryption';
@@ -23,7 +23,6 @@ import { sendSyncPayload } from '../lib/sync';
 import { Preferences } from '@capacitor/preferences';
 
 const NOTES_PAGE_SIZE = 50;
-const sleep = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
 
 interface CouplesContextType {
   couple: Couple | null;
@@ -33,6 +32,8 @@ interface CouplesContextType {
   hasMoreNotes: boolean;
   loadingOlder: boolean;
   loadOlderNotes: () => Promise<void>;
+  chatConnected:boolean;
+  retryNote: (id:string) => Promise<void>;
   createNote: (content: string, type?: 'text' | 'image' | 'audio' | 'gif', mediaUrl?: string, replyToId?: string) => Promise<void>;
   generatePairingCode: () => Promise<string>;
   joinCouple: (code: string) => Promise<void>;
@@ -68,6 +69,7 @@ interface CouplesContextType {
   hasCloudBackup: boolean;
   isHistorySynced: boolean;
   isSyncRequired: boolean;
+  identityReady:boolean;
   setupCloudBackup: (pin: string) => Promise<void>;
   restoreFromCloudBackup: (pin: string) => Promise<void>;
   completeSyncHandshake: (token: string) => Promise<void>;
@@ -98,18 +100,8 @@ export const CouplesProvider: React.FC<{ children: React.ReactNode }> = ({ child
   };
 
   // Load cached decrypted notes from localStorage for instant display
-  const getCachedNotes = (): SharedNote[] => {
-    try {
-      const cached = localStorage.getItem('tw_cached_notes');
-      return cached ? JSON.parse(cached) : [];
-    } catch { return []; }
-  };
-  const setCachedNotes = (n: SharedNote[]) => {
-    try {
-      // Only cache last 50 notes to keep localStorage size reasonable
-      localStorage.setItem('tw_cached_notes', JSON.stringify(n.slice(-50)));
-    } catch { }
-  };
+  const getCachedNotes = (): SharedNote[] => [];
+  const setCachedNotes = (_notes:SharedNote[]) => {localStorage.removeItem('tw_cached_notes');};
 
   const [couple, setCouple] = useState<Couple | null>(getCachedCouple);
   const [notes, setNotes] = useState<SharedNote[]>(getCachedNotes);
@@ -179,116 +171,57 @@ export const CouplesProvider: React.FC<{ children: React.ReactNode }> = ({ child
   const MAX_DECRYPTED_CACHE = 200;
 
   // Guard: prevent overlapping refreshE2EE calls on double user/authLoading changes
-  const refreshE2EERunningRef = React.useRef(false);
+  const refreshE2EEPendingRef = React.useRef<Promise<void>|null>(null);
+  const aliveRef=React.useRef(true);
+  const identityUsableRef=React.useRef(false);
+  const fetchRevisionRef=React.useRef(0);
+  const cachedPartnerIdRef=React.useRef<string|null>(null);
+  const outboxRef=React.useRef<QueuedChat[]>([]);
+  const sendingRef=React.useRef(new Set<string>());
+  const mainChannelRef=React.useRef<ReturnType<typeof supabase.channel>|null>(null);
+  const [chatConnected,setChatConnected]=useState(false);
+  const partnerFetchRevisionRef=React.useRef(0);
+  const relationshipRef=React.useRef(couple);
+  React.useEffect(()=>{relationshipRef.current=couple;},[couple]);
+  React.useEffect(()=>{aliveRef.current=true;return()=>{aliveRef.current=false;fetchRevisionRef.current++;};},[]);
 
   // Wait for auth to be fully verified before fetching couple data.
   // Without this gate, the cached user triggers a fetch BEFORE the Supabase
   // client has restored its JWT session, so RLS blocks the query and couple = null.
-  const refreshE2EE = async () => {
-    if (!user) {
-      setCouple(null);
-      setNotes([]);
-      setIsLoading(false);
-      partnerPublicKeyRef.current = null;
-      setPartnerPubKey(null);
-      return;
-    }
-
-    // Prevent overlapping refreshE2EE calls (user + authLoading can change in quick succession)
-    if (refreshE2EERunningRef.current) {
-      import.meta.env.DEV && console.log('[E2EE] refreshE2EE already running — skipping duplicate call');
-      return;
-    }
-    refreshE2EERunningRef.current = true;
-
-    try {
-    import.meta.env.DEV && console.log('[E2EE] Initializing for user:', user.id);
-
-    // Clear partner cache on start/restart to ensure fresh keys are fetched correctly
-    partnerPublicKeyRef.current = null;
-    deviceKeysRef.current.clear();
-    setPartnerPubKey(null);
-
-    // 1. Get or Generate Device ID
-    const { value: localDeviceId } = await Preferences.get({ key: 'tw_device_id' });
-    const currentDeviceId = localDeviceId || crypto.randomUUID();
-    if (!localDeviceId) await Preferences.set({ key: 'tw_device_id', value: currentDeviceId });
-    setDeviceId(currentDeviceId);
-
-    // 2. Local Key Management — get or create this user's key pair
-    const pubKey = await initializeEncryptionKeys(user.id);
-    import.meta.env.DEV && console.log('[E2EE] Local Public Key (Base64):', pubKey);
-
-    // 3. Fetch all existing keys for this user to check for local key registration
-    import.meta.env.DEV && console.log('[E2EE] Fetching existing keys for user:', user.id);
-    const { data: existingKeys, error: keysError } = await (supabase
-      .from('user_keys' as any)
-      .select('*')
-      .eq('user_id', user.id as any) as any);
-
-    if (keysError) console.error('[E2EE] Error fetching keys:', keysError);
-    import.meta.env.DEV && console.log('[E2EE] Found', existingKeys?.length, 'keys in user_keys table.');
-
-    // 4. Check cloud identity status from persistent table
-    import.meta.env.DEV && console.log('[E2EE] Checking persistent identity_backups table...');
-    const { data: backupData, error: backupError } = await (supabase
-      .from('identity_backups' as any)
-      .select('*')
-      .eq('user_id', user.id as any)
-      .maybeSingle() as any);
-
-    if (backupError) console.error('[E2EE] Error checking backups:', backupError);
-    setHasCloudBackup(!!backupData);
-    const cloudBackup = backupData;
-    import.meta.env.DEV && console.log('[E2EE] Cloud Backup state:', !!cloudBackup);
-
-    // 5. Determine Sync State
-    // If our current public key is NOT in the database yet, it's a fresh install/wiped device.
-    // If we ALSO have a cloud backup, we MUST restore it to read old history.
-    const localKeyRegistered = existingKeys?.some((k: any) => k.public_key === pubKey);
-    import.meta.env.DEV && console.log('[E2EE] Local key already in DB?', localKeyRegistered);
-
-    if (!localKeyRegistered && cloudBackup) {
-        console.warn('[E2EE] New device/identity detected with existing backup. Sync required.');
-        setIsSyncRequired(true);
-        setIsHistorySynced(false);
-    } else {
-        import.meta.env.DEV && console.log('[E2EE] Sync not required (Matched existing key OR no backup found).');
-        setIsSyncRequired(false);
-        setIsHistorySynced(true);
-    }
-
-    // 6. NOW Upsert this device's key (so other devices can find us)
-    import.meta.env.DEV && console.log('[E2EE] Registering device key:', currentDeviceId);
-    await (supabase.from('user_keys' as any) as any).upsert({
-        user_id: user.id,
-        device_id: currentDeviceId,
-        public_key: pubKey,
-        device_name: `${navigator.platform || 'Device'} (${currentDeviceId.slice(0, 4)})`,
-        last_active: new Date().toISOString()
-    } as any, { onConflict: 'user_id,device_id' });
-
-    // Other registered devices are valid decryption routes. Remove a device only
-    // through the explicit device-management action.
-
-    await fetchCoupleData();
-
-    // 6. After couple data loaded, auto-prompt PIN setup if no backup exists
-    if (!cloudBackup) {
-      import.meta.env.DEV && console.log('[E2EE] No backup found. Prompting PIN setup.');
-      setShowPinSetup(true);
-    }
-
-    setE2eeReady(true); // Signal that backup check is complete
-    } finally {
-      refreshE2EERunningRef.current = false;
-    }
+  const initializeIdentity = async () => {
+    if(!user){setCouple(null);setNotes([]);setIsLoading(false);return;}
+    try{
+      const [device,canonical,backup]=await Promise.all([
+        Preferences.get({key:'tw_device_id'}),
+        supabase.rpc('get_chat_public_key',{p_user_id:user.id}),
+        supabase.from('identity_backups').select('public_key').eq('user_id',user.id).maybeSingle()
+      ]);
+      if(canonical.error)throw canonical.error;if(backup.error)throw backup.error;
+      if(!aliveRef.current)return;
+      const currentDeviceId=device.value||crypto.randomUUID();
+      if(!device.value)await Preferences.set({key:'tw_device_id',value:currentDeviceId});
+      setDeviceId(currentDeviceId);setHasCloudBackup(!!backup.data);
+      const identity=await resolveDeviceIdentity(user.id,canonical.data,()=>aliveRef.current);
+      if(!aliveRef.current)return;
+      identityUsableRef.current=!identity.needsRestore;
+      setIsSyncRequired(identity.needsRestore);setIsHistorySynced(!identity.needsRestore);
+      if(identity.publicKey){
+        const {error}=await supabase.from('user_keys').upsert({user_id:user.id,device_id:currentDeviceId,public_key:identity.publicKey,device_name:navigator.platform||'Browser',last_active:new Date().toISOString()},{onConflict:'user_id,device_id'});
+        if(error)throw error;
+      }
+      if(!aliveRef.current)return;
+      setE2eeReady(true);setShowPinSetup(!identity.needsRestore&&!backup.data);
+      await fetchCoupleData();
+    }catch(error){if(aliveRef.current){setIsLoading(false);console.error('Identity initialization failed',error);}}
   };
-
-  useEffect(() => {
-    if (authLoading) return;
-    refreshE2EE();
-  }, [user?.id, authLoading, keyVersion]);
+  const refreshE2EE = async () => {
+    // Recovery must run again after an initial device check has completed.
+    // Returning early here could leave the recovered device unregistered.
+    while(refreshE2EEPendingRef.current)await refreshE2EEPendingRef.current;
+    const pending=initializeIdentity();refreshE2EEPendingRef.current=pending;
+    try{await pending;}finally{if(refreshE2EEPendingRef.current===pending)refreshE2EEPendingRef.current=null;}
+  };
+  useEffect(()=>{if(!authLoading)void refreshE2EE();},[user?.id,authLoading]);
 
   // Auto-prompt PIN setup when couple is active but no backup exists
   // GATED on e2eeReady to prevent false triggering before backup check completes
@@ -299,154 +232,53 @@ export const CouplesProvider: React.FC<{ children: React.ReactNode }> = ({ child
   }, [couple, hasCloudBackup, e2eeReady]);
 
   const fetchCoupleData = async () => {
-    try {
-      if (!user) return;
-
-      // Timeout promise to prevent hanging
-      const timeoutPromise = new Promise((_, reject) =>
-        setTimeout(() => reject(new Error('Couple data fetch timeout')), 10000)
-      );
-
-      const fetchDataPromise = async () => {
-          // fetchData logic continued below
-
-          // 2. Standard Fetch fallback
-          const query = user.role === 'admin'
-            ? (supabase.from('couples' as any).select('id,partner_1_id,partner_2_id,partner_1_role,status,pairing_code,share_enabled,love_code,love_unlocked,created_at') as any).eq('partner_1_id', user.id).order('created_at', { ascending: false })
-            : (supabase.from('couples' as any).select('id,partner_1_id,partner_2_id,partner_1_role,status,pairing_code,share_enabled,love_code,love_unlocked,created_at') as any).or(`partner_1_id.eq.${user.id},partner_2_id.eq.${user.id}`).order('created_at', { ascending: false });
-
-          const { data: rows, error: coupleError } = await query;
-
-          if (coupleError) throw coupleError;
-
-          const coupleRows = (rows || []) as Couple[];
-
-          // Prefer the active couple; fall back to the newest pending one
-          const activeCouple = coupleRows.find(r => r.status === 'active');
-          const pendingCouple = coupleRows.find(r => r.status === 'pending');
-          const coupleData = activeCouple || pendingCouple || null;
-
-          // Auto-cleanup: delete stale pending rows when an active couple exists
-          if (activeCouple && coupleRows.length > 1) {
-            const staleIds = coupleRows.filter(r => r.id !== activeCouple.id).map(r => r.id);
-            if (staleIds.length > 0) {
-              supabase.from('couples').delete().in('id', staleIds).then(() => {
-                import.meta.env.DEV && console.log('[Couples] Cleaned up', staleIds.length, 'stale couple rows');
-              });
-            }
-          }
-
-          setCouple(coupleData);
-          setCachedCouple(coupleData);
-
-          // Fast-clear loading state once basics are ready
-          setIsLoading(false);
-
-          if (coupleData) {
-            // Fetch only the latest page of notes; older ones loaded on demand
-            const { data: notesData, error: notesError } = await (supabase.from('shared_notes' as any) as any)
-              .select('*')
-              .eq('couple_id', coupleData.id)
-              .order('created_at', { ascending: false })
-              .limit(NOTES_PAGE_SIZE + 1);
-
-            if (notesError) throw notesError;
-            const fetched = (notesData || []) as SharedNote[];
-
-            // E2EE Decryption Flow
-            const resolvedPartnerId = coupleData.partner_1_id === user.id ? coupleData.partner_2_id : coupleData.partner_1_id;
-
-            // Show cached decrypted notes OR in-memory decrypted notes while we decrypt
-            // IMPORTANT: Do NOT replace visible decrypted notes with raw encrypted ones —
-            // that causes the "encryption keys flash" bug on reload.
-            const hasExistingDecryptedNotes = notes.length > 0 && notes.some(n => isContentDecrypted(n.content));
-            if (!hasExistingDecryptedNotes) {
-              // Only show raw initialNotes if we have nothing better to show
-              const initialNotes = fetched.map(n => decryptedNotesCacheRef.current.get(n.id) || n);
-              setHasMoreNotes(initialNotes.length > NOTES_PAGE_SIZE);
-              setNotes(initialNotes.slice(0, NOTES_PAGE_SIZE).reverse());
-            } else {
-              setHasMoreNotes(fetched.length > NOTES_PAGE_SIZE);
-            }
-
-            // Ensure private key is loaded before any decryption attempt
-            if (!getCachedPrivateKey()) {
-              import.meta.env.DEV && console.log('[E2EE] Private key not in memory — loading from Preferences before decrypt');
-              const { value: privKey } = await Preferences.get({ key: `${user.id}_private_key` });
-              if (privKey) setCachedPrivateKey(privKey);
-            }
-
-            // Decrypt all notes at once (no chunked delays — crypto is fast)
-            const partnerPubKey = await fetchPartnerPublicKey(resolvedPartnerId || undefined);
-            const toDecrypt = fetched.slice(0, NOTES_PAGE_SIZE);
-
-            const decryptedResults: SharedNote[] = await Promise.all(
-              toDecrypt.map(async (note) => {
-                // Use in-memory cache only if the note content hasn't changed in DB
-                const cached = decryptedNotesCacheRef.current.get(note.id);
-                // Compare against the original encrypted content to detect DB changes
-                if (cached && cached._encryptedContent === note.content && isContentDecrypted(cached.content)) return cached;
-                const decrypted = await decryptNote(note, partnerPubKey, user.id);
-                // Only cache if decryption actually worked
-                if (isContentDecrypted(decrypted.content)) {
-                  // Store original encrypted content alongside for cache invalidation
-                  (decrypted as any)._encryptedContent = note.content;
-                  decryptedNotesCacheRef.current.set(note.id, decrypted);
-                }
-                // Evict oldest entries if cache exceeds limit
-                if (decryptedNotesCacheRef.current.size > MAX_DECRYPTED_CACHE) {
-                  const firstKey = decryptedNotesCacheRef.current.keys().next().value;
-                  if (firstKey) decryptedNotesCacheRef.current.delete(firstKey);
-                }
-                return decrypted;
-              })
-            );
-
-            // Set all decrypted notes at once — instant
-            const finalNotes = decryptedResults.reverse()
-              .filter(n => !n.deleted_by || !n.deleted_by.includes(user.id));
-            setNotes(finalNotes);
-            // Only cache to localStorage if notes are actually decrypted
-            // This prevents "encrypted content poisoning" the cache on failed decryption
-            if (finalNotes.length === 0 || finalNotes.some(n => isContentDecrypted(n.content))) {
-              setCachedNotes(finalNotes);
-            }
-
-            // Mark received messages as delivered
-            const unacknowledgedNotes = fetched
-              .filter(n => n.sender_id !== user.id && n.status === 'sent')
-              .map(n => n.id);
-
-            if (unacknowledgedNotes.length > 0) {
-              const query: any = (supabase.from('shared_notes') as any).update({ status: 'delivered' });
-              await query.in('id', unacknowledgedNotes);
-            }
-
-            // Fetch Partner Data if available and authorized
-            if (coupleData.status === 'active') {
-                 await fetchPartnerDataInternal(coupleData, user.id);
-            }
-          }
-      };
-
-      await Promise.race([fetchDataPromise(), timeoutPromise]);
-
-    } catch (error) {
-      console.error('Error fetching couple data:', error);
-      setIsLoading(false);
-    }
+    if(!user)return;
+    const revision=++fetchRevisionRef.current;
+    const current=()=>aliveRef.current&&revision===fetchRevisionRef.current;
+    try{
+      const {data:rows,error}=await supabase.from('couples').select('*').or('partner_1_id.eq.'+user.id+',partner_2_id.eq.'+user.id).order('created_at',{ascending:false}).abortSignal(AbortSignal.timeout(10000));
+      if(error)throw error;if(!current())return;
+      const relationship=(rows?.find(c=>c.status==='active')||rows?.find(c=>c.status==='pending')||null) as Couple|null;
+      relationshipRef.current=relationship;setCouple(relationship);setCachedCouple(relationship);setIsLoading(false);
+      if(!relationship){setNotes([]);setPartnerProfile(null);setPartnerSettings(null);setPartnerLogs([]);return;}
+      const other=relationship.partner_1_id===user.id?relationship.partner_2_id:relationship.partner_1_id;
+      const [result,key]=await Promise.all([
+        supabase.from('shared_notes').select('*').eq('couple_id',relationship.id).order('created_at',{ascending:false}).order('id',{ascending:false}).limit(NOTES_PAGE_SIZE+1),
+        other?fetchPartnerPublicKey(other):Promise.resolve(null),
+        relationship.status==='active'?fetchPartnerDataInternal(relationship,user.id):Promise.resolve()
+      ]);
+      if(result.error)throw result.error;if(!current())return;
+      const rowsNotes=(result.data||[]) as unknown as SharedNote[];
+      const decoded=await Promise.all(rowsNotes.slice(0,NOTES_PAGE_SIZE).map(note=>decryptNote(note,key,user.id)));
+      if(!current())return;
+      setHasMoreNotes(rowsNotes.length>NOTES_PAGE_SIZE);
+      const newest=rowsNotes[0]?.created_at||'';
+      setNotes(previous=>mergeChatNotes(previous.filter(n=>n.localStatus||n.created_at>newest),decoded,user.id));
+      if(identityUsableRef.current){
+        outboxRef.current=readOutbox(user.id,relationship.id);
+        for(const entry of outboxRef.current){
+          const p=entry.params;
+          const note=await decryptNote({id:p.p_id,couple_id:p.p_couple,sender_id:user.id,content:p.p_content,type:p.p_type||'text',media_url:p.p_media,reply_to_id:p.p_reply||null,reply_content:null,reactions:null,starred_by:null,pinned_by:null,is_forwarded:false,deleted_by:null,status:'sent',sender_public_key:p.p_sender_key,recipient_public_key:p.p_recipient_key,created_at:entry.createdAt} as SharedNote,key,user.id);
+          if(!current())return;
+          setNotes(previous=>[...previous.filter(n=>n.id!==note.id),{...note,localStatus:'sending'}]);
+          void persistChat(entry).catch(()=>{});
+        }
+      }
+      const received=rowsNotes.filter(n=>n.sender_id!==user.id&&n.status==='sent').map(n=>n.id);
+      if(received.length)void supabase.from('shared_notes').update({status:'delivered'}).in('id',received).eq('status','sent').then(()=>{});
+    }catch(error){if(current()){setIsLoading(false);console.error('Could not refresh shared space',error);}}
   };
 
   const decryptNote = async (note: SharedNote, partnerPubKey: string | null, userId: string): Promise<SharedNote> => {
     if (!note.content) return note;
 
     const decryptFn = async (cipher: string, pKey: string | null) => {
-        if (!pKey) return cipher;
+        if (!pKey || !identityUsableRef.current) return '🔐 Unlock your history to read this message';
         try {
             return await decryptMessage(cipher, pKey, userId);
         } catch (e) {
             console.warn('[E2EE] Decryption failed:', e);
-            return cipher;
+            return '🔐 Unlock your history to read this message';
         }
     };
 
@@ -455,11 +287,11 @@ export const CouplesProvider: React.FC<{ children: React.ReactNode }> = ({ child
       // If we are the sender, we always use the partner's "latest" key
       // (because that's what we encrypted it with for self-decryption/backup flow)
       // If the partner is the sender, we MUST use the key for the device they sent it from.
-      let currentPartnerKey = partnerPubKey;
+      let currentPartnerKey = note.sender_id === userId ? (note.recipient_public_key || partnerPubKey) : (note.sender_public_key || partnerPubKey);
       const isPartnerSender = note.sender_id !== userId;
       const deviceIdToFetch = isPartnerSender ? note.sender_device_id : undefined;
 
-      if (deviceIdToFetch) {
+      if (deviceIdToFetch && !note.sender_public_key) {
           const cachedDeviceKey = deviceKeysRef.current.get(deviceIdToFetch);
           if (cachedDeviceKey) {
               currentPartnerKey = cachedDeviceKey;
@@ -539,6 +371,17 @@ export const CouplesProvider: React.FC<{ children: React.ReactNode }> = ({ child
   useEffect(() => {
     if (!couple?.id || !user) return;
 
+    let active=true;
+    const receiveNote=async(raw:SharedNote)=>{
+      if(raw.couple_id!==couple.id||![couple.partner_1_id,couple.partner_2_id].includes(raw.sender_id))return;
+      const cached=decryptedNotesCacheRef.current.get(raw.id);
+      const note=cached&&cached._encryptedContent===raw.content?{...raw,content:cached.content,media_url:cached.media_url,reply_content:cached.reply_content}:await decryptNote(raw,raw.sender_id===user.id?raw.recipient_public_key||await fetchPartnerPublicKey():raw.sender_public_key||await fetchPartnerPublicKey(),user.id);
+      if(!active||!aliveRef.current)return;
+      if(isContentDecrypted(note.content)){note._encryptedContent=raw.content;decryptedNotesCacheRef.current.set(note.id,note);}
+      if(decryptedNotesCacheRef.current.size>MAX_DECRYPTED_CACHE){const key=decryptedNotesCacheRef.current.keys().next().value;if(key)decryptedNotesCacheRef.current.delete(key);}
+      setNotes(previous=>mergeChatNotes(previous,[note],user.id));
+      if(note.sender_id!==user.id&&note.status==='sent')void supabase.from('shared_notes').update({status:'delivered'}).eq('id',note.id).eq('status','sent').then(()=>{});
+    };
     // 1. MAIN CHANNEL: Couple status & Shared Notes
     const mainChannel = supabase
       .channel(`couple_main_${couple.id}`, { config: { private: true } })
@@ -550,7 +393,11 @@ export const CouplesProvider: React.FC<{ children: React.ReactNode }> = ({ child
             if (payload.eventType === 'UPDATE') {
                 const oldStatus = couple?.status;
                 const newCouple = payload.new as Couple;
-                setCouple(newCouple);
+                relationshipRef.current=newCouple;
+                partnerFetchRevisionRef.current++;
+                setCouple(newCouple);setCachedCouple(newCouple);
+                if(!newCouple.share_enabled){setPartnerLogs([]);setPartnerSettings(null);}
+                else if(newCouple.share_enabled!==couple.share_enabled)void fetchPartnerDataInternal(newCouple,user.id);
 
                 // If couple just became active, clear partner key cache to get fresh keys
                 if (newCouple.status === 'active' && oldStatus !== 'active') {
@@ -568,28 +415,6 @@ export const CouplesProvider: React.FC<{ children: React.ReactNode }> = ({ child
             }
             if (payload.eventType === 'DELETE') {
                 import.meta.env.DEV && console.log('[Realtime] Couple deleted — cleaning up keys and state');
-                // Wipe own stale user_keys (backup + old device entries)
-                // so a fresh reconnect doesn't trigger false IdentityLockdown
-                if (user) {
-                  (async () => {
-                    try {
-                      await (supabase.from('user_keys' as any).delete()
-                        .eq('user_id', user.id as any) as any);
-                      // Re-register current device's key
-                      const pubKey = await initializeEncryptionKeys(user.id);
-                      await (supabase.from('user_keys' as any) as any).insert({
-                        user_id: user.id,
-                        device_id: deviceId,
-                        public_key: pubKey,
-                        device_name: `${navigator.platform || 'Device'} (${deviceId?.slice(0, 4)})`,
-                        last_active: new Date().toISOString()
-                      } as any);
-                      setHasCloudBackup(false);
-                    } catch (e) {
-                      console.error('[Realtime] Key cleanup failed:', e);
-                    }
-                  })();
-                }
                 setCouple(null);
                 setNotes([]);
                 setPartnerProfile(null);
@@ -602,184 +427,34 @@ export const CouplesProvider: React.FC<{ children: React.ReactNode }> = ({ child
             }
         }
       )
-      .on(
-        'postgres_changes',
-        { event: '*', schema: 'public', table: 'shared_notes', filter: `couple_id=eq.${couple.id}` },
-        async (payload) => {
-          if (payload.eventType === 'INSERT') {
-            let newNote = payload.new as SharedNote;
+      .on('broadcast',{event:'note:created'},({payload})=>{void receiveNote(payload as SharedNote);})
+      .on('broadcast',{event:'note:updated'},({payload})=>{void receiveNote(payload as SharedNote);})
+      .on('broadcast',{event:'note:deleted'},({payload})=>{setNotes(previous=>previous.filter(note=>note.id!==payload.id));})
+      .on('broadcast',{event:'partner_data_updated'},({payload})=>{if(payload.senderId!==user.id)refreshPartner();})
+      .on('postgres_changes',{event:'*',schema:'public',table:'shared_notes',filter:'couple_id=eq.'+couple.id},payload=>{
+        if(payload.eventType==='DELETE')setNotes(previous=>previous.filter(note=>note.id!==payload.old.id));
+        else void receiveNote(payload.new as unknown as SharedNote);
+      })
+      .subscribe(status=>{
+        if(!active)return;
+        const connected=status==='SUBSCRIBED';setChatConnected(connected);
+        if(connected)void fetchCoupleData();
+      });
+    mainChannelRef.current=mainChannel;
 
-            // WE MUST DECRYPT ON INSERT
-            const partnerPubKey = await fetchPartnerPublicKey();
-            newNote = await decryptNote(newNote, partnerPubKey, user.id);
-
-            setNotes((prev) => {
-              if (newNote.deleted_by && newNote.deleted_by.includes(user.id)) return prev;
-              // If we sent this note, createNote already added it via optimistic update.
-              // Skip to avoid the brief duplicate flash before React batches the removes.
-              if (newNote.sender_id === user.id) {
-                // Just replace in case the optimistic/returned note is already there
-                const exists = prev.some(n => n.id === newNote.id);
-                const hasTempVersion = prev.some(n => n.id.startsWith('temp-') && n.sender_id === user.id && n.content === newNote.content);
-                if (exists) return prev;
-                if (hasTempVersion) {
-                  // Replace the temp note with the real one from realtime
-                  let replaced = false;
-                  return prev.map(n => {
-                    if (!replaced && n.id.startsWith('temp-') && n.sender_id === user.id) {
-                      replaced = true;
-                      return newNote;
-                    }
-                    return n;
-                  });
-                }
-                return prev; // Self-sent note will be handled by createNote's setNotes
-              }
-              return prev.some(n => n.id === newNote.id) ? prev : [...prev, newNote];
-            });
-            if (newNote.sender_id !== user.id && newNote.status === 'sent') {
-              // When chat is open, LoveLock's markAsRead handles the 'read' transition
-              // (with optimistic UI). Only set 'delivered' here when chat is closed.
-              if (!isChatOpenRef.current) {
-                (supabase.from('shared_notes' as any) as any).update({ status: 'delivered' } as any).eq('id', newNote.id).then();
-              }
-            }
-          } else if (payload.eventType === 'UPDATE') {
-             let updatedNote = payload.new as SharedNote;
-
-              // WE MUST DECRYPT ON UPDATE
-              const partnerPubKey = await fetchPartnerPublicKey();
-              updatedNote = await decryptNote(updatedNote, partnerPubKey, user.id);
-
-             setNotes((prev) => {
-               // If this user deleted it, remove from list
-               if (updatedNote.deleted_by && updatedNote.deleted_by.includes(user.id)) {
-                 return prev.filter(n => n.id !== updatedNote.id);
-               }
-               return prev.map(n => {
-                 if (n.id !== updatedNote.id) return n;
-                 // Merge strategy: if the content decryption failed on this update
-                 // (still looks like encrypted base64), keep the existing decrypted content
-                 // and only apply metadata changes (reactions, status, starred, pinned, etc.)
-                 if (!isContentDecrypted(updatedNote.content) && isContentDecrypted(n.content)) {
-                   return {
-                     ...n,
-                     reactions: Array.isArray(updatedNote.reactions) ? updatedNote.reactions : n.reactions,
-                     status: updatedNote.status || n.status,
-                     starred_by: updatedNote.starred_by ?? n.starred_by,
-                     pinned_by: updatedNote.pinned_by ?? n.pinned_by,
-                     deleted_by: updatedNote.deleted_by ?? n.deleted_by,
-                     is_forwarded: updatedNote.is_forwarded ?? n.is_forwarded,
-                   };
-                 }
-                 return updatedNote;
-               });
-             });
-          }
-        }
-      )
-      .subscribe();
-
-    // 2. PARTNER CHANNEL: Live Cycle Sync + Profile Sync
-    let partnerChannel: any = null;
-    if (couple.status === 'active' && partnerId && partnerId !== user.id) {
-      partnerChannel = supabase
-        .channel(`partner_realtime_${partnerId}`, { config: { private: true } })
-        // Live profile sync (name, avatar changes)
-        .on(
-          'postgres_changes',
-          { event: 'UPDATE', schema: 'public', table: 'profiles', filter: `id=eq.${partnerId}` },
-          (payload) => {
-            import.meta.env.DEV && console.log('[Realtime] Partner profile synced');
-            setPartnerProfile(payload.new as any);
-          }
-        )
-        .on(
-          'broadcast',
-          { event: 'partner_data_updated' },
-          (payload) => {
-            import.meta.env.DEV && console.log('[Realtime] Broadcast received:', payload.payload.type);
-            // Re-fetch partner data immediately on broadcast
-            if (couple && user) {
-               fetchPartnerDataInternal(couple, user.id);
-            }
-          }
-        )
-        .on(
-          'postgres_changes',
-          { event: '*', schema: 'public', table: 'user_settings', filter: `user_id=eq.${partnerId}` },
-          (payload) => {
-            import.meta.env.DEV && console.log('[Realtime] Partner settings synced', payload.eventType);
-            if (payload.eventType === 'UPDATE' || payload.eventType === 'INSERT') {
-              const s = payload.new as any;
-              let start = s.last_period_start || '';
-              // Smart Fallback integration using Ref to avoid stale logs state
-              if (!start && partnerLogsRef.current.length > 0) {
-                const latest = [...partnerLogsRef.current].sort((a, b) => b.date.localeCompare(a.date)).find(l => l.flow);
-                if (latest) {
-                   import.meta.env.DEV && console.log('[Realtime] Settings fallback to latest log:', latest.date);
-                   start = latest.date;
-                }
-              }
-              setPartnerSettings(mapSettings({ ...s, last_period_start: start }));
-            }
-          }
-        )
-        .on(
-          'postgres_changes',
-          { event: '*', schema: 'public', table: 'daily_logs', filter: `user_id=eq.${partnerId}` },
-          (payload) => {
-            import.meta.env.DEV && console.log('[Realtime] Partner log synced');
-            const mapPartnerLog = (l: any) => ({
-              ...l,
-              energyLevel: l.energy_level,
-              sleepQuality: l.sleep_quality,
-              sleepHours: l.sleep_hours
-            });
-
-            if (payload.eventType === 'INSERT') {
-              setPartnerLogs(prev => [mapPartnerLog(payload.new), ...prev].sort((a, b) => b.date.localeCompare(a.date)));
-            } else if (payload.eventType === 'UPDATE') {
-              const updated = mapPartnerLog(payload.new);
-              setPartnerLogs(prev => prev.map(l => l.id === updated.id ? updated : l));
-            } else if (payload.eventType === 'DELETE') {
-              setPartnerLogs(prev => prev.filter(l => l.id !== payload.old.id));
-            }
-          }
-        )
-        .subscribe();
-    }
-
-    // 3. READ RECEIPT SYNC: Poll note statuses every 3s while chat is open
-    // This ensures the sender sees read/delivered status even if Realtime misses
-    let statusPollInterval: NodeJS.Timeout | null = null;
-    statusPollInterval = setInterval(async () => {
-      if (!isChatOpenRef.current || !couple?.id || !user) return;
-      try {
-        // Query ALL recent sent notes (not just sent/delivered) so we can
-        // catch transitions to 'read' that Realtime may have missed.
-        const { data } = await (supabase
-          .from('shared_notes')
-          .select('id, status')
-          .eq('couple_id', couple.id)
-          .eq('sender_id', user.id)
-          .order('created_at', { ascending: false })
-          .limit(20) as any);
-
-        if (data && data.length > 0) {
-          setNotes(prev => prev.map(n => {
-            const updated = (data as any[]).find(d => d.id === n.id);
-            return updated && updated.status !== n.status
-              ? { ...n, status: updated.status }
-              : n;
-          }));
-        }
-      } catch (err) {
-        // Silent — polling is a fallback
-      }
-    }, 3000);
-
+    let partnerRefreshTimer:ReturnType<typeof setTimeout>|undefined;
+    const refreshPartner=()=>{clearTimeout(partnerRefreshTimer);partnerRefreshTimer=setTimeout(()=>{const latest=relationshipRef.current;if(latest)void fetchPartnerDataInternal(latest,user.id);},60);};
+    const partnerChannel=partnerId?supabase.channel('shared_health_'+couple.id)
+      .on('postgres_changes',{event:'*',schema:'public',table:'daily_logs',filter:'user_id=eq.'+partnerId},refreshPartner)
+      .on('postgres_changes',{event:'*',schema:'public',table:'user_settings',filter:'user_id=eq.'+partnerId},refreshPartner)
+      .on('postgres_changes',{event:'UPDATE',schema:'public',table:'profiles',filter:'id=eq.'+partnerId},refreshPartner).subscribe():null;
+    const catchUp=()=>{if(document.visibilityState==='visible')void fetchCoupleData();};
+    const retryOutbox=()=>{for(const entry of outboxRef.current)void persistChat(entry).catch(()=>{});catchUp();};
+    window.addEventListener('focus',catchUp);window.addEventListener('online',retryOutbox);document.addEventListener('visibilitychange',catchUp);
+    const statusPollInterval=setInterval(()=>{if(mainChannel.state!=='joined')catchUp();},20000);
     return () => {
+      active=false;clearTimeout(partnerRefreshTimer);mainChannelRef.current=null;setChatConnected(false);
+      window.removeEventListener('focus',catchUp);window.removeEventListener('online',retryOutbox);document.removeEventListener('visibilitychange',catchUp);
       supabase.removeChannel(mainChannel);
       if (partnerChannel) supabase.removeChannel(partnerChannel);
       if (statusPollInterval) clearInterval(statusPollInterval);
@@ -787,31 +462,8 @@ export const CouplesProvider: React.FC<{ children: React.ReactNode }> = ({ child
   }, [couple?.id, user?.id, partnerId, couple?.status]);
 
   // Direct Broadcast helper
-  const broadcastUpdate = (type: 'log' | 'settings' | 'profile') => {
-    if (!couple?.id || !partnerId) return;
-
-    const channelId = `partner_realtime_${user?.id}`; // Listeners listen to the sender's channel
-    const ch = supabase.channel(channelId, { config: { private: true } });
-    // Safety timeout: remove the channel after 5s regardless of subscription status
-    const timeout = setTimeout(() => {
-      try { supabase.removeChannel(ch); } catch {}
-    }, 5000);
-    ch.subscribe((status) => {
-      if (status === 'SUBSCRIBED') {
-        ch.send({
-          type: 'broadcast',
-          event: 'partner_data_updated',
-          payload: { type, senderId: user?.id },
-        }).then(() => {
-          clearTimeout(timeout);
-          supabase.removeChannel(ch);
-        }).catch(() => {
-          clearTimeout(timeout);
-          supabase.removeChannel(ch);
-        });
-      }
-    });
-    import.meta.env.DEV && console.log('[Realtime] Broadcast sent:', type);
+  const broadcastUpdate=(type:'log'|'settings'|'profile')=>{
+    if(mainChannelRef.current?.state==='joined')void mainChannelRef.current.send({type:'broadcast',event:'partner_data_updated',payload:{type,senderId:user?.id}});
   };
 
 
@@ -827,8 +479,8 @@ export const CouplesProvider: React.FC<{ children: React.ReactNode }> = ({ child
         .from('shared_notes')
         .select('*')
         .eq('couple_id', couple.id as any)
-        .lt('created_at', oldestNote.created_at)
-        .order('created_at', { ascending: false })
+        .or(cursorFilter(oldestNote))
+        .order('created_at', { ascending: false }).order('id',{ascending:false})
         .limit(NOTES_PAGE_SIZE + 1) as any);
 
       if (error) throw error;
@@ -849,7 +501,7 @@ export const CouplesProvider: React.FC<{ children: React.ReactNode }> = ({ child
           return decrypted;
       }));
 
-      setNotes(prev => [...decryptedPage.filter(n => !n.deleted_by || !n.deleted_by.includes(user.id)), ...prev]);
+      setNotes(previous=>mergeChatNotes(previous,decryptedPage,user.id));
     } catch (err) {
       console.error('Error loading older notes:', err);
     } finally {
@@ -954,6 +606,7 @@ export const CouplesProvider: React.FC<{ children: React.ReactNode }> = ({ child
 
   const uploadMedia = async (file: File): Promise<string> => {
     if (!user || !couple) throw new Error('Not authenticated');
+    if(!identityUsableRef.current||!hasCloudBackup)throw new Error('Unlock and protect your chat history before sending an attachment.');
 
     if (couple.status !== 'active') throw new Error('Connect to your partner first.');
     if (!file.size || file.size > 20 * 1024 * 1024) throw new Error('Attachments must be smaller than 20 MB.');
@@ -972,7 +625,7 @@ export const CouplesProvider: React.FC<{ children: React.ReactNode }> = ({ child
     if (!id) return null;
 
     // 1. Cache lookup
-    if (!manualUserId && !forceRefresh) {
+    if (id === cachedPartnerIdRef.current && !forceRefresh) {
         if (targetDeviceId) {
             const devKey = deviceKeysRef.current.get(targetDeviceId);
             if (devKey) return devKey;
@@ -982,183 +635,49 @@ export const CouplesProvider: React.FC<{ children: React.ReactNode }> = ({ child
         }
     }
 
-    // 2. Try fetching from user_keys (Active Routes)
-    let query = supabase
-        .from('user_keys' as any)
-        .select('public_key')
-        .eq('user_id', id as any);
-
-    if (targetDeviceId) {
-        query = query.eq('device_id', targetDeviceId as any);
-    } else {
-        query = query.order('last_active', { ascending: false });
-    }
-
-    const { data, error } = await (query.limit(1).maybeSingle() as any);
-
-    if (data?.public_key) {
-        if (!manualUserId) {
-            if (targetDeviceId) deviceKeysRef.current.set(targetDeviceId, data.public_key);
-            else partnerPublicKeyRef.current = data.public_key;
-        }
-        if (!targetDeviceId) setPartnerPubKey(data.public_key);
-        return data.public_key;
-    }
-
-    // 3. FALLBACK 1: If specific device key is missing, try ANY key for this user
-    if (targetDeviceId) {
-        import.meta.env.DEV && console.log('[E2EE] Specific device key missing, falling back to any key for user:', id);
-        const { data: anyKeyData } = await (supabase
-            .from('user_keys' as any)
-            .select('public_key')
-            .eq('user_id', id as any)
-            .order('last_active', { ascending: false })
-            .limit(1)
-            .maybeSingle() as any);
-
-        if (anyKeyData?.public_key) {
-            deviceKeysRef.current.set(targetDeviceId, anyKeyData.public_key);
-            return anyKeyData.public_key;
-        }
-    }
-
-    // 4. FALLBACK 2: Try fetching from persistent identity_backups
-    import.meta.env.DEV && console.log('[E2EE] Key not in active routes, checking identity_backups fallback...');
-    const { data: backupData } = await (supabase
-        .from('identity_backups' as any)
-        .select('public_key')
-        .eq('user_id', id as any)
-        .maybeSingle() as any);
-
-    if (backupData?.public_key) {
-        import.meta.env.DEV && console.log('[E2EE] Found fallback key in identity_backups');
-        if (!manualUserId) {
-            if (targetDeviceId) deviceKeysRef.current.set(targetDeviceId, backupData.public_key);
-            else partnerPublicKeyRef.current = backupData.public_key;
-        }
-        if (!targetDeviceId) setPartnerPubKey(backupData.public_key);
-        return backupData.public_key;
-    }
-
-    console.warn('[E2EE] Could not fetch public key anywhere for user:', id, 'device:', targetDeviceId);
-    return null;
+    const {data,error}=await supabase.rpc('get_chat_public_key',{p_user_id:id});
+    if(error)throw error;
+    if(data){partnerPublicKeyRef.current=data;cachedPartnerIdRef.current=id;setPartnerPubKey(data);}
+    return data;
   };
 
-  const createNote = async (content: string, type: 'text' | 'image' | 'audio' | 'gif' = 'text', mediaUrl?: string, replyToId?: string) => {
-    if (!user || !couple) return;
+  const persistChat=async(entry:QueuedChat)=>{
+    if(!user||sendingRef.current.has(entry.params.p_id))return;
+    const id=entry.params.p_id;sendingRef.current.add(id);
+    try{
+      const {data,error}=await supabase.rpc('send_chat_note',entry.params).abortSignal(AbortSignal.timeout(12000));
+      if(error)throw error;
+      if(!aliveRef.current)return;
+      const note=await decryptNote(data as unknown as SharedNote,entry.params.p_recipient_key,user.id);
+      setNotes(previous=>mergeChatNotes(previous,[note],user.id));
+      outboxRef.current=outboxRef.current.filter(item=>item.params.p_id!==id);
+      writeOutbox(user.id,entry.params.p_couple,outboxRef.current);
+    }catch(error){if(aliveRef.current)setNotes(previous=>previous.map(note=>note.id===id&&note.localStatus?{...note,localStatus:'failed'}:note));throw error;}
+    finally{sendingRef.current.delete(id);}
+  };
+  const retryNote=async(id:string)=>{
+    const entry=outboxRef.current.find(item=>item.params.p_id===id);if(!entry)return;
+    setNotes(previous=>previous.map(note=>note.id===id?{...note,localStatus:'sending'}:note));
+    await persistChat(entry);
+  };
 
-    // Optimistic update - add note immediately to UI
-    const tempId = `temp-${Date.now()}`;
-    const optimisticNote: SharedNote = {
-      id: tempId,
-      couple_id: couple.id,
-      sender_id: user.id,
-      content,
-      reply_content: null,
-      reply_to_id: replyToId || null,
-      reactions: null,
-      starred_by: null,
-      pinned_by: null,
-      is_forwarded: false,
-      deleted_by: null,
-      status: 'sent',
-      type,
-      media_url: mediaUrl,
-      created_at: new Date().toISOString(),
-    };
-
-    setNotes((prev) => [...prev, optimisticNote]);
-
-    try {
-      const resolvedPartnerId = couple.partner_1_id === user.id ? couple.partner_2_id : couple.partner_1_id;
-      if (!resolvedPartnerId) throw new Error('No partner found to encrypt for');
-
-      // 1. Encrypt content using ECDH shared secret
-      // Proactive Fix: Always fetch the ABSOLUTE LATEST key from DB before encrypting
-      // to ensure the recipient can read it if they just re-paired.
-      const pKey = await fetchPartnerPublicKey(resolvedPartnerId);
-      if (!pKey) throw new Error('Partner public key not found');
-
-      const encryptedContent = await encryptMessage(content, pKey);
-      let encryptedMediaUrl = mediaUrl;
-      if (mediaUrl) {
-          encryptedMediaUrl = await encryptMessage(mediaUrl, pKey);
-      }
-
-      // 2. Insert the Note
-      const insertPayload: any = {
-        couple_id: couple.id,
-        sender_id: user.id,
-        sender_device_id: deviceId,
-        content: encryptedContent,
-        type,
-        media_url: encryptedMediaUrl,
-      };
-      if (replyToId) insertPayload.reply_to_id = replyToId;
-
-      const { data: noteData, error: noteError } = await (supabase.from('shared_notes' as any).insert(insertPayload) as any).select().single();
-
-      if (noteError) throw noteError;
-      let note = noteData as SharedNote;
-
-      // Decrypt for self
-      const partnerPubKey = await fetchPartnerPublicKey(resolvedPartnerId);
-      note = await decryptNote(note, partnerPubKey, user.id);
-
-      setNotes((prev) => {
-          if (prev.some(n => n.id === note.id)) {
-              return prev.map(n => n.id === note.id ? note : n).filter(n => n.id !== tempId);
-          }
-          return prev.map(n => n.id === tempId ? note : n);
-      });
-
-      // Trigger Push Notification & In-App Notification
-      const recipientId = couple.partner_1_id === user.id ? couple.partner_2_id : couple.partner_1_id;
-      if (recipientId) {
-        // 1. Get nickname of the recipient for the sender
-      let nickname = 'partner';
-      try {
-        const { data: recipientProfile } = await supabase
-          .from('profiles')
-          .select('partner_nickname')
-          .eq('id', recipientId)
-          .single();
-
-        if (recipientProfile && (recipientProfile as any).partner_nickname) {
-            nickname = (recipientProfile as any).partner_nickname;
-        } else {
-            // Fallback: Use Sender's First Name
-            const { data: senderProfile } = await supabase
-              .from('profiles')
-              .select('full_name')
-              .eq('id', user.id)
-              .single();
-            if (senderProfile && (senderProfile as any).full_name) {
-                nickname = (senderProfile as any).full_name.split(' ')[0];
-            }
-        }
-      } catch (err) {
-          console.warn('[CouplesContext] Failed to fetch nickname', err);
-      }
-
-      const displayMessage = `New love note from your ${nickname} ❤️`;
-
-        // 3. Insert In-App Notification
-        (supabase.from('notifications' as any) as any).insert({
-          user_id: recipientId,
-          type: 'chat',
-          message: displayMessage,
-          is_read: false,
-          created_at: new Date().toISOString(),
-        }).then(({ error }: any) => {
-          if (error) console.error('In-app notification for note failed:', error);
-        });
-      }
-    } catch (error) {
-      // Remove optimistic note on error
-      setNotes((prev) => prev.filter(n => n.id !== tempId));
-      throw error;
-    }
+  const createNote = async (content:string,type:'text'|'image'|'audio'|'gif'='text',mediaUrl?:string,replyToId?:string)=>{
+    if(!user||!couple||couple.status!=='active')throw new Error('Connect to your partner first.');
+    if(!identityUsableRef.current)throw new Error('Unlock your history before sending messages.');
+    if(!hasCloudBackup){setShowPinSetup(true);throw new Error('Set a recovery passphrase to protect your chat history first.');}
+    if(content.length>8000)throw new Error('Message is too long.');
+    if(outboxRef.current.length>=30)throw new Error('Reconnect or retry your pending messages first.');
+    const id=crypto.randomUUID(),createdAt=new Date().toISOString();
+    const other=couple.partner_1_id===user.id?couple.partner_2_id:couple.partner_1_id;
+    const partnerKey=await fetchPartnerPublicKey(other||undefined);
+    if(!partnerKey)throw new Error('Your partner needs to open Twilight and set up their secure identity.');
+    const privateKey=getCachedPrivateKey();if(!privateKey)throw new Error('Unlock your history first.');
+    const senderKey=derivePublicKeyFromPrivate(privateKey);
+    const [cipher,media]=await Promise.all([encryptMessage(content,partnerKey),mediaUrl?encryptMessage(mediaUrl,partnerKey):Promise.resolve(null)]);
+    const entry:QueuedChat={createdAt,params:{p_id:id,p_couple:couple.id,p_content:cipher,p_sender_key:senderKey,p_recipient_key:partnerKey,p_type:type,p_media:media,p_reply:replyToId||null,p_device:deviceId}};
+    const queued=[...outboxRef.current,entry];writeOutbox(user.id,couple.id,queued);outboxRef.current=queued;
+    setNotes(previous=>[...previous,{id,couple_id:couple.id,sender_id:user.id,content,type,media_url:mediaUrl,reply_to_id:replyToId||null,reply_content:null,reactions:null,starred_by:null,pinned_by:null,is_forwarded:false,deleted_by:null,status:'sent',localStatus:'sending',created_at:createdAt}]);
+    try{await persistChat(entry);}catch(error){throw Object.assign(new Error(error instanceof Error?error.message:'Message delivery failed'),{queued:true});}
   };
 
   const addReaction = async (noteId: string, emoji: string) => {
@@ -1379,134 +898,41 @@ export const CouplesProvider: React.FC<{ children: React.ReactNode }> = ({ child
   const markAsRead = async (noteIds: string[]) => {
     if (!user || noteIds.length === 0) return;
 
-    // Optimistic update
+    const {error}=await supabase.from('shared_notes').update({status:'read'})
+      .in('id',noteIds).neq('sender_id',user.id);
+    if(error)throw error;
+    if(!aliveRef.current)return;
     setNotes((prev) => prev.map(n =>
       noteIds.includes(n.id) ? { ...n, status: 'read' } : n
     ));
-
-    await (supabase
-      .from('shared_notes' as any)
-      .update({ status: 'read' } as any) as any)
-      .in('id', noteIds as any);
   };
 
-  const fetchPartnerDataInternal = async (currentCouple: Couple, currentUserId: string) => {
-      // Determine partner ID — must be the OTHER person in the couple
-      const partnerId = currentCouple.partner_1_id === currentUserId
-          ? currentCouple.partner_2_id
-          : currentCouple.partner_1_id;
-
-      import.meta.env.DEV && console.log('[PARTNER DEBUG] currentUserId:', currentUserId);
-      import.meta.env.DEV && console.log('[PARTNER DEBUG] couple.partner_1_id:', currentCouple.partner_1_id);
-      import.meta.env.DEV && console.log('[PARTNER DEBUG] couple.partner_2_id:', currentCouple.partner_2_id);
-      import.meta.env.DEV && console.log('[PARTNER DEBUG] Resolved partnerId:', partnerId);
-
-      // Safety guard: never fetch our own data as "partner"
-      if (!partnerId || partnerId === currentUserId) {
-        console.warn('[PARTNER] partnerId resolved to self or null — skipping fetch');
-        return;
-      }
-
-      const timeoutPromise = new Promise((_, reject) =>
-        setTimeout(() => reject(new Error('Partner data fetch timeout')), 8000)
-      );
-
-      const fetchPromise = async () => {
-          // Run all 3 queries in PARALLEL for instant loading
-          const thirtyDaysAgo = new Date();
-          thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
-
-          const [profileResult, settingsResult, logsResult] = await Promise.all([
-              // 1. Fetch Partner Profile
-              (supabase
-                  .from('profiles' as any)
-                  .select('*')
-                  .eq('id', partnerId as any)
-                  .single() as any),
-              // 2. Fetch User Settings (Cycle Data) — only if sharing enabled
-              currentCouple.share_enabled
-                  ? (supabase
-                      .from('user_settings' as any)
-                      .select('*') as any)
-                      .eq('user_id', partnerId as any)
-                      .maybeSingle()
-                  : Promise.resolve({ data: null }),
-              // 3. Fetch Recent Logs (Last 30 days) — only if sharing enabled
-              currentCouple.share_enabled
-                  ? (supabase
-                      .from('daily_logs' as any)
-                      .select('*') as any)
-                      .eq('user_id', partnerId as any)
-                      .gte('date', localDateKey(thirtyDaysAgo) as any)
-                      .order('date', { ascending: false })
-                  : Promise.resolve({ data: null }),
-          ]);
-
-          import.meta.env.DEV && console.log('[PARTNER DEBUG] Fetched profile:', profileResult.data?.full_name, 'avatar:', profileResult.data?.avatar_url);
-
-          // Set profile immediately
-          if (profileResult.data) setPartnerProfile(profileResult.data as any);
-
-          // Process settings + logs
-          if (currentCouple.share_enabled) {
-              const settingsData = settingsResult.data;
-              const logsData = logsResult.data as any[] | null;
-
-              if (settingsData) {
-                  let s = settingsData as any;
-
-                  // Decrypt partner settings
-                  if (s.encrypted_payload && partnerPubKey) {
-                    const decrypted = await decryptData<any>(s.encrypted_payload, partnerPubKey, user.id);
-                    if (decrypted) s = { ...s, ...decrypted };
-                  }
-
-                  let effectiveStart = s.last_period_start || s.lastPeriodStart || '';
-
-                  // SMART FALLBACK: If start date is missing in settings, derive from logs
-                  if (!effectiveStart && logsData && logsData.length > 0) {
-                      const latestFlowLog = logsData.find((l: any) => l.flow);
-                      if (latestFlowLog) {
-                          import.meta.env.DEV && console.log('[PARTNER DEBUG] Using fallback lastPeriodStart from log:', latestFlowLog.date);
-                          effectiveStart = latestFlowLog.date;
-                      }
-                  }
-
-                  setPartnerSettings(mapSettings({
-                      ...s,
-                      last_period_start: effectiveStart
-                  }));
-              } else {
-                  setPartnerSettings(null);
-              }
-
-              if (logsData) {
-                  const mappedLogs = await Promise.all((logsData as any[]).map(async (l: any) => {
-                      let data = { ...l };
-                      if (l.encrypted_payload && partnerPubKey) {
-                          const decrypted = await decryptData<any>(l.encrypted_payload, partnerPubKey, user.id);
-                          if (decrypted) data = { ...data, ...decrypted };
-                      }
-                      return {
-                          ...data,
-                          energyLevel: data.energy_level || data.energyLevel,
-                          sleepQuality: data.sleep_quality || data.sleepQuality,
-                          sleepHours: data.sleep_hours || data.sleepHours
-                      };
-                  }));
-                  setPartnerLogs(mappedLogs);
-              }
-          } else {
-              setPartnerSettings(null);
-              setPartnerLogs([]);
-          }
-      };
-
-      try {
-           await Promise.race([fetchPromise(), timeoutPromise]);
-      } catch (error) {
-          console.error('Error fetching partner data:', error);
-      }
+  const fetchPartnerDataInternal=async(c:Couple,ownId:string)=>{
+    const revision=++partnerFetchRevisionRef.current;
+    const other=c.partner_1_id===ownId?c.partner_2_id:c.partner_1_id;
+    if(!other||c.status!=='active')return;
+    const current=()=>aliveRef.current&&revision===partnerFetchRevisionRef.current&&relationshipRef.current?.id===c.id;
+    const mayShare=c.share_enabled&&identityUsableRef.current;
+    try{
+      const [profile,settings,logs,key]=await Promise.all([
+        supabase.from('profiles').select('*').eq('id',other).maybeSingle(),
+        mayShare?supabase.from('user_settings').select('*').eq('user_id',other).maybeSingle():Promise.resolve({data:null,error:null}),
+        mayShare?supabase.from('daily_logs').select('*').eq('user_id',other).order('date',{ascending:false}).limit(90):Promise.resolve({data:[],error:null}),
+        mayShare?fetchPartnerPublicKey(other):Promise.resolve(null)
+      ]);
+      if(profile.error)throw profile.error;if(settings.error)throw settings.error;if(logs.error)throw logs.error;
+      if(!current())return;setPartnerProfile(profile.data);
+      if(!mayShare||!relationshipRef.current?.share_enabled){setPartnerSettings(null);setPartnerLogs([]);return;}
+      let row=settings.data as any;
+      if(row?.encrypted_payload&&key){const decoded=await decryptData<any>(row.encrypted_payload,key,ownId);if(decoded)row={...row,...decoded};}
+      const mapped=await Promise.all((logs.data||[]).map(async record=>{
+        let data=record as any;
+        if(data.encrypted_payload&&key){const decoded=await decryptData<any>(data.encrypted_payload,key,ownId);if(decoded)data={...data,...decoded};}
+        return {...data,energyLevel:data.energy_level??data.energyLevel,sleepQuality:data.sleep_quality??data.sleepQuality,sleepHours:data.sleep_hours??data.sleepHours};
+      }));
+      if(!current()||!relationshipRef.current?.share_enabled)return;
+      setPartnerSettings(row?mapSettings(row):null);setPartnerLogs(mapped);
+    }catch(error){if(current())console.error('Shared data refresh failed',error);}
   };
 
   // Memoized partner data for components to consume
@@ -1582,24 +1008,6 @@ export const CouplesProvider: React.FC<{ children: React.ReactNode }> = ({ child
       const { error } = await (supabase.from('couples' as any) as any).delete().eq('id', couple.id as any);
       if (error) throw error;
 
-      // 3. Full key reset for BOTH users in the DB
-      // This ensures the partner doesn't stay "Locked" if they miss the Realtime event
-      await (supabase.from('user_keys' as any).delete()
-        .eq('user_id', user.id as any) as any);
-
-      // NOTE: Do NOT delete partner's keys — RLS should prevent it, and it would
-      // break their E2EE on other couples. Partner's keys are cleaned up by their own client.
-
-      // 4. Re-register current device's key (fresh entry, no backup)
-      const pubKey = await initializeEncryptionKeys(user.id);
-      await (supabase.from('user_keys' as any) as any).insert({
-        user_id: user.id,
-        device_id: deviceId,
-        public_key: pubKey,
-        device_name: `${navigator.platform || 'Device'} (${deviceId?.slice(0, 4)})`,
-        last_active: new Date().toISOString()
-      } as any);
-
       // 5. Reset local state
       partnerPublicKeyRef.current = null;
       setPartnerPubKey(null);
@@ -1622,7 +1030,8 @@ export const CouplesProvider: React.FC<{ children: React.ReactNode }> = ({ child
 
   const setupCloudBackup = async (pin: string) => {
     if (!user) return;
-    import.meta.env.DEV && console.log('[E2EE] Setting up Cloud Backup...');
+    if(!identityUsableRef.current)throw new Error('Restore your existing identity first.');
+    if(pin.length<8)throw new Error('Use a recovery passphrase of at least 8 characters.');
     const { value: privKey } = await Preferences.get({ key: `${user.id}_private_key` });
     const { value: pubKey } = await Preferences.get({ key: `${user.id}_public_key` }); // Get public key too
 
@@ -1648,101 +1057,28 @@ export const CouplesProvider: React.FC<{ children: React.ReactNode }> = ({ child
         throw error;
     }
     import.meta.env.DEV && console.log('[E2EE] Cloud Backup successfully enabled.');
-    setHasCloudBackup(true);
+    setHasCloudBackup(true);setShowPinSetup(false);
   };
 
-  const restoreFromCloudBackup = async (pin: string) => {
-    if (!user) return;
-    import.meta.env.DEV && console.log('[E2EE] Attempting Identity Restoration from Cloud Backup...');
-    const { data: backupRows, error: fetchError } = await (supabase
-        .from('identity_backups' as any)
-        .select('backup_identity, backup_salt')
-        .eq('user_id', user.id as any)
-        .limit(1) as any);
-
-    if (fetchError) {
-        console.error('[E2EE] Restoration fetch failed:', fetchError);
-        throw fetchError;
-    }
-
-    const backup = backupRows?.[0];
-    if (!backup) {
-        console.error('[E2EE] No backup record found for user:', user.id);
-        throw new Error('No cloud backup found');
-    }
-
-    import.meta.env.DEV && console.log('[E2EE] Found backup. Decrypting identity with PIN...');
-    // 1. Decrypt the backed-up private key
-    const decryptedPriv = await decryptIdentityWithPin(
-        backup.backup_identity,
-        pin,
-        backup.backup_salt
-    );
-    import.meta.env.DEV && console.log('[E2EE] Identity decrypted successfully.');
-
-    // 2. Derive the original public key from the restored private key
-    const restoredPubKey = derivePublicKeyFromPrivate(decryptedPriv);
-    import.meta.env.DEV && console.log('[E2EE] Restored Public Key (Base64):', restoredPubKey);
-
-    // 3. Store both keys locally
-    import.meta.env.DEV && console.log('[E2EE] Saving restored keys to local Preferences...');
-    await Preferences.set({ key: `${user.id}_private_key`, value: decryptedPriv });
-    await Preferences.set({ key: `${user.id}_public_key`, value: restoredPubKey });
-
-    // 4. Update the in-memory cache so decryptMessage uses the restored key
-    setCachedPrivateKey(decryptedPriv);
-
-    // 4b. Clear the shared-key derivation cache — it may contain entries derived with
-    // the WRONG (pre-restore) private key that was generated on first load.
-    clearSharedKeyCache();
-
-    // 5. Update user_keys AND identity_backups in the DB with the restored public key
-    import.meta.env.DEV && console.log('[E2EE] Updating route and permanent identity with restored public key...');
-    await Promise.all([
-        (supabase
-            .from('user_keys' as any)
-            .update({ public_key: restoredPubKey, last_active: new Date().toISOString() } as any)
-            .eq('user_id', user.id as any)
-            .eq('device_id', deviceId as any) as any),
-        (supabase
-            .from('identity_backups' as any)
-            .update({ public_key: restoredPubKey } as any)
-            .eq('user_id', user.id as any) as any)
-    ]);
-
-    // 6. Clear ALL stale caches so fresh data is used
-    partnerPublicKeyRef.current = null;
-    deviceKeysRef.current.clear();
-    decryptedNotesCacheRef.current.clear();  // Purge any failed decryption entries
-
-    // Start UI Restoration Sequence
-    setRestorationState({ isRestoring: true, progress: 10, status: 'Restoring secure identity...' });
-    await sleep(800);
-
-    setRestorationState({ isRestoring: true, progress: 40, status: 'Re-deriving shared keys...' });
-    setIsHistorySynced(true);
-    setIsSyncRequired(false);
-    setHasCloudBackup(true);
-    setE2eeReady(true);
-    setKeyVersion(prev => prev + 1);
-    await sleep(600);
-
-    setRestorationState({ isRestoring: true, progress: 70, status: 'Decrypting secure history...' });
-    // Reload everything with the NEW key
-    await Promise.all([
-      fetchCoupleData(),
-      couple ? fetchPartnerDataInternal(couple, user.id) : Promise.resolve()
-    ]);
-
-    setRestorationState({ isRestoring: true, progress: 95, status: 'Finalizing...' });
-    await sleep(500);
-
-    setRestorationState({ isRestoring: false, progress: 100, status: 'Complete' });
-    import.meta.env.DEV && console.log('[E2EE] Restoration complete.');
+  const restoreFromCloudBackup=async(passphrase:string)=>{
+    if(!user)return;
+    setRestorationState({isRestoring:true,progress:20,status:'Unlocking your encrypted identity…'});
+    try{
+      const {data,error}=await supabase.from('identity_backups').select('backup_identity,backup_salt,public_key').eq('user_id',user.id).single();
+      if(error)throw error;
+      const privateKey=await decryptIdentityWithPin(data.backup_identity,passphrase,data.backup_salt);
+      if(!aliveRef.current)return;
+      await installRecoveredIdentity(user.id,privateKey,data.public_key);
+      partnerPublicKeyRef.current=null;deviceKeysRef.current.clear();decryptedNotesCacheRef.current.clear();
+      identityUsableRef.current=true;setIsSyncRequired(false);setIsHistorySynced(true);
+      setRestorationState({isRestoring:true,progress:70,status:'Loading your history…'});
+      await refreshE2EE();setKeyVersion(v=>v+1);
+    }finally{if(aliveRef.current)setRestorationState({isRestoring:false,progress:100,status:'Complete'});}
   };
 
   const completeSyncHandshake = async (token: string) => {
     if (!user) return;
+    if(!identityUsableRef.current||isSyncRequired)throw new Error('Unlock your identity before approving another device.');
     const { value: privKey } = await Preferences.get({ key: `${user.id}_private_key` });
     if (!privKey) throw new Error('Private key not found locally');
 
@@ -1752,12 +1088,14 @@ export const CouplesProvider: React.FC<{ children: React.ReactNode }> = ({ child
   const value = useMemo(() => ({
     couple,
     notes,
+    chatConnected,
     isLoading: isLoading || authLoading,
     loading: isLoading || authLoading,
     hasMoreNotes,
     loadingOlder,
     loadOlderNotes,
     createNote,
+    retryNote,
     generatePairingCode,
     joinCouple,
     addReaction,
@@ -1786,6 +1124,7 @@ export const CouplesProvider: React.FC<{ children: React.ReactNode }> = ({ child
     hasCloudBackup,
     isHistorySynced,
     isSyncRequired,
+    identityReady:e2eeReady,
     setupCloudBackup,
     restoreFromCloudBackup,
     completeSyncHandshake,
@@ -1795,10 +1134,10 @@ export const CouplesProvider: React.FC<{ children: React.ReactNode }> = ({ child
     keyVersion,
     restorationState,
   }), [
-    couple, notes, isLoading, authLoading, hasMoreNotes, loadingOlder,
+    couple, notes, chatConnected, isLoading, authLoading, hasMoreNotes, loadingOlder,
     isSupporter, partnerProfile, partnerSettings, partnerLogs, partnerPubKey,
     partnerData, deviceId, hasCloudBackup, isHistorySynced, isSyncRequired,
-    showPinSetup, keyVersion, restorationState
+    showPinSetup, keyVersion, restorationState, e2eeReady
   ]);
 
   return (

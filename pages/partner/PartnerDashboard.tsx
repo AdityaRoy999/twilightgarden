@@ -183,7 +183,7 @@ const PartnerDashboard: React.FC = () => {
         irregularCycle: false
     };
 
-    const cycleData = calculateCyclePhase(localDateKey(), cycleSettings);
+    const cycleData = calculateCyclePhase(localDateKey(), cycleSettings,logs);
 
     // Cycle Progress Calculation
     const progress = Math.min((cycleData.currentDay / cycleSettings.avgCycleLength) * 100, 100);
@@ -193,7 +193,7 @@ const PartnerDashboard: React.FC = () => {
 
     // Determine colors
     let primaryColor = '#984369'; // Default/Menstrual
-    let phaseLabel = 'Menstrual Phase';
+    let phaseLabel = cycleData.phase==='Unknown'?'Phase unavailable':'Menstrual Phase';
 
     if (cycleData.phase === 'Follicular') {
         primaryColor = '#4CAF50';
@@ -299,7 +299,7 @@ const PartnerDashboard: React.FC = () => {
                             <span className="text-xs font-bold text-gray-400 uppercase tracking-wider">{cycleData.nextPeriodIn < 0 ? 'Past estimate' : 'Next period'}</span>
                             <div className="mt-1 flex items-baseline gap-1">
                                  <span className="text-3xl font-bold text-gray-800 dark:text-white">
-                                     {Math.abs(cycleData.nextPeriodIn)}
+                                     {cycleData.hasEstimate===false?'—':Math.abs(cycleData.nextPeriodIn)}
                                  </span>
                                  <span className="text-sm font-medium text-gray-500">days</span>
                             </div>
@@ -321,12 +321,12 @@ const PartnerDashboard: React.FC = () => {
                             <span className="text-xs font-bold text-gray-400 uppercase tracking-wider">Fertility</span>
                             <div className="mt-1">
                                  <span className={`text-xl font-bold ${cycleData.isFertile ? 'text-teal-600 dark:text-teal-400' : 'text-gray-800 dark:text-white'}`}>
-                                     {cycleData.isOvulation ? 'Ovulation' : cycleData.isFertile ? 'High' : 'Low'}
+                                     {cycleData.hasEstimate===false?'Unavailable':cycleData.isOvulation?'Estimated ovulation':cycleData.isFertile?'Estimated window':'Outside window'}
                                  </span>
                             </div>
                          </div>
                          <p className="text-xs text-gray-500 leading-tight">
-                             {cycleData.isFertile ? 'Chance of pregnancy is high.' : 'Chance of pregnancy is low.'}
+                             {cycleData.hasEstimate===false?'No reliable calendar estimate.':'Calendar estimates can vary.'}
                          </p>
                     </div>
                  </div>

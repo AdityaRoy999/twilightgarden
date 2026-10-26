@@ -19,12 +19,12 @@ _Twilight Garden is a beautifully designed menstrual cycle tracking and couples 
 ### 🔒 Security & Privacy
 
 - **End-to-End Encryption (E2EE)**: All Love Notes (text messages, images, voice messages) between partners are encrypted using **ECDH P-256 key exchange** with AES-GCM. Private keys never leave the device in plaintext. Supabase only stores encrypted blobs.
-- **PIN Lock**: Users set a hardware-local PIN via `PinSetupPrompt.tsx`. The app forces a numpad lock screen before rendering any private data on launch.
-- **Cloud Key Backup**: Encrypted backup of the private key (encrypted with PIN via PBKDF2) can be stored in the cloud for multi-device recovery.
-- **Multi-Device Support**: Users can register multiple devices (phone, tablet, desktop) with independent encryption keys. `Settings.tsx` provides device management with the ability to view, name, and unlink devices.
-- **Identity Lockdown**: `IdentityLockdownPrompt.tsx` detects suspicious session states and locks the app until the user re-verifies their identity.
-- **Security Verification**: `SecurityVerification.tsx` provides a comprehensive security check flow before accessing sensitive features like the Love Notes chat.
-- **Granular Partner Privacy**: The primary user controls exactly what data is shared with their partner. They can share cycle phase only, or include moods, symptoms, and logs individually.
+- **History Unlock**: A device without the account’s canonical identity can browse the app, but must restore that identity before reading encrypted chat or making calls.
+- **Cloud Key Backup**: A recovery passphrase protects the identity with AES-GCM and PBKDF2-SHA256. New backups use 600,000 iterations; legacy backups remain readable. This is an application backup, not hardware-backed key storage.
+- **Multi-Device Support**: Devices restore the same account identity using a passphrase or a same-account trusted-device code. Removing a device registration does not revoke its auth session or erase copied keys.
+- **Identity Lockdown**: `IdentityLockdownPrompt.tsx` opens history recovery when a chat device cannot use the canonical identity.
+- **Security Verification**: Partners compare a 60-digit fingerprint or scan a QR code. The UI shows verified only after a matching comparison.
+- **Partner Privacy**: The tracker controls relationship-wide health sharing. Separate per-field sharing controls are not implemented.
 - **Ghost Mode**: A single toggle (`toggleGhostMode()`) that instantly hides all shared data from the partner without breaking the pairing.
 
 ### 📝 Health Tracking & Logging

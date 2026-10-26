@@ -40,7 +40,7 @@ const PartnerCalendar: React.FC = () => {
 
     // SMART FALLBACK: If lastPeriodStart is missing, derive it from logs
     if (!mappedSettings.lastPeriodStart && logs.length > 0) {
-        const latestFlowLog = [...logs].sort((a,b) => b.date.localeCompare(a.date)).find((l: any) => l.flow);
+        const latestFlowLog = [...logs].sort((a,b) => b.date.localeCompare(a.date)).find((l: any) => l.is_period_start||l.periodStarted);
         if (latestFlowLog) {
             mappedSettings.lastPeriodStart = latestFlowLog.date;
         }
@@ -70,7 +70,7 @@ const PartnerCalendar: React.FC = () => {
     const getDayStatus = (date: Date) => {
         const dateStr = format(date, 'yyyy-MM-dd');
         const log = logs.find((l: any) => l.date === dateStr);
-        const phase = calculateCyclePhase(dateStr, mappedSettings);
+        const phase = calculateCyclePhase(dateStr, mappedSettings,logs);
         return {
             isPeriod: !!(log?.flow && log.flow !== 'spotting'),
             isFertile: phase.isFertile,
@@ -79,7 +79,7 @@ const PartnerCalendar: React.FC = () => {
         };
     };
 
-    const todayPhase = calculateCyclePhase(todayStr, mappedSettings);
+    const todayPhase = calculateCyclePhase(todayStr, mappedSettings,logs);
 
     const phaseDescriptions: Record<string, string> = {
         Menstrual: "Low energy. Focus on rest and introspection.",

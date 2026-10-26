@@ -39,6 +39,21 @@ export type Database = {
   }
   public: {
     Tables: {
+      app_dataset: {
+        Row: {
+          epoch: string
+          id: boolean
+        }
+        Insert: {
+          epoch?: string
+          id?: boolean
+        }
+        Update: {
+          epoch?: string
+          id?: boolean
+        }
+        Relationships: []
+      }
       app_updates: {
         Row: {
           apk_url: string
@@ -119,6 +134,7 @@ export type Database = {
           energy_level: string | null
           flow: string | null
           id: string
+          is_period_start: boolean
           moods: string[] | null
           notes: string | null
           sleep_hours: number | null
@@ -133,6 +149,7 @@ export type Database = {
           energy_level?: string | null
           flow?: string | null
           id?: string
+          is_period_start?: boolean
           moods?: string[] | null
           notes?: string | null
           sleep_hours?: number | null
@@ -147,6 +164,7 @@ export type Database = {
           energy_level?: string | null
           flow?: string | null
           id?: string
+          is_period_start?: boolean
           moods?: string[] | null
           notes?: string | null
           sleep_hours?: number | null
@@ -511,10 +529,12 @@ export type Database = {
           media_url: string | null
           pinned_by: Json | null
           reactions: Json | null
+          recipient_public_key: string | null
           reply_content: string | null
           reply_to_id: string | null
           sender_device_id: string | null
           sender_id: string
+          sender_public_key: string | null
           starred_by: Json | null
           status: string | null
           type: string | null
@@ -530,10 +550,12 @@ export type Database = {
           media_url?: string | null
           pinned_by?: Json | null
           reactions?: Json | null
+          recipient_public_key?: string | null
           reply_content?: string | null
           reply_to_id?: string | null
           sender_device_id?: string | null
           sender_id: string
+          sender_public_key?: string | null
           starred_by?: Json | null
           status?: string | null
           type?: string | null
@@ -549,10 +571,12 @@ export type Database = {
           media_url?: string | null
           pinned_by?: Json | null
           reactions?: Json | null
+          recipient_public_key?: string | null
           reply_content?: string | null
           reply_to_id?: string | null
           sender_device_id?: string | null
           sender_id?: string
+          sender_public_key?: string | null
           starred_by?: Json | null
           status?: string | null
           type?: string | null
@@ -727,6 +751,10 @@ export type Database = {
     }
     Functions: {
       can_access_realtime_topic: { Args: never; Returns: boolean }
+      choose_initial_account_role: {
+        Args: { p_role: string }
+        Returns: undefined
+      }
       claim_reminder_delivery: {
         Args: { p_kind: string; p_local_date: string; p_user_id: string }
         Returns: boolean
@@ -740,12 +768,107 @@ export type Database = {
         Returns: boolean
       }
       delete_old_notifications: { Args: never; Returns: undefined }
+      ensure_own_profile: {
+        Args: never
+        Returns: {
+          avatar_url: string | null
+          bio: string | null
+          created_at: string
+          email: string | null
+          full_name: string | null
+          id: string
+          partner_nickname: string | null
+          role: string
+          status: string | null
+          updated_at: string | null
+        }
+        SetofOptions: {
+          from: "*"
+          to: "profiles"
+          isOneToOne: true
+          isSetofReturn: false
+        }
+      }
+      get_chat_public_key: { Args: { p_user_id: string }; Returns: string }
+      get_data_epoch: { Args: never; Returns: string }
       get_partner_id: { Args: never; Returns: string }
       get_shared_card: { Args: { p_code: string }; Returns: Json }
       is_admin: { Args: never; Returns: boolean }
       join_couple: { Args: { code_input: string }; Returns: Json }
       join_couple_love_lock: { Args: { code_input: string }; Returns: Json }
       run_reminder_job: { Args: never; Returns: number }
+      save_cycle_settings: {
+        Args: { p_encrypted?: string; p_values: Json }
+        Returns: {
+          avg_cycle_length: number | null
+          avg_period_length: number | null
+          encrypted_payload: string | null
+          irregular_cycle: boolean | null
+          last_period_start: string | null
+          notifications_enabled: boolean | null
+          onboarding_completed: boolean | null
+          period_notifications: boolean | null
+          reminder_notifications: boolean | null
+          time_zone: string
+          updated_at: string | null
+          user_id: string
+        }
+        SetofOptions: {
+          from: "*"
+          to: "user_settings"
+          isOneToOne: true
+          isSetofReturn: false
+        }
+      }
+      save_daily_log: {
+        Args: {
+          p_date: string
+          p_encrypted?: string
+          p_period_start?: boolean
+          p_values: Json
+        }
+        Returns: Json
+      }
+      send_chat_note: {
+        Args: {
+          p_content: string
+          p_couple: string
+          p_device?: string
+          p_id: string
+          p_media?: string
+          p_recipient_key: string
+          p_reply?: string
+          p_sender_key: string
+          p_type?: string
+        }
+        Returns: {
+          content: string
+          couple_id: string
+          created_at: string
+          deleted_by: Json | null
+          id: string
+          is_forwarded: boolean | null
+          media_url: string | null
+          pinned_by: Json | null
+          reactions: Json | null
+          recipient_public_key: string | null
+          reply_content: string | null
+          reply_to_id: string | null
+          sender_device_id: string | null
+          sender_id: string
+          sender_public_key: string | null
+          starred_by: Json | null
+          status: string | null
+          type: string | null
+          v: number | null
+        }
+        SetofOptions: {
+          from: "*"
+          to: "shared_notes"
+          isOneToOne: true
+          isSetofReturn: false
+        }
+      }
     }
     Enums: {
       [_ in never]: never

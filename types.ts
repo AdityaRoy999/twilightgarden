@@ -25,6 +25,7 @@ export type Mood =
 export type SymptomCategory = "physical" | "digestion" | "other";
 
 export interface DailyLog {
+  periodStarted?: boolean;
   id: string;
   user_id: string;
   date: string; // ISO date string YYYY-MM-DD
@@ -48,9 +49,10 @@ export interface CycleSettings {
 }
 
 export interface CyclePhase {
+  hasEstimate?: boolean;
   overdueDays?: number;
   currentDay: number;
-  phase: "Menstrual" | "Follicular" | "Ovulation" | "Luteal";
+  phase: "Menstrual" | "Follicular" | "Ovulation" | "Luteal" | "Unknown";
   nextPeriodIn: number;
   isFertile: boolean;
   isOvulation: boolean;
@@ -87,6 +89,9 @@ export interface Couple {
 }
 
 export interface SharedNote {
+  localStatus?: 'sending' | 'failed';
+  sender_public_key?: string | null;
+  recipient_public_key?: string | null;
   /** Client-only ciphertext marker used to invalidate the decryption cache. */
   _encryptedContent?: string;
   id: string;

@@ -377,7 +377,7 @@ const Insights: React.FC = () => {
               <div className="flex justify-between items-start mb-6">
                 <div>
                   <p className="text-sm font-medium text-gray-500 dark:text-gray-400 mb-1">Prediction</p>
-                  <h2 className="text-2xl font-bold text-[#121014] dark:text-white mb-1">{cycleData.nextPeriodIn < 0 ? `Period estimate passed by ${Math.abs(cycleData.nextPeriodIn)} days` : `Period in ${cycleData.nextPeriodIn} days`}</h2>
+                  <h2 className="text-2xl font-bold text-[#121014] dark:text-white mb-1">{cycleData.hasEstimate===false?'Prediction unavailable':cycleData.nextPeriodIn < 0 ? `Period estimate passed by ${Math.abs(cycleData.nextPeriodIn)} days` : `Period in ${cycleData.nextPeriodIn} days`}</h2>
                   <p className="text-sm text-gray-400">based on {cycleSettings.avgCycleLength}d cycle</p>
                 </div>
                 <div className="flex h-12 w-12 items-center justify-center rounded-full bg-pink-100 dark:bg-pink-500/20 text-primary">

@@ -1,3 +1,5 @@
+vi.mock('../lib/encryption',()=>({encryptMessage:vi.fn(async value=>value),decryptMessage:vi.fn(async value=>value)}));
+vi.mock('../lib/callIce',()=>({loadCallIce:vi.fn(async()=>({iceServers:[],expiresAt:Date.now()+3600000,relayConfigured:true}))}));
 // @vitest-environment jsdom
 import React from 'react';
 import { act, cleanup, fireEvent, render, screen, waitFor } from '@testing-library/react';
@@ -5,7 +7,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 const mocks=vi.hoisted(()=>({handlers:{} as Record<string,(event:any)=>unknown>,channel:{on:vi.fn(),subscribe:vi.fn(),send:vi.fn()},remove:vi.fn()}));
 vi.mock('../lib/supabase',()=>({supabase:{channel:()=>mocks.channel,removeChannel:mocks.remove}}));
 vi.mock('../contexts/AuthContext',()=>({useAuth:()=>({user:{id:'A'}})}));
-vi.mock('../contexts/CouplesContext',()=>({useCouples:()=>({couple:{id:'couple',partner_1_id:'A',partner_2_id:'B',status:'active'},partnerProfile:{full_name:'Partner'}})}));
+vi.mock('../contexts/CouplesContext',()=>({useCouples:()=>({couple:{id:'couple',partner_1_id:'A',partner_2_id:'B',status:'active'},partnerProfile:{full_name:'Partner'},partnerPubKey:'synthetic-key',isSyncRequired:false,hasCloudBackup:true})}));
 import { CallProvider,useCall } from '../contexts/CallContext';
 let getMedia:ReturnType<typeof vi.fn>,stop:ReturnType<typeof vi.fn>,close:ReturnType<typeof vi.fn>;
 function Probe(){const call=useCall();return <><p>{call.callStatus}</p><button onClick={()=>void call.initiateCall(false)}>Call</button><button onClick={call.endCall}>End</button></>;}
@@ -29,13 +31,13 @@ describe('call lifecycle',()=>{
   fireEvent.click(screen.getByText('Call'));await waitFor(()=>expect(mocks.channel.send).toHaveBeenCalled());
   view.unmount();expect(stop).toHaveBeenCalledTimes(1);expect(close).toHaveBeenCalledTimes(1);
  });
- it('ignores busy offers and hangups for other call IDs',()=>{
+ it('ignores busy offers and hangups for other call IDs',async()=>{
   render(<CallProvider><Probe/></CallProvider>);
-  act(()=>mocks.handlers['call:offer']({payload:{senderId:'B',callId:'first',offer:{type:'offer',sdp:'synthetic'}}}));
+  await act(async()=>mocks.handlers['call:offer']({payload:{sealed:JSON.stringify({senderId:'B',callId:'first',offer:{type:'offer',sdp:'synthetic'}})}}));
   expect(screen.getByText('incoming')).toBeTruthy();
-  act(()=>mocks.handlers['call:offer']({payload:{senderId:'B',callId:'second',offer:{type:'offer',sdp:'synthetic'}}}));
-  act(()=>mocks.handlers['call:hangup']({payload:{senderId:'B',callId:'second'}}));
+  await act(async()=>mocks.handlers['call:offer']({payload:{sealed:JSON.stringify({senderId:'B',callId:'second',offer:{type:'offer',sdp:'synthetic'}})}}));
+  await act(async()=>mocks.handlers['call:hangup']({payload:{sealed:JSON.stringify({senderId:'B',callId:'second'})}}));
   expect(screen.getByText('incoming')).toBeTruthy();
-  act(()=>mocks.handlers['call:hangup']({payload:{senderId:'B',callId:'first'}}));expect(screen.getByText('idle')).toBeTruthy();
+  await act(async()=>mocks.handlers['call:hangup']({payload:{sealed:JSON.stringify({senderId:'B',callId:'first'})}}));expect(screen.getByText('idle')).toBeTruthy();
  });
 });
