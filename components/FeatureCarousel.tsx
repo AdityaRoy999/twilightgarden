@@ -38,7 +38,7 @@ export const FeatureCarousel: React.FC = () => {
   return (
     <div className="flex shrink-0 flex-col items-center gap-4 w-full max-w-sm mx-auto">
        {/* Card Container */}
-      <div className="relative aspect-[16/10] w-full shrink-0 rounded-[2.5rem] overflow-hidden shadow-2xl shadow-black/40 ring-1 ring-white/10 group bg-surface-dark">
+      <div className="relative aspect-[3/4] w-full shrink-0 rounded-[2.5rem] overflow-hidden shadow-2xl shadow-black/40 ring-1 ring-white/10 group bg-surface-dark">
 
         {/* Animated Background Gradients (Replaces Images) */}
         {FEATURES.map((item, index) => (
