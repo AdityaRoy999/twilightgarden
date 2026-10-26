@@ -1,3 +1,4 @@
+import { AppIcon } from '../components/ui/Icons';
 import { localDateKey } from '../lib/dates';
 import React, { useState, useEffect, useMemo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -161,7 +162,7 @@ const Wellness: React.FC = () => {
                 <div className={`rounded-2xl p-5 ${isDark ? 'bg-gradient-to-br from-purple-500/20 to-pink-500/10 border border-purple-500/20' : 'bg-gradient-to-br from-purple-50 to-pink-50 border border-purple-100'}`}>
                     <div className="flex items-center gap-3 mb-2">
                         <div className={`w-10 h-10 rounded-full flex items-center justify-center ${isDark ? 'bg-purple-500/30' : 'bg-purple-100'}`}>
-                            <span className="material-symbols-filled text-purple-400 text-xl">cycle</span>
+                            <span className="app-icon-glyph text-purple-400 text-xl"><AppIcon name={"cycle"}/></span>
                         </div>
                         <div>
                             <p className={`text-sm font-bold ${isDark ? 'text-purple-300' : 'text-purple-700'}`}>{cycleData.phase} Phase</p>
@@ -179,11 +180,11 @@ const Wellness: React.FC = () => {
                 <div className={`rounded-2xl p-5 ${isDark ? 'bg-surface-dark border border-white/5' : 'bg-white border border-gray-100'} shadow-soft`}>
                     <div className="flex items-center justify-between mb-4">
                         <h3 className={`font-bold ${isDark ? 'text-white' : 'text-gray-900'}`}>
-                            <span className="material-symbols-filled text-primary mr-2 align-middle">auto_awesome</span>
+                            <span className="app-icon-glyph text-primary mr-2 align-middle"><AppIcon name={"auto_awesome"}/></span>
                             Your Personalized Tips
                         </h3>
                         <button onClick={fetchTips} className="text-primary text-xs font-semibold flex items-center gap-1 hover:opacity-80">
-                            <span className="material-symbols-outlined text-sm">refresh</span> Refresh
+                            <span className="app-icon-glyph text-sm"><AppIcon name={"refresh"}/></span> Refresh
                         </button>
                     </div>
                     <div className={`prose prose-sm max-w-none ${isDark ? 'prose-invert' : ''} leading-relaxed whitespace-pre-line`}>
@@ -204,7 +205,7 @@ const Wellness: React.FC = () => {
                 {/* Sleep Distribution */}
                 <div className={`rounded-2xl p-5 ${isDark ? 'bg-surface-dark border border-white/5' : 'bg-white border border-gray-100'} shadow-soft`}>
                     <h3 className={`font-bold mb-4 ${isDark ? 'text-white' : 'text-gray-900'}`}>
-                        <span className="material-symbols-filled text-indigo-400 mr-2 align-middle">bedtime</span>
+                        <span className="app-icon-glyph text-indigo-400 mr-2 align-middle"><AppIcon name={"bedtime"}/></span>
                         Sleep Quality
                     </h3>
                     {sleepTotal === 0 ? (
@@ -221,7 +222,7 @@ const Wellness: React.FC = () => {
                 {/* Energy Distribution */}
                 <div className={`rounded-2xl p-5 ${isDark ? 'bg-surface-dark border border-white/5' : 'bg-white border border-gray-100'} shadow-soft`}>
                     <h3 className={`font-bold mb-4 ${isDark ? 'text-white' : 'text-gray-900'}`}>
-                        <span className="material-symbols-filled text-amber-400 mr-2 align-middle">bolt</span>
+                        <span className="app-icon-glyph text-amber-400 mr-2 align-middle"><AppIcon name={"bolt"}/></span>
                         Energy Levels
                     </h3>
                     {energyTotal === 0 ? (
@@ -238,7 +239,7 @@ const Wellness: React.FC = () => {
                 {/* Correlation Insights */}
                 <div className={`rounded-2xl p-5 ${isDark ? 'bg-gradient-to-br from-indigo-500/10 to-cyan-500/10 border border-indigo-500/20' : 'bg-gradient-to-br from-indigo-50 to-cyan-50 border border-indigo-100'}`}>
                     <h3 className={`font-bold mb-3 ${isDark ? 'text-white' : 'text-gray-900'}`}>
-                        <span className="material-symbols-filled text-cyan-400 mr-2 align-middle">insights</span>
+                        <span className="app-icon-glyph text-cyan-400 mr-2 align-middle"><AppIcon name={"insights"}/></span>
                         Correlations
                     </h3>
                     <div className="flex flex-col gap-2">
@@ -262,7 +263,7 @@ const Wellness: React.FC = () => {
             <div className="flex flex-col gap-4">
                 <div className={`rounded-2xl p-5 ${isDark ? 'bg-gradient-to-br from-pink-500/15 to-rose-500/10 border border-pink-500/20' : 'bg-gradient-to-br from-pink-50 to-rose-50 border border-pink-100'}`}>
                     <p className={`text-sm ${isDark ? 'text-pink-300/80' : 'text-pink-700'}`}>
-                        <span className="material-symbols-filled text-sm mr-1 align-middle">info</span>
+                        <span className="app-icon-glyph text-sm mr-1 align-middle"><AppIcon name={"info"}/></span>
                         This is what your partner will see as care suggestions. Share it with them!
                     </p>
                 </div>
@@ -270,11 +271,11 @@ const Wellness: React.FC = () => {
                 <div className={`rounded-2xl p-5 ${isDark ? 'bg-surface-dark border border-white/5' : 'bg-white border border-gray-100'} shadow-soft`}>
                     <div className="flex items-center justify-between mb-4">
                         <h3 className={`font-bold ${isDark ? 'text-white' : 'text-gray-900'}`}>
-                            <span className="material-symbols-filled text-pink-400 mr-2 align-middle">favorite</span>
+                            <span className="app-icon-glyph text-pink-400 mr-2 align-middle"><AppIcon name={"favorite"}/></span>
                             Partner Care Guide
                         </h3>
                         <button onClick={fetchEmpathy} className="text-primary text-xs font-semibold flex items-center gap-1 hover:opacity-80">
-                            <span className="material-symbols-outlined text-sm">refresh</span> Refresh
+                            <span className="app-icon-glyph text-sm"><AppIcon name={"refresh"}/></span> Refresh
                         </button>
                     </div>
                     <div className={`prose prose-sm max-w-none ${isDark ? 'prose-invert' : ''} leading-relaxed whitespace-pre-line`}>
@@ -297,7 +298,7 @@ const Wellness: React.FC = () => {
     const renderShopsContent = () => {
         if (mapLoading) return (
             <div className={`rounded-2xl p-8 text-center ${isDark ? 'bg-surface-dark border border-white/5' : 'bg-white border border-gray-100'} shadow-soft flex flex-col items-center justify-center min-h-[400px]`}>
-                 <span className="material-symbols-outlined text-4xl text-primary animate-spin mb-4">explore</span>
+                 <span className="app-icon-glyph text-4xl text-primary animate-spin mb-4"><AppIcon name={"explore"}/></span>
                  <p className={`font-bold ${isDark ? 'text-white' : 'text-gray-900'}`}>Locating Nearest Pads...</p>
                  <p className={`text-sm mt-2 ${isDark ? 'text-white/50' : 'text-gray-500'}`}>Finding nearby pharmacies and medical stores.</p>
             </div>
@@ -312,7 +313,7 @@ const Wellness: React.FC = () => {
                 <div className="flex flex-col gap-4 h-[500px] overflow-y-auto no-scrollbar pr-2">
                     <div className={`rounded-2xl p-4 sticky top-0 z-10 ${isDark ? 'bg-gradient-to-br from-primary/20 to-pink-500/10 border border-primary/20 backdrop-blur-xl' : 'bg-gradient-to-br from-primary/10 to-pink-50 border border-primary/20 backdrop-blur-xl'}`}>
                         <p className={`text-sm font-bold ${isDark ? 'text-primary' : 'text-primary-dark'}`}>
-                            <span className="material-symbols-filled text-sm mr-1 align-middle">local_pharmacy</span>
+                            <span className="app-icon-glyph text-sm mr-1 align-middle"><AppIcon name={"local_pharmacy"}/></span>
                             {shops.length} Pharmacies Nearby
                         </p>
                         <p className={`text-xs mt-1 ${isDark ? 'text-white/60' : 'text-gray-600'}`}>
@@ -337,12 +338,12 @@ const Wellness: React.FC = () => {
                             <div className="p-4 flex flex-col gap-2">
                                 <h4 className={`font-bold ${isDark ? 'text-white' : 'text-gray-900'}`}>{shop.name}</h4>
                                 <div className="flex items-start gap-1">
-                                    <span className="material-symbols-outlined text-[14px] text-gray-400 mt-0.5">location_on</span>
+                                    <span className="app-icon-glyph text-[14px] text-gray-400 mt-0.5"><AppIcon name={"location_on"}/></span>
                                     <p className={`text-xs leading-relaxed ${isDark ? 'text-gray-400' : 'text-gray-600'}`}>{shop.address}</p>
                                 </div>
                                 {shop.phoneNumber && (
                                     <div className="flex items-center gap-1">
-                                        <span className="material-symbols-outlined text-[14px] text-green-500">call</span>
+                                        <span className="app-icon-glyph text-[14px] text-green-500"><AppIcon name={"call"}/></span>
                                         <p className={`text-xs font-semibold ${isDark ? 'text-green-400' : 'text-green-600'}`}>{shop.phoneNumber}</p>
                                     </div>
                                 )}
@@ -350,13 +351,13 @@ const Wellness: React.FC = () => {
                                 {selectedShop?.id === shop.id && route && (
                                     <div className={`mt-2 p-2 rounded-lg flex items-center justify-between ${isDark ? 'bg-black/50' : 'bg-primary/10'}`}>
                                         <div className="flex items-center gap-1.5">
-                                            <span className="material-symbols-outlined text-[14px] text-primary">route</span>
+                                            <span className="app-icon-glyph text-[14px] text-primary"><AppIcon name={"route"}/></span>
                                             <span className={`text-xs font-bold ${isDark ? 'text-white' : 'text-gray-900'}`}>
                                                 {(route.distance / 1000).toFixed(2)} km
                                             </span>
                                         </div>
                                         <div className="flex items-center gap-1.5">
-                                            <span className="material-symbols-outlined text-[14px] text-primary">schedule</span>
+                                            <span className="app-icon-glyph text-[14px] text-primary"><AppIcon name={"schedule"}/></span>
                                             <span className={`text-xs font-bold ${isDark ? 'text-white' : 'text-gray-900'}`}>
                                                 {Math.round(route.duration / 60)} min
                                             </span>
@@ -451,7 +452,7 @@ const Wellness: React.FC = () => {
                                 : isDark ? 'bg-white/5 text-gray-400 hover:bg-white/10' : 'bg-gray-100 text-gray-500 hover:bg-gray-200'
                                 }`}
                         >
-                            <span className="material-symbols-outlined text-base">{tab.icon}</span>
+                            <span className="app-icon-glyph text-base"><AppIcon name={tab.icon}/></span>
                             {tab.label}
                         </button>
                     ))}
@@ -534,7 +535,7 @@ const LoadingSkeleton = () => (
 
 const ErrorCard = ({ message, onRetry, isDark }: { message: string; onRetry: () => void; isDark: boolean }) => (
     <div className={`rounded-2xl p-6 text-center ${isDark ? 'bg-red-500/10 border border-red-500/20' : 'bg-red-50 border border-red-100'}`}>
-        <span className="material-symbols-outlined text-3xl text-red-400 mb-2">error</span>
+        <span className="app-icon-glyph text-3xl text-red-400 mb-2"><AppIcon name={"error"}/></span>
         <p className={`text-sm mb-3 ${isDark ? 'text-white/60' : 'text-gray-600'}`}>{message}</p>
         <button onClick={onRetry} className="on-brand px-4 py-2 bg-primary text-white text-sm font-bold rounded-full">
             Try Again

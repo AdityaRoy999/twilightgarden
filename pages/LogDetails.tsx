@@ -1,3 +1,4 @@
+import { AppIcon } from '../components/ui/Icons';
 import { useTheme } from '../contexts/ThemeContext';
 import { localDateKey, parseDateKey } from '../lib/dates';
 import React, { useState, useEffect, useRef } from 'react';
@@ -131,33 +132,33 @@ const LogDetails: React.FC = () => {
   };
 
   const flowOptions = [
-    { id: 'spotting', label: 'Spotting', icon: <span className="material-symbols-outlined">grain</span> },
-    { id: 'light', label: 'Light', icon: <span className="material-symbols-outlined">water_drop</span> },
-    { id: 'medium', label: 'Medium', icon: <span className="material-symbols-filled">water_drop</span> },
-    { id: 'heavy', label: 'Heavy', icon: <span className="material-symbols-outlined">water_lux</span> },
+    { id: 'spotting', label: 'Spotting', icon: <span className="app-icon-glyph"><AppIcon name={"grain"}/></span> },
+    { id: 'light', label: 'Light', icon: <span className="app-icon-glyph"><AppIcon name={"water_drop"}/></span> },
+    { id: 'medium', label: 'Medium', icon: <span className="app-icon-glyph"><AppIcon name={"water_drop"}/></span> },
+    { id: 'heavy', label: 'Heavy', icon: <span className="app-icon-glyph"><AppIcon name={"water_lux"}/></span> },
   ];
 
   const moodOptions = [
-    { id: 'calm', label: 'Calm', icon: <span className="material-symbols-outlined">spa</span> },
-    { id: 'happy', label: 'Happy', icon: <span className="material-symbols-outlined">sentiment_satisfied</span> },
-    { id: 'energetic', label: 'Energetic', icon: <span className="material-symbols-outlined">bolt</span> },
-    { id: 'frisky', label: 'Frisky', icon: <span className="material-symbols-outlined">favorite</span> },
-    { id: 'swings', label: 'Swings', icon: <span className="material-symbols-outlined">waves</span> },
-    { id: 'anxious', label: 'Anxious', icon: <span className="material-symbols-outlined">sentiment_worried</span> },
-    { id: 'sad', label: 'Sad', icon: <span className="material-symbols-outlined">sentiment_dissatisfied</span> },
-    { id: 'irritated', label: 'Irritated', icon: <span className="material-symbols-outlined">sentiment_very_dissatisfied</span> },
+    { id: 'calm', label: 'Calm', icon: <span className="app-icon-glyph"><AppIcon name={"spa"}/></span> },
+    { id: 'happy', label: 'Happy', icon: <span className="app-icon-glyph"><AppIcon name={"sentiment_satisfied"}/></span> },
+    { id: 'energetic', label: 'Energetic', icon: <span className="app-icon-glyph"><AppIcon name={"bolt"}/></span> },
+    { id: 'frisky', label: 'Frisky', icon: <span className="app-icon-glyph"><AppIcon name={"favorite"}/></span> },
+    { id: 'swings', label: 'Swings', icon: <span className="app-icon-glyph"><AppIcon name={"waves"}/></span> },
+    { id: 'anxious', label: 'Anxious', icon: <span className="app-icon-glyph"><AppIcon name={"sentiment_worried"}/></span> },
+    { id: 'sad', label: 'Sad', icon: <span className="app-icon-glyph"><AppIcon name={"sentiment_dissatisfied"}/></span> },
+    { id: 'irritated', label: 'Irritated', icon: <span className="app-icon-glyph"><AppIcon name={"sentiment_very_dissatisfied"}/></span> },
   ];
 
   const energyOptions = [
-    { id: 'low', label: 'Low', icon: <span className="material-symbols-outlined">battery_low</span> },
-    { id: 'medium', label: 'Medium', icon: <span className="material-symbols-outlined">battery_3_bar</span> },
-    { id: 'high', label: 'High', icon: <span className="material-symbols-outlined">bolt</span> },
+    { id: 'low', label: 'Low', icon: <span className="app-icon-glyph"><AppIcon name={"battery_low"}/></span> },
+    { id: 'medium', label: 'Medium', icon: <span className="app-icon-glyph"><AppIcon name={"battery_3_bar"}/></span> },
+    { id: 'high', label: 'High', icon: <span className="app-icon-glyph"><AppIcon name={"bolt"}/></span> },
   ];
 
   const sleepOptions = [
-    { id: 'poor', label: 'Poor', icon: <span className="material-symbols-outlined">sentiment_very_dissatisfied</span> },
-    { id: 'fair', label: 'Fair', icon: <span className="material-symbols-outlined">sentiment_neutral</span> },
-    { id: 'good', label: 'Good', icon: <span className="material-symbols-outlined">bedtime</span> },
+    { id: 'poor', label: 'Poor', icon: <span className="app-icon-glyph"><AppIcon name={"sentiment_very_dissatisfied"}/></span> },
+    { id: 'fair', label: 'Fair', icon: <span className="app-icon-glyph"><AppIcon name={"sentiment_neutral"}/></span> },
+    { id: 'good', label: 'Good', icon: <span className="app-icon-glyph"><AppIcon name={"bedtime"}/></span> },
   ];
 
   return (
@@ -168,7 +169,7 @@ const LogDetails: React.FC = () => {
           onClick={() => navigate(-1)}
           className="flex size-10 items-center justify-center rounded-full text-gray-300 hover:text-white hover:bg-white/10 transition-colors"
         >
-          <span className="material-symbols-outlined text-2xl">arrow_back</span>
+          <span className="app-icon-glyph text-2xl"><AppIcon name={"arrow_back"}/></span>
         </button>
         <h2 className="text-[17px] font-bold text-white tracking-tight">Log Details</h2>
         <button onClick={() => { setFlow(undefined); setPeriodStarted(false); setMoods([]); setPhysical([]); setDigestion([]); setNotes(''); setEnergyLevel(undefined); setSleepQuality(undefined); setSleepHours(undefined); }} disabled={saving} className="text-[13px] font-medium text-gray-400 hover:text-white transition-colors px-2">
@@ -182,7 +183,7 @@ const LogDetails: React.FC = () => {
           onClick={() => handleDateChange(-1)}
           className="text-gray-500 hover:text-white transition-colors"
         >
-          <span className="material-symbols-outlined text-[14px]">arrow_back_ios_new</span>
+          <span className="app-icon-glyph text-[14px]"><AppIcon name={"arrow_back_ios_new"}/></span>
         </button>
         <div className="flex flex-col items-center gap-1">
           <h2 className="text-[22px] font-bold text-[#D14D72] leading-none">{headerDateString}</h2>
@@ -192,7 +193,7 @@ const LogDetails: React.FC = () => {
           onClick={() => handleDateChange(1)}
           className="text-gray-500 hover:text-white transition-colors"
         >
-          <span className="material-symbols-outlined text-[14px]">arrow_forward_ios</span>
+          <span className="app-icon-glyph text-[14px]"><AppIcon name={"arrow_forward_ios"}/></span>
         </button>
       </div>
 
@@ -201,7 +202,7 @@ const LogDetails: React.FC = () => {
         {/* Flow Intensity */}
         <div id="log-flow" className="bg-surface-dark rounded-[24px] p-5 shadow-sm border border-white/5">
           <div className="flex items-center gap-2.5 mb-5">
-            <span className="material-symbols-filled text-[#D14D72] text-[20px]">water_drop</span>
+            <span className="app-icon-glyph text-[#D14D72] text-[20px]"><AppIcon name={"water_drop"}/></span>
             <h3 className="text-[15px] font-bold text-white">Flow Intensity</h3>
           </div>
           <SymptomSelector
@@ -216,7 +217,7 @@ const LogDetails: React.FC = () => {
         <div id="log-mood" className="bg-surface-dark rounded-[24px] p-5 shadow-sm border border-white/5">
           <div className="flex items-center justify-between mb-6">
             <div className="flex items-center gap-2.5">
-              <span className="material-symbols-outlined text-[#4ECDC4] text-[20px]">face</span>
+              <span className="app-icon-glyph text-[#4ECDC4] text-[20px]"><AppIcon name={"face"}/></span>
               <h3 className="text-[15px] font-bold text-white">Mood</h3>
             </div>
             <span className="text-[10px] font-semibold text-gray-500 bg-white/5 px-2.5 py-1 rounded-[8px]">
@@ -236,7 +237,7 @@ const LogDetails: React.FC = () => {
         <div className="flex flex-col gap-5">
           <div className="bg-surface-dark rounded-[24px] p-5 shadow-sm border border-white/5">
             <div className="flex items-center gap-2.5 mb-5">
-              <span className="material-symbols-outlined text-yellow-400 text-[20px]">bolt</span>
+              <span className="app-icon-glyph text-yellow-400 text-[20px]"><AppIcon name={"bolt"}/></span>
               <h3 className="text-[15px] font-bold text-white">Energy Level</h3>
             </div>
             <SymptomSelector
@@ -250,7 +251,7 @@ const LogDetails: React.FC = () => {
           <div id="log-sleep" className="bg-surface-dark rounded-[24px] p-5 shadow-sm border border-white/5">
             <div className="flex items-center justify-between mb-6">
               <div className="flex items-center gap-2.5">
-                <span className="material-symbols-outlined text-indigo-400 text-[20px]">bedtime</span>
+                <span className="app-icon-glyph text-indigo-400 text-[20px]"><AppIcon name={"bedtime"}/></span>
                 <h3 className="text-[15px] font-bold text-white">Sleep Duration</h3>
               </div>
               <div className="flex items-center gap-1.5 bg-indigo-500/10 px-3 py-1 rounded-full border border-indigo-500/20">
@@ -299,7 +300,7 @@ const LogDetails: React.FC = () => {
           {/* Physical Section */}
           <div id="log-symptoms">
             <div className="flex items-center gap-2.5 mb-4">
-              <span className="material-symbols-outlined text-[#D14D72] text-[20px]">accessibility_new</span>
+              <span className="app-icon-glyph text-[#D14D72] text-[20px]"><AppIcon name={"accessibility_new"}/></span>
               <h3 className="text-[13px] font-bold text-white uppercase tracking-wider">Physical</h3>
             </div>
             <div className="flex flex-wrap gap-2.5">
@@ -324,7 +325,7 @@ const LogDetails: React.FC = () => {
           {/* Digestion Section */}
           <div>
             <div className="flex items-center gap-2.5 mb-4">
-              <span className="material-symbols-outlined text-[#E7D6A7] text-[20px]">restaurant</span>
+              <span className="app-icon-glyph text-[#E7D6A7] text-[20px]"><AppIcon name={"restaurant"}/></span>
               <h3 className="text-[13px] font-bold text-white uppercase tracking-wider">Digestion</h3>
             </div>
             <div className="flex flex-wrap gap-2.5">
@@ -350,7 +351,7 @@ const LogDetails: React.FC = () => {
         {/* Daily Notes */}
         <div className="bg-surface-dark rounded-[24px] p-5 shadow-sm border border-white/5">
           <div className="flex items-center gap-2.5 mb-4">
-            <span className="material-symbols-outlined text-gray-400 text-[20px]">edit_note</span>
+            <span className="app-icon-glyph text-gray-400 text-[20px]"><AppIcon name={"edit_note"}/></span>
             <h3 className="text-[15px] font-bold text-white">Daily Notes</h3>
           </div>
           <div className="relative bg-surface-dark/50 rounded-[18px] border border-white/5 focus-within:border-white/10 transition-colors">
@@ -378,7 +379,7 @@ const LogDetails: React.FC = () => {
           className="pointer-events-auto w-full bg-[#B04E75] hover:bg-[#9c4266] text-white font-bold text-[16px] py-4 rounded-[20px] shadow-xl shadow-[#B04E75]/20 active:scale-[0.98] transition-all flex items-center justify-center gap-2"
         >
           <div className="w-5 h-5 rounded-full bg-white text-[#B04E75] flex items-center justify-center">
-            <span className="material-symbols-outlined text-[16px] font-bold">check</span>
+            <span className="app-icon-glyph text-[16px] font-bold"><AppIcon name={"check"}/></span>
           </div>
           {saving ? 'Saving…' : 'Save Log'}
         </button>

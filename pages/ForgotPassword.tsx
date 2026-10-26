@@ -1,3 +1,4 @@
+import { AppIcon } from '../components/ui/Icons';
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -67,7 +68,7 @@ const ForgotPassword: React.FC = () => {
         onClick={() => step === 1 ? navigate('/login') : setStep(1)}
         className="self-start p-2 -ml-2 text-gray-400 hover:text-white transition-colors"
       >
-        <span className="material-symbols-outlined">arrow_back</span>
+        <span className="app-icon-glyph"><AppIcon name={"arrow_back"}/></span>
       </button>
 
       <div className="flex-1 flex flex-col justify-center max-w-md mx-auto w-full gap-8">

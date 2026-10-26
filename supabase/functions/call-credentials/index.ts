@@ -5,6 +5,7 @@ import {
   json,
   readBody,
   requireUser,
+  RequestBodyError,
 } from "../_shared/security.ts";
 
 Deno.serve(async (req: Request) => {
@@ -82,7 +83,8 @@ Deno.serve(async (req: Request) => {
         },
       },
     );
-  } catch {
+  } catch (error) {
+    if (error instanceof RequestBodyError) return json({ error: error.message }, error.status);
     return json(
       { error: "Could not prepare the private call connection." },
       500,

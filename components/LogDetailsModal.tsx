@@ -1,3 +1,5 @@
+import { MotionPortal } from './ui/MotionPortal';
+import { AppIcon } from './ui/Icons';
 import React from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { DailyLog } from '../types';
@@ -26,7 +28,7 @@ const LogDetailsModal: React.FC<LogDetailsModalProps> = ({ isOpen, onClose, log,
       {isOpen && (
         <>
           {/* Backdrop */}
-          <motion.div
+          <MotionPortal><motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
@@ -47,7 +49,7 @@ const LogDetailsModal: React.FC<LogDetailsModalProps> = ({ isOpen, onClose, log,
                   onClick={onClose}
                   className="absolute top-4 right-4 w-8 h-8 flex items-center justify-center rounded-full bg-black/5 dark:bg-white/10 text-gray-600 dark:text-white hover:bg-black/10 transition-colors"
                 >
-                  <span className="material-symbols-outlined text-sm">close</span>
+                  <span className="app-icon-glyph text-sm"><AppIcon name={"close"}/></span>
                 </button>
               </div>
 
@@ -55,7 +57,7 @@ const LogDetailsModal: React.FC<LogDetailsModalProps> = ({ isOpen, onClose, log,
               <div className="px-6 pb-6 -mt-10 relative">
                 {/* Date Badge */}
                 <div className="inline-flex items-center gap-2 bg-white dark:bg-surface-dark px-4 py-2 rounded-full shadow-sm mb-4 border border-gray-100 dark:border-white/5">
-                  <span className="material-symbols-outlined text-primary text-sm">calendar_today</span>
+                  <span className="app-icon-glyph text-primary text-sm"><AppIcon name={"calendar_today"}/></span>
                   <span className="text-sm font-bold text-gray-900 dark:text-white">{formatDate(date)}</span>
                 </div>
 
@@ -111,7 +113,7 @@ const LogDetailsModal: React.FC<LogDetailsModalProps> = ({ isOpen, onClose, log,
                           <div className="flex-1">
                             <h4 className="text-xs font-bold text-gray-400 uppercase tracking-widest mb-2">Energy</h4>
                             <div className="flex items-center gap-2">
-                              <span className="material-symbols-outlined text-yellow-500 text-sm">bolt</span>
+                              <span className="app-icon-glyph text-yellow-500 text-sm"><AppIcon name={"bolt"}/></span>
                               <span className="text-gray-800 dark:text-gray-200 capitalize font-medium">{log.energyLevel}</span>
                             </div>
                           </div>
@@ -120,7 +122,7 @@ const LogDetailsModal: React.FC<LogDetailsModalProps> = ({ isOpen, onClose, log,
                           <div className="flex-1">
                             <h4 className="text-xs font-bold text-gray-400 uppercase tracking-widest mb-2">Sleep</h4>
                             <div className="flex items-center gap-2">
-                              <span className="material-symbols-outlined text-indigo-500 text-sm">bedtime</span>
+                              <span className="app-icon-glyph text-indigo-500 text-sm"><AppIcon name={"bedtime"}/></span>
                               <div className="flex flex-col">
                                 <span className="text-gray-800 dark:text-gray-200 capitalize font-medium">{log.sleepQuality}</span>
                                 {log.sleepHours !== undefined && (
@@ -154,14 +156,14 @@ const LogDetailsModal: React.FC<LogDetailsModalProps> = ({ isOpen, onClose, log,
                     }}
                     className="on-brand w-full mt-6 bg-primary hover:bg-primary/90 text-white font-bold py-3.5 rounded-2xl shadow-lg shadow-primary/20 transition-all flex items-center justify-center gap-2"
                   >
-                    <span className="material-symbols-outlined text-lg">edit</span>
+                    <span className="app-icon-glyph text-lg"><AppIcon name={"edit"}/></span>
                     Edit Log
                   </button>
                 )}
 
               </div>
             </motion.div>
-          </motion.div>
+          </motion.div></MotionPortal>
         </>
       )}
     </AnimatePresence>

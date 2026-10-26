@@ -34,11 +34,15 @@ export async function consumeBudget(userId: string, action: string, limit: numbe
   if (error) throw new Error('Request budget is unavailable');
   return data === true;
 }
+export class RequestBodyError extends Error {
+  constructor(message: string, public status = 400) { super(message); this.name = 'RequestBodyError'; }
+}
 export async function readBody(req: Request): Promise<Record<string, unknown>> {
-  if (Number(req.headers.get('content-length') || 0) > 20000) throw new Error('Request is too large');
+  if (Number(req.headers.get('content-length') || 0) > 20000) throw new RequestBodyError('Request is too large', 413);
   const text = await req.text();
-  if (text.length > 20000) throw new Error('Request is too large');
-  const data = JSON.parse(text);
-  if (!data || typeof data !== 'object' || Array.isArray(data)) throw new Error('Invalid request body');
+  if (text.length > 20000) throw new RequestBodyError('Request is too large', 413);
+  let data;
+  try { data = JSON.parse(text); } catch { throw new RequestBodyError('Invalid JSON body'); }
+  if (!data || typeof data !== 'object' || Array.isArray(data)) throw new RequestBodyError('Invalid request body');
   return data;
 }

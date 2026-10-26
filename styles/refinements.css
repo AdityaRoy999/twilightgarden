@@ -1,0 +1,37 @@
+/* Surface edges and spacing provide depth; the app deliberately has no shadows. */
+*, *::before, *::after { box-shadow: none !important; text-shadow: none !important; }
+svg, img, [class*='drop-shadow'] { filter: none !important; }
+.route-loading { min-height: 100%; display: grid; place-items: center; color: var(--text-secondary); background: var(--bg-base); }
+.bloom-cycle-hero { background: transparent !important; border: 0 !important; border-radius: 0; }
+.cycle-hero-frame { position: absolute; inset: 0; width: 100%; height: 100%; z-index: -2; }
+.reference-day-number { position: relative; }
+.reference-day-number > span { position: relative; z-index: 1; }
+.reference-day[data-period='true'] .reference-day-number { background: transparent !important; border: 0 !important; color: var(--text-primary); }
+.reference-day-drop { position: absolute; height: 40px; width: 34px; left: 0; top: -5px; color: #ffd4e3; }
+.reference-day[data-today='true'] .reference-day-drop { color: #f54b8d; }
+.reference-day[data-period='true'][data-today='true'] .reference-day-number { color: white; }
+.reference-day[data-period='true'] .reference-day-marker { display: none; }
+.reference-legend > span:first-child svg { color: #f45a92; }
+:root.dark .reference-day-drop { color: #652844; }
+:root.dark .reference-day[data-today='true'] .reference-day-drop { color: #fc5795; }
+.reference-message-bubble { position: relative; border: 0 !important; border-radius: 20px !important; --bubble-tail: var(--bg-surface); }
+.reference-message-bubble.is-mine { --bubble-tail: var(--color-primary); border-bottom-right-radius: 6px !important; color: var(--on-primary); }
+.reference-message-bubble:not(.is-mine) { border-bottom-left-radius: 6px !important; }
+.reference-message-bubble[data-kind='text']::after { content: ''; position: absolute; bottom: 0; width: 12px; height: 17px; background: var(--bubble-tail); pointer-events: none; }
+.reference-message-bubble[data-kind='text']:not(.is-mine)::after { left: -5px; transform: scaleX(-1); clip-path: path('M0 0H7C6 8 7 13 12 17C5 17 2 13 0 10Z'); }
+.reference-message-bubble.is-mine[data-kind='text']::after { right: -5px; clip-path: path('M0 0H7C6 8 7 13 12 17C5 17 2 13 0 10Z'); }
+:root.dark .reference-message-bubble.is-mine { --bubble-tail: #cc3a76; }
+:root.dark .reference-message-bubble:not(.is-mine) { --bubble-tail: #261b30; }
+.reference-message-bubble[data-kind='media'] { background: transparent !important; border-radius: 18px !important; }
+.reference-chat-composer textarea { background: var(--bg-surface); }
+.chat-pairing { height: 100%; min-height: 0; overflow-y: auto; justify-content: flex-start; }
+.chat-pairing > * { flex-shrink: 0; }
+.chat-pairing > :first-child { margin-top: auto; }
+.chat-pairing > :last-child { margin-bottom: auto; }
+@media (max-width: 767px) {
+  .bloom-mobile-nav { gap: 0; padding-inline: 4px; inset-inline: 8px; }
+  .bloom-mobile-nav a { min-width: 0; flex: 1 1 0; font-size: 10px; letter-spacing: -.2px; gap: 5px; padding: 10px 0; border-radius: 17px; }
+  .bloom-mobile-nav a svg { width: 20px; height: 20px; }
+  .reference-chat .reference-chat-composer { padding-bottom: 12px; }
+}
+@media (max-width: 359px) { .bloom-mobile-nav a { font-size: 9px; } }

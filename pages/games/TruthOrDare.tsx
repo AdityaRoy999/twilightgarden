@@ -1,3 +1,4 @@
+import { AppIcon } from '../../components/ui/Icons';
 import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -243,7 +244,7 @@ const TruthOrDare: React.FC = () => {
              {/* Header */}
              <div className={`p-4 flex items-center justify-between border-b ${isDark ? 'border-white/10' : 'border-gray-200'}`}>
                 <button onClick={async () => { try { if (session?.id) await endSession(session.id); } catch {} navigate('/games'); }} className="p-2 -ml-2 rounded-full hover:bg-white/10 active:scale-95 transition-transform">
-                    <span className="material-symbols-outlined text-2xl">arrow_back</span>
+                    <span className="app-icon-glyph text-2xl"><AppIcon name={"arrow_back"}/></span>
                 </button>
                 <h1 className="text-lg font-bold">Truth or Dare</h1>
                 <div className="flex items-center">
@@ -252,7 +253,7 @@ const TruthOrDare: React.FC = () => {
                         className="p-2 mr-1 rounded-full hover:bg-white/10 active:scale-95 transition-transform"
                         title="Watch Tutorial"
                     >
-                        <span className="material-symbols-outlined text-2xl" style={{ color: primaryColor }}>play_circle</span>
+                        <span className="app-icon-glyph text-2xl" style={{ color: primaryColor }}><AppIcon name={"play_circle"}/></span>
                     </button>
                     <button
                         onClick={async () => {
@@ -265,7 +266,7 @@ const TruthOrDare: React.FC = () => {
                         className={`p-2 rounded-full transition-all ${ringCooldown ? 'opacity-30' : 'hover:bg-white/10 active:scale-90'}`}
                         title="Ring Partner"
                     >
-                        <span className="material-symbols-outlined text-2xl">{ringCooldown ? 'notifications_off' : 'notifications_active'}</span>
+                        <span className="app-icon-glyph text-2xl"><AppIcon name={ringCooldown ? 'notifications_off' : 'notifications_active'}/></span>
                     </button>
                 </div>
             </div>
@@ -360,7 +361,8 @@ const TruthOrDare: React.FC = () => {
                                         animate={{ rotate: [0, 10, -10, 0] }}
                                         transition={{ repeat: Infinity, duration: 2 }}
                                     >
-                                        🎲
+
+                                        <AppIcon name={"🎲"}/>
                                     </motion.div>
                                     <h2 className="text-xl font-medium opacity-80">
                                         {isMyTurn ? "It's your turn!" : "Waiting for partner..."}

@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Check, Palette } from 'lucide-react';
+import { Check, Palette } from '../../components/ui/Icons';
 import { useTheme } from '../../contexts/ThemeContext';
 import { CustomColorPicker } from '../../components/ui/CustomColorPicker';
 import { ReferenceArt, ReferenceHeading } from '../../components/ui/ReferenceArt';

@@ -1,3 +1,4 @@
+import { AppIcon } from '../../components/ui/Icons';
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { supabase } from '../../lib/supabase';
@@ -38,7 +39,7 @@ const PartnerForgotPassword: React.FC = () => {
     <div className="min-h-screen flex flex-col bg-background-dark text-white font-display">
       <div className="flex items-center p-4 pb-2 justify-between z-10">
         <button onClick={() => navigate('/partner/login')} className="text-white flex size-12 items-center justify-center hover:bg-white/5 rounded-full">
-          <span className="material-symbols-outlined">arrow_back_ios_new</span>
+          <span className="app-icon-glyph"><AppIcon name={"arrow_back_ios_new"}/></span>
         </button>
         <h2 className="text-lg font-bold flex-1 text-center pr-12">Reset Password</h2>
       </div>
@@ -46,7 +47,7 @@ const PartnerForgotPassword: React.FC = () => {
       <div className="flex-1 flex flex-col items-center justify-center p-6">
         <div className="text-center mb-8">
           <div className="w-20 h-20 bg-blue-500/20 rounded-full flex items-center justify-center mx-auto mb-6 border border-blue-500/30">
-             <span className="material-symbols-outlined text-4xl text-blue-400">lock_reset</span>
+             <span className="app-icon-glyph text-4xl text-blue-400"><AppIcon name={"lock_reset"}/></span>
           </div>
           <h1 className="text-2xl font-bold mb-2">Forgot Password?</h1>
           <p className="text-white/60 text-sm">Enter your email to receive a reset link.</p>

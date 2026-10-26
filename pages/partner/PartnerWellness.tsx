@@ -1,3 +1,4 @@
+import { AppIcon } from '../../components/ui/Icons';
 import { localDateKey } from '../../lib/dates';
 import React, { useState, useEffect, useMemo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -228,7 +229,7 @@ const PartnerWellness: React.FC = () => {
     if (!couple || couple.status !== 'active') {
         return (
             <div className={`flex flex-col items-center justify-center min-h-screen p-6 ${isDark ? 'bg-background-dark text-white' : 'bg-background-dark text-gray-900'}`}>
-                <span className="material-symbols-outlined text-5xl text-gray-400 mb-4">link_off</span>
+                <span className="app-icon-glyph text-5xl text-gray-400 mb-4"><AppIcon name={"link_off"}/></span>
                 <h2 className="text-xl font-bold mb-2">Not Connected</h2>
                 <p className={`text-sm text-center ${isDark ? 'text-white/50' : 'text-gray-500'}`}>
                     Connect with your partner to access personalized care guides and gift recommendations.
@@ -241,7 +242,7 @@ const PartnerWellness: React.FC = () => {
     if (!partnerSettings && couple.share_enabled) {
         return (
             <div className={`flex flex-col items-center justify-center min-h-screen p-6 ${isDark ? 'bg-background-dark text-white' : 'bg-background-dark text-gray-900'}`}>
-                <span className="material-symbols-outlined text-5xl text-gray-400 mb-4">hourglass_empty</span>
+                <span className="app-icon-glyph text-5xl text-gray-400 mb-4"><AppIcon name={"hourglass_empty"}/></span>
                 <h2 className="text-xl font-bold mb-2">Waiting for Data</h2>
                 <p className={`text-sm text-center ${isDark ? 'text-white/50' : 'text-gray-500'}`}>
                     Your partner hasn't logged any cycle data yet. Check back soon!
@@ -262,7 +263,7 @@ const PartnerWellness: React.FC = () => {
     const renderShopsContent = () => {
         if (mapLoading) return (
             <div className={`rounded-2xl p-8 text-center ${isDark ? 'bg-surface-dark border border-white/5' : 'bg-white border border-gray-100'} shadow-soft flex flex-col items-center justify-center min-h-[400px]`}>
-                 <span className="material-symbols-outlined text-4xl text-primary animate-spin mb-4">explore</span>
+                 <span className="app-icon-glyph text-4xl text-primary animate-spin mb-4"><AppIcon name={"explore"}/></span>
                  <p className={`font-bold ${isDark ? 'text-white' : 'text-gray-900'}`}>Locating Nearest Pads...</p>
                  <p className={`text-sm mt-2 ${isDark ? 'text-white/50' : 'text-gray-500'}`}>Finding nearby pharmacies and medical stores.</p>
             </div>
@@ -277,7 +278,7 @@ const PartnerWellness: React.FC = () => {
                 <div className="flex flex-col gap-4 h-[500px] overflow-y-auto no-scrollbar pr-2">
                     <div className={`rounded-2xl p-4 sticky top-0 z-10 ${isDark ? 'bg-gradient-to-br from-primary/20 to-pink-500/10 border border-primary/20 backdrop-blur-xl' : 'bg-gradient-to-br from-primary/10 to-pink-50 border border-primary/20 backdrop-blur-xl'}`}>
                         <p className={`text-sm font-bold ${isDark ? 'text-primary' : 'text-primary-dark'}`}>
-                            <span className="material-symbols-filled text-sm mr-1 align-middle">local_pharmacy</span>
+                            <span className="app-icon-glyph text-sm mr-1 align-middle"><AppIcon name={"local_pharmacy"}/></span>
                             {shops.length} Pharmacies Nearby
                         </p>
                         <p className={`text-xs mt-1 ${isDark ? 'text-white/60' : 'text-gray-600'}`}>
@@ -302,12 +303,12 @@ const PartnerWellness: React.FC = () => {
                             <div className="p-4 flex flex-col gap-2">
                                 <h4 className={`font-bold ${isDark ? 'text-white' : 'text-gray-900'}`}>{shop.name}</h4>
                                 <div className="flex items-start gap-1">
-                                    <span className="material-symbols-outlined text-[14px] text-gray-400 mt-0.5">location_on</span>
+                                    <span className="app-icon-glyph text-[14px] text-gray-400 mt-0.5"><AppIcon name={"location_on"}/></span>
                                     <p className={`text-xs leading-relaxed ${isDark ? 'text-gray-400' : 'text-gray-600'}`}>{shop.address}</p>
                                 </div>
                                 {shop.phoneNumber && (
                                     <div className="flex items-center gap-1">
-                                        <span className="material-symbols-outlined text-[14px] text-green-500">call</span>
+                                        <span className="app-icon-glyph text-[14px] text-green-500"><AppIcon name={"call"}/></span>
                                         <p className={`text-xs font-semibold ${isDark ? 'text-green-400' : 'text-green-600'}`}>{shop.phoneNumber}</p>
                                     </div>
                                 )}
@@ -315,13 +316,13 @@ const PartnerWellness: React.FC = () => {
                                 {selectedShop?.id === shop.id && route && (
                                     <div className={`mt-2 p-2 rounded-lg flex items-center justify-between ${isDark ? 'bg-black/50' : 'bg-primary/10'}`}>
                                         <div className="flex items-center gap-1.5">
-                                            <span className="material-symbols-outlined text-[14px] text-primary">route</span>
+                                            <span className="app-icon-glyph text-[14px] text-primary"><AppIcon name={"route"}/></span>
                                             <span className={`text-xs font-bold ${isDark ? 'text-white' : 'text-gray-900'}`}>
                                                 {(route.distance / 1000).toFixed(2)} km
                                             </span>
                                         </div>
                                         <div className="flex items-center gap-1.5">
-                                            <span className="material-symbols-outlined text-[14px] text-primary">schedule</span>
+                                            <span className="app-icon-glyph text-[14px] text-primary"><AppIcon name={"schedule"}/></span>
                                             <span className={`text-xs font-bold ${isDark ? 'text-white' : 'text-gray-900'}`}>
                                                 {Math.round(route.duration / 60)} min
                                             </span>
@@ -412,7 +413,7 @@ const PartnerWellness: React.FC = () => {
                             <img src={partnerProfile.avatar_url} alt="" className="w-10 h-10 rounded-full object-cover" />
                         ) : (
                             <div className={`w-10 h-10 rounded-full flex items-center justify-center ${isDark ? 'bg-pink-500/30' : 'bg-pink-100'}`}>
-                                <span className="material-symbols-filled text-pink-400">person</span>
+                                <span className="app-icon-glyph text-pink-400"><AppIcon name={"person"}/></span>
                             </div>
                         )}
                         <div>
@@ -438,7 +439,7 @@ const PartnerWellness: React.FC = () => {
                                 : isDark ? 'bg-white/5 text-gray-400 hover:bg-white/10' : 'bg-gray-100 text-gray-500 hover:bg-gray-200'
                                 }`}
                         >
-                            <span className="material-symbols-outlined text-base">{tab.icon}</span>
+                            <span className="app-icon-glyph text-base"><AppIcon name={tab.icon}/></span>
                             {tab.label}
                         </button>
                     ))}
@@ -465,11 +466,11 @@ const PartnerWellness: React.FC = () => {
                                     <div className={`rounded-2xl p-6 md:p-8 ${isDark ? 'bg-surface-dark border border-white/5' : 'bg-white border border-gray-100'} shadow-soft`}>
                                         <div className="flex items-center justify-between mb-6">
                                             <h3 className={`text-xl font-bold ${isDark ? 'text-white' : 'text-gray-900'}`}>
-                                                <span className="material-symbols-filled text-pink-400 mr-2 align-middle text-2xl">favorite</span>
+                                                <span className="app-icon-glyph text-pink-400 mr-2 align-middle text-2xl"><AppIcon name={"favorite"}/></span>
                                                 How to Support {partnerName}
                                             </h3>
                                             <button onClick={fetchCare} className="text-primary text-sm font-semibold flex items-center gap-1 hover:opacity-80 transition-opacity bg-primary/10 px-3 py-1.5 rounded-full">
-                                                <span className="material-symbols-outlined text-sm">refresh</span> Refresh
+                                                <span className="app-icon-glyph text-sm"><AppIcon name={"refresh"}/></span> Refresh
                                             </button>
                                         </div>
                                         <div className={`prose prose-sm md:prose-base max-w-none ${isDark ? 'prose-invert' : ''} leading-relaxed whitespace-pre-line`}>
@@ -487,7 +488,7 @@ const PartnerWellness: React.FC = () => {
                                   {/* Gift context card */}
                                   <div className={`rounded-2xl p-4 ${isDark ? 'bg-gradient-to-br from-amber-500/10 to-orange-500/10 border border-amber-500/20' : 'bg-gradient-to-br from-amber-50 to-orange-50 border border-amber-100'}`}>
                                       <p className={`text-sm ${isDark ? 'text-amber-300/80' : 'text-amber-700'}`}>
-                                          <span className="material-symbols-filled text-sm mr-1 align-middle">lightbulb</span>
+                                          <span className="app-icon-glyph text-sm mr-1 align-middle"><AppIcon name={"lightbulb"}/></span>
                                           Personalized suggestions based on {partnerName}'s current phase and mood
                                       </p>
                                   </div>
@@ -611,7 +612,7 @@ const LoadingSkeleton = ({ isDark }: { isDark: boolean }) => (
 
 const ErrorCard = ({ message, onRetry, isDark }: { message: string; onRetry: () => void; isDark: boolean }) => (
     <div className={`rounded-2xl p-6 text-center ${isDark ? 'bg-red-500/10 border border-red-500/20' : 'bg-red-50 border border-red-100'}`}>
-        <span className="material-symbols-outlined text-3xl text-red-400 mb-2">error</span>
+        <span className="app-icon-glyph text-3xl text-red-400 mb-2"><AppIcon name={"error"}/></span>
         <p className={`text-sm mb-3 ${isDark ? 'text-white/60' : 'text-gray-600'}`}>{message}</p>
         <button onClick={onRetry} className="on-brand px-4 py-2 bg-primary text-white text-sm font-bold rounded-full">
             Try Again

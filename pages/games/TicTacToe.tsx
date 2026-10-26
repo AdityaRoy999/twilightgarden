@@ -1,3 +1,4 @@
+import { AppIcon } from '../../components/ui/Icons';
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -361,7 +362,7 @@ const TicTacToe: React.FC = () => {
             {/* Header */}
             <header className={`flex items-center justify-between px-5 py-4 sticky top-0 z-20 backdrop-blur-sm border-b ${isDark ? 'bg-background-dark/95 border-white/5' : 'bg-background-dark/95 border-gray-100'}`}>
                 <button onClick={handleExit} className="w-10 h-10 rounded-full flex items-center justify-center hover:bg-white/10 transition-colors">
-                    <span className="material-symbols-outlined">arrow_back</span>
+                    <span className="app-icon-glyph"><AppIcon name={"arrow_back"}/></span>
                 </button>
                 <h1 className="text-lg font-bold">Tic Tac Toe</h1>
                 <div className="flex items-center">
@@ -370,7 +371,7 @@ const TicTacToe: React.FC = () => {
                         className="w-10 h-10 rounded-full flex items-center justify-center hover:bg-white/10 transition-all active:scale-90 mr-1"
                         title="Watch Tutorial"
                     >
-                        <span className="material-symbols-outlined text-xl" style={{ color: primaryColor }}>play_circle</span>
+                        <span className="app-icon-glyph text-xl" style={{ color: primaryColor }}><AppIcon name={"play_circle"}/></span>
                     </button>
                     <button
                         onClick={async () => {
@@ -383,7 +384,7 @@ const TicTacToe: React.FC = () => {
                         className={`w-10 h-10 rounded-full flex items-center justify-center transition-all ${ringCooldown ? 'opacity-30' : 'hover:bg-white/10 active:scale-90'}`}
                         title="Ring Partner"
                     >
-                        <span className="material-symbols-outlined text-xl">{ringCooldown ? 'notifications_off' : 'notifications_active'}</span>
+                        <span className="app-icon-glyph text-xl"><AppIcon name={ringCooldown ? 'notifications_off' : 'notifications_active'}/></span>
                     </button>
                 </div>
             </header>
@@ -481,7 +482,8 @@ const TicTacToe: React.FC = () => {
                             <button onClick={handlePlayAgain}
                                 className="w-full px-6 py-4 rounded-2xl font-bold text-white shadow-lg transition-all hover:brightness-110 active:scale-95"
                                 style={{ backgroundColor: primaryColor, boxShadow: `0 8px 24px ${primaryColor}40` }}>
-                                Play Again 🔄
+
+                                Play Again <AppIcon name={"🔄"}/>
                             </button>
                             <button onClick={handleExit}
                                 className={`w-full px-6 py-3 rounded-2xl font-bold transition-colors ${isDark ? 'bg-white/5 hover:bg-white/10 text-gray-300' : 'bg-gray-100 hover:bg-gray-200 text-gray-600'}`}>

@@ -1,13 +1,13 @@
+import { SpringModal } from './ui/SpringModal';
 import React, { useEffect, useRef, useState } from "react";
 import QRCode from "react-qr-code";
-import { Camera, Check, Clipboard, Shield, X } from "lucide-react";
+import { Camera, Check, Clipboard, Shield, X } from './ui/Icons';
 import {
   derivePublicKeyFromPrivate,
   generateVerificationFingerprint,
   getCachedPrivateKey,
 } from "../lib/encryption";
 import { useCouples } from "../contexts/CouplesContext";
-import { useDialogFocus } from "../hooks/useDialogFocus";
 
 export function SecurityVerification({
   isOpen,
@@ -18,8 +18,6 @@ export function SecurityVerification({
   onClose: () => void;
   partnerPubKey: string | null;
 }) {
-  const dialog = useRef<HTMLDivElement>(null);
-  useDialogFocus(dialog, isOpen);
   const { isSyncRequired } = useCouples();
   const [fingerprint, setFingerprint] = useState<string | null>(null),
     [otherCode, setOtherCode] = useState("");
@@ -109,18 +107,8 @@ export function SecurityVerification({
       void stop();
     };
   }, [isOpen, scanning, fingerprint]);
-  if (!isOpen) return null;
   return (
-    <div
-      ref={dialog}
-      className="fixed inset-0 z-[260] overflow-y-auto bg-background-dark text-gray-900 dark:bg-background-dark dark:text-white"
-      role="dialog"
-      aria-modal="true"
-      aria-labelledby="security-title"
-      onKeyDown={(event) => {
-        if (event.key === "Escape") onClose();
-      }}
-    >
+    <SpringModal open={isOpen} onClose={onClose} labelledBy="security-title" className="max-w-lg p-0">
       <header className="sticky top-0 z-10 flex items-center justify-between border-b border-black/10 bg-background-dark p-4 dark:border-white/10 dark:bg-background-dark">
         <h2
           id="security-title"
@@ -255,6 +243,6 @@ export function SecurityVerification({
           </>
         )}
       </div>
-    </div>
+    </SpringModal>
   );
 }

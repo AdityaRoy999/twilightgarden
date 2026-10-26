@@ -1,6 +1,8 @@
+import { SpringModal } from '../components/ui/SpringModal';
+import { AppIcon } from '../components/ui/Icons';
 import { ReferenceArt, ReferenceHeading } from '../components/ui/ReferenceArt';
 import { PreferenceSwitch } from '../components/ui/PreferenceSwitch';
-import { Moon, Palette, Waves, Sparkles, UserRound, PenLine, ChevronRight } from 'lucide-react';
+import { Moon, Palette, Waves, Sparkles, UserRound, PenLine, ChevronRight } from '../components/ui/Icons';
 import { localDateKey } from '../lib/dates';
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '../contexts/AuthContext';
@@ -12,7 +14,7 @@ import { exportHealthDataToPDF, exportDoctorsReport } from '../lib/exportPDF';
 import TodayReportModal from '../components/TodayReportModal';
 import Toast from '../components/Toast';
 import { useCouples } from '../contexts/CouplesContext';
-import { Smartphone, Monitor, Trash2, Clock, Shield } from 'lucide-react';
+import { Smartphone, Monitor, Trash2, Clock, Shield } from '../components/ui/Icons';
 import { SyncHistoryModal } from '../components/SyncHistoryModal';
 
 const Settings: React.FC = () => {
@@ -231,18 +233,14 @@ const Settings: React.FC = () => {
       />
 
       {/* Unlink Device Confirmation */}
-      {unlinkDeviceId && (
-        <div className="fixed inset-0 z-[200] flex items-center justify-center bg-black/60 p-6" onClick={() => setUnlinkDeviceId(null)}>
-          <div className="bg-white dark:bg-gray-800 rounded-2xl p-6 max-w-sm w-full shadow-xl" onClick={e => e.stopPropagation()}>
+      <SpringModal open={!!unlinkDeviceId} onClose={() => setUnlinkDeviceId(null)} label="Remove device key" className="max-w-sm p-6">
             <h3 className="text-lg font-semibold mb-2 dark:text-white">Remove device key</h3>
             <p className="text-sm text-gray-600 dark:text-gray-300 mb-5">Remove this device's public-key registration? This does not sign the device out or erase its cached keys. It can register again while signed in.</p>
             <div className="flex gap-3">
               <button onClick={() => setUnlinkDeviceId(null)} className="flex-1 py-2.5 rounded-xl bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-200 text-sm font-medium">Cancel</button>
               <button onClick={confirmUnlinkDevice} className="on-brand flex-1 py-2.5 rounded-xl bg-red-500 text-white text-sm font-medium">Remove key</button>
             </div>
-          </div>
-        </div>
-      )}
+      </SpringModal>
 
       <ReferenceHeading title="Settings"/>
       <section className="reference-card reference-profile">
@@ -279,14 +277,14 @@ const Settings: React.FC = () => {
                   >
                       <div className="flex items-center gap-3">
                           <div className="flex items-center justify-center rounded-xl bg-pink-100 dark:bg-pink-900/20 text-pink-500 w-10 h-10 group-hover:scale-105 transition-transform">
-                              <span className="material-symbols-filled">favorite</span>
+                              <span className="app-icon-glyph"><AppIcon name={"favorite"}/></span>
                           </div>
                           <div className="flex flex-col">
                               <span className="font-medium text-[var(--text-primary)] dark:text-gray-200">Love Lock</span>
                               <span className="text-xs text-gray-500">Couples Space</span>
                           </div>
                       </div>
-                      <span className="material-symbols-outlined text-gray-400 dark:text-gray-600 text-sm">arrow_forward_ios</span>
+                      <span className="app-icon-glyph text-gray-400 dark:text-gray-600 text-sm"><AppIcon name={"arrow_forward_ios"}/></span>
                   </div>
                   <div
                       className="flex items-center justify-between p-4 hover:bg-gray-50 dark:hover:bg-white/5 transition-colors cursor-pointer group"
@@ -294,14 +292,14 @@ const Settings: React.FC = () => {
                   >
                       <div className="flex items-center gap-3">
                           <div className="flex items-center justify-center rounded-xl bg-gray-50 dark:bg-white/5 text-pink-500 w-10 h-10 group-hover:scale-105 transition-transform">
-                              <span className="material-symbols-outlined">notifications</span>
+                              <span className="app-icon-glyph"><AppIcon name={"notifications"}/></span>
                           </div>
                           <div className="flex flex-col">
                               <span className="font-medium text-[var(--text-primary)] dark:text-gray-200">Manage Notifications</span>
                               <span className="text-xs text-gray-500">Period alerts & daily reminders</span>
                           </div>
                       </div>
-                      <span className="material-symbols-outlined text-gray-400 dark:text-gray-600 text-sm">arrow_forward_ios</span>
+                      <span className="app-icon-glyph text-gray-400 dark:text-gray-600 text-sm"><AppIcon name={"arrow_forward_ios"}/></span>
                   </div>
               </div>
             </div>
@@ -331,7 +329,7 @@ const Settings: React.FC = () => {
                               }}
                               className="w-full bg-gray-50 dark:bg-white/5 border border-gray-100 dark:border-white/10 rounded-xl px-4 py-3 text-[var(--text-primary)] dark:text-white focus:ring-2 focus:ring-primary/20 outline-none transition-all"
                           />
-                          <span className="material-symbols-outlined absolute right-3 top-3 text-gray-400 pointer-events-none">edit_note</span>
+                          <span className="app-icon-glyph absolute right-3 top-3 text-gray-400 pointer-events-none"><AppIcon name={"edit_note"}/></span>
                       </div>
                       <p className="text-xs text-gray-500 mt-1">This name will be used in notifications you receive.</p>
                   </div>
@@ -356,20 +354,20 @@ const Settings: React.FC = () => {
                   >
                     <div className="flex items-center gap-3">
                       <div className={`flex items-center justify-center rounded-xl bg-gray-50 dark:bg-white/5 ${item.color} w-10 h-10 group-hover:scale-105 transition-transform`}>
-                        <span className="material-symbols-outlined">{item.icon}</span>
+                        <span className="app-icon-glyph"><AppIcon name={item.icon}/></span>
                       </div>
                       <span className="font-medium text-[var(--text-primary)] dark:text-gray-200">{item.label}</span>
                     </div>
                     <div className="flex items-center gap-2">
                       <span className="text-[var(--text-primary)] dark:text-white font-semibold">{item.value}</span>
-                      <span className="material-symbols-outlined text-gray-400 dark:text-gray-600 text-sm">arrow_forward_ios</span>
+                      <span className="app-icon-glyph text-gray-400 dark:text-gray-600 text-sm"><AppIcon name={"arrow_forward_ios"}/></span>
                     </div>
                   </div>
                 ))}
                 <div className="flex items-center justify-between p-4">
                   <div className="flex items-center gap-3">
                     <div className="flex items-center justify-center rounded-xl bg-gray-50 dark:bg-white/5 text-amber-500 dark:text-amber-300 w-10 h-10">
-                      <span className="material-symbols-outlined">waves</span>
+                      <span className="app-icon-glyph"><AppIcon name={"waves"}/></span>
                     </div>
                     <div className="flex flex-col">
                       <span className="font-medium text-[var(--text-primary)] dark:text-gray-200">Irregular Cycle</span>
@@ -398,11 +396,11 @@ const Settings: React.FC = () => {
                   >
                     <div className="flex items-center gap-3">
                       <div className="flex items-center justify-center rounded-xl bg-gray-50 dark:bg-white/5 text-pink-500 w-10 h-10 group-hover:scale-105 transition-transform">
-                        <span className="material-symbols-outlined">history</span>
+                        <span className="app-icon-glyph"><AppIcon name={"history"}/></span>
                       </div>
                       <span className="font-medium text-[var(--text-primary)] dark:text-gray-200">Log History</span>
                     </div>
-                    <span className="material-symbols-outlined text-gray-400 dark:text-gray-600 text-sm">arrow_forward_ios</span>
+                    <span className="app-icon-glyph text-gray-400 dark:text-gray-600 text-sm"><AppIcon name={"arrow_forward_ios"}/></span>
                   </div>
 
                   <div
@@ -426,7 +424,7 @@ const Settings: React.FC = () => {
                       {!hasCloudBackup && (
                         <span className="px-2 py-0.5 bg-primary/10 text-primary dark:text-pink-300 text-[10px] font-bold rounded-full">Set up</span>
                       )}
-                      <span className="material-symbols-outlined text-gray-400 dark:text-gray-600 text-sm">arrow_forward_ios</span>
+                      <span className="app-icon-glyph text-gray-400 dark:text-gray-600 text-sm"><AppIcon name={"arrow_forward_ios"}/></span>
                     </div>
                   </div>
               </div>
@@ -441,14 +439,14 @@ const Settings: React.FC = () => {
                 >
                   <div className="flex items-center gap-3">
                     <div className="flex items-center justify-center rounded-xl bg-gray-50 dark:bg-white/5 text-primary w-10 h-10">
-                      <span className="material-symbols-outlined">download</span>
+                      <span className="app-icon-glyph"><AppIcon name={"download"}/></span>
                     </div>
                     <div className="flex flex-col">
                       <span className="font-medium text-[var(--text-primary)] dark:text-gray-200">Export Health Data</span>
                       <span className="text-xs text-gray-500">Download PDF report</span>
                     </div>
                   </div>
-                  <span className="material-symbols-outlined text-gray-400 dark:text-gray-600">chevron_right</span>
+                  <span className="app-icon-glyph text-gray-400 dark:text-gray-600"><AppIcon name={"chevron_right"}/></span>
                 </button>
                 <button
                   onClick={handleDoctorsReport}
@@ -456,14 +454,14 @@ const Settings: React.FC = () => {
                 >
                   <div className="flex items-center gap-3">
                     <div className="flex items-center justify-center rounded-xl bg-blue-50 dark:bg-blue-500/10 text-blue-500 w-10 h-10">
-                      <span className="material-symbols-outlined">medical_information</span>
+                      <span className="app-icon-glyph"><AppIcon name={"medical_information"}/></span>
                     </div>
                     <div className="flex flex-col">
                       <span className="font-medium text-[var(--text-primary)] dark:text-gray-200">Generate Doctor's Report</span>
                       <span className="text-xs text-gray-500">Medical summary for healthcare providers</span>
                     </div>
                   </div>
-                  <span className="material-symbols-outlined text-gray-400 dark:text-gray-600">chevron_right</span>
+                  <span className="app-icon-glyph text-gray-400 dark:text-gray-600"><AppIcon name={"chevron_right"}/></span>
                 </button>
                 <button
                   onClick={() => setShowTodayReport(true)}
@@ -471,18 +469,18 @@ const Settings: React.FC = () => {
                 >
                   <div className="flex items-center gap-3">
                     <div className="flex items-center justify-center rounded-xl bg-purple-50 dark:bg-purple-500/10 text-purple-500 w-10 h-10">
-                      <span className="material-symbols-outlined">today</span>
+                      <span className="app-icon-glyph"><AppIcon name={"today"}/></span>
                     </div>
                     <div className="flex flex-col">
                       <span className="font-medium text-[var(--text-primary)] dark:text-gray-200">Today's Report Card</span>
                       <span className="text-xs text-gray-500">Download today's symptoms as PNG/PDF</span>
                     </div>
                   </div>
-                  <span className="material-symbols-outlined text-gray-400 dark:text-gray-600">chevron_right</span>
+                  <span className="app-icon-glyph text-gray-400 dark:text-gray-600"><AppIcon name={"chevron_right"}/></span>
                 </button>
                 <button onClick={handleLogout} className="flex items-center gap-3 w-full text-left p-4 hover:bg-red-50 dark:hover:bg-red-900/10 transition-colors">
                   <div className="flex items-center justify-center rounded-xl bg-red-50 dark:bg-red-500/10 text-red-500 w-10 h-10">
-                    <span className="material-symbols-outlined">logout</span>
+                    <span className="app-icon-glyph"><AppIcon name={"logout"}/></span>
                   </div>
                   <span className="font-medium text-red-500 dark:text-red-400">Log Out</span>
                 </button>

@@ -8,14 +8,14 @@ import {
   ChevronDown,
   Eye,
   EyeOff,
-} from "lucide-react";
+} from './ui/Icons';
 import { useAuth } from "../contexts/AuthContext";
 import { useCouples } from "../contexts/CouplesContext";
 import { supabase } from "../lib/supabase";
 import { createSyncSession } from "../lib/sync";
 import { decryptWithEphemeralKey } from "../lib/encryption";
 import { installRecoveredIdentity } from "../lib/identity";
-import { useDialogFocus } from "../hooks/useDialogFocus";
+import { SpringModal } from "./ui/SpringModal";
 
 export function SyncHistoryModal({
   isOpen,
@@ -26,8 +26,6 @@ export function SyncHistoryModal({
   onClose: () => void;
   initialTab?: "sync" | "backup";
 }) {
-  const dialog = useRef<HTMLElement>(null);
-  useDialogFocus(dialog, isOpen);
   const { user } = useAuth();
   const {
     isSyncRequired,
@@ -235,7 +233,6 @@ export function SyncHistoryModal({
       if (current === revision.current) setBusy(false);
     }
   };
-  if (!isOpen) return null;
   const needsDeviceLink = isSyncRequired && !hasCloudBackup;
   const confirming = !isSyncRequired && passwordStep === "confirm";
   const field =
@@ -273,21 +270,7 @@ export function SyncHistoryModal({
     </div>
   );
   return (
-    <div
-      className="fixed inset-0 z-[250] flex items-center justify-center bg-black/60 p-4"
-      onClick={onClose}
-      onKeyDown={(event) => {
-        if (event.key === "Escape") onClose();
-      }}
-    >
-      <section
-        ref={dialog}
-        role="dialog"
-        aria-modal="true"
-        aria-labelledby="history-title"
-        className="relative max-h-[90dvh] w-full max-w-sm overflow-y-auto rounded-3xl bg-background-dark p-6 text-gray-900 shadow-xl dark:bg-surface-dark dark:text-white"
-        onClick={(event) => event.stopPropagation()}
-      >
+    <SpringModal open={isOpen} onClose={onClose} labelledBy="history-title" className="max-w-sm p-6">
         <button
           aria-label="Close chat backup"
           onClick={onClose}
@@ -521,7 +504,6 @@ export function SyncHistoryModal({
             )}
           </>
         )}
-      </section>
-    </div>
+    </SpringModal>
   );
 }

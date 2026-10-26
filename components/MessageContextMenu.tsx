@@ -1,3 +1,7 @@
+import { AppIcon } from './ui/Icons';
+import { MotionPortal } from './ui/MotionPortal';
+import { useAppMotion } from '../hooks/useAppMotion';
+import { springs, motionTransition } from '../lib/motion';
 import React, { useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 
@@ -30,6 +34,7 @@ const MessageContextMenu: React.FC<MessageContextMenuProps> = ({
   x,
 }) => {
   const menuRef = useRef<HTMLDivElement>(null);
+  const { reduced } = useAppMotion();
 
   // Close on outside click
   useEffect(() => {
@@ -85,7 +90,7 @@ const MessageContextMenu: React.FC<MessageContextMenuProps> = ({
   const visibleActions = actions.filter(a => !a.hidden);
 
   return (
-    <AnimatePresence>
+    <MotionPortal><AnimatePresence>
       {isOpen && (
         <>
           {/* Backdrop */}
@@ -103,7 +108,7 @@ const MessageContextMenu: React.FC<MessageContextMenuProps> = ({
             initial={{ opacity: 0, scale: 0.85, y: 10 }}
             animate={{ opacity: 1, scale: 1, y: 0 }}
             exit={{ opacity: 0, scale: 0.85, y: 10 }}
-            transition={{ type: 'spring', stiffness: 500, damping: 30, mass: 0.8 }}
+            transition={motionTransition(springs.modal, reduced)}
             style={{
               position: 'fixed',
               top: y,
@@ -131,11 +136,9 @@ const MessageContextMenu: React.FC<MessageContextMenuProps> = ({
                         : 'text-gray-700 dark:text-gray-200 hover:bg-gray-50 dark:hover:bg-white/5'
                     }`}
                   >
-                    <span className={`material-symbols-outlined text-[20px] ${
+                    <span className={`app-icon-glyph text-[20px] ${
                       action.danger ? 'text-red-500' : 'text-gray-400 dark:text-gray-500'
-                    }`}>
-                      {action.icon}
-                    </span>
+                    }`}><AppIcon name={action.icon}/></span>
                     <span className="text-[15px] font-medium">{action.label}</span>
                   </button>
                 </React.Fragment>
@@ -144,7 +147,7 @@ const MessageContextMenu: React.FC<MessageContextMenuProps> = ({
           </motion.div>
         </>
       )}
-    </AnimatePresence>
+    </AnimatePresence></MotionPortal>
   );
 };
 

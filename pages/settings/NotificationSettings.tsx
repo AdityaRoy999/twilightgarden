@@ -1,6 +1,6 @@
 import { ReferenceArt, ReferenceHeading } from '../../components/ui/ReferenceArt';
 import { PreferenceSwitch } from '../../components/ui/PreferenceSwitch';
-import { BellOff, BellRing, CalendarDays, Send, Check } from 'lucide-react';
+import { BellOff, BellRing, CalendarDays, Send, Check } from '../../components/ui/Icons';
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../../contexts/AuthContext';

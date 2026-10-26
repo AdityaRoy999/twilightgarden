@@ -1,3 +1,4 @@
+import { AppIcon } from '../components/ui/Icons';
 import { localDateKey } from '../lib/dates';
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
@@ -113,7 +114,7 @@ const Onboarding: React.FC = () => {
             >
                 <div className="w-24 h-24 rounded-full bg-surface-dark border border-white/10 flex items-center justify-center shadow-2xl mx-auto mb-8 relative">
                    <div className="absolute inset-0 bg-primary/20 blur-xl rounded-full"></div>
-                   <span className="material-symbols-filled text-primary text-5xl relative z-10">waving_hand</span>
+                   <span className="app-icon-glyph text-primary text-5xl relative z-10"><AppIcon name={"waving_hand"}/></span>
                 </div>
                 <h1 className="text-4xl font-bold mb-4">Welcome</h1>
                 <p className="text-gray-400 text-lg leading-relaxed mb-12">
@@ -145,9 +146,9 @@ const Onboarding: React.FC = () => {
                 <div className="bg-surface-dark rounded-3xl p-6 border border-white/5 shadow-soft">
                     {/* Calendar Header */}
                     <div className="flex justify-between items-center mb-6">
-                        <button aria-label="Previous month" onClick={() => setViewDate(new Date(viewDate.getFullYear(), viewDate.getMonth()-1, 1))} className="p-2 hover:bg-white/5 rounded-full"><span className="material-symbols-outlined">chevron_left</span></button>
+                        <button aria-label="Previous month" onClick={() => setViewDate(new Date(viewDate.getFullYear(), viewDate.getMonth()-1, 1))} className="p-2 hover:bg-white/5 rounded-full"><span className="app-icon-glyph"><AppIcon name={"chevron_left"}/></span></button>
                         <span className="font-bold text-lg">{currentMonth} {currentYear}</span>
-                        <button aria-label="Next month" disabled={localDateKey(new Date(currentYear,viewDate.getMonth()+1,1))>today} onClick={() => setViewDate(new Date(viewDate.getFullYear(), viewDate.getMonth()+1, 1))} className="p-2 hover:bg-white/5 rounded-full disabled:cursor-not-allowed disabled:opacity-30"><span className="material-symbols-outlined">chevron_right</span></button>
+                        <button aria-label="Next month" disabled={localDateKey(new Date(currentYear,viewDate.getMonth()+1,1))>today} onClick={() => setViewDate(new Date(viewDate.getFullYear(), viewDate.getMonth()+1, 1))} className="p-2 hover:bg-white/5 rounded-full disabled:cursor-not-allowed disabled:opacity-30"><span className="app-icon-glyph"><AppIcon name={"chevron_right"}/></span></button>
                     </div>
 
                     {/* Grid */}
@@ -200,7 +201,7 @@ const Onboarding: React.FC = () => {
             >
                 <div className="text-center mb-10">
                     <div className="w-16 h-16 rounded-2xl bg-teal-500/20 text-teal-400 flex items-center justify-center mx-auto mb-6">
-                        <span className="material-symbols-outlined text-3xl">refresh</span>
+                        <span className="app-icon-glyph text-3xl"><AppIcon name={"refresh"}/></span>
                     </div>
                     <h2 className="text-2xl font-bold mb-2">How long is your cycle?</h2>
                     <p className="text-gray-400 text-sm">Usually between 21 and 35 days</p>
@@ -236,7 +237,7 @@ const Onboarding: React.FC = () => {
             >
                 <div className="text-center mb-10">
                     <div className="w-16 h-16 rounded-2xl bg-purple-500/20 text-purple-400 flex items-center justify-center mx-auto mb-6">
-                        <span className="material-symbols-outlined text-3xl">water_drop</span>
+                        <span className="app-icon-glyph text-3xl"><AppIcon name={"water_drop"}/></span>
                     </div>
                     <h2 className="text-2xl font-bold mb-2">How long does it last?</h2>
                     <p className="text-gray-400 text-sm">Usually between 3 and 7 days</p>
@@ -257,7 +258,7 @@ const Onboarding: React.FC = () => {
                     disabled={loading}
                     className="w-full bg-white text-black font-bold py-4 rounded-2xl shadow-lg hover:bg-gray-100 transition-all flex items-center justify-center gap-2"
                 >
-                    {loading ? <span className="material-symbols-outlined animate-spin">progress_activity</span> : "Finish Setup"}
+                    {loading ? <span className="app-icon-glyph animate-spin"><AppIcon name={"progress_activity"}/></span> : "Finish Setup"}
                 </button>
             </motion.div>
           )}

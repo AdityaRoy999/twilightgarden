@@ -1,3 +1,4 @@
+import { AppIcon } from '../../components/ui/Icons';
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useTheme } from '../../contexts/ThemeContext';
@@ -51,7 +52,7 @@ const PartnerLogs: React.FC = () => {
                                 transition={{ type: "spring", bounce: 0.2, duration: 0.4 }}
                             />
                         )}
-                        <span className="material-symbols-outlined text-[18px]">view_list</span>
+                        <span className="app-icon-glyph text-[18px]"><AppIcon name={"view_list"}/></span>
                     </button>
                     <button
                         onClick={() => setViewMode('grid')}
@@ -70,7 +71,7 @@ const PartnerLogs: React.FC = () => {
                                 transition={{ type: "spring", bounce: 0.2, duration: 0.4 }}
                             />
                         )}
-                        <span className="material-symbols-outlined text-[18px]">grid_view</span>
+                        <span className="app-icon-glyph text-[18px]"><AppIcon name={"grid_view"}/></span>
                     </button>
                 </div>
             </header>
@@ -78,7 +79,7 @@ const PartnerLogs: React.FC = () => {
             <main className="flex-1 px-6">
                 {partnerLogs.length === 0 ? (
                     <div className={`text-center py-12 ${isDark ? 'text-gray-500' : 'text-gray-400'}`}>
-                        <span className="material-symbols-outlined text-4xl mb-2 opacity-30">description</span>
+                        <span className="app-icon-glyph text-4xl mb-2 opacity-30"><AppIcon name={"description"}/></span>
                         <p>No logs shared yet.</p>
                     </div>
                 ) : (
@@ -143,13 +144,13 @@ const PartnerLogs: React.FC = () => {
                                                 <div className="flex gap-4 mt-3 border-t border-gray-50 dark:border-white/5 pt-3">
                                                     {log.energyLevel && (
                                                         <div className="flex items-center gap-1.5">
-                                                            <span className="material-symbols-outlined text-[14px] text-yellow-500">bolt</span>
+                                                            <span className="app-icon-glyph text-[14px] text-yellow-500"><AppIcon name={"bolt"}/></span>
                                                             <span className={`text-[10px] font-bold uppercase ${isDark ? 'text-gray-400' : 'text-gray-500'}`}>{log.energyLevel} Energy</span>
                                                         </div>
                                                     )}
                                                     {log.sleepQuality && (
                                                         <div className="flex items-center gap-1.5">
-                                                            <span className="material-symbols-outlined text-[14px] text-indigo-500">bedtime</span>
+                                                            <span className="app-icon-glyph text-[14px] text-indigo-500"><AppIcon name={"bedtime"}/></span>
                                                             <span className={`text-[10px] font-bold uppercase ${isDark ? 'text-gray-400' : 'text-gray-500'}`}>
                                                                 {log.sleepQuality}
                                                                 {log.sleepHours ? ` (${log.sleepHours}h)` : ''}
@@ -182,7 +183,7 @@ const PartnerLogs: React.FC = () => {
                                                     <div className="flex items-center gap-3 truncate">
                                                         {(log.moods || []).length > 0 && (
                                                             <span className="flex items-center gap-1">
-                                                                <span className="material-symbols-outlined text-[14px] text-teal-500">face</span>
+                                                                <span className="app-icon-glyph text-[14px] text-teal-500"><AppIcon name={"face"}/></span>
                                                                 <span className="truncate">{log.moods[0]} {(log.moods || []).length > 1 ? `+${(log.moods || []).length - 1}` : ''}</span>
                                                             </span>
                                                         )}
@@ -190,13 +191,13 @@ const PartnerLogs: React.FC = () => {
                                                     <div className="flex items-center gap-3">
                                                         {(log.energyLevel || log.energy_level) && (
                                                             <span className="flex items-center gap-1">
-                                                                <span className="material-symbols-outlined text-[14px] text-yellow-500">bolt</span>
+                                                                <span className="app-icon-glyph text-[14px] text-yellow-500"><AppIcon name={"bolt"}/></span>
                                                                 <span className="capitalize">{log.energyLevel || log.energy_level}</span>
                                                             </span>
                                                         )}
                                                         {(log.sleepQuality || log.sleep_quality) && (
                                                             <span className="flex items-center gap-1">
-                                                                <span className="material-symbols-outlined text-[14px] text-indigo-500">bedtime</span>
+                                                                <span className="app-icon-glyph text-[14px] text-indigo-500"><AppIcon name={"bedtime"}/></span>
                                                                 <span className="capitalize">
                                                                     {log.sleepQuality || log.sleep_quality}
                                                                     {(log.sleepHours || log.sleep_hours) ? ` (${log.sleepHours || log.sleep_hours}h)` : ''}

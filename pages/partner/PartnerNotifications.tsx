@@ -1,3 +1,4 @@
+import { AppIcon } from '../../components/ui/Icons';
 import React, { useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -44,7 +45,7 @@ const PartnerNotifications: React.FC = () => {
                     onClick={() => navigate(-1)}
                     className={`w-10 h-10 rounded-xl flex items-center justify-center transition-colors ${isDark ? 'bg-white/5 hover:bg-white/10 text-white' : 'bg-gray-100 hover:bg-gray-200 text-gray-900'}`}
                 >
-                    <span className="material-symbols-outlined">arrow_back</span>
+                    <span className="app-icon-glyph"><AppIcon name={"arrow_back"}/></span>
                 </button>
                 <h1 className={`text-xl font-bold flex-1 ${isDark ? 'text-white' : 'text-[var(--text-primary)]'}`}>Notifications</h1>
                 <button
@@ -52,7 +53,7 @@ const PartnerNotifications: React.FC = () => {
                     className={`w-10 h-10 rounded-xl flex items-center justify-center transition-colors ${isDark ? 'text-gray-400 hover:text-white' : 'text-gray-500 hover:text-gray-900'}`}
                     title="Mark all as read"
                 >
-                    <span className="material-symbols-outlined">done_all</span>
+                    <span className="app-icon-glyph"><AppIcon name={"done_all"}/></span>
                 </button>
             </header>
 
@@ -67,9 +68,7 @@ const PartnerNotifications: React.FC = () => {
                                 className="flex flex-col items-center justify-center py-20 text-center"
                             >
                                 <div className={`w-20 h-20 rounded-full flex items-center justify-center mb-4 ${isDark ? 'bg-white/5' : 'bg-gray-100'}`}>
-                                    <span className={`material-symbols-outlined text-4xl ${isDark ? 'text-gray-600' : 'text-gray-300'}`}>
-                                        notifications_off
-                                    </span>
+                                    <span className={`app-icon-glyph text-4xl ${isDark ? 'text-gray-600' : 'text-gray-300'}`}><AppIcon name={"notifications_off"}/></span>
                                 </div>
                                 <h3 className={`text-lg font-bold mb-1 ${isDark ? 'text-white' : 'text-gray-900'}`}>No notifications</h3>
                                 <p className={`text-sm text-gray-500`}>You're all caught up!</p>
@@ -97,13 +96,11 @@ const PartnerNotifications: React.FC = () => {
                                         <div className={`w-12 h-12 rounded-xl flex items-center justify-center shrink-0 ${
                                             isDark ? 'bg-white/5' : 'bg-gray-50'
                                         }`}>
-                                            <span className={`material-symbols-outlined ${
+                                            <span className={`app-icon-glyph ${
                                                 notification.type.startsWith('game_invite') ? 'text-purple-500' :
                                                 notification.type === 'log' ? 'text-primary' : 'text-gray-500'
-                                            }`}>
-                                                {notification.type.startsWith('game_invite') ? 'sports_esports' :
-                                                 notification.type === 'log' ? 'edit_calendar' : 'notifications'}
-                                            </span>
+                                            }`}><AppIcon name={notification.type.startsWith('game_invite') ? 'sports_esports' :
+                                                 notification.type === 'log' ? 'edit_calendar' : 'notifications'}/></span>
                                         </div>
                                         <div className="flex-1 min-w-0">
                                             <p className={`text-sm leading-snug mb-1 ${isDark ? 'text-gray-200' : 'text-gray-800'}`}>

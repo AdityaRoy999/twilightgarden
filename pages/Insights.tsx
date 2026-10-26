@@ -1,5 +1,9 @@
+import { springs, motionTransition } from '../lib/motion';
+import { useAppMotion } from '../hooks/useAppMotion';
+import { MotionPortal } from '../components/ui/MotionPortal';
+import { AppIcon } from '../components/ui/Icons';
 import { ReferenceArt, ReferenceHeading } from '../components/ui/ReferenceArt';
-import { ArrowRight, CalendarDays, Sparkles, Lightbulb, Ellipsis } from 'lucide-react';
+import { ArrowRight, CalendarDays, Sparkles, Lightbulb, Ellipsis } from '../components/ui/Icons';
 import ChartEmptyState from '../components/ui/ChartEmptyState';
 import { localDateKey } from '../lib/dates';
 import React, { useState, useEffect, useMemo, useRef } from 'react';
@@ -34,6 +38,7 @@ import { ShareIcon, ShareIconHandle } from '../components/ui/AnimatedIcons';
 const RECHARTS_SUPPRESS_STYLES = `.recharts-wrapper:focus-visible, .recharts-surface:focus-visible { outline: 2px solid var(--color-primary); outline-offset: 3px; }`;
 
 const Insights: React.FC = () => {
+  const { reduced } = useAppMotion();
   useEffect(() => {
     // Suppress intrusive focus outlines on charts
     const id = 'recharts-suppress-focus';
@@ -322,7 +327,7 @@ const Insights: React.FC = () => {
               <motion.div
                 layoutId="activeInsightsTab"
                 className="absolute inset-0 bg-primary rounded-full shadow-md shadow-primary/20"
-                transition={{ type: 'spring', bounce: 0.2, duration: 0.28 }}
+                transition={motionTransition(springs.selection, reduced)}
               />
             )}
             <span className="relative z-20">History</span>
@@ -340,7 +345,7 @@ const Insights: React.FC = () => {
               <motion.div
                 layoutId="activeInsightsTab"
                 className="absolute inset-0 bg-primary rounded-full shadow-md shadow-primary/20"
-                transition={{ type: 'spring', bounce: 0.2, duration: 0.28 }}
+                transition={motionTransition(springs.selection, reduced)}
               />
             )}
             <span className="relative z-20">Trends</span>
@@ -354,13 +359,13 @@ const Insights: React.FC = () => {
         </div>
       </div>
 
-      <AnimatePresence mode="wait">
+      <React.Fragment>
         {activeTab === 'history' ? (
           <motion.main
             key="history"
-            initial={{ opacity: 0, x: -20 }}
+            initial={reduced ? false : { x: -12 }}
             animate={{ opacity: 1, x: 0 }}
-            exit={{ opacity: 0, x: -20 }}
+            transition={motionTransition(springs.section, reduced)}
             className="reference-stack"
           >
             <section className="reference-card"><div className="reference-title"><span className="reference-icon"><Sparkles size={22}/></span><h2>Common Symptoms</h2></div>
@@ -390,7 +395,7 @@ const Insights: React.FC = () => {
                   <p className="text-sm text-gray-400">based on {cycleSettings.avgCycleLength}d cycle</p>
                 </div>
                 <div className="flex h-12 w-12 items-center justify-center rounded-full bg-pink-100 dark:bg-pink-500/20 text-primary">
-                  <span className="material-symbols-filled text-2xl">water_drop</span>
+                  <span className="app-icon-glyph text-2xl"><AppIcon name={"water_drop"}/></span>
                 </div>
               </div>
               <div className="flex justify-between text-xs font-medium text-gray-400 mb-2">
@@ -408,14 +413,14 @@ const Insights: React.FC = () => {
             <section className="grid grid-cols-2 gap-4">
               <div className="flex flex-col items-center justify-center gap-3 rounded-[2rem] bg-white dark:bg-surface-dark p-6 shadow-soft border border-gray-100 dark:border-white/5 text-center h-48 transition-colors">
                 <div className="flex h-12 w-12 items-center justify-center rounded-full bg-teal-100 dark:bg-teal-500/20 text-teal-600 dark:text-teal-400">
-                  <span className="material-symbols-outlined text-2xl">refresh</span>
+                  <span className="app-icon-glyph text-2xl"><AppIcon name={"refresh"}/></span>
                 </div>
                 <h3 className="text-3xl font-bold text-[var(--text-primary)] dark:text-white">{stats.avgCycle}</h3>
                 <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest max-w-[80px]">Typical Cycle Length</p>
               </div>
               <div className="flex flex-col items-center justify-center gap-3 rounded-[2rem] bg-white dark:bg-surface-dark p-6 shadow-soft border border-gray-100 dark:border-white/5 text-center h-48 transition-colors">
                 <div className="flex h-12 w-12 items-center justify-center rounded-full bg-orange-100 dark:bg-orange-500/20 text-orange-600 dark:text-orange-400">
-                  <span className="material-symbols-outlined text-2xl">bar_chart</span>
+                  <span className="app-icon-glyph text-2xl"><AppIcon name={"bar_chart"}/></span>
                 </div>
                 <h3 className="text-3xl font-bold text-[var(--text-primary)] dark:text-white">{stats.avgPeriod}</h3>
                 <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest max-w-[80px]">Typical Period Duration</p>
@@ -433,10 +438,10 @@ const Insights: React.FC = () => {
                     <div className={`h-full w-1/2 rounded-lg bg-primary shadow-sm transition-all duration-300 ease-[cubic-bezier(0.23,1,0.32,1)] ${chartType === 'line' ? 'translate-x-full' : 'translate-x-0'}`}></div>
                   </div>
                   <button aria-label="Show bar chart" onClick={() => setChartType('bar')} className={`relative z-10 flex-1 p-2 rounded-lg transition-colors duration-300 ${chartType === 'bar' ? 'on-brand text-white' : 'text-gray-400 hover:text-white'}`}>
-                    <span className="material-symbols-outlined text-lg block text-center">bar_chart</span>
+                    <span className="app-icon-glyph text-lg block text-center"><AppIcon name={"bar_chart"}/></span>
                   </button>
                   <button aria-label="Show line chart" onClick={() => setChartType('line')} className={`relative z-10 flex-1 p-2 rounded-lg transition-colors duration-300 ${chartType === 'line' ? 'on-brand text-white' : 'text-gray-400 hover:text-white'}`}>
-                    <span className="material-symbols-outlined text-lg block text-center">show_chart</span>
+                    <span className="app-icon-glyph text-lg block text-center"><AppIcon name={"show_chart"}/></span>
                   </button>
                 </div>
               </div>
@@ -482,9 +487,9 @@ const Insights: React.FC = () => {
         ) : (
           <motion.main
             key="trends"
-            initial={{ opacity: 0, x: 20 }}
+            initial={reduced ? false : { x: 12 }}
             animate={{ opacity: 1, x: 0 }}
-            exit={{ opacity: 0, x: 20 }}
+            transition={motionTransition(springs.section, reduced)}
             className="reference-stack"
           >
             {/* Trends Sub-navigation */}
@@ -499,7 +504,7 @@ const Insights: React.FC = () => {
                   <motion.div
                     layoutId="activeSubTab"
                     className="absolute inset-0 bg-white dark:bg-white/10 rounded-xl shadow-sm"
-                    transition={{ type: 'spring', bounce: 0.1, duration: 0.24 }}
+                    transition={motionTransition(springs.selection, reduced)}
                   />
                 )}
                 <span className="relative z-20">Sleep</span>
@@ -514,20 +519,20 @@ const Insights: React.FC = () => {
                   <motion.div
                     layoutId="activeSubTab"
                     className="absolute inset-0 bg-white dark:bg-white/10 rounded-xl shadow-sm"
-                    transition={{ type: 'spring', bounce: 0.1, duration: 0.24 }}
+                    transition={motionTransition(springs.selection, reduced)}
                   />
                 )}
                 <span className="relative z-20">Energy</span>
               </button>
             </div>
 
-            <AnimatePresence mode="wait">
+            <React.Fragment>
               {trendsSubTab === 'sleep' ? (
                 <motion.div
                   key="sleep-trends"
-                  initial={{ opacity: 0, y: 10 }}
+                  initial={reduced ? false : { y: 8 }}
                   animate={{ opacity: 1, y: 0 }}
-                  exit={{ opacity: 0, y: -10 }}
+                  transition={motionTransition(springs.section, reduced)}
                   className="flex flex-col gap-6"
                 >
                   {/* Sleep Summary Grid */}
@@ -550,7 +555,7 @@ const Insights: React.FC = () => {
                         <p className="text-sm text-gray-400">Quality over the last 30 days</p>
                       </div>
                       <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-indigo-500/10 text-indigo-500">
-                        <span className="material-symbols-outlined text-2xl">bedtime</span>
+                        <span className="app-icon-glyph text-2xl"><AppIcon name={"bedtime"}/></span>
                       </div>
                     </div>
 
@@ -622,9 +627,9 @@ const Insights: React.FC = () => {
               ) : (
                 <motion.div
                   key="energy-trends"
-                  initial={{ opacity: 0, y: 10 }}
+                  initial={reduced ? false : { y: 8 }}
                   animate={{ opacity: 1, y: 0 }}
-                  exit={{ opacity: 0, y: -10 }}
+                  transition={motionTransition(springs.section, reduced)}
                   className="flex flex-col gap-6"
                 >
                   {/* Energy Summary Grid */}
@@ -647,7 +652,7 @@ const Insights: React.FC = () => {
                         <p className="text-sm text-gray-400">Vitality patterns recently</p>
                       </div>
                       <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-amber-500/10 text-amber-500">
-                        <span className="material-symbols-outlined text-2xl">bolt</span>
+                        <span className="app-icon-glyph text-2xl"><AppIcon name={"bolt"}/></span>
                       </div>
                     </div>
 
@@ -717,12 +722,12 @@ const Insights: React.FC = () => {
                   </section>
                 </motion.div>
               )}
-            </AnimatePresence>
+            </React.Fragment>
 
             {correlations?.insights && (
               <section className="rounded-[2rem] bg-primary/5 dark:bg-primary/10 p-6 border border-primary/10 mb-20 shadow-sm">
                 <h3 className="text-lg font-bold text-primary mb-4 flex items-center gap-2">
-                  <span className="material-symbols-outlined">analytics</span>
+                  <span className="app-icon-glyph"><AppIcon name={"analytics"}/></span>
                   Wellness Insights
                 </h3>
                 <div className="flex flex-col gap-3">
@@ -745,7 +750,7 @@ const Insights: React.FC = () => {
             </div>
           </motion.main>
         )}
-      </AnimatePresence>
+      </React.Fragment>
 
       <TodayReportModal
         isOpen={showTodayReport}
@@ -757,24 +762,24 @@ const Insights: React.FC = () => {
 
       <AnimatePresence>
         {showShareModal && (
-          <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-6" onClick={() => setShowShareModal(false)}>
+          <MotionPortal><motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-6" onClick={() => setShowShareModal(false)}>
             <motion.div initial={{ scale: 0.9, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} exit={{ scale: 0.9, opacity: 0 }} className="bg-white dark:bg-surface-dark rounded-3xl p-6 w-full max-w-sm shadow-2xl border border-gray-100 dark:border-white/10" onClick={(e) => e.stopPropagation()}>
               <div className="flex items-center justify-between mb-4">
                 <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center"><span className="material-symbols-outlined text-primary">share</span></div>
+                  <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center"><span className="app-icon-glyph text-primary"><AppIcon name={"share"}/></span></div>
                   <h3 className="text-lg font-bold text-[var(--text-primary)] dark:text-white">Share Your Card</h3>
                 </div>
-                <button onClick={() => setShowShareModal(false)} className="w-8 h-8 rounded-full hover:bg-black/5 dark:hover:bg-white/10 flex items-center justify-center"><span className="material-symbols-outlined text-gray-400">close</span></button>
+                <button onClick={() => setShowShareModal(false)} className="w-8 h-8 rounded-full hover:bg-black/5 dark:hover:bg-white/10 flex items-center justify-center"><span className="app-icon-glyph text-gray-400"><AppIcon name={"close"}/></span></button>
               </div>
               <p className="text-sm text-gray-500 dark:text-gray-400 mb-4">Anyone with this link can view your card for 24 hours. Creating a new link replaces the previous one.</p>
               <div className="flex items-center gap-2 bg-gray-100 dark:bg-white/5 rounded-xl p-3 border border-gray-200 dark:border-white/10">
                 <input type="text" value={shareUrl} readOnly className="flex-1 bg-transparent text-sm text-[var(--text-primary)] dark:text-white truncate outline-none" />
-                <button onClick={handleCopyLink} className={`shrink-0 w-10 h-10 rounded-xl flex items-center justify-center transition-all ${copied ? 'on-brand bg-green-500 text-white' : 'bg-primary hover:bg-primary/90 text-white'}`}><span className="material-symbols-outlined text-lg">{copied ? 'check' : 'content_copy'}</span></button>
+                <button onClick={handleCopyLink} className={`shrink-0 w-10 h-10 rounded-xl flex items-center justify-center transition-all ${copied ? 'on-brand bg-green-500 text-white' : 'bg-primary hover:bg-primary/90 text-white'}`}><span className="app-icon-glyph text-lg"><AppIcon name={copied ? 'check' : 'content_copy'}/></span></button>
               </div>
-              {copied && <motion.p initial={{ opacity: 0, y: -5 }} animate={{ opacity: 1, y: 0 }} className="text-center text-sm text-green-500 font-medium mt-3">âœ“ Link copied to clipboard!</motion.p>}
+              {copied && <motion.p initial={{ opacity: 0, y: -5 }} animate={{ opacity: 1, y: 0 }} className="text-center text-sm text-green-500 font-medium mt-3">Link copied to clipboard!</motion.p>}
               <div className="mt-6 pt-4 border-t border-gray-100 dark:border-white/5"><button onClick={() => setShowShareModal(false)} className="on-brand w-full py-3 rounded-xl bg-primary hover:bg-primary/90 text-white font-semibold transition-colors">Done</button></div>
             </motion.div>
-          </motion.div>
+          </motion.div></MotionPortal>
         )}
       </AnimatePresence>
     </div>

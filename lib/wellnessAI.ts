@@ -49,24 +49,20 @@ async function callAI(customPrompt: string, mood: string = 'encouragement'): Pro
         const { data: { session } } = await supabase.auth.getSession();
         if (!session) throw new Error('Not authenticated');
 
-        const controller = new AbortController();
-        const timeout = setTimeout(() => controller.abort(), 30000);
-
         const res = await fetch(
             `${SUPABASE_URL}/functions/v1/ai-generate`,
             {
                 method: 'POST',
+                signal: AbortSignal.timeout(30000),
                 headers: {
                     'Content-Type': 'application/json',
                     'Authorization': `Bearer ${session.access_token}`,
                     'apikey': SUPABASE_ANON_KEY,
                 },
                 body: JSON.stringify({ mood, customPrompt }),
-                signal: controller.signal,
             }
         );
 
-        clearTimeout(timeout);
 
         if (!res.ok) {
             const errText = await res.text();
@@ -78,7 +74,7 @@ async function callAI(customPrompt: string, mood: string = 'encouragement'): Pro
         const data = await res.json();
         return { text: data.text };
     } catch (error: any) {
-        if (error.name === 'AbortError') {
+        if (error.name === 'AbortError' || error.name === 'TimeoutError') {
             return { text: '', error: 'Request timed out. Please try again.' };
         }
         return { text: '', error: error.message || 'Failed to generate' };
@@ -159,6 +155,7 @@ export async function searchShoppingProducts(query: string): Promise<Product[]> 
             `${SUPABASE_URL}/functions/v1/ai-generate`,
             {
                 method: 'POST',
+                signal: AbortSignal.timeout(30000),
                 headers: {
                     'Content-Type': 'application/json',
                     'Authorization': `Bearer ${session.access_token}`,
@@ -195,6 +192,7 @@ export async function searchNearbyPharmacies(lat: number, lon: number): Promise<
             `${SUPABASE_URL}/functions/v1/ai-generate`,
             {
                 method: 'POST',
+                signal: AbortSignal.timeout(30000),
                 headers: {
                     'Content-Type': 'application/json',
                     'Authorization': `Bearer ${session.access_token}`,
@@ -234,7 +232,7 @@ export async function searchNearbyPharmacies(lat: number, lon: number): Promise<
 export async function getRouteToShop(startLat: number, startLon: number, endLat: number, endLon: number): Promise<RouteGeometry | null> {
     try {
         // OSRM expects coordinates in LON,LAT format
-        const res = await fetch(`https://router.project-osrm.org/route/v1/driving/${startLon},${startLat};${endLon},${endLat}?overview=full&geometries=geojson`);
+        const res = await fetch(`https://router.project-osrm.org/route/v1/driving/${startLon},${startLat};${endLon},${endLat}?overview=full&geometries=geojson`, { signal: AbortSignal.timeout(15000) });
         if (!res.ok) throw new Error('OSRM API failed');
         
         const data = await res.json();

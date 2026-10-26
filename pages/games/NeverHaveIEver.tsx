@@ -1,3 +1,4 @@
+import { AppIcon } from '../../components/ui/Icons';
 import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -323,7 +324,7 @@ const NeverHaveIEver: React.FC = () => {
             {/* Header */}
             <div className={`p-4 flex items-center justify-between border-b ${isDark ? 'border-white/10' : 'border-gray-200'}`}>
                 <button onClick={async () => { try { if (session?.id) await endSession(session.id); } catch {} navigate('/games'); }} className="p-2 -ml-2 rounded-full hover:bg-white/10 active:scale-95 transition-transform">
-                    <span className="material-symbols-outlined text-2xl">arrow_back</span>
+                    <span className="app-icon-glyph text-2xl"><AppIcon name={"arrow_back"}/></span>
                 </button>
                 <h1 className="text-lg font-bold">Never Have I Ever</h1>
                 <div className="flex items-center">
@@ -332,7 +333,7 @@ const NeverHaveIEver: React.FC = () => {
                         className="w-10 h-10 rounded-full flex items-center justify-center hover:bg-white/10 transition-all active:scale-90 mr-1"
                         title="Watch Tutorial"
                     >
-                        <span className="material-symbols-outlined text-xl" style={{ color: primaryColor }}>play_circle</span>
+                        <span className="app-icon-glyph text-xl" style={{ color: primaryColor }}><AppIcon name={"play_circle"}/></span>
                     </button>
                     <button
                         onClick={async () => {
@@ -345,7 +346,7 @@ const NeverHaveIEver: React.FC = () => {
                         className={`p-2 rounded-full transition-all ${ringCooldown ? 'opacity-30' : 'hover:bg-white/10 active:scale-90'}`}
                         title="Ring Partner"
                     >
-                        <span className="material-symbols-outlined text-2xl">{ringCooldown ? 'notifications_off' : 'notifications_active'}</span>
+                        <span className="app-icon-glyph text-2xl"><AppIcon name={ringCooldown ? 'notifications_off' : 'notifications_active'}/></span>
                     </button>
                 </div>
             </div>
@@ -461,7 +462,8 @@ const NeverHaveIEver: React.FC = () => {
                                                     onClick={() => respond(true)}
                                                     className="on-brand w-full py-4 rounded-2xl text-white font-bold text-lg shadow-lg active:scale-95 transition-transform bg-gradient-to-r from-green-500 to-emerald-600"
                                                 >
-                                                    ✋ I Have
+
+                                                    <AppIcon name={"✋"}/> I Have
                                                 </button>
                                             </div>
                                             <div className="flex-1">
@@ -469,7 +471,8 @@ const NeverHaveIEver: React.FC = () => {
                                                     onClick={() => respond(false)}
                                                     className="on-brand w-full py-4 rounded-2xl text-white font-bold text-lg shadow-lg active:scale-95 transition-transform bg-gradient-to-r from-blue-500 to-indigo-600"
                                                 >
-                                                    😇 Never
+
+                                                    <AppIcon name={"😇"}/> Never
                                                 </button>
                                             </div>
                                         </motion.div>
@@ -544,7 +547,8 @@ const NeverHaveIEver: React.FC = () => {
                                         animate={{ rotate: [0, -10, 10, -10, 0] }}
                                         transition={{ repeat: Infinity, duration: 3, ease: 'easeInOut' }}
                                     >
-                                        🙅
+
+                                        <AppIcon name={"🙅"}/>
                                     </motion.div>
                                     <h2 className="text-2xl font-bold mb-2">Never Have I Ever</h2>
                                     <p className="opacity-60 mb-8">
@@ -556,7 +560,8 @@ const NeverHaveIEver: React.FC = () => {
                                         disabled={!partnerPresent}
                                         className={`w-full py-4 rounded-2xl text-white font-bold text-lg shadow-lg active:scale-95 transition-transform ${partnerPresent ? 'bg-gradient-to-r from-violet-500 to-indigo-600' : 'bg-gray-600/40 cursor-not-allowed opacity-70'}`}
                                     >
-                                        🂴 Draw Statement
+
+                                        <AppIcon name={"🂴"}/> Draw Statement
                                     </button>
 
                                     {!partnerPresent && (

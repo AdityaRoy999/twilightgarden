@@ -1,3 +1,4 @@
+import { AppIcon } from './ui/Icons';
 import React from 'react';
 import {isChunkLoadError} from '../lib/chunkRecovery';
 
@@ -39,7 +40,7 @@ class ErrorBoundary extends React.Component<ErrorBoundaryProps, ErrorBoundarySta
       return (
         <div className="flex flex-col items-center justify-center min-h-[60vh] px-6 text-center">
           <div className="w-16 h-16 bg-red-100 dark:bg-red-500/10 rounded-full flex items-center justify-center mb-4">
-            <span className="material-symbols-outlined text-3xl text-red-500">error</span>
+            <span className="app-icon-glyph text-3xl text-red-500"><AppIcon name={"error"}/></span>
           </div>
           <h2 className="text-xl font-bold text-gray-900 dark:text-white mb-2">Something went wrong</h2>
           <p className="text-sm text-gray-500 dark:text-gray-400 mb-6 max-w-sm">

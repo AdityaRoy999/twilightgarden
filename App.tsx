@@ -1,4 +1,5 @@
-import { Flower2 } from 'lucide-react';
+import { AppIcon } from './components/ui/Icons';
+import { Flower2 } from './components/ui/Icons';
 import { NotificationProvider } from './contexts/NotificationContext';
 import React, { useEffect } from 'react';
 import { HashRouter, Routes, Route, Navigate, useNavigate } from 'react-router-dom';
@@ -220,7 +221,7 @@ const RequireOnboarding: React.FC<{ children: React.ReactNode; allowIncomplete: 
     return (
       <div className="min-h-screen flex items-center justify-center bg-[#121014] text-white p-6 text-center">
         <div>
-          <span className="material-symbols-outlined text-4xl mb-4 text-red-500">wifi_off</span>
+          <span className="app-icon-glyph text-4xl mb-4 text-red-500"><AppIcon name={"wifi_off"}/></span>
           <h1 className="text-xl font-bold mb-2">Connection Issue</h1>
           <p className="text-white/60 mb-4 text-sm max-w-xs mx-auto">
             {error.message || "Failed to load your data. Please check your connection."}

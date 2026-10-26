@@ -1,3 +1,4 @@
+import { AppIcon } from '../../components/ui/Icons';
 import { uploadAvatar } from '../../lib/media';
 import React, { useState, useEffect, useRef } from 'react';
 import { useAuth } from '../../contexts/AuthContext';
@@ -5,7 +6,7 @@ import { supabase } from '../../lib/supabase';
 import { useTheme } from '../../contexts/ThemeContext';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
-import { Shield, Key, Lock } from 'lucide-react';
+import { Shield, Key, Lock } from '../../components/ui/Icons';
 // PartnerProfile cleanup
 import { useCouples } from '../../contexts/CouplesContext';
 import { SyncHistoryModal } from '../../components/SyncHistoryModal';
@@ -170,9 +171,7 @@ const PartnerProfile: React.FC = () => {
             </h2>
              {/* Dynamic Icon based on tab? Or just spacer */}
              <div className={`w-10 h-10 rounded-full flex items-center justify-center ${isDark ? 'bg-white/5' : 'bg-gray-100'}`}>
-                 <span className={`material-symbols-outlined ${isDark ? 'text-white' : 'text-gray-600'}`}>
-                     {activeTab === 'profile' ? 'person' : 'settings'}
-                 </span>
+                 <span className={`app-icon-glyph ${isDark ? 'text-white' : 'text-gray-600'}`}><AppIcon name={activeTab === 'profile' ? 'person' : 'settings'}/></span>
              </div>
          </div>
 
@@ -240,7 +239,7 @@ const PartnerProfile: React.FC = () => {
                         disabled={uploading}
                         className={`on-brand absolute bottom-1 right-1 flex items-center justify-center p-2.5 rounded-full shadow-lg border-[3px] active:scale-95 transition-all cursor-pointer hover:scale-105 bg-primary text-white ${isDark ? 'border-[#121014]' : 'border-[#FDFCF8]'}`}
                     >
-                        <span className="material-symbols-outlined text-[18px]">photo_camera</span>
+                        <span className="app-icon-glyph text-[18px]"><AppIcon name={"photo_camera"}/></span>
                     </button>
                     <input
                         type="file"
@@ -290,7 +289,7 @@ const PartnerProfile: React.FC = () => {
                                 <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin"></div>
                             ) : saveMessage ? (
                                 <>
-                                    <span className="material-symbols-outlined text-[20px]">check_circle</span>
+                                    <span className="app-icon-glyph text-[20px]"><AppIcon name={"check_circle"}/></span>
                                     <span>Saved!</span>
                                 </>
                             ) : (
@@ -324,7 +323,7 @@ const PartnerProfile: React.FC = () => {
                                             isDark ? 'bg-white/5 border-white/10 text-white' : 'bg-gray-50 border-gray-200 text-gray-900'
                                         }`}
                                     />
-                                    <span className="material-symbols-outlined absolute right-3 top-3 text-gray-400 pointer-events-none">edit_note</span>
+                                    <span className="app-icon-glyph absolute right-3 top-3 text-gray-400 pointer-events-none"><AppIcon name={"edit_note"}/></span>
                                 </div>
                                 <p className={`text-xs ${isDark ? 'text-gray-500' : 'text-gray-400'}`}>Notifications will use this name.</p>
                             </div>
@@ -337,14 +336,14 @@ const PartnerProfile: React.FC = () => {
                             >
                                 <div className="flex items-center gap-3">
                                     <div className={`w-10 h-10 rounded-xl flex items-center justify-center transition-transform group-hover:scale-105 ${isDark ? 'bg-white/5 text-pink-400' : 'bg-pink-50 text-pink-500'}`}>
-                                        <span className="material-symbols-outlined">notifications</span>
+                                        <span className="app-icon-glyph"><AppIcon name={"notifications"}/></span>
                                     </div>
                                     <div>
                                         <h4 className={`font-bold ${isDark ? 'text-white' : 'text-gray-900'}`}>Notifications</h4>
                                         <p className={`text-xs ${isDark ? 'text-gray-500' : 'text-gray-400'}`}>Manage alerts</p>
                                     </div>
                                 </div>
-                                <span className="material-symbols-outlined text-gray-400">chevron_right</span>
+                                <span className="app-icon-glyph text-gray-400"><AppIcon name={"chevron_right"}/></span>
                             </div>
                         </div>
                     </section>
@@ -357,7 +356,7 @@ const PartnerProfile: React.FC = () => {
                         <div className={`p-4 rounded-2xl flex items-center justify-between shadow-sm border mb-4 ${isDark ? 'bg-surface-dark border-white/5' : 'bg-white border-gray-100'}`}>
                             <div className="flex items-center gap-3">
                                 <div className={`w-10 h-10 rounded-full flex items-center justify-center ${isDark ? 'bg-white/5 text-purple-400' : 'bg-purple-50 text-purple-600'}`}>
-                                    <span className="material-symbols-outlined">dark_mode</span>
+                                    <span className="app-icon-glyph"><AppIcon name={"dark_mode"}/></span>
                                 </div>
                                 <div>
                                     <h4 className={`font-bold ${isDark ? 'text-white' : 'text-gray-900'}`}>Dark Mode</h4>
@@ -376,7 +375,7 @@ const PartnerProfile: React.FC = () => {
                         <div className={`p-4 rounded-2xl flex items-center justify-between shadow-sm border mb-4 ${isDark ? 'bg-surface-dark border-white/5' : 'bg-white border-gray-100'}`}>
                             <div className="flex items-center gap-3">
                                 <div className={`w-10 h-10 rounded-full flex items-center justify-center ${isDark ? 'bg-white/5 text-blue-400' : 'bg-blue-50 text-blue-600'}`}>
-                                    <span className="material-symbols-outlined">{animationsEnabled ? 'animation' : 'stop_circle'}</span>
+                                    <span className="app-icon-glyph"><AppIcon name={animationsEnabled ? 'animation' : 'stop_circle'}/></span>
                                 </div>
                                 <div>
                                     <h4 className={`font-bold ${isDark ? 'text-white' : 'text-gray-900'}`}>Enable Animations</h4>
@@ -395,7 +394,7 @@ const PartnerProfile: React.FC = () => {
                         <div className={`p-4 rounded-2xl flex items-center justify-between shadow-sm border mb-4 ${isDark ? 'bg-surface-dark border-white/5' : 'bg-white border-gray-100'}`}>
                             <div className="flex items-center gap-3">
                                 <div className={`w-10 h-10 rounded-full flex items-center justify-center ${isDark ? 'bg-white/5 text-teal-400' : 'bg-teal-50 text-teal-600'}`}>
-                                    <span className="material-symbols-outlined">{solidNavBg ? 'layers_clear' : 'blur_on'}</span>
+                                    <span className="app-icon-glyph"><AppIcon name={solidNavBg ? 'layers_clear' : 'blur_on'}/></span>
                                 </div>
                                 <div>
                                     <h4 className={`font-bold ${isDark ? 'text-white' : 'text-gray-900'}`}>Solid Navbar Bg</h4>
@@ -426,7 +425,7 @@ const PartnerProfile: React.FC = () => {
                                         style={{ backgroundColor: color }}
                                     >
                                         {primaryColor === color && (
-                                            <span className="material-symbols-outlined text-white text-sm drop-shadow-md">check</span>
+                                            <span className="app-icon-glyph text-white text-sm drop-shadow-md"><AppIcon name={"check"}/></span>
                                         )}
                                     </button>
                                 ))}
@@ -459,7 +458,7 @@ const PartnerProfile: React.FC = () => {
                                     {!hasCloudBackup && (
                                         <span className="px-2 py-0.5 bg-primary/10 text-primary dark:text-pink-300 text-[10px] font-bold rounded-full">Set up</span>
                                     )}
-                                    <span className="material-symbols-outlined text-gray-400">chevron_right</span>
+                                    <span className="app-icon-glyph text-gray-400"><AppIcon name={"chevron_right"}/></span>
                                 </div>
                             </div>
                          </div>
@@ -476,14 +475,14 @@ const PartnerProfile: React.FC = () => {
                              >
                                  <div className="flex items-center gap-3">
                                      <div className="w-10 h-10 rounded-full bg-red-50 dark:bg-red-500/10 flex items-center justify-center text-red-500">
-                                         <span className="material-symbols-outlined">logout</span>
+                                         <span className="app-icon-glyph"><AppIcon name={"logout"}/></span>
                                      </div>
                                      <div className="text-left">
                                          <h4 className={`font-bold ${isDark ? 'text-white' : 'text-gray-900'}`}>Sign Out</h4>
                                          <p className={`text-xs ${isDark ? 'text-gray-500' : 'text-gray-400'}`}>Log out of your account</p>
                                      </div>
                                  </div>
-                                 <span className="material-symbols-outlined text-gray-400">chevron_right</span>
+                                 <span className="app-icon-glyph text-gray-400"><AppIcon name={"chevron_right"}/></span>
                              </button>
                          </div>
                     </section>

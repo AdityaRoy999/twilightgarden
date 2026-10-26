@@ -1,3 +1,4 @@
+import { AppIcon } from '../../components/ui/Icons';
 import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -215,7 +216,7 @@ const TwentyQuestions: React.FC = () => {
     return (
         <div className={`min-h-screen flex flex-col font-display transition-colors ${isDark ? 'bg-background-dark text-white' : 'bg-background-dark text-[var(--text-primary)]'}`}>
             <header className={`flex items-center justify-between px-5 py-4 sticky top-0 z-20 backdrop-blur-sm border-b ${isDark ? 'bg-background-dark/95 border-white/5' : 'bg-background-dark/95 border-gray-100'}`}>
-                <button onClick={handleExit} className="w-10 h-10 rounded-full flex items-center justify-center hover:bg-white/10"><span className="material-symbols-outlined">arrow_back</span></button>
+                <button onClick={handleExit} className="w-10 h-10 rounded-full flex items-center justify-center hover:bg-white/10"><span className="app-icon-glyph"><AppIcon name={"arrow_back"}/></span></button>
                 <h1 className="text-lg font-bold">20 Questions</h1>
                 <div className="flex items-center">
                     <button
@@ -223,7 +224,7 @@ const TwentyQuestions: React.FC = () => {
                         className="w-10 h-10 rounded-full flex items-center justify-center hover:bg-white/10 transition-all active:scale-90 mr-1"
                         title="Watch Tutorial"
                     >
-                        <span className="material-symbols-outlined text-xl" style={{ color: primaryColor }}>play_circle</span>
+                        <span className="app-icon-glyph text-xl" style={{ color: primaryColor }}><AppIcon name={"play_circle"}/></span>
                     </button>
                     <button
                         onClick={async () => {
@@ -236,7 +237,7 @@ const TwentyQuestions: React.FC = () => {
                         className={`w-10 h-10 rounded-full flex items-center justify-center transition-all ${ringCooldown ? 'opacity-30' : 'hover:bg-white/10 active:scale-90'}`}
                         title="Ring Partner"
                     >
-                        <span className="material-symbols-outlined text-xl">{ringCooldown ? 'notifications_off' : 'notifications_active'}</span>
+                        <span className="app-icon-glyph text-xl"><AppIcon name={ringCooldown ? 'notifications_off' : 'notifications_active'}/></span>
                     </button>
                 </div>
             </header>
@@ -288,7 +289,8 @@ const TwentyQuestions: React.FC = () => {
                                     maxLength={50} />
                                 <button onClick={handleSetup} disabled={!thingInput.trim() || !categoryInput}
                                     className="on-brand w-full py-4 rounded-2xl font-bold text-white active:scale-95 transition-transform disabled:opacity-40" style={{ backgroundColor: primaryColor }}>
-                                    I'm Ready! 🧠
+
+                                    I'm Ready! <AppIcon name={"🧠"}/>
                                 </button>
                             </>
                         ) : (
@@ -346,9 +348,9 @@ const TwentyQuestions: React.FC = () => {
                                         </div>
                                     ) : amThinker ? (
                                         <div className="mt-2 ml-7 flex gap-2">
-                                            <button onClick={() => handleAnswer(i, 'yes')} className="px-3 py-1 rounded-full text-xs font-bold bg-green-500/20 text-green-500 active:scale-95">✅ Yes</button>
-                                            <button onClick={() => handleAnswer(i, 'no')} className="px-3 py-1 rounded-full text-xs font-bold bg-red-500/20 text-red-500 active:scale-95">❌ No</button>
-                                            <button onClick={() => handleAnswer(i, 'kind-of')} className="px-3 py-1 rounded-full text-xs font-bold bg-yellow-500/20 text-yellow-500 active:scale-95">🤷 Kinda</button>
+                                            <button onClick={() => handleAnswer(i, 'yes')} className="px-3 py-1 rounded-full text-xs font-bold bg-green-500/20 text-green-500 active:scale-95"><AppIcon name={"✅"}/> Yes</button>
+                                            <button onClick={() => handleAnswer(i, 'no')} className="px-3 py-1 rounded-full text-xs font-bold bg-red-500/20 text-red-500 active:scale-95"><AppIcon name={"❌"}/> No</button>
+                                            <button onClick={() => handleAnswer(i, 'kind-of')} className="px-3 py-1 rounded-full text-xs font-bold bg-yellow-500/20 text-yellow-500 active:scale-95"><AppIcon name={"🤷"}/> Kinda</button>
                                         </div>
                                     ) : (
                                         <p className="mt-1 ml-7 text-xs text-gray-400 italic">Waiting for answer...</p>
@@ -391,7 +393,7 @@ const TwentyQuestions: React.FC = () => {
                                     <button onClick={handleGuess} disabled={!guessInput.trim()}
                                         className="on-brand px-4 py-3 rounded-xl font-bold text-white disabled:opacity-40" style={{ backgroundColor: primaryColor }}>Guess!</button>
                                 </div>
-                                <button onClick={handleGiveUp} className="text-xs text-gray-400 underline mt-1 px-4 py-2">I give up 😩</button>
+                                <button onClick={handleGiveUp} className="text-xs text-gray-400 underline mt-1 px-4 py-2">I give up <AppIcon name={"😩"}/></button>
                             </div>
                         )}
 
@@ -408,8 +410,8 @@ const TwentyQuestions: React.FC = () => {
                                     <>
                                         <p className="text-sm text-gray-400">Is this correct? (Your thing: <span className="font-bold">{state.thingDescription}</span>)</p>
                                         <div className="flex gap-3 mt-2">
-                                            <button onClick={() => handleJudge(true)} className="on-brand px-6 py-3 rounded-2xl font-bold text-white bg-green-500 active:scale-95">✅ Correct!</button>
-                                            <button onClick={() => handleJudge(false)} className="on-brand px-6 py-3 rounded-2xl font-bold text-white bg-red-500 active:scale-95">❌ Wrong!</button>
+                                            <button onClick={() => handleJudge(true)} className="on-brand px-6 py-3 rounded-2xl font-bold text-white bg-green-500 active:scale-95"><AppIcon name={"✅"}/> Correct!</button>
+                                            <button onClick={() => handleJudge(false)} className="on-brand px-6 py-3 rounded-2xl font-bold text-white bg-red-500 active:scale-95"><AppIcon name={"❌"}/> Wrong!</button>
                                         </div>
                                     </>
                                 ) : (
@@ -428,7 +430,7 @@ const TwentyQuestions: React.FC = () => {
                                 )}
                                 <p className="text-sm text-gray-400">The answer was: <span className="font-bold" style={{ color: primaryColor }}>{state.thingDescription}</span></p>
                                 <div className="flex flex-col items-center gap-3 w-full max-w-xs mt-4">
-                                    <button onClick={handleNextRound} className="on-brand w-full px-6 py-4 rounded-2xl font-bold text-white shadow-lg active:scale-95" style={{ backgroundColor: primaryColor }}>Next Round (swap roles) 🔄</button>
+                                    <button onClick={handleNextRound} className="on-brand w-full px-6 py-4 rounded-2xl font-bold text-white shadow-lg active:scale-95" style={{ backgroundColor: primaryColor }}>Next Round (swap roles) <AppIcon name={"🔄"}/></button>
                                     <button onClick={handleExit} className={`w-full px-6 py-3 rounded-2xl font-bold ${isDark ? 'bg-white/5 text-gray-300' : 'bg-gray-100 text-gray-600'}`}>Exit Game</button>
                                 </div>
                             </motion.div>

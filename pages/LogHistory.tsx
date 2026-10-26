@@ -1,3 +1,5 @@
+import { MotionPortal } from '../components/ui/MotionPortal';
+import { AppIcon } from '../components/ui/Icons';
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useData } from '../contexts/DataContext';
@@ -34,7 +36,7 @@ const LogHistory: React.FC = () => {
           onClick={() => navigate(-1)}
           className="flex size-10 items-center justify-center rounded-full text-gray-300 hover:text-white hover:bg-white/10 transition-colors"
         >
-          <span className="material-symbols-outlined text-2xl">arrow_back</span>
+          <span className="app-icon-glyph text-2xl"><AppIcon name={"arrow_back"}/></span>
         </button>
         <h2 className="text-[17px] font-bold text-white tracking-tight">Log History</h2>
         
@@ -51,7 +53,7 @@ const LogHistory: React.FC = () => {
                     transition={{ type: 'spring', bounce: 0.2, duration: 0.6 }}
                   />
                 )}
-                <span className="material-symbols-outlined text-[20px] relative z-20">view_list</span>
+                <span className="app-icon-glyph text-[20px] relative z-20"><AppIcon name={"view_list"}/></span>
             </button>
             <button 
                 onClick={() => setViewMode('grid')}
@@ -64,7 +66,7 @@ const LogHistory: React.FC = () => {
                     transition={{ type: 'spring', bounce: 0.2, duration: 0.6 }}
                   />
                 )}
-                <span className="material-symbols-outlined text-[20px] relative z-20">grid_view</span>
+                <span className="app-icon-glyph text-[20px] relative z-20"><AppIcon name={"grid_view"}/></span>
             </button>
         </div>
       </header>
@@ -72,7 +74,7 @@ const LogHistory: React.FC = () => {
        <main className="flex-1 px-5 pb-6">
         {sortedLogs.length === 0 ? (
            <div className="flex flex-col items-center justify-center h-[50vh] text-center opacity-50">
-              <span className="material-symbols-outlined text-5xl mb-4 text-gray-500">history</span>
+              <span className="app-icon-glyph text-5xl mb-4 text-gray-500"><AppIcon name={"history"}/></span>
               <p className="text-gray-400 font-medium">No logs recorded yet.</p>
            </div>
         ) : (
@@ -97,7 +99,7 @@ const LogHistory: React.FC = () => {
                             <span className={`${viewMode === 'grid' ? 'text-lg' : 'text-xl'} font-bold text-white leading-none mt-0.5`}>{day}</span>
                         </div>
                         {viewMode === 'grid' && (
-                             <span className="material-symbols-outlined text-gray-600 group-hover:text-white transition-colors">arrow_outward</span>
+                             <span className="app-icon-glyph text-gray-600 group-hover:text-white transition-colors"><AppIcon name={"arrow_outward"}/></span>
                         )}
                     </div>
 
@@ -114,7 +116,7 @@ const LogHistory: React.FC = () => {
                         <div className="flex items-center gap-3 text-sm text-gray-300 truncate">
                             {log.moods && log.moods.length > 0 && (
                                 <span className="flex items-center gap-1">
-                                    <span className="material-symbols-outlined text-[14px] text-teal-400">face</span>
+                                    <span className="app-icon-glyph text-[14px] text-teal-400"><AppIcon name={"face"}/></span>
                                     {log.moods[0]} {viewMode === 'grid' && log.moods.length > 1 ? `+${log.moods.length - 1}` : ''}
                                      {viewMode === 'list' && log.moods.length > 1 && `+${log.moods.length - 1}`}
                                 </span>
@@ -128,7 +130,7 @@ const LogHistory: React.FC = () => {
                     </div>
 
                     {viewMode === 'list' && (
-                        <span className="material-symbols-outlined text-gray-600">chevron_right</span>
+                        <span className="app-icon-glyph text-gray-600"><AppIcon name={"chevron_right"}/></span>
                     )}
                     </button>
                 );
@@ -139,8 +141,8 @@ const LogHistory: React.FC = () => {
 
       {/* Log Details Modal */}
       <AnimatePresence>
-        {selectedLog && (
-          <motion.div 
+        <AppIcon name={selectedLog && (
+          <MotionPortal><motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
@@ -158,7 +160,7 @@ const LogHistory: React.FC = () => {
                 onClick={() => setSelectedLog(null)}
                 className="absolute top-4 right-4 p-2 bg-gray-100 dark:bg-white/5 rounded-full text-gray-500 hover:bg-gray-200 dark:hover:bg-white/10 transition-colors"
               >
-                <span className="material-symbols-outlined text-sm block">close</span>
+                <span className="app-icon-glyph text-sm block"><AppIcon name={"close"}/></span>
               </button>
               <div className="flex flex-col items-center mb-6 mt-4">
                 <div className="w-16 h-16 bg-primary/10 rounded-full flex items-center justify-center mb-3">
@@ -199,8 +201,8 @@ const LogHistory: React.FC = () => {
                 )}
               </div>
             </motion.div>
-          </motion.div>
-        )}
+          </motion.div></MotionPortal>
+        )}/>
       </AnimatePresence>
     </div>
   );

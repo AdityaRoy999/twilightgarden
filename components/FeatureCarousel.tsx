@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Check, HeartHandshake, Flower2, Sparkles } from 'lucide-react';
+import { Check, HeartHandshake, Flower2, Sparkles } from './ui/Icons';
 import { BotanicalSprig, CycleBloom } from './ui/CycleBloom';
 
 const features = [

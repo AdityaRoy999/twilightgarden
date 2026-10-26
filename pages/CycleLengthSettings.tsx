@@ -1,3 +1,4 @@
+import { AppIcon } from '../components/ui/Icons';
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 
@@ -28,7 +29,7 @@ const CycleLengthSettings: React.FC = () => {
       {/* Header */}
       <header className="sticky top-0 z-20 flex items-center justify-between px-6 py-4 bg-transparent">
         <button onClick={() => navigate(-1)} className="p-2 -ml-2 rounded-full hover:bg-white/10 transition-colors">
-          <span className="material-symbols-outlined text-white text-2xl">arrow_back_ios_new</span>
+          <span className="app-icon-glyph text-white text-2xl"><AppIcon name={"arrow_back_ios_new"}/></span>
         </button>
         <h2 className="text-lg font-bold text-white">Cycle Settings</h2>
         <div className="w-10"></div>
@@ -36,7 +37,7 @@ const CycleLengthSettings: React.FC = () => {
 
       <main className="flex-1 px-6 pt-4 flex flex-col items-center relative z-10">
         <div className="w-20 h-20 rounded-full bg-surface-dark border border-white/10 flex items-center justify-center shadow-lg mb-6">
-           <span className="material-symbols-outlined text-primary text-4xl">cached</span>
+           <span className="app-icon-glyph text-primary text-4xl"><AppIcon name={"cached"}/></span>
         </div>
 
         <h1 className="text-3xl font-bold mb-3 text-center text-white">Cycle Length</h1>
@@ -59,7 +60,7 @@ const CycleLengthSettings: React.FC = () => {
         <div className="bg-surface-dark/80 backdrop-blur-md rounded-2xl p-5 border border-white/5 w-full max-w-sm shadow-soft">
              <div className="flex gap-4">
                  <div className="shrink-0 pt-0.5">
-                    <span className="material-symbols-outlined text-yellow-500/80">info</span>
+                    <span className="app-icon-glyph text-yellow-500/80"><AppIcon name={"info"}/></span>
                  </div>
                  <div>
                      <h4 className="text-sm font-bold text-white mb-1">Normal Range</h4>

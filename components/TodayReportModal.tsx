@@ -1,3 +1,7 @@
+import { MotionPortal } from './ui/MotionPortal';
+import { useAppMotion } from '../hooks/useAppMotion';
+import { springs, motionTransition } from '../lib/motion';
+import { AppIcon } from './ui/Icons';
 import { localDateKey } from '../lib/dates';
 import React, { useRef, useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -25,6 +29,7 @@ const TodayReportModal: React.FC<TodayReportModalProps> = ({
   profile
 }) => {
   const cardRef = useRef<HTMLDivElement>(null);
+  const { reduced } = useAppMotion();
   const [isExporting, setIsExporting] = useState(false);
   const [exportType, setExportType] = useState<'png' | 'pdf' | null>(null);
   const [toast, setToast] = useState<{ message: string; subMessage?: string; type: 'success' | 'error'; isVisible: boolean }>({
@@ -218,8 +223,8 @@ const TodayReportModal: React.FC<TodayReportModalProps> = ({
         onClose={() => setToast(prev => ({ ...prev, isVisible: false }))}
       />
 
-      {isOpen && (
-        <motion.div
+      <AppIcon name={isOpen && (
+        <MotionPortal><motion.div
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           exit={{ opacity: 0 }}
@@ -231,7 +236,7 @@ const TodayReportModal: React.FC<TodayReportModalProps> = ({
             initial={{ opacity: 0, scale: 0.9, y: 20 }}
             animate={{ opacity: 1, scale: 1, y: 0 }}
             exit={{ opacity: 0, scale: 0.9, y: 20 }}
-            transition={{ type: 'spring', duration: 0.4 }}
+            transition={motionTransition(springs.modal, reduced)}
             className="bg-white dark:bg-surface-dark rounded-2xl p-6 max-w-xs w-full shadow-2xl"
             onClick={(e) => e.stopPropagation()}
           >
@@ -248,7 +253,7 @@ const TodayReportModal: React.FC<TodayReportModalProps> = ({
                 disabled={isExporting}
                 className="on-brand flex items-center justify-center gap-3 py-4 px-6 bg-gradient-to-r from-pink-500 to-purple-600 text-white rounded-xl font-semibold hover:opacity-90 transition-all disabled:opacity-50"
               >
-                <span className="material-symbols-outlined">image</span>
+                <span className="app-icon-glyph"><AppIcon name={"image"}/></span>
                 {exportType === 'png' ? 'Generating...' : 'PNG Image'}
               </button>
 
@@ -257,7 +262,7 @@ const TodayReportModal: React.FC<TodayReportModalProps> = ({
                 disabled={isExporting}
                 className="on-brand flex items-center justify-center gap-3 py-4 px-6 bg-gradient-to-r from-blue-500 to-indigo-600 text-white rounded-xl font-semibold hover:opacity-90 transition-all disabled:opacity-50"
               >
-                <span className="material-symbols-outlined">picture_as_pdf</span>
+                <span className="app-icon-glyph"><AppIcon name={"picture_as_pdf"}/></span>
                 {exportType === 'pdf' ? 'Generating...' : 'PDF Document'}
               </button>
             </div>
@@ -378,8 +383,8 @@ const TodayReportModal: React.FC<TodayReportModalProps> = ({
               </div>
             </div>
           </div>
-        </motion.div>
-      )}
+        </motion.div></MotionPortal>
+      )}/>
     </AnimatePresence>
   );
 };

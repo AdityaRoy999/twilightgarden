@@ -1,3 +1,4 @@
+import { AppIcon } from './ui/Icons';
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
@@ -15,7 +16,7 @@ const GameEndedScreen: React.FC = () => {
 
     return (
         <div className="min-h-screen flex flex-col items-center justify-center text-center px-6">
-            <div className="text-6xl mb-6">🎮</div>
+            <div className="text-6xl mb-6"><AppIcon name={"🎮"}/></div>
             <h2 className="text-lg font-semibold mb-6 text-gray-300">Game ended. Your partner may have left.</h2>
             <button
                 onClick={() => navigate(getGamesPath())}

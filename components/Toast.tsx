@@ -1,3 +1,4 @@
+import { AppIcon } from './ui/Icons';
 import React, { useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 
@@ -42,9 +43,7 @@ const Toast: React.FC<ToastProps> = ({
             <div className={`shrink-0 w-10 h-10 rounded-full flex items-center justify-center ${
               type === 'success' ? 'bg-green-500/20 text-green-500' : 'bg-red-500/20 text-red-500'
             }`}>
-              <span className="material-symbols-outlined text-xl">
-                {type === 'success' ? 'check_circle' : 'error'}
-              </span>
+              <span className="app-icon-glyph text-xl"><AppIcon name={type === 'success' ? 'check_circle' : 'error'}/></span>
             </div>
             <div className="flex flex-col flex-1">
               <span className="font-bold text-sm">{message}</span>
@@ -56,7 +55,7 @@ const Toast: React.FC<ToastProps> = ({
               onClick={onClose}
               className="shrink-0 p-1 rounded-full hover:bg-white/10 dark:hover:bg-black/10 transition-colors"
             >
-              <span className="material-symbols-outlined text-lg opacity-50">close</span>
+              <span className="app-icon-glyph text-lg opacity-50"><AppIcon name={"close"}/></span>
             </button>
           </div>
         </motion.div>

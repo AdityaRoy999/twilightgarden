@@ -1,3 +1,5 @@
+import { AppIcon } from '../../components/ui/Icons';
+import { CycleHero } from '../../components/ui/CycleHero';
 import { CycleBloom, BotanicalSprig } from '../../components/ui/CycleBloom';
 import { localDateKey } from '../../lib/dates';
 import React from 'react';
@@ -71,7 +73,7 @@ const PartnerDashboard: React.FC = () => {
         return (
             <div className="min-h-screen flex flex-col items-center justify-center p-6 text-center max-w-md mx-auto">
                  <div className="w-24 h-24 bg-pink-100 dark:bg-pink-900/20 rounded-full flex items-center justify-center mb-6">
-                    <span className="material-symbols-outlined text-5xl text-pink-500">favorite</span>
+                    <span className="app-icon-glyph text-5xl text-pink-500"><AppIcon name={"favorite"}/></span>
                  </div>
                  <h2 className="text-2xl font-bold mb-3 text-gray-900 dark:text-white">Connect with Partner</h2>
 
@@ -128,7 +130,7 @@ const PartnerDashboard: React.FC = () => {
                                 ) : (
                                     <>
                                         <span>Connect</span>
-                                        <span className="material-symbols-outlined">arrow_forward</span>
+                                        <span className="app-icon-glyph"><AppIcon name={"arrow_forward"}/></span>
                                     </>
                                 )}
                             </button>
@@ -158,7 +160,7 @@ const PartnerDashboard: React.FC = () => {
                                         <span className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin"/>
                                     ) : (
                                         <>
-                                            <span className="material-symbols-outlined">key</span>
+                                            <span className="app-icon-glyph"><AppIcon name={"key"}/></span>
                                             <span>Generate Pairing Code</span>
                                         </>
                                     )}
@@ -224,11 +226,11 @@ const PartnerDashboard: React.FC = () => {
 
             <div className="w-full">
             <div className="md:grid md:grid-cols-2 md:gap-8 md:items-start">
-             <section className="bloom-cycle-hero mb-6 md:mb-0 md:col-span-2">
+             <CycleHero className="mb-6 md:mb-0 md:col-span-2">
                <BotanicalSprig className="bloom-hero-leaves"/>
                <div className="bloom-cycle-copy"><p>Your partner’s rhythm</p><h2>{cycleData.currentDay ? `Day ${cycleData.currentDay}` : 'One day at a time'}</h2><h3>{phaseLabel}</h3><p className="bloom-muted">A little understanding goes a long way.</p></div>
                <CycleBloom day={cycleData.currentDay} length={cycleSettings.avgCycleLength} hasEstimate={cycleData.hasEstimate !== false}/>
-             </section>
+             </CycleHero>
 
              {/* Right Column: Stats & Updates */}
              <div className="flex flex-col gap-6">
@@ -237,7 +239,7 @@ const PartnerDashboard: React.FC = () => {
                     {/* Next Period */}
                     <div className="bg-white dark:bg-surface-dark p-5 rounded-[24px] shadow-soft border border-gray-100 dark:border-white/5 flex flex-col justify-between h-32 relative overflow-hidden group">
                          <div className="absolute top-0 right-0 p-3 opacity-10 group-hover:opacity-20 transition-opacity">
-                            <span className="material-symbols-outlined text-4xl text-primary">water_drop</span>
+                            <span className="app-icon-glyph text-4xl text-primary"><AppIcon name={"water_drop"}/></span>
                          </div>
                          <div>
                             <span className="text-xs font-bold text-gray-400 uppercase tracking-wider">{cycleData.nextPeriodIn < 0 ? 'Past estimate' : 'Next period'}</span>
@@ -259,7 +261,7 @@ const PartnerDashboard: React.FC = () => {
                     {/* Fertility Status */}
                     <div className="bg-white dark:bg-surface-dark p-5 rounded-[24px] shadow-soft border border-gray-100 dark:border-white/5 flex flex-col justify-between h-32 relative overflow-hidden group">
                          <div className="absolute top-0 right-0 p-3 opacity-10 group-hover:opacity-20 transition-opacity">
-                            <span className="material-symbols-outlined text-4xl text-teal-500">egg_alt</span>
+                            <span className="app-icon-glyph text-4xl text-teal-500"><AppIcon name={"egg_alt"}/></span>
                          </div>
                          <div>
                             <span className="text-xs font-bold text-gray-400 uppercase tracking-wider">Fertility</span>
@@ -314,13 +316,13 @@ const PartnerDashboard: React.FC = () => {
 
                                  <div className="ml-auto flex items-center text-primary text-sm font-bold">
                                      View Details
-                                     <span className="material-symbols-outlined text-sm ml-1">arrow_forward</span>
+                                     <span className="app-icon-glyph text-sm ml-1"><AppIcon name={"arrow_forward"}/></span>
                                  </div>
                              </div>
                         </div>
                     ) : (
                         <div className="bg-gray-50 dark:bg-white/5 rounded-2xl p-6 text-center border-2 border-dashed border-gray-200 dark:border-white/10">
-                            <span className="material-symbols-outlined text-gray-300 text-3xl mb-2">history_toggle_off</span>
+                            <span className="app-icon-glyph text-gray-300 text-3xl mb-2"><AppIcon name={"history_toggle_off"}/></span>
                             <p className="text-gray-500 font-medium">No update yet today.</p>
                             <p className="text-xs text-gray-400 mt-1">Check back later or check in with her!</p>
                         </div>
@@ -331,7 +333,7 @@ const PartnerDashboard: React.FC = () => {
                 <div className="on-brand bg-gradient-to-r from-blue-500 to-indigo-600 rounded-[28px] p-6 text-white shadow-lg shadow-blue-500/20 mt-6 md:mt-0">
                     <div className="flex items-start gap-4">
                          <div className="w-10 h-10 rounded-full bg-white/20 flex items-center justify-center shrink-0">
-                            <span className="material-symbols-outlined">tips_and_updates</span>
+                            <span className="app-icon-glyph"><AppIcon name={"tips_and_updates"}/></span>
                          </div>
                          <div>
                              <h3 className="font-bold text-lg mb-1">Partner Tip</h3>

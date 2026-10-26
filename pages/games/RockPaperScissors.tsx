@@ -1,3 +1,4 @@
+import { AppIcon } from '../../components/ui/Icons';
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -294,7 +295,7 @@ const RockPaperScissors: React.FC = () => {
     return (
         <div className={`min-h-screen flex flex-col font-display transition-colors ${isDark ? 'bg-background-dark text-white' : 'bg-background-dark text-[var(--text-primary)]'}`}>
             <header className={`flex items-center justify-between px-5 py-4 sticky top-0 z-20 backdrop-blur-sm border-b ${isDark ? 'bg-background-dark/95 border-white/5' : 'bg-background-dark/95 border-gray-100'}`}>
-                <button onClick={handleExit} className="w-10 h-10 rounded-full flex items-center justify-center hover:bg-white/10"><span className="material-symbols-outlined">arrow_back</span></button>
+                <button onClick={handleExit} className="w-10 h-10 rounded-full flex items-center justify-center hover:bg-white/10"><span className="app-icon-glyph"><AppIcon name={"arrow_back"}/></span></button>
                 <h1 className="text-lg font-bold">Rock Paper Scissors</h1>
                 <div className="flex items-center">
                     <button
@@ -302,7 +303,7 @@ const RockPaperScissors: React.FC = () => {
                         className="w-10 h-10 rounded-full flex items-center justify-center hover:bg-white/10 transition-all active:scale-90 mr-1"
                         title="Watch Tutorial"
                     >
-                        <span className="material-symbols-outlined text-xl" style={{ color: primaryColor }}>play_circle</span>
+                        <span className="app-icon-glyph text-xl" style={{ color: primaryColor }}><AppIcon name={"play_circle"}/></span>
                     </button>
                     <button
                         onClick={async () => {
@@ -315,7 +316,7 @@ const RockPaperScissors: React.FC = () => {
                         className={`w-10 h-10 rounded-full flex items-center justify-center transition-all ${ringCooldown ? 'opacity-30' : 'hover:bg-white/10 active:scale-90'}`}
                         title="Ring Partner"
                     >
-                        <span className="material-symbols-outlined text-xl">{ringCooldown ? 'notifications_off' : 'notifications_active'}</span>
+                        <span className="app-icon-glyph text-xl"><AppIcon name={ringCooldown ? 'notifications_off' : 'notifications_active'}/></span>
                     </button>
                 </div>
             </header>
@@ -379,14 +380,14 @@ const RockPaperScissors: React.FC = () => {
                     <motion.div initial={{ opacity: 0, scale: 0.8 }} animate={{ opacity: 1, scale: 1 }} className="flex items-center gap-8">
                         <div className="flex flex-col items-center gap-2">
                             <motion.div initial={{ x: -60, opacity: 0 }} animate={{ x: 0, opacity: 1 }} className="text-6xl">
-                                {CHOICES.find(c => c.id === (isP1 ? lastRound.p1 : lastRound.p2))?.emoji}
+                                <AppIcon name={CHOICES.find(c => c.id === (isP1 ? lastRound.p1 : lastRound.p2))?.emoji}/>
                             </motion.div>
                             <span className="text-xs font-bold">You</span>
                         </div>
                         <span className="text-2xl font-black text-gray-400">VS</span>
                         <div className="flex flex-col items-center gap-2">
                             <motion.div initial={{ x: 60, opacity: 0 }} animate={{ x: 0, opacity: 1 }} className="text-6xl">
-                                {CHOICES.find(c => c.id === (isP1 ? lastRound.p2 : lastRound.p1))?.emoji}
+                                <AppIcon name={CHOICES.find(c => c.id === (isP1 ? lastRound.p2 : lastRound.p1))?.emoji}/>
                             </motion.div>
                             <span className="text-xs font-bold">Partner</span>
                         </div>
@@ -413,7 +414,7 @@ const RockPaperScissors: React.FC = () => {
                                         myChoice === c.id ? 'ring-3 scale-105' : myChoice ? 'opacity-30' : ''
                                     } ${isDark ? 'bg-white/5 hover:bg-white/10' : 'bg-white shadow-md hover:shadow-lg border border-gray-100'}`}
                                     style={myChoice === c.id ? { '--tw-ring-color': primaryColor } as any : {}}>
-                                    <span className="text-4xl">{c.emoji}</span>
+                                    <span className="text-4xl"><AppIcon name={c.emoji}/></span>
                                     <span className="text-xs font-bold">{c.label}</span>
                                 </motion.button>
                             ))}
@@ -439,7 +440,7 @@ const RockPaperScissors: React.FC = () => {
                                 {game.winner === user?.id ? 'You won!' : game.winner === 'draw' ? "It's a draw!" : 'You lost!'}
                             </p>
                             <p className="text-sm text-gray-400">{myScoreVal} – {partnerScoreVal}</p>
-                            <button onClick={handlePlayAgain} className="on-brand w-full px-6 py-4 rounded-2xl font-bold text-white shadow-lg active:scale-95" style={{ backgroundColor: primaryColor }}>Play Again 🔄</button>
+                            <button onClick={handlePlayAgain} className="on-brand w-full px-6 py-4 rounded-2xl font-bold text-white shadow-lg active:scale-95" style={{ backgroundColor: primaryColor }}>Play Again <AppIcon name={"🔄"}/></button>
                             <button onClick={handleExit} className={`w-full px-6 py-3 rounded-2xl font-bold ${isDark ? 'bg-white/5 text-gray-300' : 'bg-gray-100 text-gray-600'}`}>Exit Game</button>
                         </motion.div>
                     )}

@@ -1,3 +1,4 @@
+import { AppIcon } from '../../components/ui/Icons';
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -299,9 +300,9 @@ const RapidFire: React.FC = () => {
             {/* Header */}
             <div className={`p-4 flex items-center justify-between border-b ${isDark ? 'border-white/10' : 'border-gray-200'}`}>
                 <button onClick={async () => { try { if (session?.id) await endSession(session.id); } catch {} navigate('/games'); }} className="p-2 -ml-2 rounded-full hover:bg-white/10 active:scale-95 transition-transform">
-                    <span className="material-symbols-outlined text-2xl">arrow_back</span>
+                    <span className="app-icon-glyph text-2xl"><AppIcon name={"arrow_back"}/></span>
                 </button>
-                <h1 className="text-lg font-bold">⚡ Rapid Fire</h1>
+                <h1 className="text-lg font-bold"><AppIcon name={"⚡"}/> Rapid Fire</h1>
                 <button
                     onClick={async () => {
                         if (!couple || !user || ringCooldown) return;
@@ -312,7 +313,7 @@ const RapidFire: React.FC = () => {
                     disabled={ringCooldown}
                     className={`p-2 rounded-full transition-all ${ringCooldown ? 'opacity-30' : 'hover:bg-white/10 active:scale-90'}`}
                 >
-                    <span className="material-symbols-outlined text-2xl">{ringCooldown ? 'notifications_off' : 'notifications_active'}</span>
+                    <span className="app-icon-glyph text-2xl"><AppIcon name={ringCooldown ? 'notifications_off' : 'notifications_active'}/></span>
                 </button>
             </div>
 
@@ -336,7 +337,8 @@ const RapidFire: React.FC = () => {
                                     animate={{ scale: [1, 1.1, 1] }}
                                     transition={{ repeat: Infinity, duration: 1.5 }}
                                 >
-                                    ⚡
+
+                                    <AppIcon name={"⚡"}/>
                                 </motion.div>
                                 <h2 className="text-2xl font-bold mb-2">Rapid Fire!</h2>
                                 <p className="opacity-60 mb-2">{ROUNDS} questions • {TIME_PER_Q}s each</p>
@@ -347,7 +349,8 @@ const RapidFire: React.FC = () => {
                                         onClick={startGame}
                                         className="on-brand w-full py-4 rounded-2xl bg-gradient-to-r from-red-500 to-orange-500 text-white font-bold text-lg shadow-lg active:scale-95 transition-transform"
                                     >
-                                        🔥 Start Round
+
+                                        <AppIcon name={"🔥"}/> Start Round
                                     </button>
                                 ) : (
                                     <div className="flex flex-col items-center gap-6">
@@ -424,7 +427,8 @@ const RapidFire: React.FC = () => {
                                         animate={{ rotate: [0, 5, -5, 0] }}
                                         transition={{ repeat: Infinity, duration: 1 }}
                                     >
-                                        ⏳
+
+                                        <AppIcon name={"⏳"}/>
                                     </motion.div>
                                     <h2 className="text-xl font-bold mb-2">Partner is answering...</h2>
                                     <p className="opacity-50">Question {board_state.currentIndex + 1} of {board_state.questions.length}</p>
@@ -465,7 +469,8 @@ const RapidFire: React.FC = () => {
                                             onClick={newGame}
                                             className="on-brand w-full py-4 rounded-2xl bg-gradient-to-r from-red-500 to-orange-500 text-white font-bold shadow-lg active:scale-95 transition-transform"
                                         >
-                                            🔄 New Round
+
+                                            <AppIcon name={"🔄"}/> New Round
                                         </button>
                                     );
                                 } else if (isMyTurn) {
@@ -474,7 +479,8 @@ const RapidFire: React.FC = () => {
                                             onClick={switchTurn}
                                             className="on-brand w-full py-4 rounded-2xl bg-gradient-to-r from-violet-500 to-purple-600 text-white font-bold shadow-lg active:scale-95 transition-transform"
                                         >
-                                            ✨ Partner's Turn
+
+                                            <AppIcon name={"✨"}/> Partner's Turn
                                         </button>
                                     );
                                 } else {

@@ -1,3 +1,4 @@
+import { AppIcon } from '../../components/ui/Icons';
 import React, { useEffect, useState } from 'react';
 import { motion } from 'framer-motion';
 import { supabase } from '../../lib/supabase';
@@ -103,7 +104,7 @@ const AdminDashboard: React.FC = () => {
                         isDark ? 'bg-surface-dark border-white/5 shadow-none' : 'bg-white border-gray-100'
                     }`}>
                         <div className="flex items-center gap-2 mb-3">
-                            <span className="material-symbols-outlined text-primary text-lg">group</span>
+                            <span className="app-icon-glyph text-primary text-lg"><AppIcon name={"group"}/></span>
                             <span className="text-[10px] font-bold text-gray-400 uppercase tracking-wide">Total Users</span>
                         </div>
                         <div className="flex flex-col">
@@ -117,7 +118,7 @@ const AdminDashboard: React.FC = () => {
                         isDark ? 'bg-surface-dark border-white/5 shadow-none' : 'bg-white border-gray-100'
                     }`}>
                         <div className="flex items-center gap-2 mb-3">
-                            <span className="material-symbols-outlined text-[#4ECDC4] text-lg">trending_up</span>
+                            <span className="app-icon-glyph text-[#4ECDC4] text-lg"><AppIcon name={"trending_up"}/></span>
                             <span className="text-[10px] font-bold text-gray-400 uppercase tracking-wide">Active Today</span>
                         </div>
                         <div className="flex flex-col">
@@ -134,12 +135,12 @@ const AdminDashboard: React.FC = () => {
                         <div className="flex flex-col items-start gap-1">
                             <span className="text-lg font-bold">Love Lock</span>
                             <span className="text-sm text-white/80 flex items-center gap-2">
-                                <span className="material-symbols-outlined text-sm">check_circle</span>
+                                <span className="app-icon-glyph text-sm"><AppIcon name={"check_circle"}/></span>
                                 Connected
                             </span>
                         </div>
                         <div className="w-10 h-10 rounded-full bg-white/20 flex items-center justify-center">
-                            <span className="material-symbols-filled text-2xl">favorite</span>
+                            <span className="app-icon-glyph text-2xl"><AppIcon name={"favorite"}/></span>
                         </div>
                     </div>
                 ) : (pairingCode || couple?.pairing_code) ? (
@@ -152,7 +153,7 @@ const AdminDashboard: React.FC = () => {
                             </span>
                         </div>
                         <div className="w-10 h-10 rounded-full bg-white/20 flex items-center justify-center">
-                            <span className="material-symbols-filled text-2xl">favorite</span>
+                            <span className="app-icon-glyph text-2xl"><AppIcon name={"favorite"}/></span>
                         </div>
                     </div>
                 ) : (
@@ -168,7 +169,7 @@ const AdminDashboard: React.FC = () => {
                             </span>
                         </div>
                         <div className="w-10 h-10 rounded-full bg-white/20 flex items-center justify-center group-hover:bg-white/30 transition-colors">
-                            <span className="material-symbols-filled text-2xl">favorite</span>
+                            <span className="app-icon-glyph text-2xl"><AppIcon name={"favorite"}/></span>
                         </div>
                     </button>
                 )}

@@ -1,6 +1,7 @@
+import { MotionPortal } from './ui/MotionPortal';
 import React from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Shield, Lock } from 'lucide-react';
+import { Shield, Lock } from './ui/Icons';
 import { useCouples } from '../contexts/CouplesContext';
 
 const RestorationOverlay: React.FC = () => {
@@ -10,7 +11,7 @@ const RestorationOverlay: React.FC = () => {
   return (
     <AnimatePresence>
       {isRestoring && (
-        <motion.div
+        <MotionPortal><motion.div
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           exit={{ opacity: 0 }}
@@ -76,7 +77,7 @@ const RestorationOverlay: React.FC = () => {
               </div>
             </div>
           </motion.div>
-        </motion.div>
+        </motion.div></MotionPortal>
       )}
     </AnimatePresence>
   );

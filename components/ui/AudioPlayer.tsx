@@ -1,3 +1,4 @@
+import { AppIcon } from './Icons';
 import React, { useState, useRef, useEffect } from 'react';
 
 interface AudioPlayerProps {
@@ -75,9 +76,7 @@ export const AudioPlayer: React.FC<AudioPlayerProps> = ({ src, isMe }) => {
                 onClick={togglePlay}
                 className={`w-10 h-10 rounded-full flex items-center justify-center transition-all ${isMe ? 'bg-white text-pink-600' : 'on-brand bg-pink-500 text-white'}`}
             >
-                <span className="material-symbols-outlined text-2xl">
-                    {isPlaying ? 'pause' : 'play_arrow'}
-                </span>
+                <span className="app-icon-glyph text-2xl"><AppIcon name={isPlaying ? 'pause' : 'play_arrow'}/></span>
             </button>
 
             <div className="flex-1 flex flex-col gap-1">

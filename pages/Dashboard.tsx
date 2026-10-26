@@ -1,6 +1,7 @@
+import { CycleHero } from '../components/ui/CycleHero';
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
-import { ChevronRight, Droplet, Heart, Leaf, Lightbulb, Moon, Plus, Smile, Sparkles, Zap } from 'lucide-react';
+import { ChevronRight, Droplet, Heart, Leaf, Lightbulb, Moon, Plus, Smile, Sparkles, Zap } from '../components/ui/Icons';
 import { useAuth } from '../contexts/AuthContext';
 import { useData } from '../contexts/DataContext';
 import { localDateKey } from '../lib/dates';
@@ -44,11 +45,11 @@ export default function Dashboard() {
       <NotificationBell />
     </header>
     <div className="bloom-home-content">
-      <section className="bloom-cycle-hero">
+      <CycleHero>
         <BotanicalSprig className="bloom-hero-leaves"/>
         <div className="bloom-cycle-copy"><p>Your cycle</p><h2>{estimated ? `Day ${cycle.currentDay}` : 'Your own rhythm'}</h2><h3>{estimated ? cycle.phase === 'Unknown' ? 'Your cycle, your pace' : `${cycle.phase} phase` : 'Let’s get to know you'}</h3><p className="bloom-muted">{estimated ? 'A little more in tune with you' : 'Log a period start to see your estimates'}</p><button className="bloom-countdown" onClick={() => navigate(estimated ? '/calendar' : '/log/details')}>{estimated ? countdown : 'Log your period'}<ChevronRight size={19}/></button></div>
         <CycleBloom day={cycle.currentDay} length={cycleSettings.avgCycleLength} hasEstimate={estimated}/>
-      </section>
+      </CycleHero>
       <div className="bloom-stat-grid">
         <button className="bloom-card bloom-stat" onClick={() => navigate('/calendar')}><span className="bloom-icon rose"><Droplet fill="currentColor"/></span><span><span className="bloom-muted">Next period</span><strong>{estimated ? format(nextPeriod) : 'No estimate yet'}</strong><small>{estimated ? countdown : 'Start with a period log'}</small></span><ChevronRight className="bloom-chevron" size={18}/></button>
         <button className="bloom-card bloom-stat" onClick={() => navigate('/calendar')}><span className="bloom-icon mint"><Leaf fill="currentColor"/></span><span><span className="bloom-muted">Estimated fertile window</span><strong>{estimated ? `${format(fertileStart)} – ${format(fertileEnd)}` : 'Not available'}</strong><small>{estimated ? cycle.isFertile ? 'Within estimated window' : 'Outside estimated window' : 'Based on cycle history'}</small></span><ChevronRight className="bloom-chevron" size={18}/></button>

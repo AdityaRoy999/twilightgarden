@@ -1,3 +1,5 @@
+import { MotionPortal } from './ui/MotionPortal';
+import { AppIcon } from './ui/Icons';
 import ChartEmptyState from './ui/ChartEmptyState';
 import { useTheme } from '../contexts/ThemeContext';
 import React, { useState, useMemo } from 'react';
@@ -260,7 +262,7 @@ const PartnerInsightsView: React.FC<PartnerInsightsViewProps> = ({ logs, cycleSe
       </div>
 
       <AnimatePresence mode="wait">
-        {activeTab === 'history' ? (
+        <AppIcon name={activeTab === 'history' ? (
           <motion.div
             key="history"
             initial={{ opacity: 0, x: -20 }}
@@ -317,14 +319,14 @@ const PartnerInsightsView: React.FC<PartnerInsightsViewProps> = ({ logs, cycleSe
                   <section className="grid grid-cols-2 md:grid-cols-4 gap-4">
                     <div className="flex flex-col items-center justify-center gap-3 rounded-[2rem] bg-white dark:bg-surface-dark p-6 shadow-soft border border-gray-100 dark:border-white/5 text-center h-44 transition-colors md:col-span-2">
                       <div className="flex h-10 w-10 items-center justify-center rounded-full bg-teal-100 dark:bg-teal-500/20 text-teal-600 dark:text-teal-400">
-                        <span className="material-symbols-outlined text-xl">refresh</span>
+                        <span className="app-icon-glyph text-xl"><AppIcon name={"refresh"}/></span>
                       </div>
                       <h3 className="text-2xl font-bold text-[var(--text-primary)] dark:text-white">{stats.avgCycle}</h3>
                       <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Avg Cycle</p>
                     </div>
                     <div className="flex flex-col items-center justify-center gap-3 rounded-[2rem] bg-white dark:bg-surface-dark p-6 shadow-soft border border-gray-100 dark:border-white/5 text-center h-44 transition-colors md:col-span-2">
                       <div className="flex h-10 w-10 items-center justify-center rounded-full bg-orange-100 dark:bg-orange-500/20 text-orange-600 dark:text-orange-400">
-                        <span className="material-symbols-outlined text-xl">bar_chart</span>
+                        <span className="app-icon-glyph text-xl"><AppIcon name={"bar_chart"}/></span>
                       </div>
                       <h3 className="text-2xl font-bold text-[var(--text-primary)] dark:text-white">{stats.avgPeriod}</h3>
                       <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Avg Period</p>
@@ -341,10 +343,10 @@ const PartnerInsightsView: React.FC<PartnerInsightsViewProps> = ({ logs, cycleSe
                           </div>
                           <div className="flex items-center bg-gray-100 dark:bg-white/5 rounded-xl p-1 gap-1 relative">
                             <button aria-label="Show bar chart" onClick={() => setChartType('bar')} className={`relative z-10 p-2 rounded-lg transition-colors ${chartType === 'bar' ? 'on-brand bg-primary text-white' : 'text-gray-400'}`}>
-                              <span className="material-symbols-outlined text-lg block">bar_chart</span>
+                              <span className="app-icon-glyph text-lg block"><AppIcon name={"bar_chart"}/></span>
                             </button>
                             <button aria-label="Show line chart" onClick={() => setChartType('line')} className={`relative z-10 p-2 rounded-lg transition-colors ${chartType === 'line' ? 'on-brand bg-primary text-white' : 'text-gray-400'}`}>
-                              <span className="material-symbols-outlined text-lg block">show_chart</span>
+                              <span className="app-icon-glyph text-lg block"><AppIcon name={"show_chart"}/></span>
                             </button>
                           </div>
                         </div>
@@ -388,7 +390,7 @@ const PartnerInsightsView: React.FC<PartnerInsightsViewProps> = ({ logs, cycleSe
                       {/* Symptoms Card */}
                       <section className="rounded-[2rem] bg-white dark:bg-surface-dark p-6 shadow-soft border border-gray-100 dark:border-white/5 transition-colors h-full flex flex-col justify-center">
                         <h3 className="text-lg font-bold text-[var(--text-primary)] dark:text-white mb-6 flex items-center gap-2">
-                          <span className="material-symbols-filled text-primary text-xl">Auto_Awesome</span>
+                          <span className="app-icon-glyph text-primary text-xl"><AppIcon name={"Auto_Awesome"}/></span>
                           Common Symptoms
                         </h3>
                         <div className="flex flex-col gap-5">
@@ -429,7 +431,7 @@ const PartnerInsightsView: React.FC<PartnerInsightsViewProps> = ({ logs, cycleSe
                             transition={{ type: 'spring', bounce: 0.2, duration: 0.28 }}
                           />
                         )}
-                        <span className="material-symbols-outlined text-sm block relative z-20">grid_view</span>
+                        <span className="app-icon-glyph text-sm block relative z-20"><AppIcon name={"grid_view"}/></span>
                       </button>
                       <button
                         onClick={() => setLogViewMode('list')}
@@ -442,7 +444,7 @@ const PartnerInsightsView: React.FC<PartnerInsightsViewProps> = ({ logs, cycleSe
                             transition={{ type: 'spring', bounce: 0.2, duration: 0.28 }}
                           />
                         )}
-                        <span className="material-symbols-outlined text-sm block relative z-20">view_list</span>
+                        <span className="app-icon-glyph text-sm block relative z-20"><AppIcon name={"view_list"}/></span>
                       </button>
                     </div>
                   </div>
@@ -465,7 +467,7 @@ const PartnerInsightsView: React.FC<PartnerInsightsViewProps> = ({ logs, cycleSe
                                   {new Date(log.date).getDate()}
                                 </span>
                               </div>
-                              <span className="material-symbols-outlined text-gray-300 text-lg">north_east</span>
+                              <span className="app-icon-glyph text-gray-300 text-lg"><AppIcon name={"north_east"}/></span>
                             </div>
 
                             <div className="flex flex-col gap-1.5">
@@ -519,7 +521,7 @@ const PartnerInsightsView: React.FC<PartnerInsightsViewProps> = ({ logs, cycleSe
                               </div>
                             </div>
 
-                            <span className="material-symbols-outlined text-gray-300">chevron_right</span>
+                            <span className="app-icon-glyph text-gray-300"><AppIcon name={"chevron_right"}/></span>
                           </div>
                         )
                       ))}
@@ -603,7 +605,7 @@ const PartnerInsightsView: React.FC<PartnerInsightsViewProps> = ({ logs, cycleSe
                         <div className="flex items-center justify-between mb-8">
                            <h3 className="text-lg font-bold text-[var(--text-primary)] dark:text-white">Sleep Timeline</h3>
                            <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-indigo-500/10 text-indigo-500">
-                            <span className="material-symbols-outlined">bedtime</span>
+                            <span className="app-icon-glyph"><AppIcon name={"bedtime"}/></span>
                           </div>
                         </div>
                         <div className={trendsData.some(d => d.sleep !== null) ? "relative h-48 md:h-64 w-full mt-2" : "relative  md:h-64 w-full mt-2"}>
@@ -659,7 +661,7 @@ const PartnerInsightsView: React.FC<PartnerInsightsViewProps> = ({ logs, cycleSe
                         <div className="flex items-center justify-between mb-8">
                            <h3 className="text-lg font-bold text-[var(--text-primary)] dark:text-white">Energy Flow</h3>
                            <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-amber-500/10 text-amber-500">
-                            <span className="material-symbols-outlined">bolt</span>
+                            <span className="app-icon-glyph"><AppIcon name={"bolt"}/></span>
                           </div>
                         </div>
                         <div className={trendsData.some(d => d.energy !== null) ? "relative h-48 md:h-64 w-full mt-2" : "relative  md:h-64 w-full mt-2"}>
@@ -693,13 +695,13 @@ const PartnerInsightsView: React.FC<PartnerInsightsViewProps> = ({ logs, cycleSe
               )}
             </AnimatePresence>
           </motion.div>
-        )}
+        )}/>
       </AnimatePresence>
 
       {/* Log Details Modal */}
       <AnimatePresence>
-        {selectedLog && (
-          <motion.div
+        <AppIcon name={selectedLog && (
+          <MotionPortal><motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
@@ -717,7 +719,7 @@ const PartnerInsightsView: React.FC<PartnerInsightsViewProps> = ({ logs, cycleSe
                 onClick={() => setSelectedLog(null)}
                 className="absolute top-4 right-4 p-2 bg-gray-100 dark:bg-white/5 rounded-full text-gray-500 hover:bg-gray-200 dark:hover:bg-white/10 transition-colors"
               >
-                <span className="material-symbols-outlined text-sm block">close</span>
+                <span className="app-icon-glyph text-sm block"><AppIcon name={"close"}/></span>
               </button>
               <div className="flex flex-col items-center mb-6">
                 <div className="w-16 h-16 bg-primary/10 rounded-full flex items-center justify-center mb-3">
@@ -758,8 +760,8 @@ const PartnerInsightsView: React.FC<PartnerInsightsViewProps> = ({ logs, cycleSe
                 )}
               </div>
             </motion.div>
-          </motion.div>
-        )}
+          </motion.div></MotionPortal>
+        )}/>
       </AnimatePresence>
     </div>
   );

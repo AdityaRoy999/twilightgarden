@@ -1,3 +1,4 @@
+import { AppIcon } from './ui/Icons';
 import React, { useState, useRef, useEffect } from 'react';
 import { useTheme } from '../contexts/ThemeContext';
 
@@ -191,7 +192,7 @@ export const AudioRecorder: React.FC<AudioRecorderProps> = ({ onSend, onCancel }
                 onClick={onCancel} 
                 className="p-3 text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-full transition-colors flex-shrink-0"
             >
-                <span className="material-symbols-outlined">delete</span>
+                <span className="app-icon-glyph"><AppIcon name={"delete"}/></span>
             </button>
 
             <div className="flex-1 flex items-center gap-4 h-12 overflow-hidden relative bg-gray-50 dark:bg-background-dark rounded-2xl px-3 border border-gray-100 dark:border-gray-800">
@@ -220,14 +221,14 @@ export const AudioRecorder: React.FC<AudioRecorderProps> = ({ onSend, onCancel }
                     onClick={handleStop}
                     className="on-brand w-12 h-12 flex items-center justify-center bg-red-500 text-white rounded-full hover:bg-red-600 shadow-lg shadow-red-500/30 scale-100 hover:scale-110 transition-all flex-shrink-0"
                 >
-                    <span className="material-symbols-outlined">stop</span>
+                    <span className="app-icon-glyph"><AppIcon name={"stop"}/></span>
                 </button>
             ) : (
                 <button 
                     onClick={handleSend}
                     className="on-brand w-12 h-12 flex items-center justify-center bg-primary text-white rounded-full hover:brightness-110 shadow-lg shadow-primary/30 scale-100 hover:scale-110 transition-all flex-shrink-0"
                 >
-                    <span className="material-symbols-outlined">send</span>
+                    <span className="app-icon-glyph"><AppIcon name={"send"}/></span>
                 </button>
             )}
         </div>
