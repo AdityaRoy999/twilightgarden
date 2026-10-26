@@ -54,10 +54,13 @@ security audited.
   longer calls. See [Cloudflare setup](CLOUDFLARE_TURN_SETUP.md).
 - Added a dataset epoch so a reset invalidates stale application caches and keys.
   Retained login accounts can recreate minimal profiles and begin onboarding again.
+- A production tab holding an older deployment exposed stale lazy-loaded asset
+  failures. Added a one-time online reload with a loop guard and a working reload
+  action for cached import failures. Offline failures remain visible for retry.
 
 ## Verification evidence
 
-- TypeScript, 35 automated tests, production build, all five Edge Function type
+- TypeScript, 38 automated tests, production build, all five Edge Function type
   checks, secret scan and dependency audit. Dependency audit reports zero known
   vulnerabilities at verification time.
 - Live synthetic accounts: private pairing completion; canonical identity guards;
