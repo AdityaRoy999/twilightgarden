@@ -60,7 +60,7 @@ security audited.
 
 ## Verification evidence
 
-- TypeScript, 38 automated tests, production build, all five Edge Function type
+- TypeScript, 45 automated tests, production build, all five Edge Function type
   checks, secret scan and dependency audit. Dependency audit reports zero known
   vulnerabilities at verification time.
 - Live synthetic accounts: private pairing completion; canonical identity guards;
@@ -79,10 +79,10 @@ security audited.
   0–1ms; hangup closed both peers and left zero live local tracks. No physical
   microphone/camera or different-network quality claim follows from this test.
 - The old ExpressTURN server returned 401 and no relay candidates. It has been
-  removed from the code and local environment. Cloudflare requires the owner's
-  credentials before a successful forced-relay test can be performed. The deployed
-  endpoint rejects unauthenticated/outsider requests and reports missing
-  configuration explicitly rather than pretending relay support is available.
+  removed from the code and local environment. Cloudflare credentials were later
+  configured and verified over forced-relay UDP/TCP/TLS Node WebRTC connections.
+  See the [follow-up report](RELAY_AND_ONBOARDING_VERIFICATION_2026-10-26.md) for
+  measurements, the repaired rate-limit bug and current testing boundaries.
 
 ## Database reset
 
@@ -109,7 +109,8 @@ new sign-ins intentionally recreate only that account's fresh profile/onboarding
 
 ## Remaining boundaries
 
-- Cloudflare credentials and physical two-device relay/media acceptance testing.
+- Physical two-device browser relay/media acceptance testing. Cloudflare credential
+  issuance and Node WebRTC relay transport are now verified.
 - The chat cryptography uses a stable shared identity, not Signal's double ratchet
   or forward-secret per-device sessions. Web/native Preferences storage is not an
   OS credential vault. A removed registration cannot erase already copied keys or

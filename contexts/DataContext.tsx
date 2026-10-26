@@ -6,6 +6,7 @@ import { useAuth } from './AuthContext';
 import { useCouples } from './CouplesContext';
 import { DailyLog, DailyLogInput, CycleSettings, CyclePhase, AppNotification } from '../types';
 import { calculateCyclePhase } from '../lib/cycleUtils';
+import {validateCycleSettings,cycleSettingsSaveError} from '../lib/cycleSettings';
 import { encryptData, decryptData } from '../lib/encryption';
 import { useToday } from '../hooks/useToday';
 
@@ -432,10 +433,7 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const updateSettings = async (updates: Partial<CycleSettings>) => {
     if (!user) throw new Error('Please sign in before saving settings.');
     const newSettings = { ...cycleSettings, ...updates };
-    if (!Number.isFinite(newSettings.avgCycleLength) || newSettings.avgCycleLength < 20 || newSettings.avgCycleLength > 90 ||
-        !Number.isFinite(newSettings.avgPeriodLength) || newSettings.avgPeriodLength < 1 || newSettings.avgPeriodLength > 20 || newSettings.avgPeriodLength >= newSettings.avgCycleLength) {
-      throw new Error('Choose valid cycle and period lengths.');
-    }
+    validateCycleSettings(newSettings,undefined,updates.onboardingCompleted===true);
     if (user) {
       try {
         const payload = {
@@ -462,7 +460,7 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children
         broadcastUpdate('settings');
       } catch (err) {
         console.error("Failed to save settings:", err);
-        throw err;
+        throw cycleSettingsSaveError(err);
       }
     }
   };
