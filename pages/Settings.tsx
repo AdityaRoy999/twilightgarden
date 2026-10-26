@@ -1,3 +1,6 @@
+import { ReferenceArt, ReferenceHeading } from '../components/ui/ReferenceArt';
+import { PreferenceSwitch } from '../components/ui/PreferenceSwitch';
+import { Moon, Palette, Waves, Sparkles, UserRound, PenLine, ChevronRight } from 'lucide-react';
 import { localDateKey } from '../lib/dates';
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '../contexts/AuthContext';
@@ -217,7 +220,7 @@ const Settings: React.FC = () => {
   };
 
   return (
-    <div className="animate-slideIn font-display flex flex-col pb-24 bg-background-dark min-h-screen transition-colors duration-300">
+    <div className="reference-page reference-settings font-display">
       {/* Global Toast */}
       <Toast
         message={toast.message}
@@ -241,119 +244,31 @@ const Settings: React.FC = () => {
         </div>
       )}
 
-      <header className="flex items-center px-6 pt-8 pb-4 bg-transparent">
-        <h2 className="text-[var(--text-primary)] dark:text-white text-2xl font-bold leading-tight tracking-tight">Settings</h2>
-      </header>
+      <ReferenceHeading title="Settings"/>
+      <section className="reference-card reference-profile">
+        <ReferenceArt kind="leaves" className="reference-card-art"/>
+        <button className="reference-profile-avatar" aria-label="Edit your profile" onClick={() => navigate('/settings/profile')}>
+          {profile?.avatar_url ? <img src={profile.avatar_url} alt=""/> : <UserRound size={58} fill="currentColor" strokeWidth={1}/>}
+          <span className="reference-profile-edit"><PenLine size={14}/></span>
+        </button>
+        <h2>{profile?.full_name || user?.name || 'Your profile'}</h2><p>{user?.email}</p>
+        <button className="reference-button secondary" onClick={() => navigate('/settings/profile')}>Edit Profile Details</button>
+      </section>
 
-      <div className="px-6 mb-8">
-        <div className="bg-white dark:bg-surface-dark rounded-2xl p-6 shadow-soft border border-gray-100 dark:border-white/5 flex flex-col md:flex-row items-center md:items-start gap-6 transition-colors max-w-4xl mx-auto">
-          <div className="relative group cursor-pointer shrink-0" onClick={() => navigate('/settings/profile')}>
-            <div
-              className="h-24 w-24 md:h-28 md:w-28 rounded-full bg-cover bg-center border-4 border-white dark:border-[#1E1B24] shadow-md transition-transform group-hover:scale-[1.02]"
-              style={{
-                backgroundImage:
-                  `url("${profile?.avatar_url || "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100' fill='%23ccc'%3E%3Ccircle cx='50' cy='40' r='20'/%3E%3Cellipse cx='50' cy='85' rx='30' ry='22'/%3E%3C/svg%3E"}")`,
-              }}
-            ></div>
-            <button className="on-brand absolute bottom-0 right-0 bg-primary text-white p-1.5 rounded-full border-2 border-white dark:border-[#1E1B24] flex items-center justify-center shadow-sm">
-              <span className="material-symbols-outlined text-[16px]">edit</span>
-            </button>
-          </div>
-          <div className="text-center md:text-left flex-grow flex flex-col justify-center">
-            <h3 className="text-xl md:text-2xl font-bold text-[var(--text-primary)] dark:text-white mb-1">{profile?.full_name || 'User'}</h3>
-            <p className="text-sm md:text-base text-gray-500 dark:text-gray-400 mb-4">{user?.email}</p>
-            <button
-              onClick={() => navigate('/settings/profile')}
-              className="w-full md:w-auto py-2.5 px-6 rounded-xl bg-primary/10 hover:bg-primary/20 text-primary font-semibold text-sm transition-colors"
-            >
-              Edit Profile Details
-            </button>
-          </div>
-        </div>
-      </div>
-
-      <div className="px-6 mb-8 max-w-6xl mx-auto w-full">
+      <div className="mb-8 max-w-6xl mx-auto w-full">
         <div className="flex flex-col md:grid md:grid-cols-2 gap-6 md:gap-8">
 
           {/* Left Column Settings */}
           <div className="flex flex-col gap-6">
-            <div>
-              <h3 className="text-[var(--text-primary)] dark:text-white text-lg font-bold mb-3 px-1">App Preferences</h3>
-              <div className="bg-white dark:bg-surface-dark rounded-2xl border border-gray-100 dark:border-white/5 overflow-hidden shadow-soft transition-colors mb-4">
-                {/* Theme Toggle */}
-                <div className="flex items-center justify-between p-4 border-b border-gray-100 dark:border-white/5 hover:bg-gray-50 dark:hover:bg-white/5 transition-colors cursor-pointer group" onClick={toggleTheme}>
-                  <div className="flex items-center gap-3">
-                    <div className={`flex items-center justify-center rounded-xl bg-gray-50 dark:bg-white/5 ${theme === 'dark' ? 'text-purple-300' : 'text-orange-500'} w-10 h-10 group-hover:scale-105 transition-transform`}>
-                      <span className="material-symbols-outlined">{theme === 'dark' ? 'dark_mode' : 'light_mode'}</span>
-                    </div>
-                    <div className="flex flex-col">
-                      <span className="font-medium text-[var(--text-primary)] dark:text-gray-200">Dark Mode</span>
-                      <span className="text-xs text-gray-500">{theme === 'dark' ? 'On' : 'Off'}</span>
-                    </div>
-                  </div>
-                  <label className="relative inline-flex items-center cursor-pointer pointer-events-none">
-                    <input className="sr-only peer" type="checkbox" checked={theme === 'dark'} readOnly />
-                    <div className="w-11 h-6 bg-gray-200 dark:bg-gray-700 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-primary"></div>
-                  </label>
-                </div>
-
-                {/* Animations Toggle */}
-                <div className="flex items-center justify-between p-4 border-b border-gray-100 dark:border-white/5 hover:bg-gray-50 dark:hover:bg-white/5 transition-colors cursor-pointer group" onClick={handleToggleAnimations}>
-                  <div className="flex items-center gap-3">
-                    <div className={`flex items-center justify-center rounded-xl bg-gray-50 dark:bg-white/5 text-blue-400 w-10 h-10 group-hover:scale-105 transition-transform`}>
-                      <span className="material-symbols-outlined">{animationsEnabled ? 'animation' : 'stop_circle'}</span>
-                    </div>
-                    <div className="flex flex-col">
-                      <span className="font-medium text-[var(--text-primary)] dark:text-gray-200">Enable Animations</span>
-                      <span className="text-xs text-gray-500">{animationsEnabled ? 'Flowing interactions' : 'Reduced motion'}</span>
-                    </div>
-                  </div>
-                  <label className="relative inline-flex items-center cursor-pointer pointer-events-none">
-                    <input className="sr-only peer" type="checkbox" checked={animationsEnabled} readOnly />
-                    <div className="w-11 h-6 bg-gray-200 dark:bg-gray-700 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-primary"></div>
-                  </label>
-                </div>
-
-                {/* Solid Nav Bg Toggle */}
-                <div className="flex items-center justify-between p-4 hover:bg-gray-50 dark:hover:bg-white/5 transition-colors cursor-pointer group" onClick={handleToggleSolidNav}>
-                  <div className="flex items-center gap-3">
-                    <div className={`flex items-center justify-center rounded-xl bg-gray-50 dark:bg-white/5 text-teal-500 w-10 h-10 group-hover:scale-105 transition-transform`}>
-                      <span className="material-symbols-outlined">{solidNavBg ? 'layers_clear' : 'blur_on'}</span>
-                    </div>
-                    <div className="flex flex-col">
-                      <span className="font-medium text-[var(--text-primary)] dark:text-gray-200">Solid Navbar Background</span>
-                      <span className="text-xs text-gray-500">{solidNavBg ? 'Opaque (Solid Color)' : 'Glassmorphism (Blur)'}</span>
-                    </div>
-                  </div>
-                  <label className="relative inline-flex items-center cursor-pointer pointer-events-none">
-                    <input className="sr-only peer" type="checkbox" checked={solidNavBg} readOnly />
-                    <div className="w-11 h-6 bg-gray-200 dark:bg-gray-700 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-primary"></div>
-                  </label>
-                </div>
+            <section>
+              <h2 className="mb-3 px-2 text-xl font-bold">App Preferences</h2>
+              <div className="reference-card reference-preferences">
+                <div className="reference-setting-row"><div><span className="reference-icon"><Moon size={24}/></span><span><strong>Dark Mode</strong><small>{theme === 'dark' ? 'On' : 'Off · using white mode'}</small></span></div><PreferenceSwitch label="Dark Mode" checked={theme === 'dark'} onChange={toggleTheme}/></div>
+                <div className="reference-setting-row"><div><span className="reference-icon"><Sparkles size={24}/></span><span><strong>Enable Animations</strong><small>{animationsEnabled ? 'Flowing interactions' : 'Reduced motion'}</small></span></div><PreferenceSwitch label="Enable Animations" checked={animationsEnabled} onChange={handleToggleAnimations}/></div>
+                <div className="reference-setting-row"><div><span className="reference-icon"><Waves size={24}/></span><span><strong>Solid Navbar Background</strong><small>{solidNavBg ? 'Opaque · solid color' : 'Soft glass · blur'}</small></span></div><PreferenceSwitch label="Solid Navbar Background" checked={solidNavBg} onChange={handleToggleSolidNav}/></div>
               </div>
-
-              {/* Color Theme Customization Link */}
-              <div className="bg-white dark:bg-surface-dark rounded-2xl border border-gray-100 dark:border-white/5 p-1 shadow-soft transition-colors mt-4">
-                  <div
-                      className="flex items-center justify-between p-4 hover:bg-gray-50 dark:hover:bg-white/5 transition-colors cursor-pointer rounded-xl group"
-                      onClick={() => navigate('/settings/theme')}
-                  >
-                      <div className="flex items-center gap-3">
-                          <div
-                              className="w-10 h-10 rounded-xl shadow-sm border border-black/5 dark:border-white/10 flex items-center justify-center transition-transform group-hover:scale-105"
-                              style={{ backgroundColor: primaryColor }}
-                          >
-                               <span className="material-symbols-outlined text-white text-lg drop-shadow-md">palette</span>
-                          </div>
-                          <div className="flex flex-col">
-                              <span className="font-medium text-[var(--text-primary)] dark:text-gray-200">App Theme Color</span>
-                              <span className="text-xs text-gray-500">Customize appearance</span>
-                          </div>
-                      </div>
-                      <span className="material-symbols-outlined text-gray-400 dark:text-gray-600 text-sm">arrow_forward_ios</span>
-                  </div>
-              </div>
-            </div>
+              <button className="reference-card reference-theme-link" onClick={() => navigate('/settings/theme')}><ReferenceArt kind="leaves" className="reference-card-art"/><span className="reference-icon"><Palette size={25}/></span><span><strong>App Theme Color</strong><small>Customize appearance</small></span><ChevronRight size={20}/></button>
+            </section>
 
             <div>
               <h3 className="text-[var(--text-primary)] dark:text-white text-lg font-bold mb-3 px-1">App Settings</h3>

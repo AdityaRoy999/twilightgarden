@@ -1,5 +1,6 @@
 import React, { useEffect, useRef, useState } from "react";
 import { useDialogFocus } from "../hooks/useDialogFocus";
+import { useTheme } from "../contexts/ThemeContext";
 import { NavLink, Outlet, useLocation, Link } from "react-router-dom";
 import {
   CalendarDays,
@@ -20,6 +21,7 @@ import {
 type Mode = "tracker" | "partner" | "admin";
 export default function AppShell({ mode = "tracker" }: { mode?: Mode }) {
   const location = useLocation();
+  const { solidNavBg } = useTheme();
   const [collapsed, setCollapsed] = useState(
     () => localStorage.getItem("navigation-collapsed") === "true",
   );
@@ -56,6 +58,7 @@ export default function AppShell({ mode = "tracker" }: { mode?: Mode }) {
         ];
   const primary = items.slice(0, 4),
     secondary = items.slice(4);
+  const secondaryActive = secondary.some(item => location.pathname === item.to || location.pathname.startsWith(item.to + '/'));
   const hide =
     /^\/(?:partner\/|admin\/)?games\//.test(location.pathname) ||
     [
@@ -153,7 +156,7 @@ export default function AppShell({ mode = "tracker" }: { mode?: Mode }) {
         </aside>
       )}
       <div
-        className={`flex min-h-0 min-w-0 flex-1 flex-col ${!hide ? "pb-[calc(68px+env(safe-area-inset-bottom))] md:pb-0" : ""}`}
+        className={`flex min-h-0 min-w-0 flex-1 flex-col ${!hide ? "pb-[calc(92px+env(safe-area-inset-bottom))] md:pb-0" : ""}`}
       >
         <main
           id="main-content"
@@ -167,11 +170,13 @@ export default function AppShell({ mode = "tracker" }: { mode?: Mode }) {
       {!hide && (
         <nav
           aria-label="Mobile navigation"
+          data-solid={solidNavBg}
           className="bloom-mobile-nav fixed inset-x-0 bottom-0 z-40 flex min-h-[68px] items-center px-2 pb-[env(safe-area-inset-bottom)] md:hidden"
         >
           {primary.map((item) => renderLink(item, true))}
           <button
             aria-label="More navigation"
+            data-active={secondaryActive || more}
             aria-expanded={more}
             onClick={() => setMore((v) => !v)}
             className="flex min-h-12 flex-1 flex-col items-center justify-center gap-1 rounded-xl py-2 text-[11px] text-gray-500 dark:text-gray-400"

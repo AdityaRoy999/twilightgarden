@@ -1,5 +1,6 @@
 import React, { createContext, useContext, useEffect, useState } from 'react';
 import { MotionConfig } from 'framer-motion';
+import { accentAppearance } from '../lib/colorUtils';
 
 type Theme = 'dark' | 'light';
 
@@ -91,6 +92,10 @@ export const ThemeProvider: React.FC<{ children: React.ReactNode }> = ({ childre
   useEffect(() => {
     const root = document.documentElement;
     root.style.setProperty('--color-primary', primaryColor);
+    const appearance = accentAppearance(primaryColor);
+    root.style.setProperty('--on-primary', appearance.foreground);
+    root.style.setProperty('--action-start', appearance.start);
+    root.style.setProperty('--color-primary-ink', appearance.ink);
     const rgb = (hex: string) => { let value=hex.slice(1); if(value.length===3)value=value.split('').map(c=>c+c).join(''); return [0,2,4].map(i=>parseInt(value.slice(i,i+2),16)).join(' '); };
     root.style.setProperty('--primary-rgb', rgb(primaryColor));
 
@@ -99,7 +104,7 @@ export const ThemeProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     // We can assume primaryColor is a hex
     try {
         const dark = adjustColor(primaryColor, -40);
-        const light = adjustColor(primaryColor, 130); // Significantly lighter
+        const light = appearance.light;
 
         root.style.setProperty('--color-primary-dark', dark);
         root.style.setProperty('--color-primary-light', light);

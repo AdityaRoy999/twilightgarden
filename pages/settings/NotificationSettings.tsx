@@ -1,3 +1,6 @@
+import { ReferenceArt, ReferenceHeading } from '../../components/ui/ReferenceArt';
+import { PreferenceSwitch } from '../../components/ui/PreferenceSwitch';
+import { BellOff, BellRing, CalendarDays, Send, Check } from 'lucide-react';
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../../contexts/AuthContext';
@@ -90,121 +93,18 @@ const NotificationSettings: React.FC = () => {
     }catch{setError('Could not show a test notification. Please check your device permissions.');}
   };
 
-  return (
-    <div className="animate-slideIn font-display flex flex-col pb-24 bg-background-dark min-h-screen transition-colors duration-300">
-      <header className="flex items-center px-6 pt-8 pb-4 gap-4 bg-transparent">
-        <button
-          onClick={() => navigate(-1)}
-          className="p-2 rounded-full bg-white dark:bg-surface-dark shadow-sm border border-gray-100 dark:border-white/5"
-        >
-          <span className="material-symbols-outlined text-[var(--text-primary)] dark:text-white text-xl">arrow_back</span>
-        </button>
-        <h2 className="text-[var(--text-primary)] dark:text-white text-2xl font-bold leading-tight tracking-tight">Notifications</h2>
-      </header>
-
-      {error && <p role="alert" className="px-6 py-3 text-red-600">{error}</p>}
-      <div className="px-6 mb-8">
-        <p className="text-gray-500 dark:text-gray-400 text-sm mb-6">
-          Choose which notifications you'd like to receive. We'll send you gentle reminders to help you track your cycle.
-        </p>
-
-        {/* Permission Status */}
-        {!permissionGranted && (
-          <div className="mb-6 p-4 rounded-xl bg-amber-50 dark:bg-amber-500/10 border border-amber-200 dark:border-amber-500/20">
-            <div className="flex items-center gap-3 mb-3">
-              <span className="material-symbols-outlined text-amber-500">notifications_off</span>
-              <span className="font-medium text-amber-700 dark:text-amber-400">Notifications Disabled</span>
-            </div>
-            <p className="text-sm text-amber-600 dark:text-amber-300 mb-3">
-              Enable notifications to receive period predictions and daily reminders.
-            </p>
-            <button
-              onClick={handleRequestPermission}
-              className="w-full py-2 rounded-lg bg-amber-500 text-white font-semibold text-sm"
-            >
-              Enable Notifications
-            </button>
-          </div>
-        )}
-
-        {permissionGranted && (
-          <div className="mb-6 p-3 rounded-xl bg-green-50 dark:bg-green-500/10 border border-green-200 dark:border-green-500/20 flex items-center gap-3">
-            <span className="material-symbols-outlined text-green-500">check_circle</span>
-            <span className="text-sm text-green-700 dark:text-green-400">Notifications enabled</span>
-          </div>
-        )}
-
-        <div className="bg-white dark:bg-surface-dark rounded-2xl border border-gray-100 dark:border-white/5 overflow-hidden shadow-soft transition-colors">
-          {/* Period Cycle Notifications */}
-          <div className="flex items-center justify-between p-4 border-b border-gray-100 dark:border-white/5">
-            <div className="flex items-center gap-3">
-              <div className="flex items-center justify-center rounded-xl bg-pink-50 dark:bg-pink-500/10 text-pink-500 w-10 h-10">
-                <span className="material-symbols-outlined">cycle</span>
-              </div>
-              <div className="flex flex-col">
-                <span className="font-medium text-[var(--text-primary)] dark:text-gray-200">Period Predictions</span>
-                <span className="text-xs text-gray-500">Get notified before your estimated period</span>
-              </div>
-            </div>
-            <label className="relative inline-flex items-center cursor-pointer">
-              <input
-                className="sr-only peer"
-                type="checkbox"
-                checked={periodNotifications}
-                onChange={togglePeriod}
-                disabled={loading || isSaving || !permissionGranted}
-              />
-              <div className={`w-11 h-6 ${permissionGranted ? 'bg-gray-200 dark:bg-gray-700' : 'bg-gray-300 dark:bg-gray-800'} peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-primary`}></div>
-            </label>
-          </div>
-
-          {/* Daily Reminder Notifications */}
-          <div className="flex items-center justify-between p-4">
-            <div className="flex items-center gap-3">
-              <div className="flex items-center justify-center rounded-xl bg-purple-50 dark:bg-purple-500/10 text-purple-500 w-10 h-10">
-                <span className="material-symbols-outlined">edit_note</span>
-              </div>
-              <div className="flex flex-col">
-                <span className="font-medium text-[var(--text-primary)] dark:text-gray-200">Daily Reminders</span>
-                <span className="text-xs text-gray-500">Alerts at 9AM, 10AM, 12PM, 3PM, 6PM & 11PM</span>
-              </div>
-            </div>
-            <label className="relative inline-flex items-center cursor-pointer">
-              <input
-                className="sr-only peer"
-                type="checkbox"
-                checked={reminderNotifications}
-                onChange={toggleReminder}
-                disabled={loading || isSaving || !permissionGranted}
-              />
-              <div className={`w-11 h-6 ${permissionGranted ? 'bg-gray-200 dark:bg-gray-700' : 'bg-gray-300 dark:bg-gray-800'} peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-primary`}></div>
-            </label>
-          </div>
-        </div>
-      </div>
-
-      {/* Test Notification */}
-      <div className="px-6">
-        <button
-          className={`w-full py-3 px-4 rounded-xl font-semibold text-sm transition-colors flex items-center justify-center gap-2 ${
-            testSent
-              ? 'on-brand bg-green-500 text-white'
-              : 'bg-primary/10 hover:bg-primary/20 text-primary'
-          }`}
-          onClick={sendTestNotification}
-          disabled={testSent}
-        >
-          <span className="material-symbols-outlined text-sm">
-            {testSent ? 'check' : 'send'}
-          </span>
-          {testSent ? 'Notification Sent!' : 'Send Test Notification'}
-        </button>
-        <p className="text-center text-xs text-gray-400 mt-2">
-          You'll receive a test notification in 1 second
-        </p>
-      </div>
-    </div>
-  );
+  return <div className="reference-page reference-notifications font-display">
+    <ReferenceHeading title="Notifications" back onBack={() => navigate(-1)} description="Choose which notifications you’d like to receive. We’ll send you gentle reminders to help you track your cycle."/>
+    {error && <p role="alert" className="mb-4 rounded-2xl bg-red-50 p-4 text-sm text-red-700">{error}</p>}
+    <main className="reference-stack">
+      {!permissionGranted ? <section className="reference-card reference-notification-permission"><ReferenceArt kind="leaves" className="reference-card-art"/><div><span className="reference-icon"><BellOff size={27}/></span><div><h2>Notifications Disabled</h2><p className="reference-description">Enable notifications to receive period predictions and daily reminders.</p></div></div><button className="reference-button" onClick={handleRequestPermission} disabled={isSaving}>{isSaving ? 'Enabling…' : 'Enable Notifications'}</button></section> : <section className="reference-card flex items-center gap-3"><span className="reference-icon"><Check size={25}/></span><div><h2 className="font-bold">Notifications enabled</h2><p className="reference-description">A little nudge, when you need it.</p></div></section>}
+      <section className="reference-card reference-preferences">
+        <h2 className="pt-5 text-xl font-bold">Notification Preferences</h2>
+        <div className="reference-setting-row"><div><span className="reference-icon"><CalendarDays size={25}/></span><span><strong>Period Predictions</strong><small>Get notified before your estimated period.</small></span></div><PreferenceSwitch label="Period Predictions" checked={periodNotifications} onChange={togglePeriod} disabled={loading || isSaving || !permissionGranted}/></div>
+        <div className="reference-setting-row"><div><span className="reference-icon"><BellRing size={25}/></span><span><strong>Daily Reminders</strong><small>Gentle check-ins throughout your day.</small></span></div><PreferenceSwitch label="Daily Reminders" checked={reminderNotifications} onChange={toggleReminder} disabled={loading || isSaving || !permissionGranted}/></div>
+      </section>
+      <section className="reference-card reference-notification-test"><button className="reference-button secondary" onClick={sendTestNotification} disabled={testSent || isSaving}>{testSent ? <Check size={21}/> : <Send size={21}/>} {testSent ? 'Notification Sent!' : 'Send Test Notification'}</button><p>We’ll send a quick test to this device.</p></section>
+    </main>
+  </div>;
 };
-
 export default NotificationSettings;

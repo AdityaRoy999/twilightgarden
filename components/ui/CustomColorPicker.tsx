@@ -9,6 +9,7 @@ interface CustomColorPickerProps {
 export const CustomColorPicker: React.FC<CustomColorPickerProps> = ({ color, onChange }) => {
     // We maintain internal HSV state for smooth dragging
     const [hsv, setHsv] = useState(hexToHsv(color));
+    const [hexDraft, setHexDraft] = useState(color.replace('#', '').toUpperCase());
     const [isDraggingSat, setIsDraggingSat] = useState(false);
     const [isDraggingHue, setIsDraggingHue] = useState(false);
     
@@ -17,6 +18,7 @@ export const CustomColorPicker: React.FC<CustomColorPickerProps> = ({ color, onC
 
     // Sync from external prop only when NOT dragging (to prevent jitter)
     useEffect(() => {
+        setHexDraft(color.replace('#', '').toUpperCase());
         if (!isDraggingSat && !isDraggingHue) {
             setHsv(hexToHsv(color));
         }
@@ -89,11 +91,12 @@ export const CustomColorPicker: React.FC<CustomColorPickerProps> = ({ color, onC
     }, [isDraggingSat, isDraggingHue, hsv]); 
 
     return (
-        <div className="flex flex-col gap-5 w-full select-none touch-none">
+        <div className="flex flex-col gap-5 w-full select-none">
             {/* Saturation/Value Box */}
             <div 
                 ref={satAreaRef}
-                className="w-full h-48 rounded-2xl relative cursor-crosshair overflow-hidden shadow-sm ring-1 ring-black/5"
+                data-color-area
+                className="touch-none w-full h-48 rounded-2xl relative cursor-crosshair overflow-hidden shadow-sm ring-1 ring-black/5"
                 style={{
                     backgroundColor: `hsl(${hsv.h}, 100%, 50%)`,
                     backgroundImage: `
@@ -132,7 +135,7 @@ export const CustomColorPicker: React.FC<CustomColorPickerProps> = ({ color, onC
                     <div className="h-6 relative">
                          <div 
                             ref={hueSliderRef}
-                            className="w-full h-full rounded-full cursor-pointer relative overflow-hidden ring-1 ring-black/5"
+                            className="touch-none w-full h-full rounded-full cursor-pointer relative overflow-hidden ring-1 ring-black/5"
                             style={{
                                 background: 'linear-gradient(to right, #f00 0%, #ff0 17%, #0f0 33%, #0ff 50%, #00f 67%, #f0f 83%, #f00 100%)'
                             }}
@@ -161,10 +164,15 @@ export const CustomColorPicker: React.FC<CustomColorPickerProps> = ({ color, onC
                 <span className="text-gray-400 font-mono">#</span>
                 <input 
                     type="text" 
-                    value={color.replace('#', '').toUpperCase()}
+                    aria-label="Hex color"
+                    maxLength={6}
+                    spellCheck={false}
+                    value={hexDraft}
+                    onBlur={() => setHexDraft(color.replace('#', '').toUpperCase())}
                     onChange={(e) => {
                         const val = e.target.value;
                         if (/^[0-9A-Fa-f]{0,6}$/.test(val)) {
+                            setHexDraft(val.toUpperCase());
                             // Only update if full 6 chars
                             if(val.length === 6) onChange('#' + val);
                         }

@@ -12,10 +12,10 @@ resolve to semantic CSS variables, including their dark variants.
 
 | Role | Light | Dark |
 | --- | --- | --- |
-| Canvas | `#fff7fa` | `#1d1721` |
+| Canvas | `#fff1f7` | `#1d1721` |
 | Surface | `#ffffff` | `#2a212f` |
-| Primary text | `#211b37` | `#fff4f9` |
-| Secondary text | `#70647c` | `#c4b4cb` |
+| Primary text | `#101333` | `#fff4f9` |
+| Secondary text | `#6e6b8f` | `#c4b4cb` |
 | Action | `#c33367` | User's accent |
 | Supporting colors | Mint, lavender, warm amber | Muted tonal equivalents |
 
@@ -66,3 +66,26 @@ The generated HTML lives in ignored `tmp/` and is not shipped to Vercel.
 On the first load of this design update, the app adopts the requested light
 appearance and replaces the old default accent. Subsequent appearance choices
 and custom accents persist. Reset restores Bloom's light default.
+
+
+## White-mode reference update
+
+`styles/bloom.css` is the single owner of light/dark color variables. Do not put
+another copy in `index.css`. `styles/reference.css` holds the reference layouts
+and the local botanical canvas (`public/art/bloom-background.svg`). Light and dark
+surface/text tokens change together on `:root.dark`.
+
+Calendar, Insights, chat, Settings, Notifications, Theme, and Mini Games follow the
+new page-specific references. Calendar is shared with the partner view, keeping
+sharing consent and read-only journals. Do not adopt sample health correlations,
+avatars, online statuses, or account details from design references as app data.
+
+The color picker uses an accessible foreground and darker link shade for pastel
+accents. Color selection stays editable as a six-digit hex field; partial edits
+remain visible until completion or blur. Floating navigation reserves 92px plus
+safe-area space and highlights More on secondary pages.
+
+Restart Vite after changing Tailwind configuration. The previous dev process kept
+old literal dark background rules even after the production config had changed;
+checking HTML/component rendering alone did not detect that. Verify the actual
+served `/index.css?direct` alongside the built stylesheet when changing tokens.
