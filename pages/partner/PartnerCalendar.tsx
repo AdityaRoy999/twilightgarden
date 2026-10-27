@@ -7,7 +7,7 @@ import { localDateKey } from '../../lib/dates';
 
 export default function PartnerCalendar() {
     const { couple, partnerData } = useCouples();
-    if (!couple || !couple.share_enabled) return <div className="reference-page"><ReferenceHeading title="Calendar"/><section className="reference-card"><h2 className="text-xl font-bold">{couple ? 'Calendar sharing is paused' : 'No partner connected'}</h2><p className="reference-description mt-3">{couple ? 'Your partner decides when to share their cycle calendar.' : 'Connect with your partner to see the dates they choose to share.'}</p></section></div>;
+    if (!couple || !couple.share_enabled || couple.status!=='active') return <div className="reference-page"><ReferenceHeading title="Calendar"/><section className="reference-card"><h2 className="text-xl font-bold">{couple ? 'Calendar sharing is paused' : 'No partner connected'}</h2><p className="reference-description mt-3">{couple ? 'Your partner decides when to share their cycle calendar.' : 'Connect with your partner to see the dates they choose to share.'}</p></section></div>;
     const logs = partnerData?.logs || [];
     const cycleSettings = partnerData?.settings || {
         avg_cycle_length: 28,

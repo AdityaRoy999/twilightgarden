@@ -6,7 +6,7 @@ import path from 'node:path';
 import { randomUUID, randomBytes, webcrypto } from 'node:crypto';
 import { config } from 'dotenv';
 import { createClient } from '@supabase/supabase-js';
-import { parseWellnessGuide, wellnessGuidePrompt } from '../lib/wellnessGuide.ts';
+import { parseWellnessGuide, wellnessGuidePrompt, caregiverGuideHasRoleMismatch } from '../lib/wellnessGuide.ts';
 import { loadHealthHistory } from '../lib/healthHistory.ts';
 config({ quiet: true });
 
@@ -113,6 +113,7 @@ try {
     if(new Set(cards.map(card=>card.illustrationId)).size!==3) console.log('Synthetic guide illustration mismatch:',JSON.stringify(cards.map(({title,body,illustrationId})=>({title,body,illustrationId}))));
     assert.equal(cards.length, 3, 'Complete illustrated guide must have three valid cards');
     assert.equal(new Set(cards.map(card => card.illustrationId)).size, 3, 'Suggestions must have distinct relevant subjects');
+    if(partner){assert.ok(!caregiverGuideHasRoleMismatch(cards),'Caregiver guidance must not address the supporter as the person tracking their cycle');fs.writeFileSync('tmp/caregiver-ai-qa.json',JSON.stringify(cards,null,2));}
   }
   await probe('product search', '/functions/v1/ai-generate', 200, { method: 'POST', token: tokens[0], body: JSON.stringify({ mood: 'search', search_query: 'hot water bottle India' }) });
   await probe('places search', '/functions/v1/ai-generate', 200, { method: 'POST', token: tokens[0], body: JSON.stringify({ mood: 'places', lat: 22.5726, lon: 88.3639 }) });

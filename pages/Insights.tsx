@@ -1,4 +1,5 @@
 import {symptomSymbol} from '../lib/symptomSymbols';
+import {LogHistoryView} from '../components/history/LogHistoryView';
 import {SegmentedControl} from '../components/ui/SegmentedControl';
 import {ExerciseLibrary} from '../components/exercise/ExerciseLibrary';
 import { DailyGuidance } from '../components/wellness/DailyGuidance';
@@ -90,7 +91,7 @@ const Insights: React.FC = () => {
   const [chartType, setChartType] = useState<'bar' | 'line'>('bar');
   const [showTodayReport, setShowTodayReport] = useState(false);
   const [isSharing, setIsSharing] = useState(false);
-  const [activeTab, setActiveTab] = useState<'overview' | 'cycle' | 'trends' | 'exercise'>('overview');
+  const [activeTab, setActiveTab] = useState<'overview' | 'cycle' | 'history' | 'trends' | 'exercise'>('overview');
   const [trendsSubTab, setTrendsSubTab] = useState<'sleep' | 'energy'>('sleep');
   const shareIconRef = useRef<ShareIconHandle>(null);
 
@@ -256,12 +257,12 @@ const Insights: React.FC = () => {
     <div className="reference-page reference-insights font-display">
       <ReferenceHeading title="Insights" description="Learn more about your cycle and how to feel your best." action={<details className="relative"><summary className="reference-round-action cursor-pointer list-none" aria-label="Insight options"><Ellipsis size={24}/></summary><div className="absolute right-0 top-14 z-50 flex items-center gap-2 rounded-2xl bg-surface-dark p-3 shadow-medium"><NotificationBell/><button onClick={handleShare} disabled={isSharing} aria-label="Share today’s insights" className="min-h-11 px-3 text-sm text-primary">{isSharing ? 'Creating link…' : 'Share summary'}</button></div></details>}/>
 
-      <SegmentedControl<'overview'|'cycle'|'trends'|'exercise'> label="Insight sections" value={activeTab} onChange={setActiveTab} options={[
-        {value:'overview',label:'Overview',icon:'auto_awesome'},{value:'cycle',label:'Cycle',icon:'calendar_today'},{value:'trends',label:'Trends',icon:'insights'},{value:'exercise',label:'Exercise',icon:'accessibility_new'}
+      <SegmentedControl<'overview'|'cycle'|'history'|'trends'|'exercise'> label="Insight sections" value={activeTab} onChange={setActiveTab} options={[
+        {value:'overview',label:'Overview',icon:'auto_awesome'},{value:'cycle',label:'Cycle',icon:'calendar_today'},{value:'history',label:'History',icon:'history'},{value:'trends',label:'Trends',icon:'insights'},{value:'exercise',label:'Exercise',icon:'accessibility_new'}
       ]}/>
 
       <React.Fragment>
-        {activeTab === 'exercise' ? <ExerciseLibrary logs={logs}/> : activeTab === 'overview' ? (
+        {activeTab === 'history' ? <LogHistoryView logs={logs} readOnly={false} onEdit={date=>navigate(`/log/details?date=${date}`)}/> : activeTab === 'exercise' ? <ExerciseLibrary logs={logs}/> : activeTab === 'overview' ? (
           <motion.main
             key="history"
             initial={reduced ? false : { x: -12 }}

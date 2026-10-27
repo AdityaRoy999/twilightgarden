@@ -8,6 +8,7 @@ import './styles/polish.css';
 import './styles/wellness.css';
 import './styles/solar-polish.css';
 import './styles/gentle.css';
+import './styles/history.css';
 import React from 'react';
 import ReactDOM from 'react-dom/client';
 import App from './App';

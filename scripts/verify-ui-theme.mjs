@@ -9,7 +9,7 @@ async function get(path) {
 }
 const html = await get('/');
 const productionStyles = [...html.matchAll(/href="(\/assets\/[^"\s]+\.css)"/g)].map(match => match[1]);
-const paths = productionStyles.length ? productionStyles : ['/index.css?direct', '/styles/bloom.css?direct', '/styles/reference.css?direct', '/styles/spring.css?direct', '/styles/dark.css?direct', '/styles/refinements.css?direct', '/styles/polish.css?direct', '/styles/wellness.css?direct', '/styles/solar-polish.css?direct','/styles/gentle.css?direct'];
+const paths = productionStyles.length ? productionStyles : ['/index.css?direct', '/styles/bloom.css?direct', '/styles/reference.css?direct', '/styles/spring.css?direct', '/styles/dark.css?direct', '/styles/refinements.css?direct', '/styles/polish.css?direct', '/styles/wellness.css?direct', '/styles/solar-polish.css?direct','/styles/gentle.css?direct','/styles/history.css?direct'];
 const sheets = await Promise.all(paths.map(get));
 const light = {}, dark = {};
 let surfaceBindings = 0;
@@ -49,4 +49,5 @@ if (!scene.ok || !scene.headers.get('content-type')?.includes('image/webp')) thr
 await scene.body?.cancel();
 if(!sheets.some(sheet=>sheet.includes('.gentle-segments')&&sheet.includes('ring-draw')))throw new Error('Shared gentle controls or cycle reveal not served');
 if(!(await get('/art/exercise/neck-turn.svg')).includes('<svg'))throw new Error('Exercise artwork not served');
+if(!sheets.some(sheet=>sheet.includes('.history-entries')&&sheet.includes('.history-detail-modal')))throw new Error('Shared history layouts were not served');
 console.log(`PASS ${origin.origin}: paired themes, dark gradients, full-pane chat, hidden scrollbars, selection styling, and local artwork`);
