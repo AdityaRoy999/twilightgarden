@@ -1,3 +1,4 @@
+import {findPharmacies} from '../_shared/pharmacies.ts';
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { consumeBudget, json, readBody, requireUser, RequestBodyError } from '../_shared/security.ts';
 
@@ -132,44 +133,10 @@ serve(async (req) => {
             });
         }
 
-        // ── Places Search Mode ──
+        // Open community map data; never claims stock or current opening status.
         if (mood === 'places') {
-            if (!SERPER_API_KEY) throw new Error('SERPER_API_KEY is not set');
-
-
-
-            const placesBody: any = {
-                q: search_query || 'pharmacy medical store',
-                gl: 'in',
-                hl: 'en',
-                num: 20 // Increase to fetch more results to find the closest ones
-            };
-
-            // Use Serper's ll parameter with a precise zoom level.
-            // 14z is roughly city/neighborhood level, which works best for finding local places
-            if (typeof lat === 'number' && typeof lon === 'number') {
-                // By combining "near me" with the ll parameter, Serper correctly geolocates
-                placesBody.q = (search_query || 'pharmacy medical store') + ' near me';
-                placesBody.ll = `@${lat},${lon},14z`;
-            }
-
-            const placesRes = await fetch('https://google.serper.dev/places', {
-                method: "POST",
-            signal: AbortSignal.timeout(20000),
-                headers: { 'X-API-KEY': SERPER_API_KEY, 'Content-Type': 'application/json' },
-                body: JSON.stringify(placesBody),
-            });
-
-            if (!placesRes.ok) {
-                const errText = await placesRes.text();
-                throw new Error(`Serper Places error ${placesRes.status}: ${errText}`);
-            }
-
-            const data = await placesRes.json();
-            return new Response(JSON.stringify({ places: data.places || [] }), {
-                headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-                status: 200,
-            });
+            try { return json(await findPharmacies(lat as number|undefined,lon as number|undefined,search_query as string|undefined)); }
+            catch(error) { return json({error:error instanceof Error?error.message:'Nearby search unavailable'},503); }
         }
 
         // ── AI Text Generation Mode ──

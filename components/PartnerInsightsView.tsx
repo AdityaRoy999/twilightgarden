@@ -1,3 +1,4 @@
+import {MetricTooltip, DistributionTooltip} from './charts/MetricTooltip';
 import {springs,motionTransition} from '../lib/motion';
 import {SegmentedControl} from './ui/SegmentedControl';
 import { cycleStatistics } from '../lib/cycleStatistics';
@@ -100,7 +101,8 @@ const PartnerInsightsView: React.FC<PartnerInsightsViewProps> = ({ logs, cycleSe
       const sleepRaw = log.sleepQuality || log.sleep_quality;
       const energyRaw = log.energyLevel || log.energy_level;
       return {
-        date: new Date(log.date).toLocaleDateString('default', { month: 'short', day: 'numeric' }),
+        date: log.date,
+        sleepHours: log.sleepHours ?? log.sleep_hours,
         sleep: sleepMap[sleepRaw as string] || null,
         energy: energyMap[energyRaw as string] || null
       };
@@ -212,17 +214,12 @@ const PartnerInsightsView: React.FC<PartnerInsightsViewProps> = ({ logs, cycleSe
                           {historyData.length > 0 ? (<ResponsiveContainer width="100%" height="100%">
                             {chartType === 'bar' ? (
                               <BarChart data={historyData} margin={{ top: 20, right: 0, left: -20, bottom: 0 }}>
-                                <YAxis hide domain={['dataMin - 5', 'dataMax + 5']} />
+                                <XAxis dataKey="date" hide/><YAxis hide domain={['dataMin - 5', 'dataMax + 5']} />
                                 <ReferenceLine y={stats.avgCycle} stroke={theme === 'dark' ? 'rgba(255,255,255,0.2)' : '#E5E7EB'} strokeDasharray="3 3" />
-                                <Tooltip
-                                  cursor={{ fill: theme === 'dark' ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.05)' }}
-                                  contentStyle={tooltipStyles.contentStyle}
-                                  itemStyle={tooltipStyles.itemStyle}
-                                  labelStyle={tooltipStyles.labelStyle}
-                                />
+                                <Tooltip cursor={false} content={<MetricTooltip metric="cycle"/>}/>
                                 <Bar isAnimationActive={animateCharts} dataKey="value" radius={[8, 8, 0, 0]} maxBarSize={40}>
                                   {historyData.map((_entry, index) => (
-                                    <Cell key={`cell-${index}`} fill={index >= historyData.length - 1 ? '#984369' : (theme === 'dark' ? '#ffffff1a' : '#E5E7EB')} />
+                                    <Cell key={`cell-${index}`} fill={index >= historyData.length - 1 ? 'var(--color-primary)' : (theme === 'dark' ? '#ffffff1a' : '#E5E7EB')} />
                                   ))}
                                 </Bar>
                               </BarChart>
@@ -231,13 +228,9 @@ const PartnerInsightsView: React.FC<PartnerInsightsViewProps> = ({ logs, cycleSe
                                 <defs>
                                   <linearGradient id="colorHistoryP" x1="0" y1="0" x2="0" y2="1"><stop offset="5%" stopColor="#984369" stopOpacity={0.6} /><stop offset="95%" stopColor="#984369" stopOpacity={0} /></linearGradient>
                                 </defs>
-                                <YAxis hide domain={['dataMin - 5', 'dataMax + 5']} />
-                                <Tooltip
-                                  contentStyle={tooltipStyles.contentStyle}
-                                  itemStyle={tooltipStyles.itemStyle}
-                                  labelStyle={tooltipStyles.labelStyle}
-                                />
-                                <Area isAnimationActive={animateCharts} type="monotone" dataKey="value" stroke="#984369" strokeWidth={3} fillOpacity={1} fill="url(#colorHistoryP)" dot={{ r: 4, fill: "#984369" }} activeDot={{ r: 6 }} />
+                                <XAxis dataKey="date" hide/><YAxis hide domain={['dataMin - 5', 'dataMax + 5']} />
+                                <Tooltip cursor={false} content={<MetricTooltip metric="cycle"/>}/>
+                                <Area isAnimationActive={animateCharts} type="monotone" dataKey="value" stroke="var(--color-primary)" strokeWidth={3} fillOpacity={1} fill="url(#colorHistoryP)" dot={false} activeDot={{ r: 5, strokeWidth: 0 }} />
                               </AreaChart>
                             )}
                           </ResponsiveContainer>) : <ChartEmptyState message="Your partner’s shared check-ins will appear here as they log them." />}
@@ -317,13 +310,8 @@ const PartnerInsightsView: React.FC<PartnerInsightsViewProps> = ({ logs, cycleSe
                               <defs>
                                 <linearGradient id="colorSleepP" x1="0" y1="0" x2="0" y2="1"><stop offset="5%" stopColor="#6366f1" stopOpacity={0.4} /><stop offset="95%" stopColor="#6366f1" stopOpacity={0} /></linearGradient>
                               </defs>
-                              <YAxis hide domain={[0, 4]} />
-                               <Tooltip
-                                contentStyle={tooltipStyles.contentStyle}
-                                itemStyle={tooltipStyles.itemStyle}
-                                labelStyle={tooltipStyles.labelStyle}
-                                formatter={(value: any) => [value === 3 ? 'Good' : value === 2 ? 'Fair' : 'Poor', 'Quality']}
-                              />
+                              <XAxis dataKey="date" hide/><YAxis hide domain={[0, 4]} />
+                               <Tooltip cursor={false} content={<MetricTooltip metric="sleep"/>}/>
                               <Area isAnimationActive={animateCharts}
                                 type="monotone"
                                 dataKey="sleep"
@@ -372,13 +360,8 @@ const PartnerInsightsView: React.FC<PartnerInsightsViewProps> = ({ logs, cycleSe
                               <defs>
                                 <linearGradient id="colorEnergyP" x1="0" y1="0" x2="0" y2="1"><stop offset="5%" stopColor="#f59e0b" stopOpacity={0.4} /><stop offset="95%" stopColor="#f59e0b" stopOpacity={0} /></linearGradient>
                               </defs>
-                              <YAxis hide domain={[0, 4]} />
-                              <Tooltip
-                                contentStyle={tooltipStyles.contentStyle}
-                                itemStyle={tooltipStyles.itemStyle}
-                                labelStyle={tooltipStyles.labelStyle}
-                                formatter={(value: any) => [value === 3 ? 'High' : value === 2 ? 'Medium' : 'Low', 'Level']}
-                              />
+                              <XAxis dataKey="date" hide/><YAxis hide domain={[0, 4]} />
+                              <Tooltip cursor={false} content={<MetricTooltip metric="energy"/>}/>
                               <Area isAnimationActive={animateCharts}
                                 type="monotone"
                                 dataKey="energy"

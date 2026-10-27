@@ -69,7 +69,7 @@ const categories: Category[] = [
             {
                 id: 'rps',
                 title: 'Rock Paper Scissors',
-                description: 'Best of 5 — quick reflexes win!',
+                description: '3, 5 or 10 rounds — quick reflexes win!',
                 icon: 'gesture',
                 route: '/games/rps',
                 available: true,
@@ -112,7 +112,7 @@ const categories: Category[] = [
             {
                 id: 'truth-dare',
                 title: 'Truth or Dare',
-                description: 'Spicy truths & fun dares for couples.',
+                description: 'Fresh truths and optional dares at your pace.',
                 icon: 'local_fire_department',
                 route: '/games/truth-dare',
                 available: true,
@@ -224,8 +224,8 @@ const categories: Category[] = [
             },
             {
                 id: 'song-lyrics',
-                title: 'Finish the Lyrics',
-                description: 'Complete the song lyric your partner started.',
+                title: 'Finish the Verse',
+                description: 'Finish a fresh original rhyme together.',
                 icon: 'music_note',
                 route: '/games/song-lyrics',
                 available: true,
@@ -257,7 +257,7 @@ const Games: React.FC = () => {
 
         const fetchLive = async () => {
             const { data } = await (supabase.from('game_sessions') as any)
-                .select('game_type')
+                .select('game_type').eq('engine_version',2)
                 .eq('couple_id', couple.id)
                 .eq('status', 'waiting')
                 .eq('player_x', partnerId)

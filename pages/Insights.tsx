@@ -1,3 +1,4 @@
+import {MetricTooltip, DistributionTooltip} from '../components/charts/MetricTooltip';
 import {symptomSymbol} from '../lib/symptomSymbols';
 import {LogHistoryView} from '../components/history/LogHistoryView';
 import {SegmentedControl} from '../components/ui/SegmentedControl';
@@ -199,7 +200,8 @@ const Insights: React.FC = () => {
       const sleepRaw = log.sleepQuality;
       const energyRaw = log.energyLevel;
       return {
-        date: new Date(log.date).toLocaleDateString('default', { month: 'short', day: 'numeric' }),
+        date: log.date,
+        sleepHours: log.sleepHours,
         sleep: sleepMap[sleepRaw as string] || null,
         energy: energyMap[energyRaw as string] || null
       };
@@ -230,7 +232,7 @@ const Insights: React.FC = () => {
     const avgScore = scores.reduce((a, b) => a + b, 0) / scores.length;
     const avgLabel = avgScore > 2.5 ? 'Good' : avgScore > 1.5 ? 'Fair' : 'Poor';
 
-    return { distribution, avgLabel, count: sleepLogs.length };
+    return { distribution, avgLabel, count: sleepLogs.length, startDate:sleepLogs.map(l=>l.date).sort()[0],endDate:sleepLogs.map(l=>l.date).sort().at(-1) };
   }, [logs]);
 
   const energyStats = React.useMemo(() => {
@@ -250,7 +252,7 @@ const Insights: React.FC = () => {
     const avgScore = scores.reduce((a, b) => a + b, 0) / scores.length;
     const avgLabel = avgScore > 2.5 ? 'High' : avgScore > 1.5 ? 'Medium' : 'Low';
 
-    return { distribution, avgLabel, count: energyLogs.length };
+    return { distribution, avgLabel, count: energyLogs.length, startDate:energyLogs.map(l=>l.date).sort()[0],endDate:energyLogs.map(l=>l.date).sort().at(-1) };
   }, [logs]);
 
   return (
@@ -355,17 +357,12 @@ const Insights: React.FC = () => {
                 {historyData.length > 0 ? (<ResponsiveContainer width="100%" height="100%">
                   {chartType === 'bar' ? (
                     <BarChart data={historyData} margin={{ top: 20, right: 0, left: -20, bottom: 0 }} barCategoryGap="20%">
-                      <YAxis hide domain={['dataMin - 5', 'dataMax + 5']} />
+                      <XAxis dataKey="date" hide/><YAxis hide domain={['dataMin - 5', 'dataMax + 5']} />
                       <ReferenceLine y={stats.avgCycle} stroke={theme === 'dark' ? 'rgba(255,255,255,0.2)' : '#E5E7EB'} strokeDasharray="3 3" />
-                      <Tooltip
-                        cursor={{ fill: theme === 'dark' ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.05)' }}
-                        contentStyle={tooltipStyles.contentStyle}
-                        itemStyle={tooltipStyles.itemStyle}
-                        labelStyle={tooltipStyles.labelStyle}
-                      />
+                      <Tooltip cursor={false} content={<MetricTooltip metric="cycle"/>}/>
                       <Bar isAnimationActive={animateCharts} dataKey="value" radius={[8, 8, 0, 0]} animationDuration={350} animationEasing="ease-out" maxBarSize={40}>
                         {historyData.map((entry, index) => (
-                          <Cell key={`cell-${index}`} fill={index >= historyData.length - 1 ? '#984369' : (theme === 'dark' ? '#ffffff1a' : '#E5E7EB')} />
+                          <Cell key={`cell-${index}`} fill={index >= historyData.length - 1 ? 'var(--color-primary)' : (theme === 'dark' ? '#ffffff1a' : '#E5E7EB')} />
                         ))}
                       </Bar>
                     </BarChart>
@@ -374,13 +371,9 @@ const Insights: React.FC = () => {
                       <defs>
                         <linearGradient id="colorHistory" x1="0" y1="0" x2="0" y2="1"><stop offset="5%" stopColor="#984369" stopOpacity={0.6} /><stop offset="95%" stopColor="#984369" stopOpacity={0} /></linearGradient>
                       </defs>
-                      <YAxis hide domain={['dataMin - 5', 'dataMax + 5']} />
-                      <Tooltip
-                        contentStyle={tooltipStyles.contentStyle}
-                        itemStyle={tooltipStyles.itemStyle}
-                        labelStyle={tooltipStyles.labelStyle}
-                      />
-                      <Area isAnimationActive={animateCharts} type="monotone" dataKey="value" stroke="#984369" strokeWidth={3} fillOpacity={1} fill="url(#colorHistory)" dot={{ r: 4, fill: "#984369" }} activeDot={{ r: 6 }} />
+                      <XAxis dataKey="date" hide/><YAxis hide domain={['dataMin - 5', 'dataMax + 5']} />
+                      <Tooltip cursor={false} content={<MetricTooltip metric="cycle"/>}/>
+                      <Area isAnimationActive={animateCharts} type="monotone" dataKey="value" stroke="var(--color-primary)" strokeWidth={3} fillOpacity={1} fill="url(#colorHistory)" dot={false} activeDot={{ r: 5, strokeWidth: 0 }} />
                     </AreaChart>
                   )}
                 </ResponsiveContainer>) : <ChartEmptyState onLog={() => navigate('/log/details')} />}
@@ -437,22 +430,17 @@ const Insights: React.FC = () => {
                           <defs>
                             <linearGradient id="colorSleep" x1="0" y1="0" x2="0" y2="1"><stop offset="5%" stopColor="#6366f1" stopOpacity={0.4} /><stop offset="95%" stopColor="#6366f1" stopOpacity={0} /></linearGradient>
                           </defs>
-                          <YAxis hide domain={[0, 4]} />
-                           <Tooltip
-                            contentStyle={tooltipStyles.contentStyle}
-                            itemStyle={tooltipStyles.itemStyle}
-                            labelStyle={tooltipStyles.labelStyle}
-                            formatter={(value: any) => [value === 3 ? 'Good' : value === 2 ? 'Fair' : 'Poor', 'Quality']}
-                          />
+                          <XAxis dataKey="date" hide/><YAxis hide domain={[0, 4]} />
+                           <Tooltip cursor={false} content={<MetricTooltip metric="sleep"/>}/>
                           <Area isAnimationActive={animateCharts}
                             type="monotone"
                             dataKey="sleep"
                             stroke="#6366f1"
-                            strokeWidth={5}
+                            strokeWidth={3}
                             fillOpacity={1}
                             fill="url(#colorSleep)"
                             animationDuration={350}
-                            dot={{ r: 4, fill: "#6366f1", strokeWidth: 2, stroke: theme === 'dark' ? '#121014' : '#fff' }}
+                            dot={false} activeDot={{ r: 5, strokeWidth: 0 }}
                           />
                         </AreaChart>
                       </ResponsiveContainer>) : <ChartEmptyState onLog={() => navigate('/log/details')} />}
@@ -473,7 +461,9 @@ const Insights: React.FC = () => {
                             cy="50%"
                             innerRadius={60}
                             outerRadius={80}
-                            paddingAngle={5}
+                            paddingAngle={3}
+                            cornerRadius={8}
+                            stroke="none"
                             dataKey="value"
                             animationDuration={350}
                           >
@@ -481,15 +471,7 @@ const Insights: React.FC = () => {
                               <Cell key={`cell-${index}`} fill={entry.color} />
                             ))}
                           </Pie>
-                          <Tooltip
-                            contentStyle={{
-                              backgroundColor: theme === 'dark' ? '#1A161E' : '#FFFFFF',
-                              border: '1px solid ' + (theme === 'dark' ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.1)'),
-                              borderRadius: '16px',
-                              boxShadow: '0 10px 15px -3px rgba(0, 0, 0, 0.2)',
-                            }}
-                            itemStyle={{ color: theme === 'dark' ? '#fff' : '#121014' }}
-                          />
+                          <Tooltip content={<DistributionTooltip startDate={sleepStats?.startDate} endDate={sleepStats?.endDate} total={sleepStats?.count || 0} unit="nights"/>}/>
                           <Legend verticalAlign="middle" align="right" layout="vertical" iconType="circle" />
                         </PieChart>
                       </ResponsiveContainer>) : <ChartEmptyState onLog={() => navigate('/log/details')} />}
@@ -534,22 +516,17 @@ const Insights: React.FC = () => {
                           <defs>
                             <linearGradient id="colorEnergy" x1="0" y1="0" x2="0" y2="1"><stop offset="5%" stopColor="#f59e0b" stopOpacity={0.4} /><stop offset="95%" stopColor="#f59e0b" stopOpacity={0} /></linearGradient>
                           </defs>
-                          <YAxis hide domain={[0, 4]} />
-                          <Tooltip
-                            contentStyle={tooltipStyles.contentStyle}
-                            itemStyle={tooltipStyles.itemStyle}
-                            labelStyle={tooltipStyles.labelStyle}
-                            formatter={(value: any) => [value === 3 ? 'High' : value === 2 ? 'Medium' : 'Low', 'Level']}
-                          />
+                          <XAxis dataKey="date" hide/><YAxis hide domain={[0, 4]} />
+                          <Tooltip cursor={false} content={<MetricTooltip metric="energy"/>}/>
                           <Area isAnimationActive={animateCharts}
                             type="monotone"
                             dataKey="energy"
                             stroke="#f59e0b"
-                            strokeWidth={5}
+                            strokeWidth={3}
                             fillOpacity={1}
                             fill="url(#colorEnergy)"
                             animationDuration={350}
-                            dot={{ r: 4, fill: "#f59e0b", strokeWidth: 2, stroke: theme === 'dark' ? '#121014' : '#fff' }}
+                            dot={false} activeDot={{ r: 5, strokeWidth: 0 }}
                           />
                         </AreaChart>
                       </ResponsiveContainer>) : <ChartEmptyState onLog={() => navigate('/log/details')} />}
@@ -570,7 +547,9 @@ const Insights: React.FC = () => {
                             cy="50%"
                             innerRadius={60}
                             outerRadius={80}
-                            paddingAngle={5}
+                            paddingAngle={3}
+                            cornerRadius={8}
+                            stroke="none"
                             dataKey="value"
                             animationDuration={350}
                           >
@@ -578,15 +557,7 @@ const Insights: React.FC = () => {
                               <Cell key={`cell-${index}`} fill={entry.color} />
                             ))}
                           </Pie>
-                          <Tooltip
-                            contentStyle={{
-                              backgroundColor: theme === 'dark' ? '#1A161E' : '#FFFFFF',
-                              border: '1px solid ' + (theme === 'dark' ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.1)'),
-                              borderRadius: '16px',
-                              boxShadow: '0 10px 15px -3px rgba(0, 0, 0, 0.2)',
-                            }}
-                            itemStyle={{ color: theme === 'dark' ? '#fff' : '#121014' }}
-                          />
+                          <Tooltip content={<DistributionTooltip startDate={energyStats?.startDate} endDate={energyStats?.endDate} total={energyStats?.count || 0} unit="days"/>}/>
                           <Legend verticalAlign="middle" align="right" layout="vertical" iconType="circle" />
                         </PieChart>
                       </ResponsiveContainer>) : <ChartEmptyState onLog={() => navigate('/log/details')} />}

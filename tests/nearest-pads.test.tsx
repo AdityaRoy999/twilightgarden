@@ -15,7 +15,7 @@ it('waits for explicit location action and offers a manual area fallback after p
  fixture.search.mockResolvedValue([{id:'1',name:'Local Store',address:'City area',lat:22.6,lon:88.4}]);
  fireEvent.change(screen.getByLabelText('Or search an area or city'),{target:{value:'Kolkata'}});fireEvent.click(screen.getByRole('button',{name:'Search pharmacies by area'}));
  expect(await screen.findByText('Local Store')).toBeTruthy();expect(fixture.search).toHaveBeenCalledWith(undefined,undefined,'Kolkata');
- expect(screen.getByRole('link',{name:'Walking'}).getAttribute('href')).toContain('travelmode=walking');
+ expect(screen.getByRole('link',{name:'Walking'}).getAttribute('href')).toContain('engine=fossgis_osrm_foot');
  expect(screen.queryByText(/km away/)).toBeNull();
 });
 it('reports provider failure instead of showing a false empty search',async()=>{

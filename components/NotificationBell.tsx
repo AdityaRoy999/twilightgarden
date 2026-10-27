@@ -1,3 +1,5 @@
+import {notificationPath} from '../lib/notificationRoutes';
+import {useAuth} from '../contexts/AuthContext';
 import { AppIcon } from './ui/Icons';
 import React, { useState, useRef, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -14,6 +16,8 @@ const NotificationBell: React.FC = () => {
     const [isOpen, setIsOpen] = useState(false);
     const dropdownRef = useRef<HTMLDivElement>(null);
     const navigate = useNavigate();
+    const {user}=useAuth();
+    const openNotification=(path:unknown)=>navigate(notificationPath(path,'/dashboard',user?.role));
     const { theme } = useTheme();
     const isDark = theme === 'dark';
     const bellRef = useRef<BellIconHandle>(null);
@@ -41,15 +45,15 @@ const NotificationBell: React.FC = () => {
         if (notification.type.startsWith('game_invite|')) {
             // Legacy format: route embedded in type
             const route = notification.type.split('|')[1];
-            if (route) navigate(route);
+            if (route) openNotification(route);
         } else if (['game','game_invite'].includes(notification.type)) {
             const data = (notification as any).data;
-            if (data?.url) navigate(data.url);
-            else navigate('/partner/games');
+            if (data?.url) openNotification(data.url);
+            else openNotification('/games');
         } else if (notification.type === 'chat') {
-            navigate('/notes');
+            openNotification('/notes');
         } else if (notification.type === 'log') {
-            navigate('/partner/dashboard');
+            openNotification('/dashboard');
         }
     };
 

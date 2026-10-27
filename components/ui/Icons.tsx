@@ -4,7 +4,7 @@ import solar from './solar-data.json';
 export type IconProps = React.SVGProps<SVGSVGElement> & { size?: number | string; strokeWidth?: number };
 export type AppIconComponent = React.ForwardRefExoticComponent<IconProps & React.RefAttributes<SVGSVGElement>>;
 const exportAliases: Record<string,string> = { shopping_bag:'Gift',shopping_cart:'Gift',local_mall:'Gift',checkroom:'Gift',potted_plant:'Leaf', User:'UserRound',LockKeyhole:'Lock',HeartHandshake:'Hand' };
-const fontAliases: Record<string, string> = {
+const fontAliases: Record<string, string> = {ios_share:'Share',landscape:'Rock',content_cut:'Scissors',cloud:'Cloud',
   success:'CheckCircle',pause:'Pause',crop_square:'Grid2X2',nights_stay:'Moon',self_improvement:'Leaf',notifications_active:'BellRing','🍕':'Food',grid_3x3:'Grid2X2',border_all:'Grid2X2',view_column:'ChartNoAxesCombined',gesture:'Hand',draw:'PenLine',quiz:'HelpCircle',match_word:'Book',local_fire_department:'Fire',swap_horiz:'RefreshCw',compare:'ChartNoAxesCombined',help:'HelpCircle',emoji_emotions:'Smile',playing_cards:'Paper',auto_stories:'Book',psychology:'Brain',front_hand:'Hand',fact_check:'Clipboard',music_note:'Music',reply:'Reply',checklist:'Clipboard',game_invite:'Gamepad2',sports_esports:'Gamepad2',log:'CalendarDays',edit_calendar:'CalendarDays',profile:'UserRound',settings:'Settings',animation:'Waves',stop_circle:'Stop',layers_clear:'Copy',blur_on:'Waves',sleep:'Moon',
   format_quote:'Quote', wb_sunny:'Sun', chat:'MessageCircle',
   mail:'Mail', redeem:'Gift', forward:'ArrowRight',

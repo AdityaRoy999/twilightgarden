@@ -9,7 +9,7 @@ async function get(path) {
 }
 const html = await get('/');
 const productionStyles = [...html.matchAll(/href="(\/assets\/[^"\s]+\.css)"/g)].map(match => match[1]);
-const paths = productionStyles.length ? productionStyles : ['/index.css?direct', '/styles/bloom.css?direct', '/styles/reference.css?direct', '/styles/spring.css?direct', '/styles/dark.css?direct', '/styles/refinements.css?direct', '/styles/polish.css?direct', '/styles/wellness.css?direct', '/styles/solar-polish.css?direct','/styles/gentle.css?direct','/styles/history.css?direct'];
+const paths = productionStyles.length ? productionStyles : ['/index.css?direct', '/styles/bloom.css?direct', '/styles/reference.css?direct', '/styles/spring.css?direct', '/styles/dark.css?direct', '/styles/refinements.css?direct', '/styles/polish.css?direct', '/styles/wellness.css?direct', '/styles/solar-polish.css?direct','/styles/gentle.css?direct','/styles/history.css?direct','/styles/finish.css?direct','/styles/games.css?direct'];
 const sheets = await Promise.all(paths.map(get));
 const light = {}, dark = {};
 let surfaceBindings = 0;

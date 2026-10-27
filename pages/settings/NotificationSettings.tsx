@@ -1,3 +1,4 @@
+import {showTestNotification} from '../../lib/notificationTest';
 import { ReferenceArt, ReferenceHeading } from '../../components/ui/ReferenceArt';
 import { PreferenceSwitch } from '../../components/ui/PreferenceSwitch';
 import { BellOff, BellRing, CalendarDays, Send, Check } from '../../components/ui/Icons';
@@ -6,7 +7,7 @@ import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../../contexts/AuthContext';
 import { useData } from '../../contexts/DataContext';
 import { supabase } from '../../lib/supabase';
-import { checkNotificationPermission, registerPushNotifications, cancelAllNotifications, initNotificationListeners } from '../../lib/notifications';
+import { requestNotificationPermission, checkNotificationPermission, registerPushNotifications, cancelAllNotifications, initNotificationListeners } from '../../lib/notifications';
 import { Capacitor } from '@capacitor/core';
 
 
@@ -53,6 +54,7 @@ const NotificationSettings: React.FC = () => {
     if (!user || isSaving) return;
     setIsSaving(true); setError(null);
     try {
+      if(!await requestNotificationPermission())throw new Error('Permission denied');
       await registerPushNotifications(user.id, true);
       const granted = await checkNotificationPermission();
       setPermissionGranted(granted);
@@ -80,21 +82,14 @@ const NotificationSettings: React.FC = () => {
   const sendTestNotification = async () => {
     if(!permissionGranted){await handleRequestPermission();return;}
     try {
-      if(Capacitor.isNativePlatform()){
-        const { LocalNotifications }=await import('@capacitor/local-notifications');
-        const permission=await LocalNotifications.requestPermissions();
-        if(permission.display!=='granted')throw new Error('Permission denied');
-        await LocalNotifications.schedule({notifications:[{id:999,title:'Twilight Garden',body:'Notifications are working.',schedule:{at:new Date(Date.now()+1000)}}]});
-      }else{
-        const registration=await navigator.serviceWorker.ready;
-        await registration.showNotification('Twilight Garden',{body:'Notifications are working.',icon:'/twilight.png'});
-      }
+      await showTestNotification();
       setTestSent(true);setTimeout(()=>setTestSent(false),3000);
     }catch{setError('Could not show a test notification. Please check your device permissions.');}
   };
 
   return <div className="reference-page reference-notifications font-display">
     <ReferenceHeading title="Notifications" back onBack={() => navigate(-1)} description="Choose which notifications you’d like to receive. We’ll send you gentle reminders to help you track your cycle."/>
+    {Capacitor.isNativePlatform()&&Capacitor.getPlatform()==='ios'&&<p className="mb-4 text-sm text-[var(--text-secondary)]">This iOS test build supports local test notifications and in-app alerts. Background push and scheduled server reminders require APNs and are not enabled in this build.</p>}
     {error && <p role="alert" className="mb-4 rounded-2xl bg-red-50 p-4 text-sm text-red-700">{error}</p>}
     <main className="reference-stack">
       {!permissionGranted ? <section className="reference-card reference-notification-permission"><ReferenceArt kind="leaves" className="reference-card-art"/><div><span className="reference-icon"><BellOff size={27}/></span><div><h2>Notifications Disabled</h2><p className="reference-description">Enable notifications to receive period predictions and daily reminders.</p></div></div><button className="reference-button" onClick={handleRequestPermission} disabled={isSaving}>{isSaving ? 'Enabling…' : 'Enable Notifications'}</button></section> : <section className="reference-card flex items-center gap-3"><span className="reference-icon"><Check size={25}/></span><div><h2 className="font-bold">Notifications enabled</h2><p className="reference-description">A little nudge, when you need it.</p></div></section>}
