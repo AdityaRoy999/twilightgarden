@@ -2,6 +2,7 @@ import { AppIcon } from '../../components/ui/Icons';
 import { CycleHero } from '../../components/ui/CycleHero';
 import { CycleBloom, BotanicalSprig } from '../../components/ui/CycleBloom';
 import { localDateKey } from '../../lib/dates';
+import { useToday } from '../../hooks/useToday';
 import React from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useCouples } from '../../contexts/CouplesContext';
@@ -17,6 +18,7 @@ const PartnerDashboard: React.FC = () => {
     const { couple, partnerData, loading, joinCouple, generatePairingCode } = useCouples();
     const { user } = useAuth();
     const { theme } = useTheme();
+    const todayStr = useToday();
     const [selectedLogDate, setSelectedLogDate] = React.useState<string | null>(null);
     const [isModalOpen, setIsModalOpen] = React.useState(false);
 
@@ -186,11 +188,10 @@ const PartnerDashboard: React.FC = () => {
         irregularCycle: false
     };
 
-    const cycleData = calculateCyclePhase(localDateKey(), cycleSettings,logs);
+    const cycleData = calculateCyclePhase(todayStr, cycleSettings,logs);
 
     const phaseLabel = cycleData.phase === 'Unknown' ? 'Phase unavailable' : `${cycleData.phase} phase`;
     // Get today's log
-    const todayStr = format(new Date(), 'yyyy-MM-dd');
     const todayLog = logs?.find(l => l.date === todayStr);
 
     // Get yesterday's log (for "Yesterday's Status" logic if today is empty? Or just show Latest Log?)
