@@ -85,20 +85,21 @@ recipient was sent an alert during QA.
 
 ## Verification
 
-- 238 automated tests cover the rule engine, UI states, chart labels, notification
+- 240 automated tests cover the rule engine, UI states, chart labels, notification
   routing/permissions/timeouts, existing authentication/sync and privacy behavior.
 - Production API smoke: 68 checks including actual Kolkata GPS/area pharmacy
   results, auth guards, AI, private attachments, shared history and call credentials.
-- Game API: 77 requests plus partner Realtime delivery and notification assertions;
+- Game API: 80 requests plus partner Realtime delivery and notification assertions;
   all 19 rooms, concurrent joins, a completed win, stale-action rejection, direct
   write denial, secret isolation, live AI prefetch/reveal, invitation deduplication,
   recipient reads and outsider denial. Three isolated accounts are removed in
   `finally`; no existing user data is reset.
 - Build, TypeScript, six Deno function checks, theme checks, secret scanning and npm
   audit. The static page gallery renders real components using fictional fixtures.
-- Browser interaction automation is unavailable on this host (CUA initialization
-  fails). Rendered tutorials and static previews are not evidence of a complete
-  interactive browser or real-iPhone walkthrough.
+- Browser control recovered after restarting the local server. Light/dark game
+  previews were visually checked at phone and desktop widths in the browser.
+  Rendered tutorials and static previews are not evidence of a complete
+  authenticated browser or real-iPhone walkthrough.
 
 One local-to-production sample measured 77 game requests at p50 304 ms and p95
 1,885 ms, including room creation/joins and AI work. The AI prefetch was 3,671 ms;
@@ -108,3 +109,6 @@ observations from this connection, not latency guarantees or controlled benchmar
 Source licenses: Solar by 480 Design (CC BY 4.0) remains attributed in the existing
 icon notices; the font license is bundled in `public/fonts/OFL.txt`. Mascots,
 report art, tutorial code and chime are original project assets.
+
+A follow-up regression check covers repeated selection of the same game settings
+and regeneration after changing the round count, preventing a stuck Ready state.

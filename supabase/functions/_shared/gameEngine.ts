@@ -170,6 +170,9 @@ export function play(
       [3, 5, 10].includes(Number(action.total)),
       "Choose 3, 5 or 10 rounds",
     );
+    if (state.level === action.level && state.total === Number(action.total)) {
+      return { state, secret };
+    }
     state.level = action.level as State["level"];
     state.total = Number(action.total);
     secret.prompts = [];
