@@ -140,10 +140,10 @@ export default function AuthScreen({
   const title = verifying
     ? "Check your email"
     : signup
-      ? "Make room for yourself"
+      ? partner ? "A little closer, together" : "Make room for yourself"
       : "Welcome back";
   return (
-    <div className="bloom-auth min-h-dvh bg-background-dark font-display text-gray-900 dark:bg-background-dark dark:text-white">
+    <div className="bloom-auth safe-screen min-h-dvh bg-background-dark font-display text-gray-900 dark:bg-background-dark dark:text-white">
       <header className="mx-auto flex h-20 max-w-6xl items-center justify-between px-4 sm:px-8">
         <button
           onClick={() =>
@@ -195,31 +195,10 @@ export default function AuthScreen({
               {verifying
                 ? `Enter the verification code sent to ${email}.`
                 : signup
-                  ? "A simple start to a more connected routine."
+                  ? partner ? "Create your partner account and share a little more care." : "A simple start to a more connected routine."
                   : "Log in to pick up where you left off."}
             </p>
           </div>
-          {signup && !verifying && (
-            <div
-              className="mb-6 grid grid-cols-2 gap-2 rounded-2xl bg-black/[0.03] p-1 dark:bg-white/5"
-              aria-label="Account type"
-            >
-              <Link
-                to="/signup"
-                aria-current={!partner ? "page" : undefined}
-                className={`rounded-xl px-3 py-3 text-center text-sm font-medium ${!partner ? "bg-white text-primary shadow-sm dark:bg-surface-dark" : "text-gray-500"}`}
-              >
-                Track my cycle
-              </Link>
-              <Link
-                to="/signup?mode=partner"
-                aria-current={partner ? "page" : undefined}
-                className={`rounded-xl px-3 py-3 text-center text-sm font-medium ${partner ? "bg-white text-primary shadow-sm dark:bg-surface-dark" : "text-gray-500"}`}
-              >
-                Join my partner
-              </Link>
-            </div>
-          )}
           <form
             onSubmit={submit}
             className="space-y-4"
@@ -303,7 +282,7 @@ export default function AuthScreen({
                     </label>
                     {!signup && (
                       <Link
-                        to="/forgot-password"
+                        to={partner ? "/partner/forgot-password" : "/forgot-password"}
                         className="py-1 text-sm text-primary hover:underline"
                       >
                         Forgot password?
@@ -387,10 +366,8 @@ export default function AuthScreen({
                   className="font-semibold text-primary hover:underline"
                   to={
                     signup
-                      ? "/login"
-                      : partner
-                        ? "/signup?mode=partner"
-                        : "/signup"
+                      ? partner ? "/partner/login" : "/login"
+                      : partner ? "/partner/signup" : "/signup"
                   }
                 >
                   {signup ? "Log in" : "Create an account"}

@@ -1,20 +1,27 @@
 import React, { useState } from 'react';
-import { Check, HeartHandshake, Flower2, Sparkles } from './ui/Icons';
-import { BotanicalSprig, CycleBloom } from './ui/CycleBloom';
+import { motion } from 'framer-motion';
+import { useAppMotion } from '../hooks/useAppMotion';
+import { motionTransition, springs } from '../lib/motion';
+import { WelcomeIllustration } from './WelcomeIllustration';
 
 const features = [
-  { title: 'A little more in tune with you', description: 'Get to know your rhythm with thoughtful cycle tracking and simple daily check-ins.', tags: ['Your cycle', 'Your pace'], Icon: Flower2 },
-  { title: 'Make space for how you feel', description: 'From restful nights to changing moods, the little things tell your story.', tags: ['Daily check-ins', 'Personal insights'], Icon: Sparkles },
-  { title: 'Feel closer, every day', description: 'Share the moments that matter with your partner, in a space made for the two of you.', tags: ['Stay connected', 'Share with care'], Icon: HeartHandshake },
-];
+  { kind: 'cycle', title: 'A little more in tune with you', description: 'Get to know your rhythm with thoughtful cycle tracking and simple daily check-ins.', note: 'Your body, understood', tags: ['Your cycle', 'Your pace'] },
+  { kind: 'care', title: 'Make space for how you feel', description: 'Notice your moods, find gentle care ideas, and discover what helps you feel your best.', note: 'Little moments of care', tags: ['Daily check-ins', 'Personal insights'] },
+  { kind: 'together', title: 'Feel closer, every day', description: 'Share what feels right and stay connected in a thoughtful space for the two of you.', note: 'Better, together', tags: ['Stay connected', 'Share with care'] },
+] as const;
 
 export function FeatureCarousel() {
   const [current, setCurrent] = useState(0);
-  const feature = features[current];
-  const Icon = feature.Icon;
-  return <div className="bloom-welcome-feature">
-    <div className="bloom-welcome-art" aria-hidden="true"><span className="bloom-welcome-badge"><Icon size={26}/></span><BotanicalSprig className="bloom-welcome-sprig"/><div className="bloom-welcome-ring"><CycleBloom day={25} length={28}/></div><span className="bloom-welcome-note">A space to bloom.</span></div>
-    <div key={feature.title} className="bloom-feature-copy"><h1>{feature.title}</h1><p>{feature.description}</p><div className="bloom-feature-tags">{feature.tags.map(tag => <span key={tag}><Check size={14}/>{tag}</span>)}</div></div>
-    <div className="bloom-carousel-dots">{features.map((item, index) => <button key={item.title} aria-label={`Show ${item.title}`} aria-pressed={current === index} onClick={() => setCurrent(index)}><span/></button>)}</div>
-  </div>;
+  const { reduced } = useAppMotion();
+  return <section className="welcome-features" aria-label="A little introduction to Twilight">
+    <div className="welcome-cards">
+      {features.map((feature, index) => <article key={feature.kind} className="welcome-card" data-current={current === index}>
+        <div className={`welcome-art welcome-art-${feature.kind}`} aria-hidden="true"><WelcomeIllustration kind={feature.kind}/><span>{feature.note}</span></div>
+        <div className="welcome-card-copy"><h2>{feature.title}</h2><p>{feature.description}</p><div className="welcome-tags">{feature.tags.map(tag => <span key={tag}>{tag}</span>)}</div></div>
+      </article>)}
+    </div>
+    <div className="welcome-pagination" aria-label="Introduction cards">
+      {features.map((feature, index) => <motion.button key={feature.kind} type="button" aria-label={`Show ${feature.title}`} aria-pressed={current === index} onClick={() => setCurrent(index)} whileTap={reduced ? undefined : { scale: .92 }} transition={motionTransition(springs.selection, reduced)}><span/></motion.button>)}
+    </div>
+  </section>;
 }
