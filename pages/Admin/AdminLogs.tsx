@@ -90,9 +90,7 @@ const AdminLogs: React.FC = () => {
                             isDark ? 'bg-white/5 hover:bg-white/10 text-gray-400' : 'bg-white hover:bg-gray-50 text-gray-500 shadow-sm border border-gray-100'
                         }`}
                     >
-                        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                            <path d="m12 19-7-7 7-7"/><path d="M19 12H5"/>
-                        </svg>
+                        <AppIcon name="ArrowLeft" size={24}/>
                     </motion.button>
                     <div className="flex items-center gap-3 flex-1">
                         <div className={`w-10 h-10 rounded-full overflow-hidden border-2 shadow-sm ${isDark ? 'border-white/10' : 'border-white'}`}>
@@ -277,9 +275,7 @@ const AdminLogs: React.FC = () => {
                                 transition={{ type: "spring", bounce: 0.2, duration: 0.4 }}
                             />
                         )}
-                        <svg className="relative z-10" xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                            <line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/>
-                        </svg>
+                        <AppIcon name="List" size={24}/>
                     </button>
                     <button
                         onClick={() => setViewMode('grid')}
@@ -299,9 +295,7 @@ const AdminLogs: React.FC = () => {
                                 transition={{ type: "spring", bounce: 0.2, duration: 0.4 }}
                             />
                         )}
-                        <svg className="relative z-10" xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                            <rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/>
-                        </svg>
+                        <AppIcon name="Grid2X2" size={24}/>
                     </button>
                 </div>
             </header>

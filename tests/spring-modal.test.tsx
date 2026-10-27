@@ -21,9 +21,12 @@ it('portals dialogs outside transformed routes and handles Escape without a stal
   expect(screen.queryByRole('dialog')).toBeNull();
 });
 
-it('uses local SVG drawings and retains the off state and supplied illustration', () => {
-  const view = render(<><AppIcon name="water_drop" size={24}/><PhoneOff aria-label="Call off"/><AppIcon name={<svg data-testid="authored-illustration"/>}/></>);
+it('uses locally bundled Solar icons with the correct off state', () => {
+  const view = render(<><AppIcon name="water_drop" size={24}/><PhoneOff aria-label="Call off"/></>);
   expect(view.container.querySelector('svg[data-icon="Droplet"] path')).toBeTruthy();
-  expect(screen.getByLabelText('Call off').querySelector('path[d="m3 3 18 18"]')).toBeTruthy();
-  expect(screen.getByTestId('authored-illustration')).toBeTruthy();
+  expect(screen.getByLabelText('Call off').getAttribute('data-solar')).toBe('end-call-rounded-bold-duotone');
+});
+it('does not render a stray fallback icon for an absent conditional modal',()=>{
+ const view=render(<><AppIcon name={false}/><AppIcon name={null}/><AppIcon name={undefined}/></>);
+ expect(view.container.querySelector('svg')).toBeNull();
 });

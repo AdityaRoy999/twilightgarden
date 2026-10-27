@@ -3,7 +3,8 @@ import { useTheme } from "../contexts/ThemeContext";
 import { motion } from 'framer-motion';
 import { useAppMotion } from '../hooks/useAppMotion';
 import { springs, motionTransition } from '../lib/motion';
-import { NavLink, Outlet, useLocation, Link } from "react-router-dom";
+import {navigationSelected} from '../lib/navigation';
+import { Outlet, useLocation, Link } from "react-router-dom";
 import {
   CalendarDays,
   ChartNoAxesCombined,
@@ -72,26 +73,27 @@ export default function AppShell({ mode = "tracker" }: { mode?: Mode }) {
   ) => {
     const { to, label, Icon } = item;
     const isCollapsed = collapsed && !compact;
+    const isActive = navigationSelected(to,location.pathname);
     return (
-      <NavLink
+      <Link
         key={to}
         to={to}
-        end={to !== "/settings"}
+        aria-current={isActive ? 'page' : undefined}
         aria-label={label}
         title={label}
-        className={({ isActive }) =>
-          `relative isolate flex min-h-12 items-center rounded-xl transition-colors focus-visible:outline-primary ${compact ? "flex-1 flex-col justify-center gap-1 px-1 py-2 text-[11px]" : "gap-3 px-3 py-3 text-sm font-medium "} ${isActive ? "bg-primary/15 text-primary" : "text-gray-500 hover:bg-black/5 hover:text-gray-900 dark:text-gray-400 dark:hover:bg-white/5 dark:hover:text-white"}`
+        className={
+          `relative isolate flex min-h-12 items-center rounded-xl transition-colors ${compact ? "mobile-link flex-1 flex-col justify-center gap-1 px-1 py-2 text-[11px]" : "sidebar-link py-3 text-sm font-medium "} ${isActive ? "text-primary" : "text-gray-500 hover:bg-black/5 hover:text-gray-900 dark:text-gray-400 dark:hover:bg-white/5 dark:hover:text-white"}`
         }
       >
-        {(location.pathname === to || (to === '/settings' && location.pathname.startsWith('/settings/'))) && <motion.span className="nav-spring-pill" layoutId={compact ? 'mobile-selection' : 'desktop-selection'} transition={motionTransition(springs.selection, reduced)} aria-hidden="true"/>}
+        {isActive && <motion.span className="nav-spring-pill" layoutId={compact ? 'mobile-selection' : 'desktop-selection'} transition={motionTransition(springs.selection, reduced)} aria-hidden="true"/>}
         <Icon
           size={compact ? 21 : 22}
           strokeWidth={1.8}
           aria-hidden="true"
           className="relative z-10 shrink-0"
         />
-        <motion.span initial={false} className="sidebar-link-label relative z-10" aria-hidden={isCollapsed || undefined} animate={!compact ? { opacity: collapsed ? 0 : 1, width: collapsed ? 0 : 'auto' } : { opacity: 1 }} transition={motionTransition(springs.section, reduced)}>{label}</motion.span>
-      </NavLink>
+        <motion.span initial={false} className={`${compact ? 'mobile-link-label' : 'sidebar-link-label'} relative z-10`} aria-hidden={isCollapsed || undefined} animate={{ opacity: isCollapsed ? 0 : 1 }} transition={{duration:reduced?0:.1,delay:reduced||compact||collapsed?0:.12}}>{label}</motion.span>
+      </Link>
     );
   };
   return (
@@ -108,13 +110,13 @@ export default function AppShell({ mode = "tracker" }: { mode?: Mode }) {
           data-collapsed={collapsed}
           initial={false}
           animate={{ width: collapsed ? 80 : 240 }}
-          transition={motionTransition(springs.section, reduced)}
+          transition={{...motionTransition(springs.section, reduced),delay:reduced ? 0 : collapsed ? .07 : 0}}
           className="bloom-sidebar hidden h-full shrink-0 flex-col border-r md:flex"
         >
           <div
-            className="mb-6 flex h-12 shrink-0 items-center justify-between gap-2 px-1"
+            className="sidebar-header relative mb-6 flex h-12 shrink-0 items-center"
           >
-              <motion.div className="sidebar-brand" initial={false} animate={{ width: collapsed ? 0 : 'auto', opacity: collapsed ? 0 : 1 }} transition={motionTransition(springs.section, reduced)} inert={collapsed} aria-hidden={collapsed || undefined}><Link
+              <motion.div className="sidebar-brand" initial={false} animate={{ opacity: collapsed ? 0 : 1 }} transition={{duration:reduced?0:.1,delay:reduced||collapsed?0:.12}} inert={collapsed} aria-hidden={collapsed || undefined}><Link
                 to={items[0].to}
                 className="flex min-w-0 items-center gap-2 text-primary"
               >
@@ -125,7 +127,7 @@ export default function AppShell({ mode = "tracker" }: { mode?: Mode }) {
               onClick={() => setCollapsed((v) => !v)}
               aria-label={collapsed ? "Expand sidebar" : "Collapse sidebar"}
               aria-expanded={!collapsed}
-              className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl text-gray-500 hover:bg-black/5 dark:text-gray-400 dark:hover:bg-white/5"
+              className="sidebar-toggle flex h-11 w-11 shrink-0 items-center justify-center rounded-xl text-gray-500 hover:bg-black/5 dark:text-gray-400 dark:hover:bg-white/5"
             >
               {collapsed ? <Menu size={21} /> : <PanelLeftClose size={21} />}
             </button>
@@ -136,7 +138,7 @@ export default function AppShell({ mode = "tracker" }: { mode?: Mode }) {
           >
             {items.map((item) => renderLink(item))}
           </nav>
-            <motion.footer initial={false} animate={{ opacity: collapsed ? 0 : 1, height: collapsed ? 0 : 'auto', padding: collapsed ? 0 : 18, marginTop: collapsed ? 0 : 20 }} transition={motionTransition(springs.section, reduced)} aria-hidden={collapsed || undefined}><Flower2 size={25}/><strong>A little closer, every day</strong><p>{mode === "partner" ? "Small moments of care make a difference." : "Your body. Your rhythm. A space that grows with you."}</p></motion.footer>
+            <motion.footer initial={false} animate={{ opacity: collapsed ? 0 : 1 }} transition={{duration:reduced?0:.1,delay:reduced||collapsed?0:.12}} inert={collapsed} aria-hidden={collapsed || undefined}><Flower2 size={25}/><strong>A little closer, every day</strong><p>{mode === "partner" ? "Small moments of care make a difference." : "Your body. Your rhythm. A space that grows with you."}</p></motion.footer>
         </motion.aside>
       )}
       <div

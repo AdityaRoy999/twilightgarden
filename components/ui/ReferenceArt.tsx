@@ -1,5 +1,5 @@
 import React, { useId } from 'react';
-import { Heart, BellRing, Palette } from './Icons';
+import { Heart, BellRing, Palette, AppIcon } from './Icons';
 
 /** Local vector artwork, kept decorative and separate from health data. */
 export function ReferenceArt({ kind = 'clipboard', className = '' }: { kind?: 'clipboard' | 'moon' | 'leaves' | 'hearts' | 'bell' | 'palette'; className?: string }) {
@@ -20,5 +20,5 @@ export function ReferenceArt({ kind = 'clipboard', className = '' }: { kind?: 'c
 
 export function ReferenceHeading({ title, description, action, back, onBack }: { title: string; description?: string; action?: React.ReactNode; back?: boolean; onBack?: () => void }) {
   const headingArt = /games/i.test(title) ? 'hearts' : /notification/i.test(title) ? 'bell' : /theme|color/i.test(title) ? 'palette' : 'leaves';
-  return <header className={`reference-heading ${back ? 'has-back' : ''}`}><ReferenceArt kind={headingArt} className="reference-heading-art"/>{back && <button className="reference-back" onClick={onBack} aria-label="Back"><svg viewBox="0 0 24 24" fill="none" width="24" height="24" aria-hidden="true"><path d="m14 6-6 6 6 6" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"/></svg></button>}<div className="reference-heading-row"><h1>{title}</h1>{action}</div>{description && <p>{description}</p>}</header>;
+  return <header className={`reference-heading ${back ? 'has-back' : ''}`}><ReferenceArt kind={headingArt} className="reference-heading-art"/>{back && <button className="reference-back" onClick={onBack} aria-label="Back"><AppIcon name="arrow_back" size={24}/></button>}<div className="reference-heading-row"><h1>{title}</h1>{action}</div>{description && <p>{description}</p>}</header>;
 }

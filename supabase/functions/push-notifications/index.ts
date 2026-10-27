@@ -7,7 +7,8 @@ Deno.serve(async (req: Request) => {
   if (req.method === 'OPTIONS') return new Response('ok', { headers: corsHeaders });
   if (req.method !== 'POST') return json({ error: 'Method not allowed' }, 405);
   const internal = await isInternal(req);
-  const actorId = internal ? null : await requireUser(req);
+  let actorId: string | null;
+  try { actorId = internal ? null : await requireUser(req); } catch { return json({error:'Sign-in verification is temporarily unavailable. Please retry.',code:'AUTH_UNAVAILABLE'},503); }
   if (!internal && !actorId) return json({ error: 'Authentication required' }, 401);
   try {
     const body = await readBody(req);

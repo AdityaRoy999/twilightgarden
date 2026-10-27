@@ -1,3 +1,6 @@
+import { DailyGuidance } from '../components/wellness/DailyGuidance';
+import { useToday } from '../hooks/useToday';
+import { cycleStatistics } from '../lib/cycleStatistics';
 import { springs, motionTransition } from '../lib/motion';
 import { useAppMotion } from '../hooks/useAppMotion';
 import { MotionPortal } from '../components/ui/MotionPortal';
@@ -84,7 +87,7 @@ const Insights: React.FC = () => {
   const [chartType, setChartType] = useState<'bar' | 'line'>('bar');
   const [showTodayReport, setShowTodayReport] = useState(false);
   const [isSharing, setIsSharing] = useState(false);
-  const [activeTab, setActiveTab] = useState<'history' | 'trends'>('history');
+  const [activeTab, setActiveTab] = useState<'overview' | 'cycle' | 'trends'>('overview');
   const [trendsSubTab, setTrendsSubTab] = useState<'sleep' | 'energy'>('sleep');
   const shareIconRef = useRef<ShareIconHandle>(null);
 
@@ -96,7 +99,7 @@ const Insights: React.FC = () => {
   });
 
   // Get today's log for the report card
-  const todayStr = localDateKey();
+  const todayStr = useToday();
   const todayLog = logs.find(l => l.date === todayStr) || null;
 
   // Share modal state
@@ -155,69 +158,7 @@ const Insights: React.FC = () => {
     }
   };
 
-  // 1. Calculate History & Real Averages
-  const { historyData, stats } = React.useMemo(() => {
-    if (!logs.length) return {
-      historyData: [],
-      stats: { avgCycle: cycleSettings.avgCycleLength, avgPeriod: cycleSettings.avgPeriodLength }
-    };
-
-    const periods: { start: Date, end: Date, length: number }[] = [];
-    const sortedLogs = [...logs].sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
-
-    let currentPeriodStart: Date | null = null;
-    let currentPeriodEnd: Date | null = null;
-
-    sortedLogs.forEach((log) => {
-      if (log.flow) {
-        const logDate = new Date(log.date);
-        if (!currentPeriodStart) {
-          currentPeriodStart = logDate;
-          currentPeriodEnd = logDate;
-        } else {
-          const diffDays = (logDate.getTime() - currentPeriodEnd!.getTime()) / (1000 * 3600 * 24);
-          if (diffDays > 7) {
-            const length = Math.ceil((currentPeriodEnd!.getTime() - currentPeriodStart.getTime()) / (1000 * 3600 * 24)) + 1;
-            periods.push({ start: currentPeriodStart, end: currentPeriodEnd!, length });
-            currentPeriodStart = logDate;
-            currentPeriodEnd = logDate;
-          } else {
-            currentPeriodEnd = logDate;
-          }
-        }
-      }
-    });
-
-    if (currentPeriodStart && currentPeriodEnd) {
-      const length = Math.ceil((currentPeriodEnd.getTime() - currentPeriodStart.getTime()) / (1000 * 3600 * 24)) + 1;
-      periods.push({ start: currentPeriodStart, end: currentPeriodEnd, length });
-    }
-
-    const cycleLengths: { value: number, label: string }[] = [];
-    for (let i = 0; i < periods.length - 1; i++) {
-      const current = periods[i];
-      const next = periods[i + 1];
-      const diffTime = Math.abs(next.start.getTime() - current.start.getTime());
-      const diffDays = Math.round(diffTime / (1000 * 60 * 60 * 24));
-      if (diffDays > 15 && diffDays < 60) {
-        cycleLengths.push({
-          value: diffDays,
-          label: current.start.toLocaleString('default', { month: 'short' })
-        });
-      }
-    }
-
-    const totalPeriodLength = periods.reduce((sum, p) => sum + p.length, 0);
-    const calculatedAvgPeriod = periods.length ? Math.round(totalPeriodLength / periods.length) : cycleSettings.avgPeriodLength;
-    const totalCycleLength = cycleLengths.reduce((sum, c) => sum + c.value, 0);
-    const calculatedAvgCycle = cycleLengths.length ? Math.round(totalCycleLength / cycleLengths.length) : cycleSettings.avgCycleLength;
-    const finalHistory = cycleLengths.slice(-6);
-
-    return {
-      historyData: finalHistory,
-      stats: { avgCycle: calculatedAvgCycle, avgPeriod: calculatedAvgPeriod }
-    };
-  }, [logs, cycleSettings]);
+  const {historyData,stats}=useMemo(()=>cycleStatistics(logs||[],cycleSettings),[logs,cycleSettings]);
 
   // 2. Calculate Top Symptoms
   const topSymptoms = React.useMemo(() => {
@@ -316,21 +257,25 @@ const Insights: React.FC = () => {
       <div className="reference-insight-tabs w-full overflow-x-auto no-scrollbar mb-4">
         <div className="flex gap-3 min-w-max relative">
           <button
-            onClick={() => setActiveTab('history')}
-            aria-pressed={activeTab === 'history'} className={`relative z-10 flex h-10 items-center justify-center px-6 rounded-full text-sm font-semibold transition-all ${
-              activeTab === 'history'
+            onClick={() => setActiveTab('overview')}
+            aria-pressed={activeTab === 'overview'} className={`relative z-10 flex h-10 items-center justify-center px-6 rounded-full text-sm font-semibold transition-all ${
+              activeTab === 'overview'
                 ? 'on-brand text-white'
                 : 'bg-white/5 dark:bg-white/5 text-gray-400 hover:bg-white/10'
             }`}
           >
-            {activeTab === 'history' && (
+            {activeTab === 'overview' && (
               <motion.div
                 layoutId="activeInsightsTab"
                 className="absolute inset-0 bg-primary rounded-full shadow-md shadow-primary/20"
                 transition={motionTransition(springs.selection, reduced)}
               />
             )}
-            <span className="relative z-20">History</span>
+            <span className="relative z-20">Overview</span>
+          </button>
+          <button onClick={()=>setActiveTab('cycle')} aria-pressed={activeTab==='cycle'} className={`relative z-10 flex h-10 items-center justify-center rounded-full text-sm font-semibold ${activeTab==='cycle'?'on-brand text-white':'text-gray-400'}`}>
+            {activeTab==='cycle' && <motion.div layoutId="activeInsightsTab" className="absolute inset-0 bg-primary rounded-full" transition={motionTransition(springs.selection,reduced)}/>}
+            <span className="relative z-20">Cycle</span>
           </button>
           <button
             onClick={() => setActiveTab('trends')}
@@ -360,7 +305,7 @@ const Insights: React.FC = () => {
       </div>
 
       <React.Fragment>
-        {activeTab === 'history' ? (
+        {activeTab === 'overview' ? (
           <motion.main
             key="history"
             initial={reduced ? false : { x: -12 }}
@@ -385,9 +330,12 @@ const Insights: React.FC = () => {
 )}
             </section>
 
-            <section className="reference-card reference-sleep-card"><ReferenceArt kind="moon"/><div className="reference-title"><span className="reference-icon"><Lightbulb size={22}/></span><h2>Did you know?</h2></div><p className="reference-description">Your rhythm is personal. Log your sleep and energy to explore how you feel over time.</p><button onClick={() => { setActiveTab('trends'); setTrendsSubTab('sleep'); }}>View Sleep Trends <ArrowRight size={17}/></button></section>
+            <DailyGuidance phase={cycleData.phase} cycleDay={cycleData.currentDay} logs={logs} today={todayStr}/>
             <section className="reference-card reference-report"><button onClick={() => setShowTodayReport(true)} className="reference-button"><CalendarDays size={20}/>Generate Today’s Report Card <ArrowRight size={18}/></button><p>Creates a shareable card of today’s symptoms and cycle status.</p></section>
-            <details className="reference-history"><summary>Cycle history &amp; averages</summary><div>            <section className="relative overflow-hidden rounded-[2rem] bg-white dark:bg-surface-dark p-6 shadow-soft border border-gray-100 dark:border-white/5 transition-colors">
+
+          </motion.main>
+        ) : activeTab === 'cycle' ? (
+          <motion.main key="cycle" initial={reduced ? false : { x: 12 }} animate={{ x: 0 }} transition={motionTransition(springs.section,reduced)} className="reference-stack">            <section className="relative overflow-hidden rounded-[2rem] bg-white dark:bg-surface-dark p-6 shadow-soft border border-gray-100 dark:border-white/5 transition-colors">
               <div className="flex justify-between items-start mb-6">
                 <div>
                   <p className="text-sm font-medium text-gray-500 dark:text-gray-400 mb-1">Prediction</p>
@@ -423,7 +371,7 @@ const Insights: React.FC = () => {
                   <span className="app-icon-glyph text-2xl"><AppIcon name={"bar_chart"}/></span>
                 </div>
                 <h3 className="text-3xl font-bold text-[var(--text-primary)] dark:text-white">{stats.avgPeriod}</h3>
-                <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest max-w-[80px]">Typical Period Duration</p>
+                <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest max-w-[80px]">Avg Logged Flow Days</p>
               </div>
             </section>
 
@@ -482,8 +430,7 @@ const Insights: React.FC = () => {
               </div>
             </section>
 
-</div></details>
-          </motion.main>
+</motion.main>
         ) : (
           <motion.main
             key="trends"

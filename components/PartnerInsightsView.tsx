@@ -1,3 +1,4 @@
+import { cycleStatistics } from '../lib/cycleStatistics';
 import { MotionPortal } from './ui/MotionPortal';
 import { AppIcon } from './ui/Icons';
 import ChartEmptyState from './ui/ChartEmptyState';
@@ -71,69 +72,7 @@ const PartnerInsightsView: React.FC<PartnerInsightsViewProps> = ({ logs, cycleSe
     }
   }), [theme]);
 
-  // 1. Calculate History & Real Averages
-  const { historyData, stats } = useMemo(() => {
-    if (!logs?.length) return {
-      historyData: [],
-      stats: { avgCycle: cycleSettings?.avgCycleLength || 28, avgPeriod: cycleSettings?.avgPeriodLength || 5 }
-    };
-
-    const periods: { start: Date, end: Date, length: number }[] = [];
-    const sortedLogs = [...logs].sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
-
-    let currentPeriodStart: Date | null = null;
-    let currentPeriodEnd: Date | null = null;
-
-    sortedLogs.forEach((log) => {
-      if (log.flow) {
-        const logDate = new Date(log.date);
-        if (!currentPeriodStart) {
-          currentPeriodStart = logDate;
-          currentPeriodEnd = logDate;
-        } else {
-          const diffDays = (logDate.getTime() - currentPeriodEnd!.getTime()) / (1000 * 3600 * 24);
-          if (diffDays > 7) {
-            const length = Math.ceil((currentPeriodEnd!.getTime() - currentPeriodStart.getTime()) / (1000 * 3600 * 24)) + 1;
-            periods.push({ start: currentPeriodStart, end: currentPeriodEnd!, length });
-            currentPeriodStart = logDate;
-            currentPeriodEnd = logDate;
-          } else {
-            currentPeriodEnd = logDate;
-          }
-        }
-      }
-    });
-
-    if (currentPeriodStart && currentPeriodEnd) {
-      const length = Math.ceil((currentPeriodEnd.getTime() - currentPeriodStart.getTime()) / (1000 * 3600 * 24)) + 1;
-      periods.push({ start: currentPeriodStart, end: currentPeriodEnd, length });
-    }
-
-    const cycleLengths: { value: number, label: string }[] = [];
-    for (let i = 0; i < periods.length - 1; i++) {
-      const current = periods[i];
-      const next = periods[i + 1];
-      const diffTime = Math.abs(next.start.getTime() - current.start.getTime());
-      const diffDays = Math.round(diffTime / (1000 * 60 * 60 * 24));
-      if (diffDays > 15 && diffDays < 60) {
-        cycleLengths.push({
-          value: diffDays,
-          label: current.start.toLocaleString('default', { month: 'short' })
-        });
-      }
-    }
-
-    const totalPeriodLength = periods.reduce((sum, p) => sum + p.length, 0);
-    const calculatedAvgPeriod = periods.length ? Math.round(totalPeriodLength / periods.length) : (cycleSettings?.avgPeriodLength || 5);
-    const totalCycleLength = cycleLengths.reduce((sum, c) => sum + c.value, 0);
-    const calculatedAvgCycle = cycleLengths.length ? Math.round(totalCycleLength / cycleLengths.length) : (cycleSettings?.avgCycleLength || 28);
-    const finalHistory = cycleLengths.slice(-6);
-
-    return {
-      historyData: finalHistory,
-      stats: { avgCycle: calculatedAvgCycle, avgPeriod: calculatedAvgPeriod }
-    };
-  }, [logs, cycleSettings]);
+  const {historyData,stats}=useMemo(()=>cycleStatistics(logs||[],cycleSettings),[logs,cycleSettings]);
 
   // 2. Calculate Top Symptoms
   const topSymptoms = useMemo(() => {
@@ -224,45 +163,12 @@ const PartnerInsightsView: React.FC<PartnerInsightsViewProps> = ({ logs, cycleSe
   return (
     <div className="flex flex-col gap-6 w-full">
       {/* Tab Switcher (Styled like Insights.tsx) */}
-      <div className="flex bg-gray-100/50 dark:bg-white/5 p-1 rounded-2xl w-full mb-2 relative">
-        <button
-          onClick={() => setActiveTab('history')}
-          className={`relative z-10 flex-1 flex h-10 items-center justify-center rounded-xl text-sm font-bold transition-all ${
-            activeTab === 'history'
-              ? 'on-brand text-white'
-              : 'text-gray-400 hover:text-gray-600 dark:hover:text-gray-200'
-          }`}
-        >
-          {activeTab === 'history' && (
-            <motion.div
-              layoutId="activePartnerInsightsTab"
-              className="absolute inset-0 bg-primary rounded-xl shadow-md"
-              transition={{ type: 'spring', bounce: 0.2, duration: 0.28 }}
-            />
-          )}
-          <span className="relative z-20">History</span>
-        </button>
-        <button
-          onClick={() => setActiveTab('trends')}
-          className={`relative z-10 flex-1 flex h-10 items-center justify-center rounded-xl text-sm font-bold transition-all ${
-            activeTab === 'trends'
-              ? 'on-brand text-white'
-              : 'text-gray-400 hover:text-gray-600 dark:hover:text-gray-200'
-          }`}
-        >
-          {activeTab === 'trends' && (
-            <motion.div
-              layoutId="activePartnerInsightsTab"
-              className="absolute inset-0 bg-primary rounded-xl shadow-md"
-              transition={{ type: 'spring', bounce: 0.2, duration: 0.28 }}
-            />
-          )}
-          <span className="relative z-20">Trends</span>
-        </button>
-      </div>
+      <div className="reference-insight-tabs partner-insight-tabs"><div>{[
+{label:'Cycle',tab:'history',sub:'general'},{label:'Logs',tab:'history',sub:'logs'},{label:'Sleep',tab:'trends',sub:'sleep'},{label:'Energy',tab:'trends',sub:'energy'}
+].map(section=>{const selected=activeTab===section.tab&&(section.tab==='history'?historyTab:trendsSubTab)===section.sub;return <button key={section.label} aria-pressed={selected} className={selected?'on-brand text-white':'text-gray-400'} onClick={()=>{setActiveTab(section.tab as 'history'|'trends');if(section.tab==='history')setHistoryTab(section.sub as 'general'|'logs');else setTrendsSubTab(section.sub as 'sleep'|'energy');}}>{selected?<motion.span layoutId="activePartnerInsightsTab" className="nav-spring-pill" transition={{duration:animateCharts ? .22 : 0}}/>:null}<span className="relative z-10">{section.label}</span></button>;})}</div></div>
 
       <AnimatePresence mode="wait">
-        <AppIcon name={activeTab === 'history' ? (
+        {activeTab === 'history' ? (
           <motion.div
             key="history"
             initial={{ opacity: 0, x: -20 }}
@@ -272,38 +178,7 @@ const PartnerInsightsView: React.FC<PartnerInsightsViewProps> = ({ logs, cycleSe
           >
              {/* History Sub-tabs */}
              <div className="flex justify-center mb-2">
-                <div className="flex bg-gray-100/50 dark:bg-white/5 p-1 rounded-xl relative">
-                  <button
-                   onClick={() => setHistoryTab('general')}
-                   className={`relative z-10 px-6 py-1.5 rounded-lg text-xs font-bold transition-all ${
-                     historyTab === 'general' ? 'text-primary' : 'text-gray-400 hover:text-gray-600 dark:hover:text-gray-200'
-                   }`}
-                  >
-                    {historyTab === 'general' && (
-                      <motion.div
-                        layoutId="activePartnerHistoryTab"
-                        className="absolute inset-0 bg-white dark:bg-white/10 rounded-lg shadow-sm"
-                        transition={{ type: 'spring', bounce: 0.2, duration: 0.28 }}
-                      />
-                    )}
-                    <span className="relative z-20">General Info</span>
-                  </button>
-                  <button
-                   onClick={() => setHistoryTab('logs')}
-                   className={`relative z-10 px-6 py-1.5 rounded-lg text-xs font-bold transition-all ${
-                     historyTab === 'logs' ? 'text-primary' : 'text-gray-400 hover:text-gray-600 dark:hover:text-gray-200'
-                   }`}
-                  >
-                    {historyTab === 'logs' && (
-                      <motion.div
-                        layoutId="activePartnerHistoryTab"
-                        className="absolute inset-0 bg-white dark:bg-white/10 rounded-lg shadow-sm"
-                        transition={{ type: 'spring', bounce: 0.2, duration: 0.28 }}
-                      />
-                    )}
-                    <span className="relative z-20">Log History</span>
-                  </button>
-                </div>
+
              </div>
 
             <AnimatePresence mode="wait">
@@ -545,38 +420,7 @@ const PartnerInsightsView: React.FC<PartnerInsightsViewProps> = ({ logs, cycleSe
           >
              {/* Trends Sub-tabs */}
              <div className="flex justify-center mb-2">
-                <div className="flex bg-gray-100/50 dark:bg-white/5 p-1 rounded-xl relative">
-                  <button
-                   onClick={() => setTrendsSubTab('sleep')}
-                   className={`relative z-10 px-6 py-1.5 rounded-lg text-xs font-bold transition-all ${
-                     trendsSubTab === 'sleep' ? 'text-primary' : 'text-gray-400 hover:text-gray-600 dark:hover:text-gray-200'
-                   }`}
-                  >
-                    {trendsSubTab === 'sleep' && (
-                      <motion.div
-                        layoutId="activePartnerTrendsTab"
-                        className="absolute inset-0 bg-white dark:bg-white/10 rounded-lg shadow-sm"
-                        transition={{ type: 'spring', bounce: 0.2, duration: 0.28 }}
-                      />
-                    )}
-                    <span className="relative z-20">Sleep</span>
-                  </button>
-                  <button
-                   onClick={() => setTrendsSubTab('energy')}
-                   className={`relative z-10 px-6 py-1.5 rounded-lg text-xs font-bold transition-all ${
-                     trendsSubTab === 'energy' ? 'text-primary' : 'text-gray-400 hover:text-gray-600 dark:hover:text-gray-200'
-                   }`}
-                  >
-                    {trendsSubTab === 'energy' && (
-                      <motion.div
-                        layoutId="activePartnerTrendsTab"
-                        className="absolute inset-0 bg-white dark:bg-white/10 rounded-lg shadow-sm"
-                        transition={{ type: 'spring', bounce: 0.2, duration: 0.28 }}
-                      />
-                    )}
-                    <span className="relative z-20">Energy</span>
-                  </button>
-                </div>
+
              </div>
 
             <AnimatePresence mode="wait">
@@ -695,12 +539,12 @@ const PartnerInsightsView: React.FC<PartnerInsightsViewProps> = ({ logs, cycleSe
               )}
             </AnimatePresence>
           </motion.div>
-        )}/>
+        )}
       </AnimatePresence>
 
       {/* Log Details Modal */}
       <AnimatePresence>
-        <AppIcon name={selectedLog && (
+        {selectedLog && (
           <MotionPortal><motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
@@ -761,7 +605,7 @@ const PartnerInsightsView: React.FC<PartnerInsightsViewProps> = ({ logs, cycleSe
               </div>
             </motion.div>
           </motion.div></MotionPortal>
-        )}/>
+        )}
       </AnimatePresence>
     </div>
   );

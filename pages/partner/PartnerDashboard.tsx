@@ -1,3 +1,4 @@
+import { DailyGuidance } from '../../components/wellness/DailyGuidance';
 import { AppIcon } from '../../components/ui/Icons';
 import { CycleHero } from '../../components/ui/CycleHero';
 import { CycleBloom, BotanicalSprig } from '../../components/ui/CycleBloom';
@@ -330,27 +331,7 @@ const PartnerDashboard: React.FC = () => {
                     )}
                 </div>
 
-                {/* Daily Insight or Tip specific for Partners? */}
-                <div className="on-brand bg-gradient-to-r from-blue-500 to-indigo-600 rounded-[28px] p-6 text-white shadow-lg shadow-blue-500/20 mt-6 md:mt-0">
-                    <div className="flex items-start gap-4">
-                         <div className="w-10 h-10 rounded-full bg-white/20 flex items-center justify-center shrink-0">
-                            <span className="app-icon-glyph"><AppIcon name={"tips_and_updates"}/></span>
-                         </div>
-                         <div>
-                             <h3 className="font-bold text-lg mb-1">Partner Tip</h3>
-                             <p className="text-white/90 text-sm md:text-base leading-relaxed">
-                                {cycleData.phase === 'Menstrual'
-                                    ? "She might be feeling lower energy. Offer some comfort food or a cozy movie night!"
-                                    : cycleData.phase === 'Follicular'
-                                    ? "Energy is rising! Great time to plan fun activities together."
-                                    : cycleData.phase === 'Ovulation'
-                                    ? "It's the peak of the cycle. She's likely feeling her best!"
-                                    : "Luteal phase can bring some PMS. Be patient and extra supportive."
-                                }
-                             </p>
-                         </div>
-                    </div>
-                </div>
+                <DailyGuidance phase={cycleData.phase} cycleDay={cycleData.currentDay} logs={logs} today={todayStr} partner/>
 
              </div>
             </div>

@@ -119,7 +119,7 @@ const raster = [
  ['herbal-hydration','Herbal tea and hydration',['herbal tea','herbal drink','hydration','hydration focus','warm water'],'water_drop','blue'],
  ['rest-recovery','Rest and recovery',['rest','recovery','recharge','relaxation'],'bedtime','violet'],
  ['peaceful-sleep','Peaceful sleep',['sleep','sleeping','quality sleep'],'bedtime','violet'],
- ['self-comfort','Comfort and self-compassion',['self compassion','self-compassion','cycle sync','embrace the reset','comfort'],'favorite','rose'],
+ ['self-comfort','Comfort and self-compassion',['self compassion','self-compassion','cycle sync','embrace the reset','emotional comfort','heart cushion','hug a cushion','self-soothing'],'favorite','rose'],
  ['supportive-couple','A reassuring presence',['supportive embrace','listen without fixing','partner care','reassuring presence'],'favorite','violet'],
 ];
 mkdirSync('public/art/wellness',{recursive:true});
@@ -130,6 +130,6 @@ for(const e of entries){
  const darkSvg = svg.replace(/#[0-9a-f]{6}/g,color => darkPalette[color] || color);
  writeFileSync(`public/art/wellness/${e.id}.dark.svg`,darkSvg);
 }
-const catalog=[...raster.map(([id,label,tags,icon,tone])=>({id,label,tags,icon,tone,src:`/art/wellness/${id}.webp`,format:'raster'})),...entries.map(({art,...e})=>({...e,src:`/art/wellness/${e.id}.svg`,darkSrc:`/art/wellness/${e.id}.dark.svg`,format:'vector'}))];
+const catalog=[...raster.map(([id,label,tags,icon,tone])=>({id,label,tags,icon,tone,src:`/art/wellness/${id}.cartoon.webp`,format:'raster'})),...entries.map(({art,...e})=>({...e,src:`/art/wellness/${e.id}.svg`,darkSrc:`/art/wellness/${e.id}.dark.svg`,format:'vector'}))];
 writeFileSync('lib/wellness-art-catalog.json',JSON.stringify(catalog,null,2)+'\n');
 console.log(`Created ${entries.length} original vector scenes + ${raster.length} raster scenes = ${catalog.length} distinct subjects.`);

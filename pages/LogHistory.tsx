@@ -141,7 +141,7 @@ const LogHistory: React.FC = () => {
 
       {/* Log Details Modal */}
       <AnimatePresence>
-        <AppIcon name={selectedLog && (
+        {selectedLog && (
           <MotionPortal><motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
@@ -202,7 +202,7 @@ const LogHistory: React.FC = () => {
               </div>
             </motion.div>
           </motion.div></MotionPortal>
-        )}/>
+        )}
       </AnimatePresence>
     </div>
   );

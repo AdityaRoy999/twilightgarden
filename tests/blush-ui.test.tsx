@@ -60,6 +60,7 @@ describe('blush frontend data and navigation', () => {
   });
   it('replaces empty history and sleep charts with a check-in action', () => {
     render(<MemoryRouter><Insights/></MemoryRouter>);
+    fireEvent.click(screen.getByRole('button', {name:'Cycle'}));
     expect(screen.getByText('Your patterns start here')).toBeTruthy();
     expect(screen.queryByTestId('chart')).toBeNull();
     fireEvent.click(screen.getByRole('button', { name: 'Trends' }));

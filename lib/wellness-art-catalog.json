@@ -10,7 +10,7 @@
     ],
     "icon": "bolt",
     "tone": "amber",
-    "src": "/art/wellness/morning-energy.webp",
+    "src": "/art/wellness/morning-energy.cartoon.webp",
     "format": "raster"
   },
   {
@@ -23,7 +23,7 @@
     ],
     "icon": "spa",
     "tone": "mint",
-    "src": "/art/wellness/gentle-stretch.webp",
+    "src": "/art/wellness/gentle-stretch.cartoon.webp",
     "format": "raster"
   },
   {
@@ -38,7 +38,7 @@
     ],
     "icon": "water_drop",
     "tone": "blue",
-    "src": "/art/wellness/herbal-hydration.webp",
+    "src": "/art/wellness/herbal-hydration.cartoon.webp",
     "format": "raster"
   },
   {
@@ -52,7 +52,7 @@
     ],
     "icon": "bedtime",
     "tone": "violet",
-    "src": "/art/wellness/rest-recovery.webp",
+    "src": "/art/wellness/rest-recovery.cartoon.webp",
     "format": "raster"
   },
   {
@@ -65,7 +65,7 @@
     ],
     "icon": "bedtime",
     "tone": "violet",
-    "src": "/art/wellness/peaceful-sleep.webp",
+    "src": "/art/wellness/peaceful-sleep.cartoon.webp",
     "format": "raster"
   },
   {
@@ -76,11 +76,14 @@
       "self-compassion",
       "cycle sync",
       "embrace the reset",
-      "comfort"
+      "emotional comfort",
+      "heart cushion",
+      "hug a cushion",
+      "self-soothing"
     ],
     "icon": "favorite",
     "tone": "rose",
-    "src": "/art/wellness/self-comfort.webp",
+    "src": "/art/wellness/self-comfort.cartoon.webp",
     "format": "raster"
   },
   {
@@ -94,7 +97,7 @@
     ],
     "icon": "favorite",
     "tone": "violet",
-    "src": "/art/wellness/supportive-couple.webp",
+    "src": "/art/wellness/supportive-couple.cartoon.webp",
     "format": "raster"
   },
   {

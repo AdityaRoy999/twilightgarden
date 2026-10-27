@@ -31,12 +31,15 @@ describe('original illustration catalog', () => {
     ['A handful of nuts','Almonds make a convenient snack.','nuts'],
     ['A quiet reading moment','Read a favorite book.','reading'],
     ['Warmth for cramps','A heating pad may feel comforting.','heat-pad'],
+    ['Warm Comfort','A heating pad may feel comforting.','heat-pad'],
   ])('matches %s to its actual subject', (title,body,id) => {
     expect(matchWellnessIllustration(title,body,id).id).toBe(id);
   });
   it('rejects an unrelated model choice and does not allow external image URLs', () => {
     expect(matchWellnessIllustration('Peaceful sleep','Make space for sleep.','herbal-hydration').id).toBe('peaceful-sleep');
     expect(getWellnessIllustration('https://tracker.invalid/image').id).toBe('general-care');
+    expect(matchWellnessIllustration('Warm Comfort','Try a heating pad.','self-comfort').id).toBe('heat-pad');
+    expect(matchWellnessIllustration('Gentle Movement','Take a short walk.','gentle-stretch').id).toBe('walking-shoes');
   });
   it('uses neutral care for an unknown subject rather than random artwork', () => {
     expect(matchWellnessIllustration('Unrecognized suggestion','An unrecognized suggestion.').id).toBe('general-care');

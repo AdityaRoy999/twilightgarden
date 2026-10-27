@@ -1,5 +1,6 @@
 import { supabase } from './supabase';
 import { parseWellnessGuide, wellnessGuidePrompt } from './wellnessGuide';
+import { normalizePharmacies, type PharmacyPlace } from './places';
 
 const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL;
 const SUPABASE_ANON_KEY = import.meta.env.VITE_SUPABASE_ANON_KEY || '';
@@ -13,6 +14,7 @@ export interface WellnessContext {
     energyLevel?: string;
     partnerName?: string;
     logHistory?: string; // Summarized history of last 15 logs
+    observedDays?: number;
 }
 
 export interface Product {
@@ -45,9 +47,9 @@ interface AIResult {
     error?: string;
 }
 
-async function callAI(customPrompt: string, mood: string = 'encouragement'): Promise<AIResult> {
+async function callAI(customPrompt: string, mood: string = 'encouragement', pinnedSession?:{access_token:string}): Promise<AIResult> {
     try {
-        const { data: { session } } = await supabase.auth.getSession();
+        const session = pinnedSession || (await supabase.auth.getSession()).data.session;
         if (!session) throw new Error('Not authenticated');
 
         const res = await fetch(
@@ -83,20 +85,37 @@ async function callAI(customPrompt: string, mood: string = 'encouragement'): Pro
     }
 }
 
-export async function generateWellnessTips(ctx: WellnessContext): Promise<AIResult> {
-    return generateGuide(ctx, false);
+export async function generateWellnessTips(ctx: WellnessContext, refresh=false): Promise<AIResult> {
+    return generateGuide(ctx, false,refresh);
 }
 
-export async function generateEmpathyAlerts(ctx: WellnessContext): Promise<AIResult> {
-    return generateGuide(ctx, true);
+export async function generateEmpathyAlerts(ctx: WellnessContext,refresh=false): Promise<AIResult> {
+    return generateGuide(ctx, true,refresh);
 }
 
-async function generateGuide(ctx: WellnessContext, partner: boolean): Promise<AIResult> {
-    const result = await callAI(wellnessGuidePrompt(ctx, partner), 'raw');
-    if (result.error) return result;
-    const cards = parseWellnessGuide(result.text || '');
-    if (cards.length !== 3 || new Set(cards.map(card => card.illustrationId)).size !== 3) return { text: '', error: 'We couldn’t finish your guide. Please try again.' };
-    return { text: JSON.stringify({ cards }) };
+const guideCache=new Map<string,{expires:number;pending?:Promise<AIResult>;result?:AIResult}>();
+async function generateGuide(ctx: WellnessContext, partner: boolean,refresh=false): Promise<AIResult> {
+    try {
+        const {data:{session}}=await supabase.auth.getSession();
+        if(!session)return {text:'',error:'Please sign in to prepare your guide.'};
+        const key=JSON.stringify([session.user.id,partner,ctx]);
+        for(const [id,entry]of guideCache)if(entry.expires<Date.now()&&!entry.pending)guideCache.delete(id);
+        const cached=guideCache.get(key);
+        if(cached?.pending)return cached.pending;
+        if(!refresh&&cached?.result&&cached.expires>Date.now())return cached.result;
+        const entry:{expires:number;pending?:Promise<AIResult>;result?:AIResult}={expires:Date.now()+300000};
+        const job=(async()=>{
+            const result=await callAI(wellnessGuidePrompt(ctx,partner),'raw',session);
+            const cards=result.error?[]:parseWellnessGuide(result.text||'');
+            const validated:AIResult=result.error?result:cards.length===3&&new Set(cards.map(card=>card.illustrationId)).size===3?{text:JSON.stringify({cards})}:{text:'',error:'We couldn’t finish your guide. Please try again.'};
+            entry.pending=undefined;
+            if(validated.error)guideCache.delete(key);else entry.result=validated;
+            return validated;
+        })();
+        entry.pending=job;guideCache.set(key,entry);
+        if(guideCache.size>25)guideCache.delete(guideCache.keys().next().value!);
+        return job;
+    }catch{return {text:'',error:'Your guide could not be prepared. Please retry.'};}
 }
 
 export async function generateGiftRecommendations(ctx: WellnessContext): Promise<AIResult> {
@@ -156,53 +175,15 @@ export async function searchShoppingProducts(query: string): Promise<Product[]> 
 
 // --- Nearest Pad (Serper Places API) ---
 
-export async function searchNearbyPharmacies(lat: number, lon: number): Promise<NearbyShop[]> {
-    try {
-        const { data: { session } } = await supabase.auth.getSession();
-        if (!session) throw new Error('Not authenticated');
-
-        // Query: "pharmacy medical store near lat,lon"
-        const query = `pharmacy medical store near ${lat},${lon}`;
-        
-        const res = await fetch(
-            `${SUPABASE_URL}/functions/v1/ai-generate`,
-            {
-                method: 'POST',
-                signal: AbortSignal.timeout(30000),
-                headers: {
-                    'Content-Type': 'application/json',
-                    'Authorization': `Bearer ${session.access_token}`,
-                    'apikey': SUPABASE_ANON_KEY,
-                },
-                body: JSON.stringify({ 
-                    mood: 'places', 
-                    search_query: 'pharmacy medical store', // Edge function will use lat/lon for sorting/picking
-                    lat: lat,
-                    lon: lon
-                }),
-            }
-        );
-
-        if (!res.ok) throw new Error(`HTTP ${res.status}`);
-        const data = await res.json();
-        
-        const places = data.places || [];
-
-        return places.map((el: any) => ({
-            id: el.cid || Math.random().toString(),
-            name: el.title || 'Pharmacy',
-            lat: el.latitude,
-            lon: el.longitude,
-            address: el.address || '',
-            phoneNumber: el.phoneNumber || '',
-            imageUrl: el.thumbnailUrl || el.imageUrl || '',
-            distanceRelevance: Math.pow(el.latitude - lat, 2) + Math.pow(el.longitude - lon, 2)
-        })).sort((a: NearbyShop, b: NearbyShop) => (a.distanceRelevance || 0) - (b.distanceRelevance || 0));
-
-    } catch (error) {
-        console.error('Failed to fetch pharmacies from Edge Function:', error);
-        return [];
-    }
+export async function searchNearbyPharmacies(lat?:number,lon?:number,area?:string):Promise<PharmacyPlace[]> {
+    const hasCoordinates=Number.isFinite(lat)&&Number.isFinite(lon);
+    if(!hasCoordinates&&(!area||area.trim().length<2))throw new Error('Enter an area or use your location.');
+    const {data:{session}}=await supabase.auth.getSession();
+    if(!session)throw new Error('Please sign in again to search nearby stores.');
+    const response=await fetch(`${SUPABASE_URL}/functions/v1/ai-generate`,{method:'POST',signal:AbortSignal.timeout(30000),headers:{'Content-Type':'application/json','Authorization':`Bearer ${session.access_token}`,'apikey':SUPABASE_ANON_KEY},body:JSON.stringify({mood:'places',search_query:area?`pharmacy medical store in ${area.trim().slice(0,120)}`:'pharmacy medical store',...(hasCoordinates?{lat,lon}:{})})});
+    if(!response.ok)throw new Error(response.status===429?'Nearby search is busy. Please try again shortly.':'Nearby search is unavailable. Please try again.');
+    const data=await response.json();
+    return normalizePharmacies(data.places,hasCoordinates?[lat!,lon!]:undefined);
 }
 
 export async function getRouteToShop(startLat: number, startLon: number, endLat: number, endLon: number): Promise<RouteGeometry | null> {

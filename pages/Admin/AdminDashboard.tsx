@@ -72,10 +72,7 @@ const AdminDashboard: React.FC = () => {
                 <div className="flex items-center gap-3">
                     <div className="relative">
                         <div className="w-12 h-12 rounded-full bg-primary flex items-center justify-center shadow-md">
-                            <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                                <path d="M12 2a10 10 0 1 0 10 10H12V2Z"/>
-                                <path d="M21.18 8.02c-1-2.3-2.85-4.17-5.16-5.18"/>
-                            </svg>
+                            <AppIcon name="ChartNoAxesCombined" size={24}/>
                         </div>
                         <div className="absolute bottom-0 right-0 w-3.5 h-3.5 bg-[#4ADE80] border-2 border-[#FDFCF8] dark:border-[#121014] rounded-full"></div>
                     </div>

@@ -3,7 +3,7 @@
 The Wellness Tips, Sleep & Energy, and Partner Care views use the supplied white
 and plum references: separate rounded advice cards, illustrations beside the
 copy, purpose chips, refresh controls, and practical care actions. The existing
-shadow-free styling, seven mobile destinations, custom UI icons, and reduced
+shadow-free styling, seven mobile destinations, locally bundled Solar UI icons, and reduced
 motion preferences remain in effect.
 
 ## Artwork
@@ -23,10 +23,10 @@ are the same subjects and are **not counted as additional illustrations**.
 
 The raster scenes were created with the built-in image-generation tool, one
 asset per call, with transparent backgrounds. They were resized and encoded as
-WebP, preserving alpha. Seven images together are about 0.9 MB. No external
+WebP, preserving alpha. Seven images together are about 0.5 MB. No external
 image service is needed at runtime; images load only when displayed. Images are
 original interpretations of the references, not pixel-exact copies. Vector
-scenes are simpler editorial drawings; the detailed human scenes are raster.
+scenes are simpler editorial drawings; the cartoon human scenes are raster.
 
 Run `npm run design:preview` to create local, fictional-data page previews plus
 `/tmp/wellness-illustrations.html`, a searchable-by-browser illustration sheet
