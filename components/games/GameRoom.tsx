@@ -15,6 +15,7 @@ import {
 } from "../../supabase/functions/_shared/gameEngine";
 import { GameMascot } from "./GameMascot";
 import { AppIcon } from "../ui/Icons";
+import { MotionPortal } from '../ui/MotionPortal';
 
 const symbols: Record<string, string> = {
   heart: "favorite",
@@ -40,6 +41,8 @@ export default function GameRoom({ game }: { game: GameType }) {
     reopen,
     setError,
     couple,
+    invitationSent,
+    optimistic,
   } = useGameRoom(game);
   const { user } = useAuth();
   const { openTutorial } = useTutorial();
@@ -57,9 +60,9 @@ export default function GameRoom({ game }: { game: GameType }) {
     setLie(0);
   }, [room?.id, room?.board_state.round]);
   useEffect(() => {
-    setInviteSent(false);
+    setInviteSent(!!invitationSent);
     setCopied(false);
-  }, [room?.id]);
+  }, [room?.id,invitationSent]);
   const requested = useRef("");
   const state = room?.board_state;
   const title = games[game][0];
@@ -166,6 +169,7 @@ export default function GameRoom({ game }: { game: GameType }) {
           <AppIcon name="help" size={24} />
         </button>
       </header>
+      {(optimistic || (busy && state.phase === 'play')) && <MotionPortal><p className="game-sync-status" role="status">Syncing move…</p></MotionPortal>}
       <div className="game-players">
         {(["X", "O"] as Player[]).map((p) => (
           <div key={p} className={state.turn === p && !ended ? "is-turn" : ""}>

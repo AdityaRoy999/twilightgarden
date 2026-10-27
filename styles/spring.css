@@ -2,7 +2,7 @@
 .app-icon-glyph { display: inline-flex; align-items: center; justify-content: center; line-height: 1; vertical-align: middle; font-family: inherit; }
 .app-icon-glyph > svg { display: block; width: 1em; height: 1em; flex-shrink: 0; }
 .nav-spring-pill { position: absolute; inset: 0; border-radius: inherit; background: var(--bloom-tint); z-index: 0; }
-.bloom-mobile-nav a[aria-current='page'], .bloom-mobile-nav > button[data-active='true'], .bloom-sidebar nav a[aria-current='page'] { background: transparent; }
+.bloom-sidebar nav a[aria-current='page'] { background: transparent; }
 .bloom-route, .bloom-route > .animate-slideIn { animation: none; }
 .spring-modal-backdrop { position: fixed; inset: 0; z-index: 300; display: flex; justify-content: center; align-items: center; padding: 20px; background: #17102070; }
 .spring-modal-backdrop.is-sheet { align-items: flex-end; padding: 12px 12px calc(12px + env(safe-area-inset-bottom)); }

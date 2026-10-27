@@ -14,7 +14,7 @@
 .bloom-sidebar .sidebar-link-label { position: absolute; left: 58px; top: 50%; transform: translateY(-50%); width: 145px; white-space: nowrap; overflow: visible; }
 .bloom-sidebar footer { position: absolute; left: 12px; bottom: 24px; width: 216px; min-height: 170px; padding: 18px; flex-shrink: 0; }
 .bloom-sidebar[data-collapsed='true'] footer { pointer-events: none; }
-.bloom-sidebar nav a[aria-current='page'], .bloom-mobile-nav a[aria-current='page'] { background: transparent !important; color: var(--color-primary-ink) !important; }
+.bloom-sidebar nav a[aria-current='page'] { background: transparent !important; color: var(--color-primary-ink) !important; }
 .nav-spring-pill { background: var(--bloom-tint) !important; border: 0 !important; }
 .mobile-link-label { white-space: nowrap; }
 #main-content:not([data-chat='true']) { background-size: cover !important; background-position: center top !important; background-repeat: no-repeat !important; }

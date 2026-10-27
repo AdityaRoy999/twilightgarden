@@ -45,7 +45,7 @@
 :root.dark .bloom-section-heading button { color: #ff71a6; }
 :root.dark .bloom-mobile-nav, :root.dark .bloom-sidebar { background: linear-gradient(125deg, #271c31f5, #201728f5); border-color: #45304d; box-shadow: 0 12px 40px -18px #08050e; }
 :root.dark .bloom-mobile-nav a, :root.dark .bloom-mobile-nav > button, :root.dark .bloom-sidebar nav a { color: #bfb5e2; }
-:root.dark .bloom-mobile-nav a[aria-current='page'], :root.dark .bloom-mobile-nav > button[data-active='true'], :root.dark .bloom-sidebar nav a[aria-current='page'] { color: #ff65a1; background: transparent; }
+:root.dark .bloom-sidebar nav a[aria-current='page'] { color: #ff65a1; background: transparent; }
 :root.dark .nav-spring-pill { background: linear-gradient(140deg, #68243f, #3e1e37); border: 1px solid #984365; box-shadow: inset 0 1px 0 #e979a524, 0 4px 20px -12px #ff4999; }
 :root.dark .bloom-sidebar footer { background: #3a1e32; }
 :root.dark .reference-heading h1 { color: #fffaff; }

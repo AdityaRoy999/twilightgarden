@@ -35,10 +35,7 @@
 .reference-switch input:checked + span::after { transform: translateX(19px); }
 .reference-switch input:focus-visible + span { outline: 3px solid var(--color-primary); outline-offset: 4px; }
 .reference-switch:has(input:disabled) { opacity: .5; cursor: not-allowed; }
-.bloom-mobile-nav { inset-inline: 14px; bottom: calc(10px + env(safe-area-inset-bottom)); border-radius: 28px; border: 1.5px solid white; min-height: 70px; padding: 5px 7px; box-shadow: 0 12px 40px -15px #df94b440; }
 .bloom-mobile-nav[data-solid='false'] { background: var(--bloom-nav); backdrop-filter: blur(16px); }
-.bloom-mobile-nav > button[data-active='true'] { background: var(--bloom-tint); color: var(--color-primary); }
-.bloom-mobile-nav a, .bloom-mobile-nav > button { font-size: 11px; border-radius: 22px; color: var(--text-secondary); }
 .reference-calendar-card { padding: 20px 18px 18px; }
 .reference-month { display: flex; align-items: center; justify-content: space-between; margin-bottom: 18px; }
 .reference-month strong { font-size: 17px; letter-spacing: -.4px; }

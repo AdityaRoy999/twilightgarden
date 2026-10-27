@@ -1,3 +1,4 @@
+import { GameInvitationBanner } from './components/GameInvitationBanner';
 import { AppIcon } from './components/ui/Icons';
 import { Flower2 } from './components/ui/Icons';
 import { NotificationProvider } from './contexts/NotificationContext';
@@ -460,6 +461,7 @@ const App: React.FC = () => {
                   <RestorationOverlay />
                   <WidgetSyncHandler />
                   <NotificationNavigationHandler />
+                  <GameInvitationBanner />
                   <UpdateModal />
                   <GlobalGameTutorial />
                   <CallModal />
