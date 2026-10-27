@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
+import {withinDeadline} from '../lib/requestTimeout';
 
 type Result = { text: string; error?: string };
 type Entry = Result & { status: 'loading' | 'ready' | 'error' };
@@ -23,7 +24,7 @@ export function useGeneratedText<K extends string>(generators: Record<K, (refres
     const generate = current.current[key];
     const job = (async () => {
       try {
-        const result = await Promise.resolve().then(()=>generate(refresh));
+        const result = await withinDeadline(()=>generate(refresh),40000,'Your AI guide is taking too long. Please try again.');
         if (result.error || typeof result.text !== 'string' || !result.text.trim()) throw new Error(result.error || 'No guidance was returned. Please retry.');
         write({ status: 'ready', text: result.text });
       } catch (error) {

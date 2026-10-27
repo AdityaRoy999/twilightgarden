@@ -62,7 +62,7 @@ const Wellness: React.FC = () => {
     ];
 
     const renderTipsContent = () => {
-        if (loading && !tipsText) return <GuidancePending/>;
+        if (!activeGuidance || (loading && !tipsText)) return <GuidancePending/>;
         if (error) return <ErrorCard message={error} onRetry={fetchTips} isDark={isDark} />;
 
         return <IllustratedGuide text={tipsText} onRefresh={fetchTips} busy={loading}/>;
@@ -71,7 +71,7 @@ const Wellness: React.FC = () => {
     const renderSleepContent = () => <SleepEnergy data={sleepData}/>;
 
     const renderEmpathyContent = () => {
-        if (loading && !empathyText) return <GuidancePending partner/>;
+        if (!activeGuidance || (loading && !empathyText)) return <GuidancePending partner/>;
         if (error) return <ErrorCard message={error} onRetry={fetchEmpathy} isDark={isDark}/>;
         return <div className="care-guide-view"><aside className="care-preview-banner"><AppIcon name="info" size={26}/><p>A preview of the kind of care suggestions your partner can explore. Each guide is personalized when it’s generated.</p><WellnessIllustration id="kind-message" decorative/></aside><IllustratedGuide text={empathyText} partner onRefresh={fetchEmpathy} busy={loading}/></div>;
     };

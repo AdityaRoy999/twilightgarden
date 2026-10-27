@@ -88,3 +88,11 @@
 @media(max-width:700px) { .pharmacy-search { flex-direction: column; align-items: stretch; gap: 14px; } .pharmacy-results { grid-template-columns: 1fr; } .pharmacy-map-frame { grid-row: 1; position: relative; height: 300px; top: auto; } .pharmacy-list { max-height: none; } .nearest-pads-heading h2 { font-size: 22px; } .nearest-pads-heading img { width: 85px; height: 100px; } }
 @media(max-width:650px) { .illustrated-tip { display: grid; grid-template-columns: 1fr; padding: 20px; gap: 0; } .tip-copy { padding-bottom: 0; } .tip-title h3 { font-size: 20px; } .tip-caption { font-size: 12px; line-height: 1.65; } .tip-body { font-size: 14px; } .tip-visual { display: grid; grid-template-columns: 1fr 1fr; align-items: center; gap: 14px; margin-top: 13px; } .tip-visual img { width: 100%; max-height: 165px; margin: 0; order: 2; } .tip-visual img:only-child { grid-column: 1/-1; max-height: 175px; } .tip-visual ul { grid-row: 1; margin: 0; font-size: 12px; } .tip-copy blockquote { font-size: 13px; } .guide-heading h2 { font-size: 21px; } .guide-heading > div { min-width: 0; } .guide-heading { flex-wrap: nowrap; } .guide-refresh { padding: 8px 10px; } .guide-refresh .solar-icon { width: 16px; } .guidance-pending .guide-cards { grid-template-columns: 1fr; gap: 10px; } .guidance-pending article { padding: 15px; display: flex; align-items: center; gap: 13px; } .guidance-pending article .solar-icon { margin: 0; flex-shrink: 0; } }
 @supports not (backdrop-filter:blur(1px)) { .spring-modal-backdrop { background: var(--overlay-wash) !important; } }
+.generation-status { display:inline-flex; align-items:center; gap:9px; font-size:12px; color:var(--color-primary-ink); margin:10px 0; }
+.generation-dots { display:inline-flex; align-items:center; gap:4px; height:16px; }
+.generation-dots i { width:5px; height:5px; border-radius:50%; background:currentColor; animation:generation-pulse 1.2s ease-in-out infinite; }
+.generation-dots i:nth-child(2) { animation-delay:.15s; }
+.generation-dots i:nth-child(3) { animation-delay:.3s; }
+@keyframes generation-pulse { 0%,70%,100% { opacity:.35; transform:translateY(0); } 35% { opacity:1; transform:translateY(-3px); } }
+.disable-animations .generation-dots i { animation:none; }
+@media(prefers-reduced-motion:reduce) { .generation-dots i { animation:none; } }

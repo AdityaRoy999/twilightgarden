@@ -241,7 +241,7 @@ const PartnerWellness: React.FC = () => {
                     >
                         {activeTab === 'care' && (
                             <div className="flex flex-col gap-4 max-w-4xl mx-auto w-full">
-                                {loading && !careText ? (
+                                {!guidance.entries.care || (loading && !careText) ? (
                                     <GuidancePending partner/>
                                 ) : careError ? (
                                     <ErrorCard message={careError} onRetry={fetchCare} isDark={isDark} />

@@ -308,7 +308,7 @@ const WidgetSyncHandler: React.FC = () => {
 };
 
 const AuthStatusBoundary: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const { error, refreshUser, recoveringPassword } = useAuth();
+  const { error, loading, refreshUser, recoveringPassword } = useAuth();
   const navigate = useNavigate();
   useEffect(() => {
     if (recoveringPassword) navigate('/reset-password', { replace: true });
@@ -316,7 +316,7 @@ const AuthStatusBoundary: React.FC<{ children: React.ReactNode }> = ({ children 
   if (error) return <main className="min-h-screen flex flex-col items-center justify-center gap-4 p-6 bg-background-dark text-white">
     <h1 className="text-xl font-bold">Unable to verify your session</h1>
     <p role="alert" className="max-w-md text-center">{error}</p>
-    <button onClick={() => { void refreshUser(); }} className="rounded-xl bg-primary px-6 py-3">Retry</button>
+    <button disabled={loading} onClick={() => { void refreshUser(); }} className="rounded-xl bg-primary px-6 py-3">{loading?'Checking your session…':'Retry'}</button>
   </main>;
   return <>{children}</>;
 };

@@ -185,8 +185,8 @@ export const CouplesProvider: React.FC<{ children: React.ReactNode }> = ({ child
     try{
       const [device,canonical,backup]=await Promise.all([
         Preferences.get({key:'tw_device_id'}),
-        supabase.rpc('get_chat_public_key',{p_user_id:user.id}),
-        supabase.from('identity_backups').select('public_key').eq('user_id',user.id).maybeSingle()
+        supabase.rpc('get_chat_public_key',{p_user_id:user.id}).abortSignal(AbortSignal.timeout(10000)),
+        supabase.from('identity_backups').select('public_key').eq('user_id',user.id).abortSignal(AbortSignal.timeout(10000)).maybeSingle()
       ]);
       if(canonical.error)throw canonical.error;if(backup.error)throw backup.error;
       if(!aliveRef.current)return;
@@ -213,7 +213,11 @@ export const CouplesProvider: React.FC<{ children: React.ReactNode }> = ({ child
     const pending=initializeIdentity();refreshE2EEPendingRef.current=pending;
     try{await pending;}finally{if(refreshE2EEPendingRef.current===pending)refreshE2EEPendingRef.current=null;}
   };
-  useEffect(()=>{if(!authLoading)void refreshE2EE();},[user?.id,authLoading]);
+  useEffect(()=>{if(!authLoading){
+    // Health sharing must not wait for chat device registration/recovery.
+    if(user)void fetchCoupleData();
+    void refreshE2EE();
+  }},[user?.id,authLoading]);
 
 
   const fetchCoupleData = async () => {
