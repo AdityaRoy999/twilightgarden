@@ -112,10 +112,18 @@ input:focus, textarea:focus, select:focus { --tw-ring-color: rgb(var(--primary-r
 .bloom-sidebar footer svg { color: var(--color-primary); margin-bottom: 12px; }
 .bloom-sidebar footer strong { font-size: 13px; display: block; margin-bottom: 6px; }
 .bloom-sidebar footer p { font-size: 11px; line-height: 1.7; color: var(--text-secondary); }
-.bloom-mobile-nav { background: var(--bloom-nav); border: 1px solid var(--border-color); border-radius: 26px 26px 0 0; box-shadow: 0 -8px 32px -20px rgb(169 71 109 / .22); gap: 4px; padding-top: 7px; }
-.bloom-mobile-nav a, .bloom-mobile-nav > button { border-radius: 20px; min-height: 54px; font-weight: 500; }
-.bloom-mobile-nav a[aria-current='page'], .bloom-mobile-nav > button[aria-expanded='true'] { background: var(--bloom-tint); color: var(--color-primary); }
-.bloom-mobile-nav a[aria-current='page'] svg { fill: rgb(var(--primary-rgb) / .12); }
+/* One geometry for the bar and its selection: outer radius minus 6px inset. */
+:root { --mobile-nav-height:80px; --mobile-nav-bottom:max(8px,calc(var(--safe-area-bottom,0px) - 10px)); }
+.bloom-mobile-nav { inset-inline:8px; bottom:var(--mobile-nav-bottom); height:var(--mobile-nav-height); padding:6px; gap:0; align-items:stretch; border:0; border-radius:34px; background:var(--bloom-nav); }
+.bloom-mobile-nav a { flex:1 1 0; min-width:0; min-height:0; padding:8px 0; gap:6px; border-radius:22px; font-size:11px; font-weight:500; color:var(--text-secondary); transition:background-color 160ms ease,color 160ms ease; }
+.bloom-mobile-nav a:first-child { border-radius:28px 22px 22px 28px; }
+.bloom-mobile-nav a:last-child { border-radius:22px 28px 28px 22px; }
+.bloom-mobile-nav a[aria-current='page'] { background:var(--selection-bg) !important; color:var(--selection-ink) !important; }
+.bloom-mobile-nav a svg { width:23px; height:23px; }
+.bloom-mobile-nav a:focus-visible { text-decoration:underline; text-underline-offset:4px; background:var(--selection-bg); }
+@media (max-width:767px) { .app-shell-content[data-has-nav='true'] { padding-bottom:calc(var(--mobile-nav-height) + var(--mobile-nav-bottom) + 12px); } }
+@media (max-width:359px) { .bloom-mobile-nav { inset-inline:2px; padding-inline:4px; } .bloom-mobile-nav a { font-size:9.5px; } .bloom-mobile-nav a:first-child { border-radius:28px 16px 16px 28px; } .bloom-mobile-nav a:last-child { border-radius:16px 28px 28px 16px; } }
+
 .bloom-route { animation: bloom-enter 220ms var(--ease-bloom); }
 @keyframes bloom-enter { from { opacity: .45; } to { opacity: 1; } }
 .bloom-sheet { animation: bloom-sheet 260ms var(--ease-bloom) both; }
@@ -339,3 +347,14 @@ html:not(.dark) .bloom-checkin { color: white; }
   .welcome-actions { max-width: 410px; grid-template-columns: 1fr; gap: 10px; }
   .welcome-action { min-height: 54px; }
 }
+
+.game-invitation-host { position:fixed; top:calc(var(--safe-area-top) + 12px); left:50%; translate:-50% 0; width:min(560px,calc(100% - 24px)); z-index:150; pointer-events:none; }
+.game-invitation-banner { display:flex; align-items:flex-start; gap:13px; padding:18px; border-radius:28px; background:var(--bg-surface); color:var(--text-primary); pointer-events:auto; }
+.game-invitation-symbol { display:grid; place-items:center; width:48px; height:48px; border-radius:18px; background:var(--selection-bg); color:var(--icon-ink); flex-shrink:0; }
+.game-invitation-banner > div { flex:1; min-width:0; }
+.game-invitation-banner strong { font-size:15px; font-weight:750; }
+.game-invitation-banner p { color:var(--text-secondary); font-size:13px; line-height:1.6; margin:5px 0; }
+.game-invitation-join { display:flex; align-items:center; gap:8px; min-height:44px; font-size:14px; font-weight:700; color:var(--color-primary-ink); }
+.game-invitation-close { display:grid; place-items:center; width:44px; height:44px; border-radius:50%; flex-shrink:0; color:var(--text-secondary); }
+.game-invitation-close:focus-visible { background:var(--selection-bg); }
+.game-sync-status { font-size:12px; color:var(--text-secondary); position:fixed; left:50%; bottom:calc(12px + var(--safe-area-bottom)); translate:-50% 0; padding:7px 14px; border-radius:16px; background:var(--bg-surface); pointer-events:none; }

@@ -15,8 +15,15 @@ import {
   type GameType,
   type Player,
 } from "../_shared/gameEngine.ts";
+import { inviteToGame } from "../_shared/gameInvitations.ts";
 import { generateGamePrompts } from "../_shared/gamePrompts.ts";
 Deno.serve(async (req: Request) => {
+  const started = performance.now();
+  const response = await handleGameRequest(req);
+  response.headers.set('Server-Timing',`game;dur=${(performance.now()-started).toFixed(1)}`);
+  return response;
+});
+async function handleGameRequest(req: Request): Promise<Response> {
   if (req.method === "OPTIONS")
     return new Response("ok", { headers: corsHeaders });
   if (req.method !== "POST") return json({ error: "Method not allowed" }, 405);
@@ -30,8 +37,6 @@ Deno.serve(async (req: Request) => {
   try {
     const body = await readBody(req);
     const db = adminClient();
-    if (!(await consumeBudget(actor, "game-move", 100)))
-      return json({ error: "Please slow down" }, 429);
     if (body.kind === "open") {
       if (
         typeof body.game !== "string" ||
@@ -40,6 +45,7 @@ Deno.serve(async (req: Request) => {
         !/^[a-f0-9-]{36}$/i.test(body.couple)
       )
         return json({ error: "Invalid room" }, 400);
+      if (!(await consumeBudget(actor, "game-move", 100))) return json({error:"Please slow down"},429);
       const initial = initialGame(body.game as GameType);
       const { data, error } = await db.rpc("open_game_room", {
         p_actor: actor,
@@ -53,7 +59,16 @@ Deno.serve(async (req: Request) => {
           { error: "Could not join this active relationship’s game" },
           403,
         );
-      return json({ session: data });
+      let invited = false;
+      let invitationError: string | undefined;
+      if (data.player_x === actor) {
+        const {data:relationship} = await db.from('couples').select('partner_1_id,partner_2_id').eq('id',body.couple).single();
+        if (relationship) {
+          try { invited = await inviteToGame(db,req,actor,data,relationship); }
+          catch { invitationError = 'The game is ready, but the invitation could not be sent. Tap Notify my partner to retry.'; }
+        }
+      }
+      return json({ session: data, invited, invitationError });
     }
     if (
       typeof body.id !== "string" ||
@@ -63,25 +78,19 @@ Deno.serve(async (req: Request) => {
       typeof body.action !== "object"
     )
       return json({ error: "Invalid action" }, 400);
-    const { data: room, error } = await db
-      .from("game_sessions")
-      .select("*")
-      .eq("id", body.id)
-      .eq("engine_version", 2)
-      .single();
-    if (error || !room || ![room.player_x, room.player_o].includes(actor))
-      return json({ error: "Room unavailable" }, 403);
-    const { data: couple } = await db
-      .from("couples")
-      .select("partner_1_id,partner_2_id,status")
-      .eq("id", room.couple_id)
-      .single();
-    if (
-      !couple ||
-      couple.status !== "active" ||
-      ![couple.partner_1_id, couple.partner_2_id].includes(actor)
-    )
-      return json({ error: "Relationship is not active" }, 403);
+    // Fetch all context in one indexed join, concurrently with the request budget.
+    // Nested secrets are stripped before any public room response is returned.
+    const [allowed,context] = await Promise.all([
+      consumeBudget(actor,"game-move",100),
+      db.from('game_sessions').select('*,couples!inner(partner_1_id,partner_2_id,status),game_room_secrets(payload)').eq('id',body.id).eq('engine_version',2).single(),
+    ]);
+    if (!allowed) return json({error:'Please slow down'},429);
+    if (context.error || !context.data) return json({error:'Room unavailable'},403);
+    const {couples:relationship,game_room_secrets:privateData,...room} = context.data;
+    const couple = Array.isArray(relationship) ? relationship[0] : relationship;
+    const privateRow = Array.isArray(privateData) ? privateData[0] : privateData;
+    if (![room.player_x,room.player_o].includes(actor)) return json({error:'Room unavailable'},403);
+    if (!couple || couple.status !== 'active' || ![couple.partner_1_id,couple.partner_2_id].includes(actor)) return json({error:'Relationship is not active'},403);
     if (room.revision !== body.revision)
       return json(
         {
@@ -92,73 +101,10 @@ Deno.serve(async (req: Request) => {
       );
     const action = body.action as Record<string, unknown>,
       type = room.game_type as GameType;
-    if (action.kind === "invite") {
-      const recipient =
-        actor === couple.partner_1_id
-          ? couple.partner_2_id
-          : couple.partner_1_id;
-      const digest = new Uint8Array(
-        await crypto.subtle.digest(
-          "SHA-256",
-          new TextEncoder().encode(`${room.id}:${actor}:invite`),
-        ),
-      );
-      const hex = Array.from(digest.slice(0, 16), (x) =>
-        x.toString(16).padStart(2, "0"),
-      ).join("");
-      const id = `${hex.slice(0, 8)}-${hex.slice(8, 12)}-${hex.slice(12, 16)}-${hex.slice(16, 20)}-${hex.slice(20)}`;
-      const { data: previous } = await db
-        .from("notifications")
-        .select("id")
-        .eq("id", id)
-        .maybeSingle();
-      if (!previous) {
-        const { error: failure } = await db
-          .from("notifications")
-          .upsert(
-            {
-              id,
-              user_id: recipient,
-              type: "game",
-              message: `Your partner invited you to ${games[type][0]}.`,
-              is_read: false,
-              data: {
-                url: `/games/${games[type][1]}`,
-                gameName: games[type][0],
-              },
-            },
-            { onConflict: "id", ignoreDuplicates: true },
-          );
-        if (failure) throw new Error("Invitation could not be saved");
-        // Best-effort push; the in-app notification is durable even without a token.
-        try {
-          await fetch(
-            `${Deno.env.get("SUPABASE_URL")}/functions/v1/push-notifications`,
-            {
-              method: "POST",
-              headers: {
-                Authorization: req.headers.get("Authorization")!,
-                "Content-Type": "application/json",
-                apikey: Deno.env.get("SUPABASE_ANON_KEY")!,
-              },
-              body: JSON.stringify({
-                userId: recipient,
-                url: `/games/${games[type][1]}`,
-              }),
-              signal: AbortSignal.timeout(3000),
-            },
-          );
-        } catch {
-          /* In-app delivery succeeded. */
-        }
-      }
-      return json({ session: room, invited: true });
+    if (action.kind === 'invite') {
+      const invited = await inviteToGame(db,req,actor,{id:room.id,game_type:type},couple);
+      return json({session:room,invited});
     }
-    const { data: privateRow } = await db
-      .from("game_room_secrets")
-      .select("payload")
-      .eq("session_id", body.id)
-      .single();
     if (!privateRow) return json({ error: "Room unavailable" }, 404);
     let state = room.board_state,
       secret = privateRow.payload;
@@ -207,4 +153,4 @@ Deno.serve(async (req: Request) => {
       error instanceof RequestBodyError ? error.status : 400,
     );
   }
-});
+}

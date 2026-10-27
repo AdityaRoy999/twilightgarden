@@ -85,7 +85,7 @@ export default function AppShell({ mode = "tracker" }: { mode?: Mode }) {
           `relative isolate flex min-h-12 items-center rounded-xl transition-colors ${compact ? "mobile-link flex-1 flex-col justify-center gap-1 px-1 py-2 text-[11px]" : "sidebar-link py-3 text-sm font-medium "} ${isActive ? "text-primary" : "text-gray-500 hover:bg-black/5 hover:text-gray-900 dark:text-gray-400 dark:hover:bg-white/5 dark:hover:text-white"}`
         }
       >
-        {isActive && <motion.span className="nav-spring-pill" layoutId={compact ? 'mobile-selection' : 'desktop-selection'} transition={motionTransition(springs.selection, reduced)} aria-hidden="true"/>}
+        {isActive && !compact && <span className="nav-spring-pill" aria-hidden="true"/>}
         <Icon
           size={compact ? 21 : 22}
           strokeWidth={1.8}
@@ -142,7 +142,8 @@ export default function AppShell({ mode = "tracker" }: { mode?: Mode }) {
         </motion.aside>
       )}
       <div
-        className={`flex min-h-0 min-w-0 flex-1 flex-col ${!hide ? "pb-[calc(92px+env(safe-area-inset-bottom))] md:pb-0" : ""}`}
+        data-has-nav={!hide}
+        className="app-shell-content flex min-h-0 min-w-0 flex-1 flex-col"
       >
         <main
           id="main-content"
@@ -158,7 +159,7 @@ export default function AppShell({ mode = "tracker" }: { mode?: Mode }) {
         <nav
           aria-label="Mobile navigation"
           data-solid={solidNavBg}
-          className="bloom-mobile-nav fixed inset-x-0 bottom-0 z-40 flex min-h-[68px] items-center px-2 pb-[env(safe-area-inset-bottom)] md:hidden"
+          className="bloom-mobile-nav fixed z-40 flex md:hidden"
         >
           {items.map((item) => renderLink(item, true))}
         </nav>

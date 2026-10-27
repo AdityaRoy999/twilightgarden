@@ -3,6 +3,7 @@ import { supabase } from "../lib/supabase";
 import { useAuth } from "../contexts/AuthContext";
 import { useCouples } from "../contexts/CouplesContext";
 import type { GameType, State } from "../supabase/functions/_shared/gameEngine";
+import { previewGameMove } from '../lib/gamePreview';
 export interface GameRoomSession {
   id: string;
   revision: number;
@@ -19,6 +20,8 @@ export function useGameRoom(game: GameType) {
     [loading, setLoading] = useState(true),
     [busy, setBusy] = useState(false),
     [error, setError] = useState("");
+  const [preview, setPreview] = useState<{id:string; revision:number; state:State} | null>(null);
+  const [invitationSent, setInvitationSent] = useState(false);
   const current = useRef(room),
     alive = useRef(true),
     lock = useRef(false),
@@ -67,6 +70,8 @@ export function useGameRoom(game: GameType) {
     lock.current = false;
     setBusy(false);
     setRoom(null);
+    setPreview(null);
+    setInvitationSent(false);
     if (!user || !couple) {
       setLoading(false);
       return;
@@ -74,7 +79,8 @@ export function useGameRoom(game: GameType) {
     setLoading(true);
     setError("");
     try {
-      await request({ kind: "open", game, couple: couple.id });
+      const result = await request({ kind: "open", game, couple: couple.id });
+      if (alive.current && version === generation.current) { setInvitationSent(result.invited === true); if(result.invitationError) setError(result.invitationError); }
     } catch (e) {
       if (alive.current && version === generation.current)
         setError(e instanceof Error ? e.message : "Could not open the game.");
@@ -141,8 +147,12 @@ export function useGameRoom(game: GameType) {
       lock.current = true;
       setBusy(true);
       setError("");
+      const player = session.player_x === user?.id ? 'X' : 'O';
+      const predicted = previewGameMove(game,session.board_state,player,action);
+      if (predicted) setPreview({id:session.id,revision:session.revision,state:predicted});
       try {
         await request({ id: session.id, revision: session.revision, action });
+        if (alive.current && version === generation.current && action.kind === 'invite') setInvitationSent(true);
         return true;
       } catch (e) {
         if (alive.current && version === generation.current)
@@ -151,14 +161,18 @@ export function useGameRoom(game: GameType) {
       } finally {
         if (version === generation.current) {
           lock.current = false;
+          setPreview(null);
           if (alive.current) setBusy(false);
         }
       }
     },
-    [request],
+    [request,game,user?.id],
   );
+  const optimistic = !!preview && preview.id === room?.id && preview.revision === room?.revision;
   return {
-    room,
+    room: room && optimistic ? {...room,board_state:preview!.state} : room,
+    optimistic,
+    invitationSent,
     loading,
     busy,
     error,
