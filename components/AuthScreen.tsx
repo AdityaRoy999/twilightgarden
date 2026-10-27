@@ -115,9 +115,13 @@ export default function AuthScreen({
             (signup && partner ? "/#/partner/auth-callback" : "/");
       const { data, error } = await supabase.auth.signInWithOAuth({
         provider: "google",
-        options: { redirectTo: redirect, skipBrowserRedirect: tauri },
+        options: { redirectTo: redirect, skipBrowserRedirect: tauri || Capacitor.isNativePlatform() },
       });
       if (error) throw error;
+      if (Capacitor.isNativePlatform() && data.url) {
+        const { Browser } = await import('@capacitor/browser');
+        await Browser.open({url:data.url});
+      }
       if (tauri && data.url) {
         const { open } = await import("@tauri-apps/plugin-shell");
         await open(data.url);

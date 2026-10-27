@@ -6,6 +6,9 @@
   icon fonts, or emoji as navigation/control icons.
   User messages, game content, reactions, and official provider logos retain
   their content; they are not generic interface icons.
+- Use original `LogSymbol` SVGs for selectable health check-ins, as explicitly
+  requested by the user; retain Solar for general controls. Tab selections use
+  color fades rather than a sliding highlight.
 - Use the spring presets in `lib/motion.ts` for interface movement. Honor both
   operating-system reduced motion and the in-app animation preference. Initial
   chat history, pagination, receipts, and identity recovery must not replay

@@ -1,3 +1,6 @@
+import {symptomSymbol} from '../lib/symptomSymbols';
+import {SegmentedControl} from '../components/ui/SegmentedControl';
+import {ExerciseLibrary} from '../components/exercise/ExerciseLibrary';
 import { DailyGuidance } from '../components/wellness/DailyGuidance';
 import { useToday } from '../hooks/useToday';
 import { cycleStatistics } from '../lib/cycleStatistics';
@@ -87,7 +90,7 @@ const Insights: React.FC = () => {
   const [chartType, setChartType] = useState<'bar' | 'line'>('bar');
   const [showTodayReport, setShowTodayReport] = useState(false);
   const [isSharing, setIsSharing] = useState(false);
-  const [activeTab, setActiveTab] = useState<'overview' | 'cycle' | 'trends'>('overview');
+  const [activeTab, setActiveTab] = useState<'overview' | 'cycle' | 'trends' | 'exercise'>('overview');
   const [trendsSubTab, setTrendsSubTab] = useState<'sleep' | 'energy'>('sleep');
   const shareIconRef = useRef<ShareIconHandle>(null);
 
@@ -164,7 +167,7 @@ const Insights: React.FC = () => {
   const topSymptoms = React.useMemo(() => {
     const counts: Record<string, number> = {};
     logs.forEach(log => {
-      log.symptoms?.forEach(sym => {
+      [...new Set(log.symptoms||[])].forEach(sym => {
         counts[sym] = (counts[sym] || 0) + 1;
       });
     });
@@ -174,13 +177,13 @@ const Insights: React.FC = () => {
       { name: 'No Data', level: '-', width: '0%', color: 'bg-gray-200' }
     ];
 
-    const max = sorted[0][1];
+
     return sorted.map(([name, count], i) => {
-      const baseline = Math.max(max, 5);
+      const baseline = Math.max(logs.length, 1);
       const pct = (count / baseline) * 100;
       const color = i === 0 ? 'bg-primary' : i === 1 ? 'bg-[#E7D6A7]' : 'bg-[#2DD4BF]';
-      const level = count > 5 ? 'High' : count > 2 ? 'Med' : 'Low';
-      return { name, level, width: `${Math.max(pct, 5)}%`, color };
+      const level = `${count} of ${logs.length} check-ins`;
+      return { name, level, width: `${pct}%`, color };
     });
   }, [logs]);
 
@@ -253,59 +256,12 @@ const Insights: React.FC = () => {
     <div className="reference-page reference-insights font-display">
       <ReferenceHeading title="Insights" description="Learn more about your cycle and how to feel your best." action={<details className="relative"><summary className="reference-round-action cursor-pointer list-none" aria-label="Insight options"><Ellipsis size={24}/></summary><div className="absolute right-0 top-14 z-50 flex items-center gap-2 rounded-2xl bg-surface-dark p-3 shadow-medium"><NotificationBell/><button onClick={handleShare} disabled={isSharing} aria-label="Share today’s insights" className="min-h-11 px-3 text-sm text-primary">{isSharing ? 'Creating link…' : 'Share summary'}</button></div></details>}/>
 
-      {/* Tabs */}
-      <div className="reference-insight-tabs w-full overflow-x-auto no-scrollbar mb-4">
-        <div className="flex gap-3 min-w-max relative">
-          <button
-            onClick={() => setActiveTab('overview')}
-            aria-pressed={activeTab === 'overview'} className={`relative z-10 flex h-10 items-center justify-center px-6 rounded-full text-sm font-semibold transition-all ${
-              activeTab === 'overview'
-                ? 'on-brand text-white'
-                : 'bg-white/5 dark:bg-white/5 text-gray-400 hover:bg-white/10'
-            }`}
-          >
-            {activeTab === 'overview' && (
-              <motion.div
-                layoutId="activeInsightsTab"
-                className="absolute inset-0 bg-primary rounded-full shadow-md shadow-primary/20"
-                transition={motionTransition(springs.selection, reduced)}
-              />
-            )}
-            <span className="relative z-20">Overview</span>
-          </button>
-          <button onClick={()=>setActiveTab('cycle')} aria-pressed={activeTab==='cycle'} className={`relative z-10 flex h-10 items-center justify-center rounded-full text-sm font-semibold ${activeTab==='cycle'?'on-brand text-white':'text-gray-400'}`}>
-            {activeTab==='cycle' && <motion.div layoutId="activeInsightsTab" className="absolute inset-0 bg-primary rounded-full" transition={motionTransition(springs.selection,reduced)}/>}
-            <span className="relative z-20">Cycle</span>
-          </button>
-          <button
-            onClick={() => setActiveTab('trends')}
-            aria-pressed={activeTab === 'trends'}
-            className={`relative z-10 flex h-10 items-center justify-center px-6 rounded-full text-sm font-semibold transition-all ${
-              activeTab === 'trends'
-                ? 'on-brand text-white'
-                : 'bg-white/5 dark:bg-white/5 text-gray-400 hover:bg-white/10'
-            }`}
-          >
-            {activeTab === 'trends' && (
-              <motion.div
-                layoutId="activeInsightsTab"
-                className="absolute inset-0 bg-primary rounded-full shadow-md shadow-primary/20"
-                transition={motionTransition(springs.selection, reduced)}
-              />
-            )}
-            <span className="relative z-20">Trends</span>
-          </button>
-          <button
-            onClick={() => navigate('/breathing')}
-            className="flex h-10 items-center justify-center px-6 rounded-full bg-white/5 dark:bg-white/5 text-gray-500 dark:text-gray-400 hover:bg-gray-200 dark:hover:bg-white/10 text-sm font-semibold transition-colors"
-          >
-            Breathe
-          </button>
-        </div>
-      </div>
+      <SegmentedControl<'overview'|'cycle'|'trends'|'exercise'> label="Insight sections" value={activeTab} onChange={setActiveTab} options={[
+        {value:'overview',label:'Overview',icon:'auto_awesome'},{value:'cycle',label:'Cycle',icon:'calendar_today'},{value:'trends',label:'Trends',icon:'insights'},{value:'exercise',label:'Exercise',icon:'accessibility_new'}
+      ]}/>
 
       <React.Fragment>
-        {activeTab === 'overview' ? (
+        {activeTab === 'exercise' ? <ExerciseLibrary logs={logs}/> : activeTab === 'overview' ? (
           <motion.main
             key="history"
             initial={reduced ? false : { x: -12 }}
@@ -318,7 +274,7 @@ const Insights: React.FC = () => {
                 {topSymptoms.map((s) => (
                   <div key={s.name} className="flex flex-col gap-2">
                     <div className="flex justify-between text-sm font-semibold">
-                      <span className="capitalize text-gray-700 dark:text-gray-300">{s.name}</span>
+                      <span className="capitalize text-gray-700 dark:text-gray-300"><span className="symptom-emoji" aria-hidden="true">{symptomSymbol(s.name)}</span> {s.name}</span>
                       <span className="text-gray-400">{s.level}</span>
                     </div>
                     <div className="h-2.5 w-full rounded-full bg-gray-100 dark:bg-white/5">
@@ -439,39 +395,7 @@ const Insights: React.FC = () => {
             transition={motionTransition(springs.section, reduced)}
             className="reference-stack"
           >
-            {/* Trends Sub-navigation */}
-            <div className="flex bg-gray-100/50 dark:bg-white/5 p-1 rounded-2xl self-center mb-2 relative">
-              <button
-                onClick={() => setTrendsSubTab('sleep')}
-                className={`relative z-10 flex h-9 items-center justify-center px-6 rounded-xl text-xs font-bold transition-all ${
-                  trendsSubTab === 'sleep' ? 'text-[var(--text-primary)] dark:text-white' : 'text-gray-400 hover:text-gray-600 dark:hover:text-gray-200'
-                }`}
-              >
-                {trendsSubTab === 'sleep' && (
-                  <motion.div
-                    layoutId="activeSubTab"
-                    className="absolute inset-0 bg-white dark:bg-white/10 rounded-xl shadow-sm"
-                    transition={motionTransition(springs.selection, reduced)}
-                  />
-                )}
-                <span className="relative z-20">Sleep</span>
-              </button>
-              <button
-                onClick={() => setTrendsSubTab('energy')}
-                className={`relative z-10 flex h-9 items-center justify-center px-6 rounded-xl text-xs font-bold transition-all ${
-                  trendsSubTab === 'energy' ? 'text-[var(--text-primary)] dark:text-white' : 'text-gray-400 hover:text-gray-600 dark:hover:text-gray-200'
-                }`}
-              >
-                {trendsSubTab === 'energy' && (
-                  <motion.div
-                    layoutId="activeSubTab"
-                    className="absolute inset-0 bg-white dark:bg-white/10 rounded-xl shadow-sm"
-                    transition={motionTransition(springs.selection, reduced)}
-                  />
-                )}
-                <span className="relative z-20">Energy</span>
-              </button>
-            </div>
+            <SegmentedControl<'sleep'|'energy'> label="Trend view" value={trendsSubTab} onChange={setTrendsSubTab} options={[{value:'sleep',label:'Sleep',icon:'bedtime'},{value:'energy',label:'Energy',icon:'bolt'}]}/>
 
             <React.Fragment>
               {trendsSubTab === 'sleep' ? (

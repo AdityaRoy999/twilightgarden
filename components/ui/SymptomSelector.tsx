@@ -1,4 +1,3 @@
-import { AppIcon } from './Icons';
 import React from 'react';
 
 export interface SymptomOption {
@@ -36,7 +35,7 @@ export const SymptomSelector: React.FC<SymptomSelectorProps> = ({
     <div className="symptom-options">
       {options.map(option => {
         const isSelected = selected.includes(option.id);
-        return <button key={option.id} type="button" aria-pressed={isSelected} onClick={() => toggleSelection(option.id)} className="symptom-option"><span className="symptom-option-symbol"><AppIcon name={option.icon}/></span><span>{option.label}</span></button>;
+        return <button key={option.id} type="button" aria-pressed={isSelected} onClick={() => toggleSelection(option.id)} className="symptom-option"><span className="symptom-option-symbol" aria-hidden="true">{option.icon}</span><span>{option.label}</span></button>;
       })}
     </div>
   );

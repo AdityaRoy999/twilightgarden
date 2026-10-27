@@ -11,13 +11,16 @@ export default defineConfig(({ mode }) => {
       plugins: [react()],
       esbuild: { drop: mode === 'production' ? ['console', 'debugger'] : [] },
       build: {
+        manifest: true,
         chunkSizeWarningLimit: 1000,
         rollupOptions: {
             output: {
                 manualChunks: {
                     'vendor-react': ['react', 'react-dom', 'react-router-dom'],
-                    'vendor-ui': ['framer-motion', 'recharts'],
-                    'vendor-utils': ['date-fns', 'html2canvas', 'jspdf'],
+                    'vendor-motion': ['framer-motion'],
+                    'vendor-charts': ['recharts'],
+                    'vendor-dates': ['date-fns'],
+                    'vendor-pdf': ['html2canvas', 'jspdf'],
                     'vendor-capacitor': ['@capacitor/core', '@capacitor/app', '@capacitor/filesystem', '@capacitor/local-notifications', '@capacitor/push-notifications', '@capacitor/share', '@capacitor/splash-screen'],
                     'vendor-supabase': ['@supabase/supabase-js']
                 }

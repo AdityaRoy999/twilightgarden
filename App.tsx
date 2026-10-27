@@ -45,7 +45,7 @@ const SharedCard = React.lazy(() => import('./pages/SharedCard'));
 const LoveLock = React.lazy(() => import('./pages/LoveLock'));
 const JoinPartner = React.lazy(() => import('./pages/JoinPartner'));
 const Wellness = React.lazy(() => import('./pages/Wellness'));
-const BreathingExercises = React.lazy(() => import('./pages/BreathingExercises'));
+const Exercise = React.lazy(() => import('./pages/Exercise'));
 // Partner Pages Lazy Load
 const PartnerLayout = React.lazy(() => import('./components/PartnerLayout'));
 const PartnerDashboard = React.lazy(() => import('./pages/partner/PartnerDashboard'));
@@ -540,7 +540,9 @@ const App: React.FC = () => {
                       <Route path="/notes" element={<ProtectedRoute><LoveLock /></ProtectedRoute>} />
                       <Route path="/games" element={<ProtectedRoute><Games /></ProtectedRoute>} />
                       <Route path="/wellness" element={<MenstruatorRoute><Wellness /></MenstruatorRoute>} />
-                      <Route path="/breathing" element={<MenstruatorRoute><BreathingExercises /></MenstruatorRoute>} />
+                      <Route path="/breathing" element={<Navigate to="/exercise" replace/>} />
+                      <Route path="/exercise" element={<MenstruatorRoute><Exercise /></MenstruatorRoute>} />
+                      <Route path="/partner/exercise" element={<PartnerRoute><Exercise partner/></PartnerRoute>} />
                     </Route>
 
                     {/* Standalone game routes (no bottom nav) */}

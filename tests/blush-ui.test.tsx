@@ -13,7 +13,7 @@ vi.mock('../contexts/ThemeContext', () => ({ useTheme: () => ({ theme: 'light', 
 vi.mock('../lib/supabase', () => ({ supabase: { from: () => ({ select: () => ({ eq: () => ({ single: async () => ({ data: null }) }) }) }) } }));
 vi.mock('../components/TodayReportModal', () => ({ default: () => null }));
 vi.mock('../components/ui/AnimatedIcons', () => ({ ShareIcon: React.forwardRef(() => <span/>) }));
-vi.mock('framer-motion', () => ({ motion: { div: ({ children, ...props }: any) => <div>{children}</div>, main: ({ children }: any) => <main>{children}</main> }, AnimatePresence: ({ children }: any) => children, useReducedMotion: () => true }));
+vi.mock('framer-motion', () => ({ motion: { span: ({children}:any)=><span>{children}</span>, div: ({ children, ...props }: any) => <div>{children}</div>, main: ({ children }: any) => <main>{children}</main> }, AnimatePresence: ({ children }: any) => children, useReducedMotion: () => true }));
 vi.mock('recharts', () => Object.fromEntries(['BarChart', 'Bar', 'Cell', 'XAxis', 'YAxis', 'Tooltip', 'ResponsiveContainer', 'AreaChart', 'Area', 'CartesianGrid', 'ReferenceLine', 'PieChart', 'Pie', 'Legend'].map(name => [name, () => <div data-testid="chart"/>])));
 import Dashboard from '../pages/Dashboard';
 import Insights from '../pages/Insights';

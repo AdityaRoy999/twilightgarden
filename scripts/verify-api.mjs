@@ -110,6 +110,7 @@ try {
     const guidance = await probe(`AI illustrated ${partner ? 'partner care' : 'Wellness tips'}`, '/functions/v1/ai-generate', 200, { method: 'POST', token: tokens[0], body: JSON.stringify({ mood: 'raw', customPrompt: wellnessGuidePrompt({phase:'Menstrual',cycleDay:2,moods:['calm'],symptoms:['cramps'],sleepQuality:'fair',energyLevel:'low',logHistory:'Fictional test context only. Three daily check-ins with mixed energy and 6 to 8 hours sleep.'}, partner) }) });
     assert.ok(typeof guidance?.text === 'string' && guidance.text.length > 50 && !guidance.text.includes('<think>'), 'Wellness must receive a visible answer, not just provider reasoning tokens');
     const cards = parseWellnessGuide(guidance.text);
+    if(new Set(cards.map(card=>card.illustrationId)).size!==3) console.log('Synthetic guide illustration mismatch:',JSON.stringify(cards.map(({title,body,illustrationId})=>({title,body,illustrationId}))));
     assert.equal(cards.length, 3, 'Complete illustrated guide must have three valid cards');
     assert.equal(new Set(cards.map(card => card.illustrationId)).size, 3, 'Suggestions must have distinct relevant subjects');
   }

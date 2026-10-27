@@ -1,3 +1,4 @@
+import {SegmentedControl} from '../components/ui/SegmentedControl';
 import { useAppMotion } from '../hooks/useAppMotion';
 import { springs, motionTransition } from '../lib/motion';
 import { GameSymbol } from '../components/ui/GameSymbol';
@@ -329,7 +330,8 @@ const Games: React.FC = () => {
 
     return <div className="reference-page reference-games font-display">
       <ReferenceHeading title="Mini Games" description="Make a moment for the two of you. Pick a favorite and play together." action={<button aria-label={viewMode === 'list' ? 'Show grid view' : 'Show list view'} onClick={() => setViewMode(viewMode === 'list' ? 'card' : 'list')}>{viewMode === 'list' ? <Grid2X2 size={18}/> : <List size={18}/>}</button>}/>
-      <nav className="reference-game-tabs" aria-label="Game categories">{categories.map(category => <button key={category.key} aria-pressed={category.key === activeTab} onClick={() => setActiveTab(category.key)}><AppIcon name={category.emoji} size={20}/>{category.label}</button>)}</nav>
+      <SegmentedControl label="Game categories" value={activeTab} onChange={setActiveTab} options={categories.map(category=>({value:category.key,label:category.label,icon:category.emoji}))}/>
+
       {!isPaired && <p className="reference-card reference-description mb-4">Pair with your partner first to play games together.</p>}
       <main className={`reference-game-list ${viewMode === 'card' ? 'reference-game-grid' : ''}`}>
         {activeCategory.games.map((game, index) => <motion.div key={game.id} className="reference-card reference-game-card" initial={reduced ? false : { y: 8 }} animate={{ y: 0 }} transition={motionTransition(springs.section, reduced)}>

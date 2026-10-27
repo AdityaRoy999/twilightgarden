@@ -1,3 +1,4 @@
+import {LogSymbol} from '../components/ui/LogSymbol';
 import { ReferenceArt } from '../components/ui/ReferenceArt';
 import { AppIcon } from '../components/ui/Icons';
 import { useTheme } from '../contexts/ThemeContext';
@@ -121,27 +122,27 @@ const LogDetails: React.FC = () => {
   };
 
   const flowOptions = [
-    { id: 'spotting', label: 'Spotting', icon: <span className="app-icon-glyph"><AppIcon name={"grain"}/></span> },
-    { id: 'light', label: 'Light', icon: <span className="app-icon-glyph"><AppIcon name={"flow_light"}/></span> },
-    { id: 'medium', label: 'Medium', icon: <span className="app-icon-glyph"><AppIcon name={"flow_medium"}/></span> },
-    { id: 'heavy', label: 'Heavy', icon: <span className="app-icon-glyph"><AppIcon name={"flow_heavy"}/></span> },
+    { id: 'spotting', label: 'Spotting', icon: <LogSymbol kind="spotting"/> },
+    { id: 'light', label: 'Light', icon: <LogSymbol kind="light"/> },
+    { id: 'medium', label: 'Medium', icon: <LogSymbol kind="flow-medium"/> },
+    { id: 'heavy', label: 'Heavy', icon: <LogSymbol kind="heavy"/> },
   ];
 
   const moodOptions = [
-    { id: 'calm', label: 'Calm', icon: <span className="app-icon-glyph"><AppIcon name={"spa"}/></span> },
-    { id: 'happy', label: 'Happy', icon: <span className="app-icon-glyph"><AppIcon name={"sentiment_satisfied"}/></span> },
-    { id: 'energetic', label: 'Energetic', icon: <span className="app-icon-glyph"><AppIcon name={"bolt"}/></span> },
-    { id: 'frisky', label: 'Frisky', icon: <span className="app-icon-glyph"><AppIcon name={"favorite"}/></span> },
-    { id: 'swings', label: 'Swings', icon: <span className="app-icon-glyph"><AppIcon name={"waves"}/></span> },
-    { id: 'anxious', label: 'Anxious', icon: <span className="app-icon-glyph"><AppIcon name={"sentiment_worried"}/></span> },
-    { id: 'sad', label: 'Sad', icon: <span className="app-icon-glyph"><AppIcon name={"sentiment_dissatisfied"}/></span> },
-    { id: 'irritated', label: 'Irritated', icon: <span className="app-icon-glyph"><AppIcon name={"sentiment_very_dissatisfied"}/></span> },
+    { id: 'calm', label: 'Calm', icon: <LogSymbol kind="calm"/> },
+    { id: 'happy', label: 'Happy', icon: <LogSymbol kind="happy"/> },
+    { id: 'energetic', label: 'Energetic', icon: <LogSymbol kind="energetic"/> },
+    { id: 'frisky', label: 'Frisky', icon: <LogSymbol kind="frisky"/> },
+    { id: 'swings', label: 'Swings', icon: <LogSymbol kind="swings"/> },
+    { id: 'anxious', label: 'Anxious', icon: <LogSymbol kind="anxious"/> },
+    { id: 'sad', label: 'Sad', icon: <LogSymbol kind="sad"/> },
+    { id: 'irritated', label: 'Irritated', icon: <LogSymbol kind="irritated"/> },
   ];
 
   const energyOptions = [
-    { id: 'low', label: 'Low', icon: <span className="app-icon-glyph"><AppIcon name={"battery_low"}/></span> },
-    { id: 'medium', label: 'Medium', icon: <span className="app-icon-glyph"><AppIcon name={"battery_3_bar"}/></span> },
-    { id: 'high', label: 'High', icon: <span className="app-icon-glyph"><AppIcon name={"bolt"}/></span> },
+    { id: 'low', label: 'Low', icon: <LogSymbol kind="low"/> },
+    { id: 'medium', label: 'Medium', icon: <LogSymbol kind="medium"/> },
+    { id: 'high', label: 'High', icon: <LogSymbol kind="high"/> },
   ];
 
   const reset = () => {

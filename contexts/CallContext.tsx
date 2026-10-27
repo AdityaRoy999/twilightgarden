@@ -1,3 +1,4 @@
+import {applyCallQuality,CallStatsSampler,nextCallQuality,recommendedCallQuality,preferSpeechCodec,type CallQuality,type CallNetwork} from '../lib/callQuality';
 import { encryptMessage, decryptMessage } from "../lib/encryption";
 import { loadCallIce, type CallIce } from "../lib/callIce";
 import React, {
@@ -32,6 +33,7 @@ interface CallContextType {
   callError: string | null;
   dismissCallError: () => void;
   callLatencyMs: number | null;
+  callNetwork: (CallNetwork&{quality:CallQuality;videoPaused:boolean}) | null;
 }
 interface Signal {
   callId: string;
@@ -56,6 +58,10 @@ export const CallProvider: React.FC<{ children: React.ReactNode }> = ({
   } = useCouples();
   const [callError, setCallError] = useState<string | null>(null);
   const [callLatencyMs, setCallLatencyMs] = useState<number | null>(null);
+  const [callNetwork,setCallNetwork]=useState<(CallNetwork&{quality:CallQuality;videoPaused:boolean})|null>(null);
+  const qualityRef=useRef<CallQuality>('clear');
+  const goodQualitySamples=useRef(0);
+  const tuning=useRef(false);
   const localCandidates = useRef<RTCIceCandidateInit[]>([]);
   const descriptionSent = useRef(false);
   const statsTimer = useRef<ReturnType<typeof setInterval> | undefined>(
@@ -106,7 +112,7 @@ export const CallProvider: React.FC<{ children: React.ReactNode }> = ({
     clearInterval(statsTimer.current);
     localCandidates.current = [];
     descriptionSent.current = false;
-    setCallLatencyMs(null);
+    setCallLatencyMs(null);setCallNetwork(null);qualityRef.current='clear';goodQualitySamples.current=0;tuning.current=false;
     const pc = pcRef.current;
     pcRef.current = null;
     if (pc) {
@@ -288,25 +294,20 @@ export const CallProvider: React.FC<{ children: React.ReactNode }> = ({
         clearTimeout(timeout.current);
         updateStatus("connected");
         clearInterval(statsTimer.current);
+        const sampler=new CallStatsSampler();
         statsTimer.current = setInterval(() => {
-          if (pcRef.current !== pc || !pc.getStats) return;
-          void pc
-            .getStats()
-            .then((report) => {
-              report.forEach((entry) => {
-                if (
-                  entry.type === "candidate-pair" &&
-                  entry.state === "succeeded" &&
-                  entry.nominated &&
-                  typeof entry.currentRoundTripTime === "number"
-                )
-                  setCallLatencyMs(
-                    Math.round(entry.currentRoundTripTime * 1000),
-                  );
-              });
-            })
-            .catch(() => {});
-        }, 2000);
+          if(pcRef.current!==pc||!pc.getStats||tuning.current)return;
+          tuning.current=true;
+          void pc.getStats().then(async report=>{
+            if(pcRef.current!==pc)return;
+            const network=sampler.sample(report);
+            setCallLatencyMs(network.rttMs);
+            const next=nextCallQuality(qualityRef.current,recommendedCallQuality(network),goodQualitySamples.current);
+            qualityRef.current=next.quality;goodQualitySamples.current=next.goodSamples;
+            const videoPaused=await applyCallQuality(pc,next.quality);
+            if(pcRef.current===pc)setCallNetwork({...network,quality:next.quality,videoPaused});
+          }).catch(()=>{}).finally(()=>{if(pcRef.current===pc)tuning.current=false;});
+        },2000);
       } else if (pc.connectionState === "failed") {
         setCallError(
           "The media connection failed. Check your network and try again.",
@@ -463,7 +464,8 @@ export const CallProvider: React.FC<{ children: React.ReactNode }> = ({
             localCandidates.current = [];
             await pc.setRemoteDescription(payload.offer);
             await flushCandidates(pc);
-            const answer = await pc.createAnswer();
+            preferSpeechCodec(pc);
+      const answer = await pc.createAnswer();
             await pc.setLocalDescription(answer);
             await signal("call:answer", { answer });
             await flushLocalCandidates();
@@ -503,14 +505,15 @@ export const CallProvider: React.FC<{ children: React.ReactNode }> = ({
         "Camera and microphone access requires a supported browser and HTTPS.",
       );
     const stream = await navigator.mediaDevices.getUserMedia({
-      audio: true,
-      video: video ? { facingMode: "user" } : false,
+      audio:{echoCancellation:true,noiseSuppression:true,autoGainControl:true,channelCount:{ideal:1},sampleRate:{ideal:48000}},
+      video:video?{facingMode:'user',width:{ideal:1920,max:1920},height:{ideal:1080,max:1080},frameRate:{ideal:30,max:30}}:false,
     });
     // A user can hang up or sign out while the permission prompt is open.
     if (generation.current !== revision) {
       stream.getTracks().forEach((track) => track.stop());
       return null;
     }
+    for(const track of stream.getTracks()){try{if(track.kind==='video')track.contentHint='motion';if(track.kind==='audio')track.contentHint='speech';}catch{}}
     streamRef.current = stream;
     setLocalStream(stream);
     return stream;
@@ -548,13 +551,13 @@ export const CallProvider: React.FC<{ children: React.ReactNode }> = ({
     armTimeout();
     const revision = generation.current;
     try {
-      const stream = await acquireMedia(video, revision);
-      if (!stream) return;
-      const pc = await makePeer(revision);
-      if (!pc) return;
+      const [stream,pc]=await Promise.all([acquireMedia(video,revision),makePeer(revision)]);
+      if(!stream||!pc)return;
       stream.getTracks().forEach((track) => pc.addTrack(track, stream));
+      preferSpeechCodec(pc);
       const offer = await pc.createOffer();
       await pc.setLocalDescription(offer);
+      await applyCallQuality(pc,'clear');
       if (revision !== generation.current) return;
       await signal("call:offer", { offer, isVideo: video });
       await flushLocalCandidates();
@@ -575,15 +578,15 @@ export const CallProvider: React.FC<{ children: React.ReactNode }> = ({
     updateStatus("connecting");
     const revision = generation.current;
     try {
-      const stream = await acquireMedia(videoRef.current, revision);
-      if (!stream) return;
-      const pc = await makePeer(revision);
-      if (!pc) return;
+      const [stream,pc]=await Promise.all([acquireMedia(videoRef.current,revision),makePeer(revision)]);
+      if(!stream||!pc)return;
       await pc.setRemoteDescription(offer);
       stream.getTracks().forEach((track) => pc.addTrack(track, stream));
       await flushCandidates(pc);
+      preferSpeechCodec(pc);
       const answer = await pc.createAnswer();
       await pc.setLocalDescription(answer);
+      await applyCallQuality(pc,'clear');
       if (revision !== generation.current) return;
       await signal("call:answer", { answer });
       await flushLocalCandidates();
@@ -614,6 +617,7 @@ export const CallProvider: React.FC<{ children: React.ReactNode }> = ({
         callError,
         dismissCallError: () => setCallError(null),
         callLatencyMs,
+        callNetwork,
         callStatus,
         localStream,
         remoteStream,

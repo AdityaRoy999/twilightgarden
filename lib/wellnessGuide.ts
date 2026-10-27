@@ -25,7 +25,10 @@ export function matchWellnessIllustration(title: string, body = '', requestedId?
   const best = ranked[0];
   const literal=requested&&requested.tags.some(tag=>!broadTopics.has(normalize(tag))&&(contains(heading,tag)||contains(description,tag)));
   if (requested && literal && !used.has(requested.id) && score(requested, heading, description) > 0 && (!best || score(requested, heading, description) >= best.score * .7)) return requested;
-  return ranked.find(entry => !used.has(entry.item.id) && entry.score >= best.score * .7)?.item || best?.item || byId.get('general-care')!;
+  // Repeated symptom words in every card must not force the same picture. Use
+  // the best remaining semantic match, even when a previously-used image scored
+  // higher. Never fill an unknown subject with unrelated random artwork.
+  return ranked.find(entry => !used.has(entry.item.id))?.item || best?.item || byId.get('general-care')!;
 }
 
 export interface WellnessCard {

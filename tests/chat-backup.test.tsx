@@ -159,7 +159,7 @@ describe("simple optional chat backup", () => {
     expect(screen.getByLabelText("Link code").textContent).toBe("ABCDEFGH");
     expect(mocks.create).toHaveBeenCalledTimes(1);
   });
-  it("still prompts a new device to restore its existing identity", () => {
+  it("still prompts a new device to restore its existing identity", async () => {
     mocks.locked = true;
     mocks.backup = true;
     render(
@@ -167,7 +167,7 @@ describe("simple optional chat backup", () => {
         <IdentityLockdownPrompt />
       </MemoryRouter>,
     );
-    expect(screen.getByRole("dialog")).toBeTruthy();
+    expect(await screen.findByRole("dialog")).toBeTruthy();
     expect(screen.getByRole("heading", { name: "Restore chats" })).toBeTruthy();
   });
   it("removes a device-link request that finishes after the modal was closed", async () => {

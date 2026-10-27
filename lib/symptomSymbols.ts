@@ -1,0 +1,2 @@
+const symbols:Record<string,string>={cramps:'⚡',bloating:'🫧',cravings:'🍓',headache:'🤕',fatigue:'😴',backache:'🧘',acne:'🌸',nausea:'😖',insomnia:'🌙',dizziness:'💫','tender breasts':'🌷','hot flashes':'🌡️',chills:'❄️','pelvic pain':'🌿','joint pain':'🦵','sensory sensitivity':'🪷',gas:'💨',diarrhea:'🚻',constipation:'🍃',heartburn:'🔥',indigestion:'🍵','loss of appetite':'🥣'};
+export const symptomSymbol=(name:string)=>symbols[name.toLowerCase()]||'🌼';

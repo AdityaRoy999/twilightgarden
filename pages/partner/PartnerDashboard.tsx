@@ -231,7 +231,7 @@ const PartnerDashboard: React.FC = () => {
              <CycleHero className="mb-6 md:mb-0 md:col-span-2">
                <BotanicalSprig className="bloom-hero-leaves"/>
                <div className="bloom-cycle-copy"><p>Your partner’s rhythm</p><h2>{cycleData.currentDay ? `Day ${cycleData.currentDay}` : 'One day at a time'}</h2><h3>{phaseLabel}</h3><p className="bloom-muted">A little understanding goes a long way.</p></div>
-               <CycleBloom day={cycleData.currentDay} length={cycleSettings.avgCycleLength} hasEstimate={cycleData.hasEstimate !== false}/>
+               <CycleBloom periodLength={cycleSettings.avgPeriodLength} introKey={user?.id} day={cycleData.currentDay} length={cycleSettings.avgCycleLength} hasEstimate={cycleData.hasEstimate !== false}/>
              </CycleHero>
 
              {/* Right Column: Stats & Updates */}
@@ -239,7 +239,7 @@ const PartnerDashboard: React.FC = () => {
                  {/* Info Grid */}
                  <div className="grid grid-cols-2 gap-4">
                     {/* Next Period */}
-                    <div className="bg-white dark:bg-surface-dark p-5 rounded-[24px] shadow-soft border border-gray-100 dark:border-white/5 flex flex-col justify-between h-32 relative overflow-hidden group">
+                    <div className="bloom-card partner-metric-card">
                          <div className="absolute top-0 right-0 p-3 opacity-10 group-hover:opacity-20 transition-opacity">
                             <span className="app-icon-glyph text-4xl text-primary"><AppIcon name={"water_drop"}/></span>
                          </div>
@@ -249,19 +249,19 @@ const PartnerDashboard: React.FC = () => {
                                  <span className="text-3xl font-bold text-gray-800 dark:text-white">
                                      {cycleData.hasEstimate===false?'—':Math.abs(cycleData.nextPeriodIn)}
                                  </span>
-                                 <span className="text-sm font-medium text-gray-500">days</span>
+                                 <span className="text-sm font-medium text-gray-500">{cycleData.hasEstimate===false?'No estimate yet':'days'}</span>
                             </div>
                          </div>
                          <div className="w-full bg-gray-100 dark:bg-white/10 h-1.5 rounded-full mt-3 overflow-hidden">
                             <div
                                 className="h-full bg-primary rounded-full"
-                                style={{ width: `${Math.min(100, Math.max(100 - (cycleData.nextPeriodIn / cycleSettings.avgCycleLength) * 100, 10))}%` }} // Reverse logic approx
+                                style={{ width: `${cycleData.hasEstimate===false?0:Math.max(0,Math.min(100,((cycleData.currentDay-1)/cycleSettings.avgCycleLength)*100))}%` }} // Reverse logic approx
                             ></div>
                          </div>
                     </div>
 
                     {/* Fertility Status */}
-                    <div className="bg-white dark:bg-surface-dark p-5 rounded-[24px] shadow-soft border border-gray-100 dark:border-white/5 flex flex-col justify-between h-32 relative overflow-hidden group">
+                    <div className="bloom-card partner-metric-card">
                          <div className="absolute top-0 right-0 p-3 opacity-10 group-hover:opacity-20 transition-opacity">
                             <span className="app-icon-glyph text-4xl text-teal-500"><AppIcon name={"egg_alt"}/></span>
                          </div>
