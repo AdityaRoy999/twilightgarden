@@ -1,8 +1,9 @@
 # Frontend conventions
 
-- Use Twilight's custom SVG icons from `components/ui/Icons.tsx` and the local
-  illustration components. Add a drawing there for a new UI symbol. Do not add
-  icon fonts, third-party icon packs, or emoji as navigation/control icons.
+- Use the locally vendored Solar icon adapter in `components/ui/Icons.tsx`, as
+  explicitly requested by the user. Add Solar data/mappings there for new UI
+  symbols. Keep attribution to 480 Design. Do not add remote icon requests,
+  icon fonts, or emoji as navigation/control icons.
   User messages, game content, reactions, and official provider logos retain
   their content; they are not generic interface icons.
 - Use the spring presets in `lib/motion.ts` for interface movement. Honor both

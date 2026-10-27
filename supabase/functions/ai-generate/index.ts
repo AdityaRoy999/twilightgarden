@@ -101,11 +101,11 @@ serve(async (req) => {
         return new Response('ok', { headers: corsHeaders });
     }
     if (req.method !== 'POST') return json({ error: 'Method not allowed' }, 405);
-    const userId = await requireUser(req);
+    let userId: string | null;
+    try { userId = await requireUser(req); } catch { return json({error:'Sign-in verification is temporarily unavailable. Please retry.',code:'AUTH_UNAVAILABLE'},503); }
     if (!userId) return json({ error: 'Authentication required' }, 401);
 
     try {
-        if (!await consumeBudget(userId, 'ai', 10)) return json({ error: 'Please wait before making another request.' }, 429);
         const { mood, customPrompt, search_query, lat, lon } = await readBody(req);
         const supportedModes = ['search','places','raw','missing','morning','appreciation','flirty','apology','encouragement'];
         if (typeof mood !== 'string' || !supportedModes.includes(mood) ||
@@ -113,6 +113,15 @@ serve(async (req) => {
             (search_query !== undefined && (typeof search_query !== 'string' || search_query.length > 300))) {
             return json({ error: 'Invalid request parameters' }, 400);
         }
+
+        // Reject malformed requests before touching the rate-limit store.
+        // Validation errors must not consume a generation allowance.
+        if (mood === 'places') {
+            const hasCoordinates = lat !== undefined || lon !== undefined;
+            if (hasCoordinates && (typeof lat !== 'number' || typeof lon !== 'number' || !Number.isFinite(lat) || !Number.isFinite(lon) || Math.abs(lat) > 90 || Math.abs(lon) > 180)) return json({ error: 'Valid coordinates are required' }, 400);
+            if (!hasCoordinates && (typeof search_query !== 'string' || search_query.trim().length < 2)) return json({ error: 'Coordinates or an area search are required' }, 400);
+        }
+        if (!await consumeBudget(userId, 'ai', 10)) return json({ error: 'Please wait before making another request.' }, 429);
 
         // ── Product Search Mode ──
         if (mood === 'search' && search_query) {
@@ -127,8 +136,7 @@ serve(async (req) => {
         if (mood === 'places') {
             if (!SERPER_API_KEY) throw new Error('SERPER_API_KEY is not set');
 
-            if (typeof lat !== 'number' || typeof lon !== 'number' || !Number.isFinite(lat) || !Number.isFinite(lon) ||
-                Math.abs(lat) > 90 || Math.abs(lon) > 180) return json({ error: 'Valid coordinates are required' }, 400);
+
 
             const placesBody: any = {
                 q: search_query || 'pharmacy medical store',
@@ -139,7 +147,7 @@ serve(async (req) => {
 
             // Use Serper's ll parameter with a precise zoom level.
             // 14z is roughly city/neighborhood level, which works best for finding local places
-            if (Number.isFinite(lat) && Number.isFinite(lon)) {
+            if (typeof lat === 'number' && typeof lon === 'number') {
                 // By combining "near me" with the ll parameter, Serper correctly geolocates
                 placesBody.q = (search_query || 'pharmacy medical store') + ' near me';
                 placesBody.ll = `@${lat},${lon},14z`;

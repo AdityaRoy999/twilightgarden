@@ -3,7 +3,7 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 type Result = { text: string; error?: string };
 type Entry = Result & { status: 'loading' | 'ready' | 'error' };
 /** In-memory, view-scoped requests: no cross-account persistence or stale writes. */
-export function useGeneratedText<K extends string>(generators: Record<K, () => Promise<Result>>, scope: string) {
+export function useGeneratedText<K extends string>(generators: Record<K, (refresh?:boolean) => Promise<Result>>, scope: string) {
   const current = useRef(generators); current.current = generators;
   const generation = useRef(scope); generation.current = scope;
   const mounted = useRef(true);
@@ -23,7 +23,7 @@ export function useGeneratedText<K extends string>(generators: Record<K, () => P
     const generate = current.current[key];
     const job = (async () => {
       try {
-        const result = await Promise.resolve().then(generate);
+        const result = await Promise.resolve().then(()=>generate(refresh));
         if (result.error || typeof result.text !== 'string' || !result.text.trim()) throw new Error(result.error || 'No guidance was returned. Please retry.');
         write({ status: 'ready', text: result.text });
       } catch (error) {

@@ -7,10 +7,11 @@ export const wellnessIllustrations: readonly WellnessIllustration[] = catalogDat
 const byId = new Map(wellnessIllustrations.map(item => [item.id, item]));
 const normalize = (text: string) => text.toLowerCase().replace(/[^a-z0-9]+/g, ' ').trim();
 const contains = (text: string, term: string) => ` ${text} `.includes(` ${normalize(term)} `);
+const broadTopics=new Set(['movement','comfort','care','wellness','support','energy','routine','feeling','mood','rest','sleep','hydration','water','gentle','space','pause','pace','plan','kindness','calm','feelings','body']);
 function score(item: WellnessIllustration, title: string, body: string) {
   // A specific phrase outranks several overlapping generic synonyms.
-  const heading = Math.max(0,...item.tags.map(tag => contains(title,tag) ? 12 + tag.length / 2 : 0));
-  const detail = Math.max(0,...item.tags.map(tag => contains(body,tag) ? 2 + tag.length / 10 : 0));
+  const heading = Math.max(0,...item.tags.map(tag => contains(title,tag) ? broadTopics.has(normalize(tag))?2+tag.length/20:12 + tag.length / 2 : 0));
+  const detail = Math.max(0,...item.tags.map(tag => contains(body,tag) ? broadTopics.has(normalize(tag)) ? .2 : 6 + tag.length / 10 : 0));
   return heading + detail;
 }
 
@@ -22,7 +23,8 @@ export function matchWellnessIllustration(title: string, body = '', requestedId?
   const requested = requestedId && byId.get(requestedId);
   // Respect a valid semantic choice, but reject e.g. a tea picture for sleep advice.
   const best = ranked[0];
-  if (requested && !used.has(requested.id) && score(requested, heading, description) > 0 && (!best || score(requested, heading, description) >= best.score * .7)) return requested;
+  const literal=requested&&requested.tags.some(tag=>!broadTopics.has(normalize(tag))&&(contains(heading,tag)||contains(description,tag)));
+  if (requested && literal && !used.has(requested.id) && score(requested, heading, description) > 0 && (!best || score(requested, heading, description) >= best.score * .7)) return requested;
   return ranked.find(entry => !used.has(entry.item.id) && entry.score >= best.score * .7)?.item || best?.item || byId.get('general-care')!;
 }
 

@@ -13,7 +13,8 @@ Deno.serve(async (req: Request) => {
     return new Response("ok", { headers: corsHeaders });
   if (req.method !== "POST") return json({ error: "Method not allowed" }, 405);
   try {
-    const userId = await requireUser(req);
+    let userId: string | null;
+    try { userId = await requireUser(req); } catch { return json({error:'Sign-in verification is temporarily unavailable. Please retry.',code:'AUTH_UNAVAILABLE'},503); }
     if (!userId) return json({ error: "Authentication required" }, 401);
     const body = await readBody(req),
       coupleId = body.coupleId;

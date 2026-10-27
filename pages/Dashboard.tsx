@@ -1,3 +1,4 @@
+import { DailyGuidance } from '../components/wellness/DailyGuidance';
 import { CycleHero } from '../components/ui/CycleHero';
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
@@ -14,7 +15,7 @@ const quickLogs = [{ label: 'Cramps', Icon: Zap, tone: 'rose' }, { label: 'Mood'
 export default function Dashboard() {
   const navigate = useNavigate();
   const { user } = useAuth();
-  const { getCyclePhase, cycleSettings, getLog } = useData();
+  const { getCyclePhase, cycleSettings, getLog, logs } = useData();
   const today = useToday();
   const cycle = getCyclePhase(today);
   const estimated = cycle.hasEstimate !== false && cycle.currentDay > 0;
@@ -28,12 +29,7 @@ export default function Dashboard() {
   fertileStart.setDate(nextPeriod.getDate() - 19);
   fertileEnd.setDate(nextPeriod.getDate() - 14);
   const logged = getLog(localDateKey());
-  const phaseCopy: Record<string, string> = {
-    Menstrual: 'Make room for rest. A warm drink, a gentle stretch, or a quiet moment can feel good today.',
-    Follicular: 'Check in with your energy today. There is no need to feel a certain way because of your cycle.',
-    Ovulation: 'A little time for yourself can go a long way. Notice how you feel and follow your own pace.',
-    Luteal: 'Give yourself a little extra kindness. Rest, a regular meal, and a small pause are all good places to start.',
-  };
+
   const countdown = cycle.nextPeriodIn < 0 ? `${Math.abs(cycle.nextPeriodIn)} days past estimate` : cycle.nextPeriodIn === 0 ? 'Period estimated today' : `${cycle.nextPeriodIn} days to next period`;
 
   return <div className="bloom-page bloom-home">
@@ -55,7 +51,7 @@ export default function Dashboard() {
         <button className="bloom-card bloom-stat" onClick={() => navigate('/calendar')}><span className="bloom-icon mint"><Leaf fill="currentColor"/></span><span><span className="bloom-muted">Estimated fertile window</span><strong>{estimated ? `${format(fertileStart)} – ${format(fertileEnd)}` : 'Not available'}</strong><small>{estimated ? cycle.isFertile ? 'Within estimated window' : 'Outside estimated window' : 'Based on cycle history'}</small></span><ChevronRight className="bloom-chevron" size={18}/></button>
       </div>
       <button className="bloom-checkin" onClick={() => navigate('/log/details')}><span className="bloom-checkin-smile"><Smile size={30}/></span><span><strong>{logged ? 'A little check-in?' : 'How are you feeling?'}</strong><span>{logged ? 'Add to today’s journal' : 'Log today’s symptoms'}</span></span><span className="bloom-checkin-plus"><Plus size={30}/></span></button>
-      <section className="bloom-card bloom-insight"><span className="bloom-icon sunshine"><Lightbulb size={28}/></span><div><p className="bloom-eyebrow">A little care for today</p><p>{phaseCopy[cycle.phase] || 'Your body has its own rhythm. Start with a small daily check-in, and let your patterns take shape over time.'}</p></div><BotanicalSprig className="bloom-insight-leaves"/></section>
+      <DailyGuidance phase={cycle.phase} cycleDay={cycle.currentDay} logs={logs} today={today}/>
       <section className="bloom-quick"><div className="bloom-section-heading"><h2>Quick log</h2><button onClick={() => navigate('/log/details')}>See all <ChevronRight size={17}/></button></div><div className="bloom-quick-grid">{quickLogs.map(({ label, Icon, tone }) => <button key={label} className="bloom-card bloom-quick-item" onClick={() => navigate(`/log/details?section=${label.toLowerCase()}`)} aria-label={`Log ${label.toLowerCase()}`}><span className={`bloom-icon ${tone}`}><Icon size={27}/></span><span>{label}</span></button>)}</div></section>
       <p className="bloom-footnote">Estimates can change. Cycle tracking cannot confirm ovulation or prevent pregnancy.</p>
     </div>

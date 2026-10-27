@@ -30,12 +30,7 @@ const AdminProfile: React.FC = () => {
                 }`}>
                     <div className="relative">
                         <div className="h-24 w-24 rounded-full bg-primary flex items-center justify-center border-4 border-white dark:border-[#1E1B24] shadow-md">
-                            <svg xmlns="http://www.w3.org/2000/svg" width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                                <path d="M12 15c-3.866 0-7 1.79-7 4v2h14v-2c0-2.21-3.134-4-7-4z"/>
-                                <circle cx="12" cy="7" r="4"/>
-                                <path d="M22 7h-5"/>
-                                <path d="M19 4v6"/>
-                            </svg>
+                            <AppIcon name="UserRound" size={24}/>
                         </div>
                     </div>
                     <div className="text-center">

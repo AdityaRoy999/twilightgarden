@@ -115,6 +115,9 @@ try {
   }
   await probe('product search', '/functions/v1/ai-generate', 200, { method: 'POST', token: tokens[0], body: JSON.stringify({ mood: 'search', search_query: 'hot water bottle India' }) });
   await probe('places search', '/functions/v1/ai-generate', 200, { method: 'POST', token: tokens[0], body: JSON.stringify({ mood: 'places', lat: 22.5726, lon: 88.3639 }) });
+  const areaPlaces=await probe('places manual-area fallback', '/functions/v1/ai-generate', 200, {method:'POST',token:tokens[0],body:JSON.stringify({mood:'places',search_query:'pharmacy medical store in Salt Lake Kolkata'})});
+  assert.ok(Array.isArray(areaPlaces?.places),'Area search must return a places list');
+  await probe('places invalid coordinates', '/functions/v1/ai-generate', 400, {method:'POST',token:tokens[0],body:JSON.stringify({mood:'places',lat:100,lon:88})});
   // Discover every table referenced by the client, then exercise its read route.
   const sources = dir => fs.readdirSync(dir, { withFileTypes: true }).flatMap(e => e.isDirectory() ? sources(path.join(dir, e.name)) : /\.tsx?$/.test(e.name) ? [path.join(dir, e.name)] : []);
   const tables = new Set([...sources('contexts'), ...sources('lib'), ...sources('hooks'), ...sources('pages')].flatMap(file => [...fs.readFileSync(file, 'utf8').replace(/\.storage\.from\(['"][^'"]+['"]\)/g, '').matchAll(/\.from\(['"]([a-z_]+)['"]\)/g)].map(match => match[1])));

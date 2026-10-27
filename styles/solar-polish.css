@@ -1,0 +1,90 @@
+/* Solar by 480 Design, CC BY 4.0. Duotone colors follow the active theme. */
+:root { --icon-secondary: #ed8eae; --overlay-wash: #e8cadb50; }
+:root.dark { --icon-secondary: #b75183; --overlay-wash: #100b1955; }
+.solar-icon { display: inline-block; flex-shrink: 0; vertical-align: middle; }
+.solar-icon :is(path,g)[opacity] { fill: var(--icon-secondary); }
+.bloom-sidebar { padding: 24px 12px; position: relative; }
+.sidebar-header { width: 100%; }
+.sidebar-brand { position: absolute; left: 7px; width: 154px; white-space: nowrap; }
+.sidebar-brand a { width: 154px; }
+.sidebar-toggle { position: absolute; right: 6px; }
+.bloom-sidebar nav { gap: 10px; }
+.bloom-sidebar nav .sidebar-link { display: block; height: 54px; min-height: 54px; padding: 0; width: 100%; flex-shrink: 0; }
+.sidebar-link > .solar-icon { position: absolute; left: 17px; top: 50%; transform: translateY(-50%); }
+.bloom-sidebar .sidebar-link-label { position: absolute; left: 58px; top: 50%; transform: translateY(-50%); width: 145px; white-space: nowrap; overflow: visible; }
+.bloom-sidebar footer { position: absolute; left: 12px; bottom: 24px; width: 216px; min-height: 170px; padding: 18px; flex-shrink: 0; }
+.bloom-sidebar[data-collapsed='true'] footer { pointer-events: none; }
+.bloom-sidebar nav a[aria-current='page'], .bloom-mobile-nav a[aria-current='page'] { background: transparent !important; color: var(--color-primary-ink) !important; }
+.nav-spring-pill { background: var(--bloom-tint) !important; border: 0 !important; }
+.mobile-link-label { white-space: nowrap; }
+#main-content:not([data-chat='true']) { background-size: cover !important; background-position: center top !important; background-repeat: no-repeat !important; }
+.reference-chat .bloom-chat-header { background: linear-gradient(to bottom,color-mix(in srgb,var(--bg-base) 94%,transparent),color-mix(in srgb,var(--bg-base) 62%,transparent)) !important; backdrop-filter: blur(18px); -webkit-backdrop-filter: blur(18px); border-bottom: 0; }
+.reference-chat .reference-chat-composer { background: linear-gradient(to bottom,color-mix(in srgb,var(--bg-base) 55%,transparent),var(--bg-base)) !important; backdrop-filter: blur(18px); -webkit-backdrop-filter: blur(18px); }
+.spring-modal-backdrop,[data-twilight-overlays] > .fixed[class*='bg-black/'] { isolation: isolate; background: linear-gradient(to bottom,transparent,var(--overlay-wash)) !important; }
+:is(.spring-modal-backdrop,[data-twilight-overlays] > .fixed[class*='bg-black/'])::before,:is(.spring-modal-backdrop,[data-twilight-overlays] > .fixed[class*='bg-black/'])::after { content: ''; position: absolute; inset: 0; pointer-events: none; z-index: -1; }
+:is(.spring-modal-backdrop,[data-twilight-overlays] > .fixed[class*='bg-black/'])::before { backdrop-filter: blur(7px); -webkit-backdrop-filter: blur(7px); mask-image: linear-gradient(to bottom,#0003,#000 80%); }
+:is(.spring-modal-backdrop,[data-twilight-overlays] > .fixed[class*='bg-black/'])::after { backdrop-filter: blur(15px); -webkit-backdrop-filter: blur(15px); mask-image: linear-gradient(to bottom,transparent,#000 85%); }
+.spring-modal-panel { position: relative; background: color-mix(in srgb,var(--bg-surface) 94%,transparent); backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px); }
+.illustrated-tip { grid-template-columns: minmax(0,1.5fr) minmax(170px,1fr); padding: 24px; gap: 14px; }
+.tip-title { align-items: flex-start; }
+.tip-title > div { flex: 1; }
+.tip-caption { border-radius: 10px; padding: 5px 0; background: transparent; font-size: 12px; max-width: 100%; }
+.tip-body { line-height: 1.75; }
+.tip-visual ul { padding: 0; margin-top: 10px; }
+.tip-visual .wellness-illustration { max-height: 230px; }
+.illustrated-tip::before { display: none; }
+.guidance-pending-label { font-size: 11px; color: var(--text-secondary); margin-bottom: 12px; }
+.guidance-pending .guide-heading { margin-bottom: 14px; }
+.guidance-pending .guide-cards { grid-template-columns: repeat(3,minmax(0,1fr)); }
+.guidance-pending article { padding: 19px; border-radius: 22px; background: var(--bloom-tint); }
+.guidance-pending article .solar-icon { color: var(--color-primary-ink); margin-bottom: 12px; }
+.guidance-pending article p { font-size: 14px; line-height: 1.8; color: var(--text-primary); }
+.daily-ai-copy { min-width: 0; flex: 1; }
+.daily-ai-copy > p:last-child { line-height: 1.8; }
+.daily-ai-copy small { display: block; color: var(--text-secondary); margin-top: 9px; font-size: 10px; }
+.solar-attribution { text-align: center; color: var(--text-secondary); font-size: 10px; margin: 24px 0; }
+.solar-attribution a { text-decoration: underline; text-underline-offset: 3px; }
+.reference-insight-tabs > div { display: grid; grid-template-columns: repeat(4,minmax(0,1fr)); min-width: 0; gap: 6px; }
+.reference-insight-tabs button { padding-inline: 7px; font-size: 12px; min-height: 44px; }
+.partner-insight-tabs button { position: relative; isolation: isolate; border-radius: 22px; }
+.partner-insight-tabs .nav-spring-pill { background: var(--color-primary) !important; }
+.nearest-pads { background: var(--bg-surface); border-radius: 28px; padding: clamp(18px,3vw,28px); border: 1px solid var(--border-color); }
+.nearest-pads-heading { display: flex; align-items: center; justify-content: space-between; gap: 15px; }
+.nearest-pads-heading h2 { font-size: 26px; line-height: 1.3; font-weight: 800; letter-spacing: -.8px; margin-top: 8px; }
+.nearest-pads-heading p { font-size: 14px; color: var(--text-secondary); line-height: 1.8; margin-top: 8px; }
+.nearest-pads-heading img { width: 125px; height: 125px; }
+.pharmacy-search { display: flex; gap: 20px; align-items: end; margin-top: 20px; }
+.pharmacy-search > button { white-space: nowrap; flex-shrink: 0; font-size: 13px; }
+.pharmacy-search form { flex: 1; min-width: 0; }
+.pharmacy-search label { display: block; font-size: 11px; color: var(--text-secondary); margin-bottom: 7px; }
+.pharmacy-search form > div { display: flex; border-radius: 16px; background: var(--bloom-muted-surface); overflow: hidden; }
+.pharmacy-search input { background: transparent; border: 0; padding: 13px; flex: 1; min-width: 0; font-size: 13px; color: var(--text-primary); }
+.pharmacy-search form button { width: 48px; min-height: 48px; color: var(--color-primary-ink); }
+.pharmacy-stock-note { display: flex; align-items: flex-start; gap: 8px; color: var(--text-secondary); font-size: 11px; line-height: 1.7; margin-top: 17px; }
+.pharmacy-stock-note svg { margin-top: 2px; }
+.pharmacy-error { background: var(--bloom-tint); color: var(--text-primary); padding: 17px; border-radius: 18px; margin-top: 18px; font-size: 13px; line-height: 1.7; }
+.pharmacy-error button { color: var(--color-primary-ink); min-height: 44px; font-weight: 650; }
+.pharmacy-status { text-align: center; padding: 30px; color: var(--text-secondary); font-size: 14px; }
+.pharmacy-empty { display: flex; flex-direction: column; align-items: center; text-align: center; gap: 12px; padding: 24px 15px; }
+.pharmacy-empty img { width: 150px; }
+.pharmacy-empty h3 { font-weight: 750; }
+.pharmacy-empty p { font-size: 13px; color: var(--text-secondary); }
+.pharmacy-empty a { display: inline-flex; gap: 8px; align-items: center; min-height: 44px; color: var(--color-primary-ink); font-size: 13px; }
+.pharmacy-results { display: grid; grid-template-columns: 1fr 1.2fr; gap: 20px; margin-top: 26px; align-items: start; }
+.pharmacy-list { min-width: 0; display: grid; gap: 13px; max-height: 600px; overflow-y: auto; }
+.pharmacy-list h3 { font-size: 13px; color: var(--text-secondary); font-weight: 600; }
+.pharmacy-list article { border: 1px solid var(--border-color); border-radius: 22px; padding: 15px; }
+.pharmacy-list article.is-selected { background: var(--bloom-tint); }
+.pharmacy-select { display: flex; gap: 12px; text-align: left; width: 100%; }
+.pharmacy-select .tip-symbol { width: 39px; height: 39px; }
+.pharmacy-select strong { display: block; font-size: 14px; line-height: 1.4; }
+.pharmacy-select small { display: block; font-size: 11px; color: var(--text-secondary); line-height: 1.7; margin-top: 6px; }
+.pharmacy-select em { display: block; font-size: 10px; color: var(--color-primary-ink); font-style: normal; margin-top: 7px; }
+.pharmacy-actions { display: flex; align-items: center; flex-wrap: wrap; gap: 5px; margin-top: 12px; }
+.pharmacy-actions a { display: flex; align-items: center; gap: 6px; background: var(--bloom-muted-surface); border-radius: 20px; padding: 8px 11px; min-height: 40px; font-size: 11px; color: var(--color-primary-ink); }
+.pharmacy-route { font-size: 11px; line-height: 1.7; margin-top: 11px; color: var(--text-secondary); }
+.pharmacy-map-frame { height: 520px; min-width: 0; border-radius: 24px; overflow: hidden; position: sticky; top: 20px; z-index: 0; background: var(--bloom-tint); }
+.pharmacy-map { height: 100%; width: 100%; }
+@media(max-width:700px) { .pharmacy-search { flex-direction: column; align-items: stretch; gap: 14px; } .pharmacy-results { grid-template-columns: 1fr; } .pharmacy-map-frame { grid-row: 1; position: relative; height: 300px; top: auto; } .pharmacy-list { max-height: none; } .nearest-pads-heading h2 { font-size: 22px; } .nearest-pads-heading img { width: 85px; height: 100px; } }
+@media(max-width:650px) { .illustrated-tip { display: grid; grid-template-columns: 1fr; padding: 20px; gap: 0; } .tip-copy { padding-bottom: 0; } .tip-title h3 { font-size: 20px; } .tip-caption { font-size: 12px; line-height: 1.65; } .tip-body { font-size: 14px; } .tip-visual { display: grid; grid-template-columns: 1fr 1fr; align-items: center; gap: 14px; margin-top: 13px; } .tip-visual img { width: 100%; max-height: 165px; margin: 0; order: 2; } .tip-visual img:only-child { grid-column: 1/-1; max-height: 175px; } .tip-visual ul { grid-row: 1; margin: 0; font-size: 12px; } .tip-copy blockquote { font-size: 13px; } .guide-heading h2 { font-size: 21px; } .guide-heading > div { min-width: 0; } .guide-heading { flex-wrap: nowrap; } .guide-refresh { padding: 8px 10px; } .guide-refresh .solar-icon { width: 16px; } .guidance-pending .guide-cards { grid-template-columns: 1fr; gap: 10px; } .guidance-pending article { padding: 15px; display: flex; align-items: center; gap: 13px; } .guidance-pending article .solar-icon { margin: 0; flex-shrink: 0; } }
+@supports not (backdrop-filter:blur(1px)) { .spring-modal-backdrop { background: var(--overlay-wash) !important; } }

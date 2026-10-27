@@ -6,6 +6,7 @@ import './styles/dark.css';
 import './styles/refinements.css';
 import './styles/polish.css';
 import './styles/wellness.css';
+import './styles/solar-polish.css';
 import React from 'react';
 import ReactDOM from 'react-dom/client';
 import App from './App';

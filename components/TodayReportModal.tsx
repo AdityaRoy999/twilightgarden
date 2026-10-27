@@ -223,7 +223,7 @@ const TodayReportModal: React.FC<TodayReportModalProps> = ({
         onClose={() => setToast(prev => ({ ...prev, isVisible: false }))}
       />
 
-      <AppIcon name={isOpen && (
+      {isOpen && (
         <MotionPortal><motion.div
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
@@ -384,7 +384,7 @@ const TodayReportModal: React.FC<TodayReportModalProps> = ({
             </div>
           </div>
         </motion.div></MotionPortal>
-      )}/>
+      )}
     </AnimatePresence>
   );
 };

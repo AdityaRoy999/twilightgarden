@@ -486,7 +486,7 @@ const Settings: React.FC = () => {
                 </button>
               </div>
               <div className="mt-8 text-center">
-                <p className="text-xs text-gray-500 dark:text-gray-600">Version 2.4.0</p>
+                <p className="text-xs text-gray-500 dark:text-gray-600">Version 2.4.0</p><p className="solar-attribution">Solar icons by <a href="https://www.figma.com/community/file/1166831539721848736" target="_blank" rel="noreferrer">480 Design</a> · <a href="https://creativecommons.org/licenses/by/4.0/" target="_blank" rel="noreferrer">CC BY 4.0</a></p>
               </div>
             </div>
 
