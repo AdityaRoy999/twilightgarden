@@ -198,9 +198,9 @@ export async function searchNearbyPharmacies(lat?:number,lon?:number,area?:strin
     if(!hasCoordinates&&(!area||area.trim().length<2))throw new Error('Enter an area or use your location.');
     const session=await getAISession();
     if(!session)throw new Error('Please sign in again to search nearby stores.');
-    const response=await fetch(`${SUPABASE_URL}/functions/v1/ai-generate`,{method:'POST',signal:AbortSignal.timeout(30000),headers:{'Content-Type':'application/json','Authorization':`Bearer ${session.access_token}`,'apikey':SUPABASE_ANON_KEY},body:JSON.stringify({mood:'places',search_query:area?`pharmacy medical store in ${area.trim().slice(0,120)}`:'pharmacy medical store',...(hasCoordinates?{lat,lon}:{})})});
-    if(!response.ok)throw new Error(response.status===429?'Nearby search is busy. Please try again shortly.':'Nearby search is unavailable. Please try again.');
+    const response=await fetch(`${SUPABASE_URL}/functions/v1/ai-generate`,{method:'POST',signal:AbortSignal.timeout(30000),headers:{'Content-Type':'application/json','Authorization':`Bearer ${session.access_token}`,'apikey':SUPABASE_ANON_KEY},body:JSON.stringify({mood:'places',search_query:area?area.trim().slice(0,120):'pharmacy medical store',...(hasCoordinates?{lat,lon}:{})})});
     const data=await response.json();
+    if(!response.ok)throw new Error(data.error||'Nearby search is unavailable. Please try again.');
     return normalizePharmacies(data.places,hasCoordinates?[lat!,lon!]:undefined);
 }
 

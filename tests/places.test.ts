@@ -18,6 +18,6 @@ it('keeps valid manual-area results without fabricating a current location or di
 });
 it('builds explicit walking and driving directions using validated coordinates',()=>{
  const place={id:'1',name:'Store',lat:22.6,lon:88.4,address:'Local'};
- const walking=new URL(pharmacyDirections(place));expect(walking.searchParams.get('api')).toBe('1');expect(walking.searchParams.get('travelmode')).toBe('walking');expect(walking.searchParams.get('destination')).toBe('22.6,88.4');
- expect(new URL(pharmacyDirections(place,'driving')).searchParams.get('travelmode')).toBe('driving');
+ const walking=new URL(pharmacyDirections(place));expect(walking.hostname).toBe('www.openstreetmap.org');expect(walking.searchParams.get('engine')).toBe('fossgis_osrm_foot');expect(walking.searchParams.get('to')).toBe('22.6,88.4');
+ expect(new URL(pharmacyDirections(place,'driving')).searchParams.get('engine')).toBe('fossgis_osrm_car');
 });

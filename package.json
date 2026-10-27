@@ -20,7 +20,9 @@
     "design:preview": "vitest run --config scripts/design-preview.config.ts",
     "verify:ui": "node scripts/verify-ui-theme.mjs",
     "verify:api": "node --experimental-strip-types scripts/verify-api.mjs",
-    "seed:demo": "node --experimental-strip-types scripts/seed-demo-history.mjs"
+    "seed:demo": "node --experimental-strip-types scripts/seed-demo-history.mjs",
+    "tutorials:studio": "remotion studio remotion/index.tsx",
+    "tutorials:preview": "node scripts/render-tutorial-previews.mjs"
   },
   "dependencies": {
     "@capacitor/android": "^8.1.0",
@@ -36,6 +38,7 @@
     "@capacitor/share": "^8.0.1",
     "@capacitor/splash-screen": "^8.0.1",
     "@capawesome-team/capacitor-file-opener": "^8.0.1",
+    "@remotion/player": "4.0.539",
     "@supabase/supabase-js": "^2.98.0",
     "@tauri-apps/plugin-deep-link": "^2.4.7",
     "@tauri-apps/plugin-dialog": "^2.6.0",
@@ -59,10 +62,12 @@
     "react-leaflet": "^5.0.0",
     "react-qr-code": "^2.0.18",
     "react-router-dom": "^7.13.1",
-    "recharts": "^3.7.0"
+    "recharts": "^3.7.0",
+    "remotion": "4.0.539"
   },
   "devDependencies": {
     "@capacitor/cli": "^8.1.0",
+    "@remotion/cli": "4.0.539",
     "@tailwindcss/container-queries": "0.1.1",
     "@tailwindcss/forms": "0.5.11",
     "@tauri-apps/api": "^2.10.1",
@@ -85,6 +90,7 @@
     "tar": "^7.5.8",
     "minimatch": "^3.1.2",
     "@grpc/grpc-js": "1.14.6",
-    "postcss-selector-parser": "7.1.6"
+    "postcss-selector-parser": "7.1.6",
+    "zod": "^4.6.6"
   }
 }

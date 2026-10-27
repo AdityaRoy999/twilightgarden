@@ -37,7 +37,7 @@ async function probe(label, pathname, expected, { method = 'GET', token = anon, 
   }
 }
 try {
-  const functions = ['ai-generate', 'call-credentials', 'push-notifications', 'push-notifications-', 'health-check', 'check-reminders', 'check-remainders'];
+  const functions = ['game-action','ai-generate', 'call-credentials', 'push-notifications', 'push-notifications-', 'health-check', 'check-reminders', 'check-remainders'];
   for (const name of functions) {
     const route = `/functions/v1/${name}`;
     await probe(`${name} preflight`, route, 200, { method: 'OPTIONS' });
@@ -116,20 +116,15 @@ try {
     if(partner){assert.ok(!caregiverGuideHasRoleMismatch(cards),'Caregiver guidance must not address the supporter as the person tracking their cycle');fs.writeFileSync('tmp/caregiver-ai-qa.json',JSON.stringify(cards,null,2));}
   }
   await probe('product search', '/functions/v1/ai-generate', 200, { method: 'POST', token: tokens[0], body: JSON.stringify({ mood: 'search', search_query: 'hot water bottle India' }) });
-  await probe('places search', '/functions/v1/ai-generate', 200, { method: 'POST', token: tokens[0], body: JSON.stringify({ mood: 'places', lat: 22.5726, lon: 88.3639 }) });
-  const areaPlaces=await probe('places manual-area fallback', '/functions/v1/ai-generate', 200, {method:'POST',token:tokens[0],body:JSON.stringify({mood:'places',search_query:'pharmacy medical store in Salt Lake Kolkata'})});
-  assert.ok(Array.isArray(areaPlaces?.places),'Area search must return a places list');
+  const gpsPlaces=await probe('places search', '/functions/v1/ai-generate', 200, { method: 'POST', token: tokens[0], body: JSON.stringify({ mood: 'places', lat: 22.5726, lon: 88.3639 }) });
+  assert.ok(gpsPlaces?.places?.length>0,'Known Kolkata test coordinates must return real OSM pharmacies');
+  const areaPlaces=await probe('places manual-area fallback', '/functions/v1/ai-generate', 200, {method:'POST',token:tokens[0],body:JSON.stringify({mood:'places',search_query:'Salt Lake Kolkata'})});
+  assert.ok(areaPlaces?.places?.length>0,'Known Kolkata area must return actual pharmacy rows');
   await probe('places invalid coordinates', '/functions/v1/ai-generate', 400, {method:'POST',token:tokens[0],body:JSON.stringify({mood:'places',lat:100,lon:88})});
   // Discover every table referenced by the client, then exercise its read route.
   const sources = dir => fs.readdirSync(dir, { withFileTypes: true }).flatMap(e => e.isDirectory() ? sources(path.join(dir, e.name)) : /\.tsx?$/.test(e.name) ? [path.join(dir, e.name)] : []);
   const tables = new Set([...sources('contexts'), ...sources('lib'), ...sources('hooks'), ...sources('pages')].flatMap(file => [...fs.readFileSync(file, 'utf8').replace(/\.storage\.from\(['"][^'"]+['"]\)/g, '').matchAll(/\.from\(['"]([a-z_]+)['"]\)/g)].map(match => match[1])));
   for (const table of tables) await probe(`table ${table}`, `/rest/v1/${table}?select=*&limit=0`, [200, 401, 403], { token: tokens[0] });
-  for (const name of fs.readdirSync('public/Games_data').filter(name => name.endsWith('.json'))) {
-    const route = new URL(`/Games_data/${name}`, process.env.API_WEB_ORIGIN || 'http://127.0.0.1:3000');
-    const response = await fetch(route, { signal: AbortSignal.timeout(10000) });
-    assert.equal(response.status, 200); await response.json();
-    results.push({ label: `game data ${name}`, pass: true });
-  }
   const route = await fetch('https://router.project-osrm.org/route/v1/driving/88.3639,22.5726;88.3649,22.5736?overview=full&geometries=geojson', { signal: AbortSignal.timeout(15000) });
   assert.equal(route.status, 200); assert.equal((await route.json()).code, 'Ok');
   results.push({ label: 'OSRM route geometry', pass: true });

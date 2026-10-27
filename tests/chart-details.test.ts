@@ -1,0 +1,4 @@
+import {expect,it} from 'vitest';
+import {metricDetails} from '../components/charts/MetricTooltip';
+it('shows a real date, weekday, units and the next cycle start',()=>{const d=metricDetails({date:'2026-10-26',endDate:'2026-11-23',value:28},'cycle');expect(d?.heading).toContain('Monday');expect(d?.heading).toContain('2026');expect(d?.value).toBe('28 days');expect(d?.label).toBe('Cycle length');expect(d?.end).toContain('23');});
+it('labels qualitative metrics without treating missing data as poor sleep',()=>{expect(metricDetails({date:'2026-10-27',sleep:3},'sleep')?.value).toBe('Good');expect(metricDetails({date:'2026-10-27',sleep:null},'sleep')?.value).toBe('Not logged');expect(metricDetails({date:'2026-10-27',energy:1},'energy')?.label).toBe('Energy level');expect(metricDetails({date:'3'},'cycle')).toBeNull();});

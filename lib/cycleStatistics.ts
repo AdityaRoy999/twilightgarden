@@ -12,7 +12,7 @@ export function cycleStatistics(logs:any[],settings?:{avgCycleLength?:number;avg
   if(log.flow)current.flowDates.add(log.date);current.end=log.date;
  }
  const starts=explicit.length?explicit:episodes.map(episode=>episode.start);
- const intervals=starts.slice(1).map((next,index)=>({value:calendarDayDifference(next,starts[index]),label:parseDateKey(starts[index]).toLocaleString('default',{month:'short'}),date:starts[index]})).filter(row=>row.value>0);
+ const intervals=starts.slice(1).map((next,index)=>({value:calendarDayDifference(next,starts[index]),label:parseDateKey(starts[index]).toLocaleString('default',{month:'short'}),date:starts[index],endDate:next})).filter(row=>row.value>0);
  const durations=episodes.filter(episode=>episode.flowDates.size>0).map(episode=>episode.flowDates.size);
  return {historyData:intervals.slice(-6),stats:{avgCycle:intervals.length?Math.round(intervals.reduce((total,row)=>total+row.value,0)/intervals.length):settings?.avgCycleLength||28,avgPeriod:durations.length?Math.round(durations.reduce((total,value)=>total+value,0)/durations.length):settings?.avgPeriodLength||5}};
 }

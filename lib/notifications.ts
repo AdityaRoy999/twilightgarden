@@ -1,3 +1,4 @@
+import {notificationPath} from './notificationRoutes';
 import { LocalNotifications } from '@capacitor/local-notifications';
 import { PushNotifications } from '@capacitor/push-notifications';
 import { Capacitor } from '@capacitor/core';
@@ -102,9 +103,9 @@ export function initNotificationListeners(): void {
 
   trackLocalListener('localNotificationActionPerformed', (action) => {
     console.log('Local Notification action performed:', action);
-    if (action.notification.id === 1) {
-      window.location.hash = '#/log/details';
-    }
+    const path=notificationPath(action.notification.extra?.url,action.notification.id===1?'/log/details':'/dashboard');
+    window.dispatchEvent(new CustomEvent('appNotificationClick',{detail:{url:path}}));
+    window.location.hash='#'+path;
   });
 
   // Push Notifications
@@ -129,11 +130,11 @@ export function initNotificationListeners(): void {
 
     // Use a custom event to notify App.tsx about the navigation target
     if (data?.url) {
-      const navEvent = new CustomEvent('appNotificationClick', { detail: { url: data.url } });
+      const navEvent = new CustomEvent('appNotificationClick', { detail: { url: notificationPath(data.url) } });
       window.dispatchEvent(navEvent);
 
       // Fallback: still set hash but the event is primary
-      window.location.hash = '#' + data.url;
+      window.location.hash = '#' + notificationPath(data.url);
     }
   });
 }
@@ -321,10 +322,11 @@ async function registerWebPush(userId: string, revision: number) {
                 }
 
                 // Fallback for standard Web/PWA
-                new Notification(title, {
+                const foregroundNotification = new Notification(title, {
                     body,
                     icon: '/twilight.png',
                 });
+                foregroundNotification.onclick=()=>{window.focus();window.location.hash='#'+notificationPath(payload.data?.url);};
             }
         });
 
@@ -344,112 +346,4 @@ async function registerWebPush(userId: string, revision: number) {
             console.error('[FCM-Web]   6. Try in Microsoft Edge instead');
         }
     }
-}
-
-// ── Game Notifications ──
-
-/** Send a push notification to your partner for game invites or rings */
-export async function sendGameNotification(
-  couple: { id: string; partner_1_id: string; partner_2_id: string },
-  currentUserId: string,
-  gameName: string,
-  gameRoute: string,
-  type: 'invite' | 'ring' | 'partner_answered' = 'invite'
-): Promise<void> {
-  const partnerId = couple.partner_1_id === currentUserId
-    ? couple.partner_2_id
-    : couple.partner_1_id;
-  if (!partnerId) return;
-
-  // Get the nickname preference of the RECIPIENT (what they call the sender)
-  let nickname = 'partner';
-  try {
-    // Check if the recipient has assigned a nickname to the sender
-    const { data: recipientProfile } = await supabase
-      .from('profiles')
-      .select('partner_nickname')
-      .eq('id', partnerId)
-      .single();
-
-    if (recipientProfile && (recipientProfile as any).partner_nickname) {
-      nickname = (recipientProfile as any).partner_nickname;
-    } else {
-      // Fallback: Use the Sender's Actual Name
-      const { data: senderProfile } = await supabase
-        .from('profiles')
-        .select('full_name')
-        .eq('id', currentUserId)
-        .single();
-
-      if (senderProfile && (senderProfile as any).full_name) {
-        nickname = (senderProfile as any).full_name.split(' ')[0]; // Use first name
-      }
-    }
-  } catch (err) {
-    console.warn('[GameNotify] Failed to fetch nickname, using default', err);
-  }
-
-  const inviteMessages = [
-    `💕 Your ${nickname} wants to play ${gameName}! Come join the fun!`,
-    `🎮 ${gameName} time! Your ${nickname} is waiting for you!`,
-    `✨ Your ${nickname} started a game of ${gameName}! Jump in!`,
-  ];
-  const ringMessages = [
-    `🔔 Your ${nickname} is waiting for you in ${gameName}! Don't keep them waiting!`,
-    `💝 Hellooo! Your ${nickname} misses you in ${gameName}!`,
-    `🎯 Psst! Your ${nickname} rang the bell in ${gameName}! Come play!`,
-  ];
-  const answeredMessages = [
-    `💬 Your ${nickname} just submitted their answer in ${gameName}!`,
-    `✨ Answer alert! Your ${nickname} finished their turn in ${gameName}!`,
-    `💭 Your ${nickname} has spoken! Reveal the answers in ${gameName}!`,
-  ];
-
-  const pool = type === 'invite' ? inviteMessages : type === 'ring' ? ringMessages : answeredMessages;
-  const message = pool[Math.floor(Math.random() * pool.length)];
-
-  try {
-    console.log('[GameNotify] Sending to partner:', partnerId, 'type:', type, 'game:', gameName);
-
-    // Debug Authentication State before sending
-    const { data: { session }, error: sessionError } = await supabase.auth.getSession();
-    if (sessionError || !session) {
-      console.error('[GameNotify] ❌ NO ACTIVE SESSION found! Push will fail.', sessionError);
-    } else {
-      console.log('[GameNotify] ✅ Active Session User:', session.user.id);
-    }
-
-    // 1. Insert into DB (Guaranteed Delivery to In-App Bell)
-    const { error: dbError } = await supabase.from('notifications').insert({
-      user_id: partnerId,
-      type: 'game',
-      message: message,
-      is_read: false,
-      data: { url: gameRoute, gameName, notificationType: type },
-    });
-
-    if (dbError) {
-      console.error('[GameNotify] DB Insert failed:', dbError);
-    } else {
-      console.log('[GameNotify] ✅ In-App Notification saved');
-    }
-
-    // 2. Send Push Notification via Edge Function (Best Effort)
-    const { data, error } = await supabase.functions.invoke('push-notifications', {
-      body: {
-        userId: partnerId,
-        message,
-        type: 'game',
-        url: gameRoute,
-      }
-    });
-
-    if (error) {
-      console.error('[GameNotify] Push failed (Edge Function):', error);
-    } else {
-      console.log('[GameNotify] ✅ Push sent:', JSON.stringify(data));
-    }
-  } catch (err) {
-    console.error('[GameNotify] System Error:', err);
-  }
 }
