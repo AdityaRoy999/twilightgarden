@@ -6,6 +6,7 @@ import path from 'node:path';
 import { randomUUID, randomBytes, webcrypto } from 'node:crypto';
 import { config } from 'dotenv';
 import { createClient } from '@supabase/supabase-js';
+import { parseWellnessGuide, wellnessGuidePrompt } from '../lib/wellnessGuide.ts';
 config({ quiet: true });
 
 const origin = process.env.VITE_SUPABASE_URL;
@@ -92,8 +93,13 @@ try {
   for (const name of ['ai-generate', 'call-credentials', 'push-notifications', 'push-notifications-']) {
     for (const body of ['{', '[]']) await probe(`${name} invalid body ${body === '{' ? 'syntax' : 'shape'}`, `/functions/v1/${name}`, 400, { method: 'POST', token: tokens[0], body });
   }
-  const guidance = await probe('AI Wellness generation', '/functions/v1/ai-generate', 200, { method: 'POST', token: tokens[0], body: JSON.stringify({ mood: 'raw', customPrompt: 'Generate exactly 3 concise, complete general self-care tips. Each starts with an emoji and a bold title followed by one sentence. Fictional test context: Luteal phase, cycle day 25, calm mood, tired after a busy day, 6 hours sleep. Do not diagnose or recommend medication. Recent fictional history: three daily check-ins with mixed energy and 6 to 8 hours sleep.' }) });
-  assert.ok(typeof guidance?.text === 'string' && guidance.text.length > 50 && !guidance.text.includes('<think>'), 'Wellness must receive a visible answer, not just provider reasoning tokens');
+  for (const partner of [false, true]) {
+    const guidance = await probe(`AI illustrated ${partner ? 'partner care' : 'Wellness tips'}`, '/functions/v1/ai-generate', 200, { method: 'POST', token: tokens[0], body: JSON.stringify({ mood: 'raw', customPrompt: wellnessGuidePrompt({phase:'Menstrual',cycleDay:2,moods:['calm'],symptoms:['cramps'],sleepQuality:'fair',energyLevel:'low',logHistory:'Fictional test context only. Three daily check-ins with mixed energy and 6 to 8 hours sleep.'}, partner) }) });
+    assert.ok(typeof guidance?.text === 'string' && guidance.text.length > 50 && !guidance.text.includes('<think>'), 'Wellness must receive a visible answer, not just provider reasoning tokens');
+    const cards = parseWellnessGuide(guidance.text);
+    assert.equal(cards.length, 3, 'Complete illustrated guide must have three valid cards');
+    assert.equal(new Set(cards.map(card => card.illustrationId)).size, 3, 'Suggestions must have distinct relevant subjects');
+  }
   await probe('product search', '/functions/v1/ai-generate', 200, { method: 'POST', token: tokens[0], body: JSON.stringify({ mood: 'search', search_query: 'hot water bottle India' }) });
   await probe('places search', '/functions/v1/ai-generate', 200, { method: 'POST', token: tokens[0], body: JSON.stringify({ mood: 'places', lat: 22.5726, lon: 88.3639 }) });
   // Discover every table referenced by the client, then exercise its read route.

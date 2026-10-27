@@ -1,7 +1,10 @@
+import { IllustratedGuide } from '../components/wellness/IllustratedGuide';
+import { SleepEnergy } from '../components/wellness/SleepEnergy';
+import { WellnessIllustration } from '../components/wellness/WellnessIllustration';
 import { useGeneratedText } from '../hooks/useGeneratedText';
 import { useAppMotion } from '../hooks/useAppMotion';
 import { springs, motionTransition } from '../lib/motion';
-import { ReferenceHeading, ReferenceArt } from '../components/ui/ReferenceArt';
+import { ReferenceHeading } from '../components/ui/ReferenceArt';
 import { AppIcon } from '../components/ui/Icons';
 import { useToday } from '../hooks/useToday';
 import React, { useState, useEffect, useMemo } from 'react';
@@ -125,119 +128,18 @@ const Wellness: React.FC = () => {
     ];
 
     const renderTipsContent = () => {
-        if (loading) return <LoadingSkeleton />;
+        if (loading && !tipsText) return <LoadingSkeleton />;
         if (error) return <ErrorCard message={error} onRetry={fetchTips} isDark={isDark} />;
 
-        return (
-            <div className="flex flex-col gap-4">
-                {/* AI Tips */}
-                <div className={`rounded-2xl p-5 ${isDark ? 'bg-surface-dark border border-white/5' : 'bg-white border border-gray-100'} shadow-soft`}>
-                    <div className="flex items-center justify-between mb-4">
-                        <h3 className={`font-bold ${isDark ? 'text-white' : 'text-gray-900'}`}>
-                            <span className="app-icon-glyph text-primary mr-2 align-middle"><AppIcon name={"auto_awesome"}/></span>
-                            Your Personalized Tips
-                        </h3>
-                        <button onClick={fetchTips} className="text-primary text-xs font-semibold flex items-center gap-1 hover:opacity-80">
-                            <span className="app-icon-glyph text-sm"><AppIcon name={"refresh"}/></span> Refresh
-                        </button>
-                    </div>
-                    <div className={`prose prose-sm max-w-none ${isDark ? 'prose-invert' : ''} leading-relaxed whitespace-pre-line`}>
-                        {tipsText ? <FormattedText text={tipsText} /> : 'Generating your personalized tips...'}
-                    </div>
-                </div>
-            </div>
-        );
+        return <IllustratedGuide text={tipsText} onRefresh={fetchTips} busy={loading}/>;
     };
 
-    const renderSleepContent = () => {
-        const { sleepCounts, energyCounts, insights, totalLogs } = sleepData;
-        const sleepTotal = sleepCounts.good + sleepCounts.fair + sleepCounts.poor;
-        const energyTotal = energyCounts.high + energyCounts.medium + energyCounts.low;
-
-        return (
-            <div className="flex flex-col gap-4">
-                {/* Sleep Distribution */}
-                <div className={`rounded-2xl p-5 ${isDark ? 'bg-surface-dark border border-white/5' : 'bg-white border border-gray-100'} shadow-soft`}>
-                    <h3 className={`font-bold mb-4 ${isDark ? 'text-white' : 'text-gray-900'}`}>
-                        <span className="app-icon-glyph text-indigo-400 mr-2 align-middle"><AppIcon name={"bedtime"}/></span>
-                        Sleep Quality
-                    </h3>
-                    {sleepTotal === 0 ? (
-                        <p className={`text-sm ${isDark ? 'text-white/40' : 'text-gray-400'}`}>No sleep data logged yet. Start logging to see trends!</p>
-                    ) : (
-                        <div className="flex flex-col gap-3">
-                            <SleepBar label="Good" count={sleepCounts.good} total={sleepTotal} color="bg-emerald-500" isDark={isDark} />
-                            <SleepBar label="Fair" count={sleepCounts.fair} total={sleepTotal} color="bg-amber-500" isDark={isDark} />
-                            <SleepBar label="Poor" count={sleepCounts.poor} total={sleepTotal} color="bg-red-400" isDark={isDark} />
-                        </div>
-                    )}
-                </div>
-
-                {/* Energy Distribution */}
-                <div className={`rounded-2xl p-5 ${isDark ? 'bg-surface-dark border border-white/5' : 'bg-white border border-gray-100'} shadow-soft`}>
-                    <h3 className={`font-bold mb-4 ${isDark ? 'text-white' : 'text-gray-900'}`}>
-                        <span className="app-icon-glyph text-amber-400 mr-2 align-middle"><AppIcon name={"bolt"}/></span>
-                        Energy Levels
-                    </h3>
-                    {energyTotal === 0 ? (
-                        <p className={`text-sm ${isDark ? 'text-white/40' : 'text-gray-400'}`}>No energy data logged yet. Start logging to see trends!</p>
-                    ) : (
-                        <div className="flex flex-col gap-3">
-                            <SleepBar label="High" count={energyCounts.high} total={energyTotal} color="bg-emerald-500" isDark={isDark} />
-                            <SleepBar label="Medium" count={energyCounts.medium} total={energyTotal} color="bg-amber-500" isDark={isDark} />
-                            <SleepBar label="Low" count={energyCounts.low} total={energyTotal} color="bg-red-400" isDark={isDark} />
-                        </div>
-                    )}
-                </div>
-
-                {/* Correlation Insights */}
-                <div className={`rounded-2xl p-5 ${isDark ? 'bg-gradient-to-br from-indigo-500/10 to-cyan-500/10 border border-indigo-500/20' : 'bg-gradient-to-br from-indigo-50 to-cyan-50 border border-indigo-100'}`}>
-                    <h3 className={`font-bold mb-3 ${isDark ? 'text-white' : 'text-gray-900'}`}>
-                        <span className="app-icon-glyph text-cyan-400 mr-2 align-middle"><AppIcon name={"insights"}/></span>
-                        Correlations
-                    </h3>
-                    <div className="flex flex-col gap-2">
-                        {insights.map((insight, i) => (
-                            <p key={i} className={`text-sm leading-relaxed ${isDark ? 'text-white/70' : 'text-gray-600'}`}>{insight}</p>
-                        ))}
-                    </div>
-                    <p className={`text-xs mt-3 ${isDark ? 'text-white/30' : 'text-gray-400'}`}>
-                        Based on {totalLogs} logged day{totalLogs !== 1 ? 's' : ''}
-                    </p>
-                </div>
-            </div>
-        );
-    };
+    const renderSleepContent = () => <SleepEnergy data={sleepData}/>;
 
     const renderEmpathyContent = () => {
-        if (loading) return <LoadingSkeleton />;
-        if (error) return <ErrorCard message={error} onRetry={fetchEmpathy} isDark={isDark} />;
-
-        return (
-            <div className="flex flex-col gap-4">
-                <div className={`rounded-2xl p-5 ${isDark ? 'bg-gradient-to-br from-pink-500/15 to-rose-500/10 border border-pink-500/20' : 'bg-gradient-to-br from-pink-50 to-rose-50 border border-pink-100'}`}>
-                    <p className={`text-sm ${isDark ? 'text-pink-300/80' : 'text-pink-700'}`}>
-                        <span className="app-icon-glyph text-sm mr-1 align-middle"><AppIcon name={"info"}/></span>
-                        This is what your partner will see as care suggestions. Share it with them!
-                    </p>
-                </div>
-
-                <div className={`rounded-2xl p-5 ${isDark ? 'bg-surface-dark border border-white/5' : 'bg-white border border-gray-100'} shadow-soft`}>
-                    <div className="flex items-center justify-between mb-4">
-                        <h3 className={`font-bold ${isDark ? 'text-white' : 'text-gray-900'}`}>
-                            <span className="app-icon-glyph text-pink-400 mr-2 align-middle"><AppIcon name={"favorite"}/></span>
-                            Partner Care Guide
-                        </h3>
-                        <button onClick={fetchEmpathy} className="text-primary text-xs font-semibold flex items-center gap-1 hover:opacity-80">
-                            <span className="app-icon-glyph text-sm"><AppIcon name={"refresh"}/></span> Refresh
-                        </button>
-                    </div>
-                    <div className={`prose prose-sm max-w-none ${isDark ? 'prose-invert' : ''} leading-relaxed whitespace-pre-line`}>
-                        {empathyText ? <FormattedText text={empathyText} /> : 'Generating empathy insights...'}
-                    </div>
-                </div>
-            </div>
-        );
+        if (loading && !empathyText) return <LoadingSkeleton/>;
+        if (error) return <ErrorCard message={error} onRetry={fetchEmpathy} isDark={isDark}/>;
+        return <div className="care-guide-view"><aside className="care-preview-banner"><AppIcon name="info" size={26}/><p>A preview of the kind of care suggestions your partner can explore. Each guide is personalized when it’s generated.</p><WellnessIllustration id="kind-message" decorative/></aside><IllustratedGuide text={empathyText} partner onRefresh={fetchEmpathy} busy={loading}/></div>;
     };
 
     // Helper component to recenter map when selecting a shop
@@ -252,7 +154,7 @@ const Wellness: React.FC = () => {
     const renderShopsContent = () => {
         if (mapLoading) return (
             <div className={`rounded-2xl p-8 text-center ${isDark ? 'bg-surface-dark border border-white/5' : 'bg-white border border-gray-100'} shadow-soft flex flex-col items-center justify-center min-h-[400px]`}>
-                 <span className="app-icon-glyph text-4xl text-primary animate-spin mb-4"><AppIcon name={"explore"}/></span>
+                 <WellnessIllustration id="location" decorative/>
                  <p className={`font-bold ${isDark ? 'text-white' : 'text-gray-900'}`}>Locating Nearest Pads...</p>
                  <p className={`text-sm mt-2 ${isDark ? 'text-white/50' : 'text-gray-500'}`}>Finding nearby pharmacies and medical stores.</p>
             </div>
@@ -390,7 +292,7 @@ const Wellness: React.FC = () => {
     return (
         <div className="reference-page reference-wellness font-display flex flex-col">
             <ReferenceHeading title="Wellness" description="A little care, at your own pace." action={<NotificationBell/>}/>
-            <section className="reference-card wellness-overview"><ReferenceArt kind={activeTab === 'sleep' ? 'moon' : 'leaves'} className="reference-card-art"/><span className="reference-icon"><AppIcon name={activeTab === 'sleep' ? 'bedtime' : 'spa'} size={26}/></span><div><span className="bloom-eyebrow">Your daily rhythm</span><h2>{cycleData.phase === 'Unknown' ? 'One day at a time' : `${cycleData.phase} phase`}</h2><p>{cycleData.currentDay > 0 ? `Cycle day ${cycleData.currentDay}` : 'Start with a daily check-in'}{todayLog?.sleepHours !== undefined ? ` · ${todayLog.sleepHours}h of sleep logged` : ''}</p></div></section>
+            <section className="reference-card wellness-overview"><WellnessIllustration id={activeTab === 'sleep' ? 'sleep-chart' : activeTab === 'empathy' ? 'supportive-couple' : activeTab === 'shops' ? 'pharmacy' : 'gentle-stretch'} className="wellness-overview-art" decorative/><span className="reference-icon"><AppIcon name={activeTab === 'sleep' ? 'bedtime' : 'spa'} size={26}/></span><div><span className="bloom-eyebrow">Your daily rhythm</span><h2>{cycleData.phase === 'Unknown' ? 'One day at a time' : `${cycleData.phase} phase`}</h2><p>{cycleData.currentDay > 0 ? `Cycle day ${cycleData.currentDay}` : 'Start with a daily check-in'}{todayLog?.sleepHours !== undefined ? ` · ${todayLog.sleepHours}h of sleep logged` : ''}</p></div></section>
 
             {/* Tabs */}
             <div className="wellness-tabs">
@@ -435,47 +337,8 @@ const Wellness: React.FC = () => {
 
 // --- Sub-components ---
 
-const FormattedText = ({ text }: { text: string }) => {
-    // Split text by ** bold syntax, including potential newlines inside
-    const parts = text.split(/(\*\*[\s\S]*?\*\*)/g);
-    return (
-        <>
-            {parts.map((part, i) => {
-                if (part.startsWith('**') && part.endsWith('**')) {
-                    return (
-                        <strong key={i} className="font-bold text-white dark:text-white" style={{ fontWeight: 800 }}>
-                            {part.slice(2, -2).trim()}
-                        </strong>
-                    );
-                }
-                return part;
-            })}
-        </>
-    );
-};
-
-const SleepBar = ({ label, count, total, color, isDark }: { label: string; count: number; total: number; color: string; isDark: boolean }) => {
-    const pct = total > 0 ? Math.round((count / total) * 100) : 0;
-    return (
-        <div className="flex flex-col gap-1.5">
-            <div className="flex justify-between text-xs font-semibold">
-                <span className={isDark ? 'text-white/70' : 'text-gray-600'}>{label}</span>
-                <span className={isDark ? 'text-white/40' : 'text-gray-400'}>{count} days ({pct}%)</span>
-            </div>
-            <div className={`h-2.5 w-full rounded-full ${isDark ? 'bg-white/5' : 'bg-gray-100'}`}>
-                <motion.div
-                    className={`h-full rounded-full ${color}`}
-                    initial={{ width: 0 }}
-                    animate={{ width: `${pct}%` }}
-                    transition={{ duration: 0.8, ease: 'easeOut' }}
-                />
-            </div>
-        </div>
-    );
-};
-
 const LoadingSkeleton = () => (
-    <section className="reference-card wellness-loading" role="status"><ReferenceArt kind="leaves"/><div><h2>Putting together a little care…</h2><p>Your daily guidance is on its way. You can explore Sleep & Energy while it loads.</p></div><span className="wellness-loading-dots" aria-hidden="true"><i/><i/><i/></span></section>
+    <section className="reference-card wellness-loading" role="status"><WellnessIllustration id="general-care" decorative/><div><h2>Putting together a little care…</h2><p>Your daily guidance is on its way. You can explore Sleep & Energy while it loads.</p></div><span className="wellness-loading-dots" aria-hidden="true"><i/><i/><i/></span></section>
 );
 
 const ErrorCard = ({ message, onRetry, isDark }: { message: string; onRetry: () => void; isDark: boolean }) => (

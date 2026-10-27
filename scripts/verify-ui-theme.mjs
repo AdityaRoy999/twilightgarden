@@ -9,7 +9,7 @@ async function get(path) {
 }
 const html = await get('/');
 const productionStyles = [...html.matchAll(/href="(\/assets\/[^"\s]+\.css)"/g)].map(match => match[1]);
-const paths = productionStyles.length ? productionStyles : ['/index.css?direct', '/styles/bloom.css?direct', '/styles/reference.css?direct', '/styles/spring.css?direct', '/styles/dark.css?direct', '/styles/refinements.css?direct', '/styles/polish.css?direct'];
+const paths = productionStyles.length ? productionStyles : ['/index.css?direct', '/styles/bloom.css?direct', '/styles/reference.css?direct', '/styles/spring.css?direct', '/styles/dark.css?direct', '/styles/refinements.css?direct', '/styles/polish.css?direct', '/styles/wellness.css?direct'];
 const sheets = await Promise.all(paths.map(get));
 const light = {}, dark = {};
 let surfaceBindings = 0;
@@ -41,4 +41,9 @@ if (!hiddenTracks || !selectionOutlinesRemoved) throw new Error('Scrollbar and s
 if (!sheets.some(sheet => sheet.includes('data-chat') && sheet.includes('max-width:none') || sheet.includes('data-chat') && sheet.includes('max-width: none'))) throw new Error('Full-pane chat styles were not served');
 if (!(await get('/art/bloom-background.svg')).includes('<svg')) throw new Error('Botanical background asset was not served');
 if (!(await get('/art/bloom-background-dark.svg')).includes('<svg')) throw new Error('Dark botanical background asset was not served');
+if (!sheets.some(sheet => sheet.includes('.illustrated-guide') && sheet.includes('.correlation-chart'))) throw new Error('Illustrated Wellness styles were not served');
+if (!(await get('/art/wellness/correlation.svg')).includes('<svg')) throw new Error('Wellness vector scene was not served');
+const scene = await fetch(new URL('/art/wellness/gentle-stretch.webp',origin));
+if (!scene.ok || !scene.headers.get('content-type')?.includes('image/webp')) throw new Error('Wellness scene artwork was not served');
+await scene.body?.cancel();
 console.log(`PASS ${origin.origin}: paired themes, dark gradients, full-pane chat, hidden scrollbars, selection styling, and local artwork`);

@@ -1,3 +1,4 @@
+import { IllustratedGuide } from '../../components/wellness/IllustratedGuide';
 import { useGeneratedText } from '../../hooks/useGeneratedText';
 import { useAppMotion } from '../../hooks/useAppMotion';
 import { springs, motionTransition } from '../../lib/motion';
@@ -440,25 +441,12 @@ const PartnerWellness: React.FC = () => {
                     >
                         {activeTab === 'care' && (
                             <div className="flex flex-col gap-4 max-w-4xl mx-auto w-full">
-                                {loading ? (
+                                {loading && !careText ? (
                                     <LoadingSkeleton isDark={isDark} />
                                 ) : careError ? (
                                     <ErrorCard message={careError} onRetry={fetchCare} isDark={isDark} />
                                 ) : (
-                                    <div className={`rounded-2xl p-6 md:p-8 ${isDark ? 'bg-surface-dark border border-white/5' : 'bg-white border border-gray-100'} shadow-soft`}>
-                                        <div className="flex items-center justify-between mb-6">
-                                            <h3 className={`text-xl font-bold ${isDark ? 'text-white' : 'text-gray-900'}`}>
-                                                <span className="app-icon-glyph text-pink-400 mr-2 align-middle text-2xl"><AppIcon name={"favorite"}/></span>
-                                                How to Support {partnerName}
-                                            </h3>
-                                            <button onClick={fetchCare} className="text-primary text-sm font-semibold flex items-center gap-1 hover:opacity-80 transition-opacity bg-primary/10 px-3 py-1.5 rounded-full">
-                                                <span className="app-icon-glyph text-sm"><AppIcon name={"refresh"}/></span> Refresh
-                                            </button>
-                                        </div>
-                                        <div className={`prose prose-sm md:prose-base max-w-none ${isDark ? 'prose-invert' : ''} leading-relaxed whitespace-pre-line`}>
-                                            {careText ? <FormattedText text={careText} /> : 'Generating care guide...'}
-                                        </div>
-                                    </div>
+                                    <IllustratedGuide text={careText} partner onRefresh={fetchCare} busy={loading}/>
                                 )}
                             </div>
                         )}
@@ -560,25 +548,6 @@ const PartnerWellness: React.FC = () => {
 };
 
 // --- Sub-components ---
-
-const FormattedText = ({ text }: { text: string }) => {
-    // Split text by ** bold syntax, including potential newlines inside
-    const parts = text.split(/(\*\*[\s\S]*?\*\*)/g);
-    return (
-        <>
-            {parts.map((part, i) => {
-                if (part.startsWith('**') && part.endsWith('**')) {
-                    return (
-                        <strong key={i} className="font-bold text-gray-900 dark:text-white" style={{ fontWeight: 800 }}>
-                            {part.slice(2, -2).trim()}
-                        </strong>
-                    );
-                }
-                return part;
-            })}
-        </>
-    );
-};
 
 const LoadingSkeleton = ({ isDark }: { isDark: boolean }) => <section className="reference-card wellness-loading" role="status"><ReferenceArt kind="hearts"/><div><h2>A little care is on its way</h2><p>Putting together your partner's care guide.</p></div></section>;
 
