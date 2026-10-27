@@ -38,6 +38,15 @@ function getSupabaseClient(): SupabaseClient<Database> {
       flowType: 'pkce',
     },
     global: {
+      // Token refresh runs before INITIAL_SESSION/getSession. Bound auth network
+      // waits so an unavailable auth service cannot hold the client lock forever.
+      fetch: (input, init) => {
+        const url = typeof input === 'string' ? input : input instanceof URL ? input.href : input.url;
+        if (!url.startsWith(`${supabaseUrl}/auth/v1/`)) return fetch(input, init);
+        const inherited=init?.signal || (input instanceof Request ? input.signal : undefined);
+        const timeout=AbortSignal.timeout(12000);
+        return fetch(input,{...init,signal:inherited?AbortSignal.any([inherited,timeout]):timeout});
+      },
       headers: {
         'X-Client-Info': 'twilight-app',
       },

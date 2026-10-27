@@ -1,6 +1,7 @@
 import { supabase } from './supabase';
 import { parseWellnessGuide, wellnessGuidePrompt } from './wellnessGuide';
 import { normalizePharmacies, type PharmacyPlace } from './places';
+import {withinDeadline,requestError} from './requestTimeout';
 
 const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL;
 const SUPABASE_ANON_KEY = import.meta.env.VITE_SUPABASE_ANON_KEY || '';
@@ -47,9 +48,15 @@ interface AIResult {
     error?: string;
 }
 
+async function getAISession() {
+    const {data,error}=await withinDeadline(()=>supabase.auth.getSession(),8000,'Your session is taking too long to respond. Please retry.');
+    if(error)throw error;
+    return data.session;
+}
+
 async function callAI(customPrompt: string, mood: string = 'encouragement', pinnedSession?:{access_token:string}): Promise<AIResult> {
     try {
-        const session = pinnedSession || (await supabase.auth.getSession()).data.session;
+        const session = pinnedSession || await getAISession();
         if (!session) throw new Error('Not authenticated');
 
         const res = await fetch(
@@ -96,7 +103,7 @@ export async function generateEmpathyAlerts(ctx: WellnessContext,refresh=false):
 const guideCache=new Map<string,{expires:number;pending?:Promise<AIResult>;result?:AIResult}>();
 async function generateGuide(ctx: WellnessContext, partner: boolean,refresh=false): Promise<AIResult> {
     try {
-        const {data:{session}}=await supabase.auth.getSession();
+        const session=await getAISession();
         if(!session)return {text:'',error:'Please sign in to prepare your guide.'};
         const key=JSON.stringify([session.user.id,partner,ctx]);
         for(const [id,entry]of guideCache)if(entry.expires<Date.now()&&!entry.pending)guideCache.delete(id);
@@ -105,17 +112,20 @@ async function generateGuide(ctx: WellnessContext, partner: boolean,refresh=fals
         if(!refresh&&cached?.result&&cached.expires>Date.now())return cached.result;
         const entry:{expires:number;pending?:Promise<AIResult>;result?:AIResult}={expires:Date.now()+300000};
         const job=(async()=>{
-            const result=await callAI(wellnessGuidePrompt(ctx,partner),'raw',session);
-            const cards=result.error?[]:parseWellnessGuide(result.text||'');
-            const validated:AIResult=result.error?result:cards.length===3&&new Set(cards.map(card=>card.illustrationId)).size===3?{text:JSON.stringify({cards})}:{text:'',error:'We couldn’t finish your guide. Please try again.'};
+            let validated:AIResult;
+            try {
+                const result=await withinDeadline(()=>callAI(wellnessGuidePrompt(ctx,partner),'raw',session),30000,'Your AI guide is taking too long. Please try again.');
+                const cards=result.error?[]:parseWellnessGuide(result.text||'');
+                validated=result.error?result:cards.length===3&&new Set(cards.map(card=>card.illustrationId)).size===3?{text:JSON.stringify({cards})}:{text:'',error:'We couldn’t finish your guide. Please try again.'};
+            } catch(error) {validated={text:'',error:requestError(error,'Your guide could not be prepared. Please retry.')};}
             entry.pending=undefined;
-            if(validated.error)guideCache.delete(key);else entry.result=validated;
+            if(guideCache.get(key)===entry){if(validated.error)guideCache.delete(key);else entry.result=validated;}
             return validated;
         })();
         entry.pending=job;guideCache.set(key,entry);
         if(guideCache.size>25)guideCache.delete(guideCache.keys().next().value!);
         return job;
-    }catch{return {text:'',error:'Your guide could not be prepared. Please retry.'};}
+    }catch(error){return {text:'',error:requestError(error,'Your guide could not be prepared. Please retry.')};}
 }
 
 export async function generateGiftRecommendations(ctx: WellnessContext): Promise<AIResult> {
@@ -143,7 +153,7 @@ DO NOT include any greeting or conversational text.`;
 
 export async function searchShoppingProducts(query: string): Promise<Product[]> {
     try {
-        const { data: { session } } = await supabase.auth.getSession();
+        const session = await getAISession();
         if (!session) throw new Error('Not authenticated');
 
         const res = await fetch(
@@ -178,7 +188,7 @@ export async function searchShoppingProducts(query: string): Promise<Product[]> 
 export async function searchNearbyPharmacies(lat?:number,lon?:number,area?:string):Promise<PharmacyPlace[]> {
     const hasCoordinates=Number.isFinite(lat)&&Number.isFinite(lon);
     if(!hasCoordinates&&(!area||area.trim().length<2))throw new Error('Enter an area or use your location.');
-    const {data:{session}}=await supabase.auth.getSession();
+    const session=await getAISession();
     if(!session)throw new Error('Please sign in again to search nearby stores.');
     const response=await fetch(`${SUPABASE_URL}/functions/v1/ai-generate`,{method:'POST',signal:AbortSignal.timeout(30000),headers:{'Content-Type':'application/json','Authorization':`Bearer ${session.access_token}`,'apikey':SUPABASE_ANON_KEY},body:JSON.stringify({mood:'places',search_query:area?`pharmacy medical store in ${area.trim().slice(0,120)}`:'pharmacy medical store',...(hasCoordinates?{lat,lon}:{})})});
     if(!response.ok)throw new Error(response.status===429?'Nearby search is busy. Please try again shortly.':'Nearby search is unavailable. Please try again.');

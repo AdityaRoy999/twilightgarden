@@ -31,3 +31,17 @@ it('ignores a previous account/context result and permits retry after synchronou
   await act(async () => { await hook.result.current.request('tips', true); });
   await waitFor(() => expect(hook.result.current.entries.tips?.text).toBe('New context'));
 });
+
+it('releases a stuck generation and allows retry without accepting its late result', async () => {
+  vi.useFakeTimers();
+  let finishOld!: (value:{text:string})=>void;
+  const tips=vi.fn().mockImplementationOnce(()=>new Promise(resolve=>{finishOld=resolve;})).mockResolvedValue({text:'Fresh guide'});
+  const hook=renderHook(()=>useGeneratedText({tips},'timeout-context'));
+  await act(async()=>{void hook.result.current.request('tips');});
+  await act(async()=>{await vi.advanceTimersByTimeAsync(40001);});
+  expect(hook.result.current.entries.tips?.status).toBe('error');
+  expect(hook.result.current.entries.tips?.error).toContain('taking too long');
+  await act(async()=>{await hook.result.current.request('tips',true);finishOld({text:'Late old guide'});});
+  expect(hook.result.current.entries.tips?.text).toBe('Fresh guide');
+  vi.useRealTimers();
+});
