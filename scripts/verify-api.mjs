@@ -7,6 +7,7 @@ import { randomUUID, randomBytes, webcrypto } from 'node:crypto';
 import { config } from 'dotenv';
 import { createClient } from '@supabase/supabase-js';
 import { parseWellnessGuide, wellnessGuidePrompt } from '../lib/wellnessGuide.ts';
+import { loadHealthHistory } from '../lib/healthHistory.ts';
 config({ quiet: true });
 
 const origin = process.env.VITE_SUPABASE_URL;
@@ -64,6 +65,18 @@ try {
   checked(await clients[1].rpc('join_couple', { code_input: code }));
   checked(await clients[0].from('couples').update({ love_code: code }).eq('id', coupleId));
   checked(await clients[1].rpc('join_couple_love_lock', { code_input: code }));
+  // More than 90 records must be visible to the explicitly linked partner.
+  const historyRows = Array.from({length:125},(_,index)=>({user_id:users[0].id,date:new Date(Date.UTC(2025,0,1+index)).toISOString().slice(0,10),moods:[],symptoms:[],notes:'Synthetic shared-history QA'}));
+  checked(await clients[0].from('daily_logs').insert(historyRows));
+  const ownHistory = await loadHealthHistory(clients[0],users[0].id);
+  const sharedHistory = await loadHealthHistory(clients[1],users[0].id);
+  assert.equal(ownHistory.length,126);
+  assert.deepEqual(sharedHistory.map(row=>row.date),ownHistory.map(row=>row.date));
+  results.push({label:'full shared health history matches owner beyond 90 logs',pass:true});
+  checked(await clients[0].from('couples').update({share_enabled:false}).eq('id',coupleId));
+  assert.equal((await loadHealthHistory(clients[1],users[0].id)).length,0);
+  checked(await clients[0].from('couples').update({share_enabled:true}).eq('id',coupleId));
+  results.push({label:'sharing disabled denies partner history',pass:true});
   const avatarPath = `${users[0].id}/${randomUUID()}.png`;
   storedObjects.push({ bucket: 'avatars', path: avatarPath });
   checked(await clients[0].storage.from('avatars').upload(avatarPath, fs.readFileSync('public/twilight.png'), { contentType: 'image/png' }));

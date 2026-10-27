@@ -8,6 +8,7 @@ import { DailyLog, DailyLogInput, CycleSettings, CyclePhase, AppNotification } f
 import { calculateCyclePhase } from '../lib/cycleUtils';
 import {validateCycleSettings,cycleSettingsSaveError} from '../lib/cycleSettings';
 import { encryptData, decryptData } from '../lib/encryption';
+import { loadHealthHistory } from '../lib/healthHistory';
 import { useToday } from '../hooks/useToday';
 
 interface DataContextType {
@@ -260,10 +261,7 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children
       try {
         // Fetch independent log and settings queries together.
         const [logsResult, settingsResult] = await Promise.all([
-          supabase
-            .from('daily_logs')
-            .select('id,date,is_period_start,flow,moods,symptoms,notes,energy_level,sleep_hours,sleep_quality,encrypted_payload,created_at')
-            .eq('user_id', user.id),
+          loadHealthHistory(supabase,user.id,AbortSignal.timeout(15000)).then(data=>({data,error:null})),
           supabase
             .from('user_settings')
             .select('*')

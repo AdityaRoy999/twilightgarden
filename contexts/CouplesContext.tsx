@@ -2,6 +2,7 @@ import { resolveDeviceIdentity, installRecoveredIdentity } from '../lib/identity
 import { mergeChatNotes, cursorFilter } from '../lib/chat';
 import { readOutbox, writeOutbox, type QueuedChat } from '../lib/chatOutbox';
 import { localDateKey } from '../lib/dates';
+import { loadHealthHistory, canReadSharedHealth } from '../lib/healthHistory';
 import React, { createContext, useContext, useEffect, useState, useMemo } from 'react';
 import { supabase } from '../lib/supabase';
 import { useAuth } from './AuthContext';
@@ -136,8 +137,7 @@ export const CouplesProvider: React.FC<{ children: React.ReactNode }> = ({ child
 
   // Check if current user is the "supporter"
   const isSupporter = couple
-    ? (couple.partner_1_id === user?.id && couple.partner_1_role === 'supporter') ||
-      (couple.partner_2_id === user?.id)
+    ? (couple.partner_1_id === user?.id ? couple.partner_1_role === 'supporter' : couple.partner_2_id === user?.id && couple.partner_1_role !== 'supporter')
     : user?.role === 'partner';
 
   // Use a ref to track chat open status without triggering re-subscriptions
@@ -431,7 +431,9 @@ export const CouplesProvider: React.FC<{ children: React.ReactNode }> = ({ child
     const catchUp=()=>{if(document.visibilityState==='visible')void fetchCoupleData();};
     const retryOutbox=()=>{for(const entry of outboxRef.current)void persistChat(entry).catch(()=>{});catchUp();};
     window.addEventListener('focus',catchUp);window.addEventListener('online',retryOutbox);document.addEventListener('visibilitychange',catchUp);
-    const statusPollInterval=setInterval(()=>{if(mainChannel.state!=='joined')catchUp();},20000);
+    // A joined chat socket does not prove that the separate health subscription
+    // delivered every update (sleep, reconnects, bulk imports, network changes).
+    const statusPollInterval=setInterval(()=>{if(mainChannel.state!=='joined')catchUp();else if(document.visibilityState==='visible')refreshPartner();},20000);
     return () => {
       active=false;clearTimeout(partnerRefreshTimer);mainChannelRef.current=null;setChatConnected(false);
       window.removeEventListener('focus',catchUp);window.removeEventListener('online',retryOutbox);document.removeEventListener('visibilitychange',catchUp);
@@ -887,23 +889,23 @@ export const CouplesProvider: React.FC<{ children: React.ReactNode }> = ({ child
     const other=c.partner_1_id===ownId?c.partner_2_id:c.partner_1_id;
     if(!other||c.status!=='active')return;
     const current=()=>aliveRef.current&&revision===partnerFetchRevisionRef.current&&relationshipRef.current?.id===c.id;
-    const mayShare=c.share_enabled&&identityUsableRef.current;
+    const mayShare=canReadSharedHealth(c,ownId,[c.partner_1_id,c.partner_2_id]);
     try{
       const [profile,settings,logs,key]=await Promise.all([
         supabase.from('profiles').select('*').eq('id',other).maybeSingle(),
         mayShare?supabase.from('user_settings').select('*').eq('user_id',other).maybeSingle():Promise.resolve({data:null,error:null}),
-        mayShare?supabase.from('daily_logs').select('*').eq('user_id',other).order('date',{ascending:false}).limit(90):Promise.resolve({data:[],error:null}),
+        mayShare?loadHealthHistory(supabase,other,AbortSignal.timeout(15000)).then(data=>({data,error:null})):Promise.resolve({data:[],error:null}),
         mayShare?fetchPartnerPublicKey(other):Promise.resolve(null)
       ]);
       if(profile.error)throw profile.error;if(settings.error)throw settings.error;if(logs.error)throw logs.error;
       if(!current())return;setPartnerProfile(profile.data);
       if(!mayShare||!relationshipRef.current?.share_enabled){setPartnerSettings(null);setPartnerLogs([]);return;}
       let row=settings.data as any;
-      if(row?.encrypted_payload&&key){const decoded=await decryptData<any>(row.encrypted_payload,key,ownId);if(decoded)row={...row,...decoded};}
+      if(row?.encrypted_payload&&key&&identityUsableRef.current){const decoded=await decryptData<any>(row.encrypted_payload,key,ownId);if(decoded)row={...row,...decoded};}
       const mapped=await Promise.all((logs.data||[]).map(async record=>{
         let data=record as any;
-        if(data.encrypted_payload&&key){const decoded=await decryptData<any>(data.encrypted_payload,key,ownId);if(decoded)data={...data,...decoded};}
-        return {...data,energyLevel:data.energy_level??data.energyLevel,sleepQuality:data.sleep_quality??data.sleepQuality,sleepHours:data.sleep_hours??data.sleepHours};
+        if(data.encrypted_payload&&key&&identityUsableRef.current){const decoded=await decryptData<any>(data.encrypted_payload,key,ownId);if(decoded)data={...data,...decoded};}
+        return {...data,periodStarted:data.is_period_start??data.periodStarted??false,energyLevel:data.energy_level??data.energyLevel,sleepQuality:data.sleep_quality??data.sleepQuality,sleepHours:data.sleep_hours??data.sleepHours};
       }));
       if(!current()||!relationshipRef.current?.share_enabled)return;
       setPartnerSettings(row?mapSettings(row):null);setPartnerLogs(mapped);
