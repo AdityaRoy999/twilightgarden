@@ -1,0 +1,48 @@
+name: Build unsigned iOS app
+on:
+  workflow_dispatch:
+permissions:
+  contents: read
+concurrency:
+  group: ios-unsigned-${{ github.ref }}
+  cancel-in-progress: true
+jobs:
+  ios:
+    runs-on: macos-26
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - name: Build bundled web app
+        run: |
+          test -n "$VITE_SUPABASE_URL" && test -n "$VITE_SUPABASE_ANON_KEY"
+          npm run build
+        env:
+          VITE_SUPABASE_URL: ${{ vars.VITE_SUPABASE_URL }}
+          VITE_SUPABASE_ANON_KEY: ${{ vars.VITE_SUPABASE_ANON_KEY }}
+      - name: Sync native dependencies
+        run: npx cap sync ios
+      - name: Build device app without Apple signing credentials
+        run: |
+          set -euo pipefail
+          xcodebuild -version
+          xcodebuild -project ios/App/App.xcodeproj -scheme App -configuration Release -destination 'generic/platform=iOS' -derivedDataPath "$RUNNER_TEMP/twilight-build" CODE_SIGNING_ALLOWED=NO CODE_SIGNING_REQUIRED=NO CODE_SIGN_IDENTITY='' build > "$RUNNER_TEMP/ios-build.log" 2>&1 || { tail -n 160 "$RUNNER_TEMP/ios-build.log"; exit 1; }
+          mkdir -p "$RUNNER_TEMP/twilight-package/Payload" artifacts
+          ditto "$RUNNER_TEMP/twilight-build/Build/Products/Release-iphoneos/App.app" "$RUNNER_TEMP/twilight-package/Payload/App.app"
+          cd "$RUNNER_TEMP/twilight-package"
+          ditto -c -k --keepParent Payload "$GITHUB_WORKSPACE/artifacts/TwilightGarden-unsigned.ipa"
+          cd "$GITHUB_WORKSPACE"
+          shasum -a 256 artifacts/TwilightGarden-unsigned.ipa > artifacts/SHA256SUMS.txt
+          cp docs/ios-sideload.md artifacts/READ-ME-signing-required.md
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        with:
+          name: TwilightGarden-unsigned-iOS
+          path: artifacts/
+          retention-days: 7
+          if-no-files-found: error

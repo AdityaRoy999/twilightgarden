@@ -1,3 +1,5 @@
+import {springs,motionTransition} from '../lib/motion';
+import {SegmentedControl} from './ui/SegmentedControl';
 import { cycleStatistics } from '../lib/cycleStatistics';
 import { MotionPortal } from './ui/MotionPortal';
 import { AppIcon } from './ui/Icons';
@@ -79,7 +81,7 @@ const PartnerInsightsView: React.FC<PartnerInsightsViewProps> = ({ logs, cycleSe
     if (!logs?.length) return [{ name: 'No Data', level: '-', width: '0%', color: 'bg-gray-200' }];
     const counts: Record<string, number> = {};
     logs.forEach(log => {
-      log.symptoms?.forEach((sym: string) => {
+      [...new Set((log.symptoms || []) as string[])].forEach((sym: string) => {
         counts[sym] = (counts[sym] || 0) + 1;
       });
     });
@@ -89,13 +91,13 @@ const PartnerInsightsView: React.FC<PartnerInsightsViewProps> = ({ logs, cycleSe
       { name: 'No Data', level: '-', width: '0%', color: 'bg-gray-200' }
     ];
 
-    const max = sorted[0][1];
+
     return sorted.map(([name, count], i) => {
-      const baseline = Math.max(max, 5);
+      const baseline = logs.length;
       const pct = (count / baseline) * 100;
       const color = i === 0 ? 'bg-primary' : i === 1 ? 'bg-[#E7D6A7]' : 'bg-[#2DD4BF]';
-      const level = count > 5 ? 'High' : count > 2 ? 'Med' : 'Low';
-      return { name, level, width: `${Math.max(pct, 5)}%`, color };
+      const level = `${count} of ${logs.length} check-ins`;
+      return { name, level, width: `${pct}%`, color };
     });
   }, [logs]);
 
@@ -163,31 +165,24 @@ const PartnerInsightsView: React.FC<PartnerInsightsViewProps> = ({ logs, cycleSe
   return (
     <div className="flex flex-col gap-6 w-full">
       {/* Tab Switcher (Styled like Insights.tsx) */}
-      <div className="reference-insight-tabs partner-insight-tabs"><div>{[
-{label:'Cycle',tab:'history',sub:'general'},{label:'Logs',tab:'history',sub:'logs'},{label:'Sleep',tab:'trends',sub:'sleep'},{label:'Energy',tab:'trends',sub:'energy'}
-].map(section=>{const selected=activeTab===section.tab&&(section.tab==='history'?historyTab:trendsSubTab)===section.sub;return <button key={section.label} aria-pressed={selected} className={selected?'on-brand text-white':'text-gray-400'} onClick={()=>{setActiveTab(section.tab as 'history'|'trends');if(section.tab==='history')setHistoryTab(section.sub as 'general'|'logs');else setTrendsSubTab(section.sub as 'sleep'|'energy');}}>{selected?<motion.span layoutId="activePartnerInsightsTab" className="nav-spring-pill" transition={{duration:animateCharts ? .22 : 0}}/>:null}<span className="relative z-10">{section.label}</span></button>;})}</div></div>
+      <SegmentedControl label="Shared insight sections" value={activeTab==='history'?historyTab:trendsSubTab} options={[{value:'general',label:'Cycle',icon:'calendar_today'},{value:'logs',label:'Logs',icon:'history'},{value:'sleep',label:'Sleep',icon:'bedtime'},{value:'energy',label:'Energy',icon:'bolt'}]} onChange={value=>{if(value==='general'||value==='logs'){setActiveTab('history');setHistoryTab(value);}else{setActiveTab('trends');setTrendsSubTab(value as 'sleep'|'energy');}}}/>
 
-      <AnimatePresence mode="wait">
+
+      <React.Fragment>
         {activeTab === 'history' ? (
           <motion.div
             key="history"
-            initial={{ opacity: 0, x: -20 }}
-            animate={{ opacity: 1, x: 0 }}
-            exit={{ opacity: 0, x: -20 }}
+            initial={animateCharts?{y:8}:false}
+            animate={{y:0}} transition={motionTransition(springs.section,!animateCharts)}
             className="flex flex-col gap-6"
           >
-             {/* History Sub-tabs */}
-             <div className="flex justify-center mb-2">
 
-             </div>
-
-            <AnimatePresence mode="wait">
+            <React.Fragment>
               {historyTab === 'general' ? (
                 <motion.div
                   key="general-info"
-                  initial={{ opacity: 0, scale: 0.98 }}
-                  animate={{ opacity: 1, scale: 1 }}
-                  exit={{ opacity: 0, scale: 0.98 }}
+                  initial={animateCharts?{y:8}:false}
+                  animate={{y:0}} transition={motionTransition(springs.section,!animateCharts)}
                   className="flex flex-col gap-6"
                 >
                   {/* Stats Cards */}
@@ -287,9 +282,8 @@ const PartnerInsightsView: React.FC<PartnerInsightsViewProps> = ({ logs, cycleSe
               ) : (
                 <motion.div
                   key="log-history"
-                  initial={{ opacity: 0, scale: 0.98 }}
-                  animate={{ opacity: 1, scale: 1 }}
-                  exit={{ opacity: 0, scale: 0.98 }}
+                  initial={animateCharts?{y:8}:false}
+                  animate={{y:0}} transition={motionTransition(springs.section,!animateCharts)}
                   className="flex flex-col gap-4"
                 >
                   <div className="flex items-center justify-between px-2">
@@ -303,7 +297,7 @@ const PartnerInsightsView: React.FC<PartnerInsightsViewProps> = ({ logs, cycleSe
                           <motion.div
                             layoutId="logViewToggle"
                             className="absolute inset-0 bg-white dark:bg-white/10 rounded-lg shadow-sm"
-                            transition={{ type: 'spring', bounce: 0.2, duration: 0.28 }}
+                            transition={motionTransition(springs.selection,!animateCharts)}
                           />
                         )}
                         <span className="app-icon-glyph text-sm block relative z-20"><AppIcon name={"grid_view"}/></span>
@@ -316,7 +310,7 @@ const PartnerInsightsView: React.FC<PartnerInsightsViewProps> = ({ logs, cycleSe
                           <motion.div
                             layoutId="logViewToggle"
                             className="absolute inset-0 bg-white dark:bg-white/10 rounded-lg shadow-sm"
-                            transition={{ type: 'spring', bounce: 0.2, duration: 0.28 }}
+                            transition={motionTransition(springs.selection,!animateCharts)}
                           />
                         )}
                         <span className="app-icon-glyph text-sm block relative z-20"><AppIcon name={"view_list"}/></span>
@@ -408,14 +402,13 @@ const PartnerInsightsView: React.FC<PartnerInsightsViewProps> = ({ logs, cycleSe
                   )}
                 </motion.div>
               )}
-            </AnimatePresence>
+            </React.Fragment>
           </motion.div>
         ) : (
           <motion.div
             key="trends"
-            initial={{ opacity: 0, x: 20 }}
-            animate={{ opacity: 1, x: 0 }}
-            exit={{ opacity: 0, x: 20 }}
+            initial={animateCharts?{y:8}:false}
+            animate={{y:0}} transition={motionTransition(springs.section,!animateCharts)}
             className="flex flex-col gap-6"
           >
              {/* Trends Sub-tabs */}
@@ -423,13 +416,12 @@ const PartnerInsightsView: React.FC<PartnerInsightsViewProps> = ({ logs, cycleSe
 
              </div>
 
-            <AnimatePresence mode="wait">
+            <React.Fragment>
               {trendsSubTab === 'sleep' ? (
                  <motion.div
                   key="sleep-trends"
-                  initial={{ opacity: 0, scale: 0.98 }}
-                  animate={{ opacity: 1, scale: 1 }}
-                  exit={{ opacity: 0, scale: 0.98 }}
+                  initial={animateCharts?{y:8}:false}
+                  animate={{y:0}} transition={motionTransition(springs.section,!animateCharts)}
                   className="flex flex-col gap-6"
                 >
                    <div className="md:grid md:grid-cols-[1fr_2.5fr] md:gap-6 flex flex-col gap-6">
@@ -483,9 +475,8 @@ const PartnerInsightsView: React.FC<PartnerInsightsViewProps> = ({ logs, cycleSe
               ) : (
                 <motion.div
                   key="energy-trends"
-                  initial={{ opacity: 0, scale: 0.98 }}
-                  animate={{ opacity: 1, scale: 1 }}
-                  exit={{ opacity: 0, scale: 0.98 }}
+                  initial={animateCharts?{y:8}:false}
+                  animate={{y:0}} transition={motionTransition(springs.section,!animateCharts)}
                   className="flex flex-col gap-6"
                 >
                    <div className="md:grid md:grid-cols-[1fr_2.5fr] md:gap-6 flex flex-col gap-6">
@@ -537,10 +528,10 @@ const PartnerInsightsView: React.FC<PartnerInsightsViewProps> = ({ logs, cycleSe
                    </div>
                 </motion.div>
               )}
-            </AnimatePresence>
+            </React.Fragment>
           </motion.div>
         )}
-      </AnimatePresence>
+      </React.Fragment>
 
       {/* Log Details Modal */}
       <AnimatePresence>

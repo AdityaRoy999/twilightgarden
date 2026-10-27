@@ -1059,7 +1059,7 @@ const LoveLock: React.FC = () => {
                                                             : note.status === 'delivered'
                                                                 ? 'text-white/70'
                                                                 : 'text-white/50'
-                                                    }`}><AppIcon name={note.localStatus==='sending'?'schedule':note.localStatus==='failed'?'error_outline':note.status === 'sent' ? 'check' : 'done_all'}/></span>
+                                                    }`}><AppIcon data-receipt={note.status} name={note.localStatus==='sending'?'schedule':note.localStatus==='failed'?'error_outline':note.status === 'sent' ? 'check' : 'done_all'}/></span>
                                                 )}
                                             </div>
                                         </div>
@@ -1100,7 +1100,7 @@ const LoveLock: React.FC = () => {
                                                         note.status === 'read'
                                                             ? 'text-[#53bdeb] font-bold'
                                                             : 'text-white/70'
-                                                    }`}><AppIcon name={note.status === 'sent' ? 'check' : 'done_all'}/></span>
+                                                    }`}><AppIcon data-receipt={note.status} name={note.status === 'sent' ? 'check' : 'done_all'}/></span>
                                                 )}
                                             </div>
                                         </div>

@@ -1,3 +1,4 @@
+import {SegmentedControl} from '../components/ui/SegmentedControl';
 import { NearestPads } from '../components/wellness/NearestPads';
 import { buildWellnessContext } from '../lib/wellnessContext';
 import { GuidancePending } from '../components/wellness/GuidancePending';
@@ -84,24 +85,7 @@ const Wellness: React.FC = () => {
             <section className="reference-card wellness-overview"><WellnessIllustration id={activeTab === 'sleep' ? 'sleep-chart' : activeTab === 'empathy' ? 'supportive-couple' : activeTab === 'shops' ? 'pharmacy' : 'gentle-stretch'} className="wellness-overview-art" decorative/><span className="reference-icon"><AppIcon name={activeTab === 'sleep' ? 'bedtime' : 'spa'} size={26}/></span><div><span className="bloom-eyebrow">Your daily rhythm</span><h2>{cycleData.phase === 'Unknown' ? 'One day at a time' : `${cycleData.phase} phase`}</h2><p>{cycleData.currentDay > 0 ? `Cycle day ${cycleData.currentDay}` : 'Start with a daily check-in'}{todayLog?.sleepHours !== undefined ? ` · ${todayLog.sleepHours}h of sleep logged` : ''}</p></div></section>
 
             {/* Tabs */}
-            <div className="wellness-tabs">
-                <div className="wellness-tab-list">
-                    {tabs.map(tab => (
-                        <button
-                            key={tab.key}
-                            aria-pressed={activeTab === tab.key}
-                            onClick={() => setActiveTab(tab.key)}
-                            className={`flex h-10 items-center gap-2 px-5 rounded-full text-sm font-semibold transition-all ${activeTab === tab.key
-                                ? 'on-brand bg-primary text-white shadow-md shadow-primary/20'
-                                : isDark ? 'bg-white/5 text-gray-400 hover:bg-white/10' : 'bg-gray-100 text-gray-500 hover:bg-gray-200'
-                                }`}
-                        >
-                            <span className="app-icon-glyph text-base"><AppIcon name={tab.icon}/></span>
-                            {tab.label}
-                        </button>
-                    ))}
-                </div>
-            </div>
+            <SegmentedControl<Tab> label="Wellness sections" value={activeTab} onChange={setActiveTab} options={tabs.map(tab=>({value:tab.key,label:tab.label,icon:tab.icon}))}/>
 
             {/* Content */}
             <main className="wellness-content flex flex-col gap-4">

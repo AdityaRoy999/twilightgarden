@@ -1,5 +1,5 @@
 import { localDateKey } from './dates';
-import { jsPDF } from 'jspdf';
+import type { jsPDF } from 'jspdf';
 import { DailyLog, CycleSettings } from '../types';
 import { Filesystem, Directory } from '@capacitor/filesystem';
 import { Share } from '@capacitor/share';
@@ -78,6 +78,7 @@ const COLORS = {
 
 export async function exportHealthDataToPDF(data: ExportData): Promise<void> {
   const { profile, cycleSettings, logs } = data;
+  const {jsPDF}=await import('jspdf');
   const doc = new jsPDF();
 
   const pageWidth = doc.internal.pageSize.getWidth();
@@ -304,6 +305,7 @@ export async function exportHealthDataToPDF(data: ExportData): Promise<void> {
 // =========================================================
 export async function exportDoctorsReport(data: ExportData): Promise<void> {
   const { profile, cycleSettings, logs } = data;
+  const {jsPDF}=await import('jspdf');
   const doc = new jsPDF();
 
   const pageWidth = doc.internal.pageSize.getWidth();

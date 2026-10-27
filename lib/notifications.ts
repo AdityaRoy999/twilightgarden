@@ -162,6 +162,9 @@ export async function resetPushRegistration(userId: string | null) {
 }
 
 export async function registerPushNotifications(userId: string, requestPermission = false) {
+  // This iOS sideload build has no APNs entitlement/provider. APNs device tokens
+  // must never be stored as FCM tokens; foreground/local notifications still work.
+  if (Capacitor.getPlatform() === 'ios') return;
   if (registeredUserId && registeredUserId !== userId) await resetPushRegistration(registeredUserId);
   if ((pushRegistrationDone || pushRegistrationInProgress) && registeredUserId === userId) return;
   registeredUserId = userId;

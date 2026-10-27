@@ -22,8 +22,9 @@ it('portals dialogs outside transformed routes and handles Escape without a stal
 });
 
 it('uses locally bundled Solar icons with the correct off state', () => {
-  const view = render(<><AppIcon name="water_drop" size={24}/><PhoneOff aria-label="Call off"/></>);
+  const view = render(<><AppIcon name="water_drop" size={24}/><PhoneOff aria-label="Call off"/><AppIcon name="done_all"/></>);
   expect(view.container.querySelector('svg[data-icon="Droplet"] path')).toBeTruthy();
+  expect(view.container.querySelector('[data-icon="DoubleCheck"]')?.getAttribute('data-solar')).toBe('check-read-bold-duotone');
   expect(screen.getByLabelText('Call off').getAttribute('data-solar')).toBe('end-call-rounded-bold-duotone');
 });
 it('does not render a stray fallback icon for an absent conditional modal',()=>{

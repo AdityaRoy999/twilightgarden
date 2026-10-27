@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { useLocation } from "react-router-dom";
 import { useCouples } from "../contexts/CouplesContext";
-import { SyncHistoryModal } from "./SyncHistoryModal";
+const SyncHistoryModal = React.lazy(() => import('./SyncHistoryModal').then(module=>({default:module.SyncHistoryModal})));
 export function IdentityLockdownPrompt() {
   const { isSyncRequired, identityReady } = useCouples();
   const location = useLocation();
@@ -26,7 +26,7 @@ export function IdentityLockdownPrompt() {
           Restore chats
         </button>
       )}
-      <SyncHistoryModal isOpen={open} onClose={() => setOpen(false)} />
+      {open&&<React.Suspense fallback={null}><SyncHistoryModal isOpen={open} onClose={() => setOpen(false)} /></React.Suspense>}
     </>
   );
 }

@@ -1,3 +1,4 @@
+import {qualityProfiles} from '../lib/callQuality';
 import { MotionPortal } from './ui/MotionPortal';
 import React, { useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -6,7 +7,7 @@ import { useCall } from '../contexts/CallContext';
 
 export const CallModal: React.FC = () => {
     const { 
-        callStatus,callError,dismissCallError,callLatencyMs,
+        callStatus,callError,dismissCallError,callLatencyMs,callNetwork,
         localStream, 
         remoteStream, 
         callerName, 
@@ -121,6 +122,7 @@ export const CallModal: React.FC = () => {
                         )}
                     </div>
 
+                    {callNetwork&&<p className="mt-2 text-xs text-white/70">{isVideoCall?(callNetwork.videoPaused?'Weak connection · video paused to protect audio':qualityProfiles[callNetwork.quality].label):'Adaptive speech'}{isVideoCall&&callNetwork.videoHeight?` · sending ${callNetwork.videoHeight}p`:""}{isVideoCall&&callNetwork.sentKbps!==undefined?` · ${callNetwork.sentKbps} kbps`:""}{callNetwork.receivedJitterMs!==undefined?` · ${callNetwork.receivedJitterMs} ms audio jitter`:""}</p>}
                     {callLatencyMs!==null&&<p className="mt-3 text-xs text-white/60" aria-live="polite">{callLatencyMs} ms round-trip{callLatencyMs>350?' · Network delay':''}</p>}
                     {/* Controls */}
                     <div className="w-full mt-8 flex flex-col items-center space-y-8">

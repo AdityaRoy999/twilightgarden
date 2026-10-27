@@ -5,8 +5,8 @@ import { AppIcon } from './ui/Icons';
 import { localDateKey } from '../lib/dates';
 import React, { useRef, useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import html2canvas from 'html2canvas';
-import { jsPDF } from 'jspdf';
+
+
 import { DailyLog, CycleSettings } from '../types';
 import { Filesystem, Directory } from '@capacitor/filesystem';
 import { Share } from '@capacitor/share';
@@ -117,6 +117,7 @@ const TodayReportModal: React.FC<TodayReportModalProps> = ({
     await new Promise(r => setTimeout(r, 100));
 
     try {
+      const {default:html2canvas}=await import('html2canvas');
       const canvas = await html2canvas(cardRef.current, {
         scale: 3,
         backgroundColor: null,
@@ -155,6 +156,7 @@ const TodayReportModal: React.FC<TodayReportModalProps> = ({
     await new Promise(r => setTimeout(r, 100));
 
     try {
+      const {default:html2canvas}=await import('html2canvas');
       const canvas = await html2canvas(cardRef.current, {
         scale: 3,
         backgroundColor: null,
@@ -162,6 +164,7 @@ const TodayReportModal: React.FC<TodayReportModalProps> = ({
       });
 
       const imgData = canvas.toDataURL('image/png');
+      const {jsPDF}=await import('jspdf');
       const pdf = new jsPDF({
         orientation: 'portrait',
         unit: 'mm',

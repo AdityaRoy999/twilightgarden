@@ -47,6 +47,14 @@ describe('original illustration catalog', () => {
 });
 
 describe('generated guide validation', () => {
+  it('does not repeat symptom artwork when distinct tips share the same symptom context',()=>{
+    const cards=parseWellnessGuide(JSON.stringify({cards:[
+      {title:'Warm Comfort',body:'Try a heating pad for cramps.',illustrationId:'heat-pad'},
+      {title:'Gentle Movement',body:'Try a walk at your pace when cramps allow.',illustrationId:'heat-pad'},
+      {title:'Rest',body:'Rest when cramps make you tired.',illustrationId:'heat-pad'},
+    ]}));
+    expect(new Set(cards.map(card=>card.illustrationId)).size).toBe(3);
+  });
   it('accepts structured output and corrects incompatible illustration ids', () => {
     const cards = parseWellnessGuide(JSON.stringify({cards:[{title:'Peaceful sleep',body:'Make space for sleep.',illustrationId:'ginger-tea',actions:['Dim the lights'],quote:'Take your time.'}]}));
     expect(cards[0]).toMatchObject({illustrationId:'peaceful-sleep',actions:['Dim the lights'],quote:'Take your time.'});

@@ -1,0 +1,129 @@
+{
+  "date": "2026-10-27",
+  "method": {
+    "reads": "One warm-up plus seven sequential ordinary authenticated REST reads against an isolated synthetic account with 241 logs. Only that fixture account is removed afterwards.",
+    "bundle": "Production dist/index.html entry and modulepreload JavaScript only; raw size and local gzip. Not total route transfer or browser paint time.",
+    "limitations": "Single execution host, small sample, uncontrolled internet conditions. Before and after differ in time; network improvements cannot be causally attributed to index removal. Intermediate run had history p50 237ms/p95 373ms."
+  },
+  "before": {
+    "network": {
+      "profile": {
+        "p50Ms": 54,
+        "p95Ms": 62,
+        "ttfbP50Ms": 53,
+        "bytes": 74
+      },
+      "datasetEpoch": {
+        "p50Ms": 64,
+        "p95Ms": 87,
+        "ttfbP50Ms": 64,
+        "bytes": 38
+      },
+      "history241": {
+        "p50Ms": 79,
+        "p95Ms": 670,
+        "ttfbP50Ms": 78,
+        "bytes": 84830
+      },
+      "productionHtml": {
+        "p50Ms": 37,
+        "p95Ms": 40,
+        "ttfbP50Ms": 36,
+        "bytes": 3823
+      }
+    },
+    "bundle": {
+      "initialJavaScriptFiles": 5,
+      "rawBytes": 1205055,
+      "gzipBytes": 373314,
+      "files": [
+        {
+          "path": "/assets/index-VEdnm82y.js",
+          "rawBytes": 465167,
+          "gzipBytes": 150903
+        },
+        {
+          "path": "/assets/vendor-react-BRKisvHt.js",
+          "rawBytes": 51017,
+          "gzipBytes": 18124
+        },
+        {
+          "path": "/assets/vendor-ui-DtlTuOQU.js",
+          "rawBytes": 509520,
+          "gzipBytes": 155317
+        },
+        {
+          "path": "/assets/vendor-capacitor-DljBELwV.js",
+          "rawBytes": 10908,
+          "gzipBytes": 4481
+        },
+        {
+          "path": "/assets/vendor-supabase-DX0i8-Of.js",
+          "rawBytes": 168443,
+          "gzipBytes": 44489
+        }
+      ]
+    }
+  },
+  "after": {
+    "network": {
+      "profile": {
+        "p50Ms": 99,
+        "p95Ms": 129,
+        "ttfbP50Ms": 99,
+        "bytes": 74
+      },
+      "datasetEpoch": {
+        "p50Ms": 54,
+        "p95Ms": 97,
+        "ttfbP50Ms": 54,
+        "bytes": 38
+      },
+      "history241": {
+        "p50Ms": 69,
+        "p95Ms": 95,
+        "ttfbP50Ms": 67,
+        "bytes": 84830
+      },
+      "productionHtml": {
+        "p50Ms": 66,
+        "p95Ms": 93,
+        "ttfbP50Ms": 66,
+        "bytes": 3823
+      }
+    },
+    "bundle": {
+      "initialJavaScriptFiles": 5,
+      "rawBytes": 802387,
+      "gzipBytes": 253508,
+      "files": [
+        {
+          "path": "/assets/index-BDf8P8Yy.js",
+          "rawBytes": 441549,
+          "gzipBytes": 143055
+        },
+        {
+          "path": "/assets/vendor-capacitor-DljBELwV.js",
+          "rawBytes": 10908,
+          "gzipBytes": 4481
+        },
+        {
+          "path": "/assets/vendor-react-BRKisvHt.js",
+          "rawBytes": 51017,
+          "gzipBytes": 18124
+        },
+        {
+          "path": "/assets/vendor-motion-B6I6Lmoh.js",
+          "rawBytes": 130470,
+          "gzipBytes": 43359
+        },
+        {
+          "path": "/assets/vendor-supabase-DX0i8-Of.js",
+          "rawBytes": 168443,
+          "gzipBytes": 44489
+        }
+      ]
+    }
+  },
+  "initialGzipReductionPercent": 32.1
+}
