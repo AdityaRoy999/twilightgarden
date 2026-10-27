@@ -36,7 +36,7 @@ const PartnerForgotPassword: React.FC = () => {
   };
 
   return (
-    <div className="min-h-screen flex flex-col bg-background-dark text-white font-display">
+    <div className="safe-screen min-h-screen flex flex-col bg-background-dark text-white font-display">
       <div className="flex items-center p-4 pb-2 justify-between z-10">
         <button onClick={() => navigate('/partner/login')} className="text-white flex size-12 items-center justify-center hover:bg-white/5 rounded-full">
           <span className="app-icon-glyph"><AppIcon name={"arrow_back_ios_new"}/></span>

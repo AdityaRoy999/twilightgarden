@@ -63,7 +63,7 @@ const ForgotPassword: React.FC = () => {
   };
 
   return (
-    <div className="min-h-screen bg-background-dark text-white flex flex-col p-6 font-display">
+    <div className="safe-screen recovery-screen min-h-screen bg-background-dark text-white flex flex-col p-6 font-display">
       <button
         onClick={() => step === 1 ? navigate('/login') : setStep(1)}
         className="self-start p-2 -ml-2 text-gray-400 hover:text-white transition-colors"

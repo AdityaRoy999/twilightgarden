@@ -3,6 +3,25 @@
 :root.dark :is(.bg-surface-dark, .dark\:bg-surface-dark, .bloom-auth main > section:last-child) { background-image: var(--dark-card); }
 :root.dark :is(.text-gray-400, .text-gray-500, .text-gray-600) { color: var(--text-secondary); }
 :root.dark #main-content, :root.dark .bloom-auth, :root.dark .reference-welcome, :root.dark .reference-onboarding { background: var(--bg-base) url('/art/bloom-background-dark.svg') center top / cover no-repeat; }
+:root.dark {
+  --welcome-rose: #cd608c;
+  --welcome-rose-light: #e7a0bd;
+  --welcome-lilac: #9380ba;
+  --welcome-lilac-light: #bfaadb;
+  --welcome-wash: #3b263b;
+  --welcome-ground: #49263e;
+  --welcome-paper: #36283f;
+  --welcome-track: #584367;
+  --welcome-skin: #dca48c;
+  --welcome-hair: #352531;
+  --welcome-ink: #54323b;
+  --welcome-blush: #c87b8c;
+  --welcome-leaf: #657f74;
+  --welcome-stem: #88a799;
+  --welcome-gold: #d8b574;
+}
+:root.dark .welcome-brand, :root.dark .welcome-art > span, :root.dark .welcome-tags span, :root.dark .welcome-partner { color: var(--selection-ink); }
+:root.dark .welcome-card { background: var(--dark-card); }
 :root.dark :is(.reference-card, .bloom-card, .spring-modal-panel) { background: var(--dark-card); border: 1px solid #48314e; box-shadow: 0 14px 40px -26px #f6438a24, inset 0 1px 0 #ffffff04; }
 :root.dark .bloom-cycle-hero { background: radial-gradient(ellipse at 85% 30%, #63223b30, transparent 65%), linear-gradient(135deg, #251a2e, #191322 60%, #241627); border-color: #50304d; }
 :root.dark .bloom-cycle-copy h3 { color: #ff70a5; }

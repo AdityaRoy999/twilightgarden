@@ -8,9 +8,11 @@ async function get(path) {
   return response.text();
 }
 const html = await get('/');
+if (!/name="viewport"[^>]*viewport-fit=cover/.test(html)) throw new Error('iPhone viewport safe-area support was not served');
 const productionStyles = [...html.matchAll(/href="(\/assets\/[^"\s]+\.css)"/g)].map(match => match[1]);
 const paths = productionStyles.length ? productionStyles : ['/index.css?direct', '/styles/bloom.css?direct', '/styles/reference.css?direct', '/styles/spring.css?direct', '/styles/dark.css?direct', '/styles/refinements.css?direct', '/styles/polish.css?direct', '/styles/wellness.css?direct', '/styles/solar-polish.css?direct','/styles/gentle.css?direct','/styles/history.css?direct','/styles/finish.css?direct','/styles/games.css?direct'];
 const sheets = await Promise.all(paths.map(get));
+if (!sheets.some(sheet => sheet.includes('.safe-screen') && sheet.includes('--safe-area-top') && sheet.includes('safe-area-inset-top'))) throw new Error('Safe-area spacing was not served');
 const light = {}, dark = {};
 let surfaceBindings = 0;
 for (const sheet of sheets) {

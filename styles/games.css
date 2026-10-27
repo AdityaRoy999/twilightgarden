@@ -12,9 +12,10 @@
   width: min(100%, 760px);
   min-height: 100%;
   margin: auto;
-  padding: 24px clamp(16px, 4vw, 40px) 30px;
+  padding: calc(24px + var(--safe-area-top)) max(clamp(16px, 4vw, 40px),var(--safe-area-right)) calc(30px + var(--safe-area-bottom)) max(clamp(16px, 4vw, 40px),var(--safe-area-left));
   color: var(--text-primary);
 }
+.app-shell .game-room { padding-top: 24px; }
 .game-header {
   display: flex;
   justify-content: space-between;
