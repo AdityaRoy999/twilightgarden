@@ -85,7 +85,7 @@ export default function GameRoom({ game }: { game: GameType }) {
       (state.promptCount ?? 0) >= 3
     )
       return;
-    const key = `${room.id}:${state.level}:${state.round}`;
+    const key = `${room.id}:${state.level}:${state.total}:${state.round}`;
     if (requested.current === key) return;
     requested.current = key;
     void action({ kind: "prefetch" });
@@ -93,6 +93,7 @@ export default function GameRoom({ game }: { game: GameType }) {
     room?.id,
     room?.player_o,
     state?.level,
+    state?.total,
     state?.round,
     state?.promptCount,
     state?.phase,
