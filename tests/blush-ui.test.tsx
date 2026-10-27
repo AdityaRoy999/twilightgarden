@@ -13,7 +13,7 @@ vi.mock('../contexts/ThemeContext', () => ({ useTheme: () => ({ theme: 'light', 
 vi.mock('../lib/supabase', () => ({ supabase: { from: () => ({ select: () => ({ eq: () => ({ single: async () => ({ data: null }) }) }) }) } }));
 vi.mock('../components/TodayReportModal', () => ({ default: () => null }));
 vi.mock('../components/ui/AnimatedIcons', () => ({ ShareIcon: React.forwardRef(() => <span/>) }));
-vi.mock('framer-motion', () => ({ motion: { span: ({children}:any)=><span>{children}</span>, div: ({ children, ...props }: any) => <div>{children}</div>, main: ({ children }: any) => <main>{children}</main> }, AnimatePresence: ({ children }: any) => children, useReducedMotion: () => true }));
+vi.mock('framer-motion', () => ({ motion: { span: ({children}:any)=><span>{children}</span>, div: ({ children, ...props }: any) => <div>{children}</div>, main: ({ children }: any) => <main>{children}</main> }, AnimatePresence: ({ children }: any) => children, useIsPresent: () => true, useReducedMotion: () => true }));
 vi.mock('recharts', () => Object.fromEntries(['BarChart', 'Bar', 'Cell', 'XAxis', 'YAxis', 'Tooltip', 'ResponsiveContainer', 'AreaChart', 'Area', 'CartesianGrid', 'ReferenceLine', 'PieChart', 'Pie', 'Legend'].map(name => [name, () => <div data-testid="chart"/>])));
 import Dashboard from '../pages/Dashboard';
 import Insights from '../pages/Insights';
@@ -28,6 +28,13 @@ beforeEach(() => { vi.useFakeTimers(); vi.setSystemTime(new Date('2026-10-26T10:
 afterEach(() => { cleanup(); vi.useRealTimers(); });
 
 describe('blush frontend data and navigation', () => {
+  it('puts the owner’s check-in history under Insights',()=>{
+    fixture.logs=[{id:'history',date:'2026-10-25',moods:['happy']}];
+    render(<MemoryRouter><Insights/></MemoryRouter>);
+    fireEvent.click(screen.getByRole('button',{name:'History'}));
+    expect(screen.getByRole('heading',{name:'Log History'})).toBeTruthy();
+    expect(screen.getByRole('button',{name:'View check-in for October 25, 2026'})).toBeTruthy();
+  });
   it('uses the cycle model for the ring and next-period card', () => {
     render(<MemoryRouter><Dashboard/></MemoryRouter>);
     expect(screen.getByRole('img', { name: 'Cycle day 25 of an estimated 32 days' })).toBeTruthy();
@@ -89,11 +96,12 @@ describe('blush frontend data and navigation', () => {
   });
   it('keeps the partner calendar read-only', () => {
     const settings = { avgCycleLength: 32, avgPeriodLength: 5, lastPeriodStart: '2026-10-02', irregularCycle: false, onboardingCompleted: true };
-    const log = { id: 'sample', user_id: 'partner', date: '2026-10-26', moods: ['calm' as const] };
+    const log = { id: 'sample', user_id: 'partner', date: '2026-10-26', moods: ['calm' as const], energyLevel: 'low' as const };
     render(<MemoryRouter><CalendarScreen readOnly logs={[log]} cycleSettings={settings} getCyclePhase={date => calculateCyclePhase(date || '2026-10-26', settings)}/></MemoryRouter>);
     expect((screen.getByRole('button', { name: '2026-10-25' }) as HTMLButtonElement).disabled).toBe(true);
     fireEvent.click(screen.getByRole('button', { name: '2026-10-26, Has a journal entry' }));
-    expect(screen.queryByRole('button', { name: 'Edit Log' })).toBeNull();
+    expect(screen.queryByRole('button', { name: 'Edit this check-in' })).toBeNull();
+    expect(screen.getByText(/They logged low energy today/)).toBeTruthy();
   });
   it('lets the color field be edited one character at a time', () => {
     const onChange = vi.fn();

@@ -1,5 +1,5 @@
 import { supabase } from './supabase';
-import { parseWellnessGuide, wellnessGuidePrompt } from './wellnessGuide';
+import { parseWellnessGuide, wellnessGuidePrompt, caregiverGuideHasRoleMismatch } from './wellnessGuide';
 import { normalizePharmacies, type PharmacyPlace } from './places';
 import {withinDeadline,requestError} from './requestTimeout';
 
@@ -116,7 +116,7 @@ async function generateGuide(ctx: WellnessContext, partner: boolean,refresh=fals
             try {
                 const result=await withinDeadline(()=>callAI(wellnessGuidePrompt(ctx,partner),'raw',session),30000,'Your AI guide is taking too long. Please try again.');
                 const cards=result.error?[]:parseWellnessGuide(result.text||'');
-                validated=result.error?result:cards.length===3&&new Set(cards.map(card=>card.illustrationId)).size===3?{text:JSON.stringify({cards})}:{text:'',error:'We couldn’t finish your guide. Please try again.'};
+                validated=result.error?result:cards.length===3&&new Set(cards.map(card=>card.illustrationId)).size===3&&(!partner||!caregiverGuideHasRoleMismatch(cards))?{text:JSON.stringify({cards})}:{text:'',error:'We couldn’t finish your guide. Please try again.'};
             } catch(error) {validated={text:'',error:requestError(error,'Your guide could not be prepared. Please retry.')};}
             entry.pending=undefined;
             if(guideCache.get(key)===entry){if(validated.error)guideCache.delete(key);else entry.result=validated;}

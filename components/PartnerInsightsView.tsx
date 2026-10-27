@@ -1,12 +1,12 @@
 import {springs,motionTransition} from '../lib/motion';
 import {SegmentedControl} from './ui/SegmentedControl';
 import { cycleStatistics } from '../lib/cycleStatistics';
-import { MotionPortal } from './ui/MotionPortal';
+import {LogHistoryView} from './history/LogHistoryView';
 import { AppIcon } from './ui/Icons';
 import ChartEmptyState from './ui/ChartEmptyState';
 import { useTheme } from '../contexts/ThemeContext';
 import React, { useState, useMemo } from 'react';
-import { motion, AnimatePresence, useReducedMotion } from 'framer-motion';
+import { motion, useReducedMotion } from 'framer-motion';
 import {
   BarChart,
   Bar,
@@ -29,17 +29,6 @@ interface PartnerInsightsViewProps {
   theme: string;
 }
 
-const getMoodEmoji = (mood: string) => {
-  const m = mood.toLowerCase();
-  if (m.includes('happy') || m.includes('great')) return '😊';
-  if (m.includes('energetic') || m.includes('productive')) return '🤩';
-  if (m.includes('sad') || m.includes('down')) return '😔';
-  if (m.includes('anxious') || m.includes('stressed')) return '😰';
-  if (m.includes('irritated') || m.includes('angry')) return '😠';
-  if (m.includes('calm') || m.includes('relaxed')) return '😌';
-  return '😐';
-};
-
 const PartnerInsightsView: React.FC<PartnerInsightsViewProps> = ({ logs, cycleSettings, theme }) => {
   const { animationsEnabled } = useTheme();
   const reducedMotion = useReducedMotion();
@@ -47,9 +36,7 @@ const PartnerInsightsView: React.FC<PartnerInsightsViewProps> = ({ logs, cycleSe
   const [chartType, setChartType] = useState<'bar' | 'line'>('bar');
   const [activeTab, setActiveTab] = useState<'history' | 'trends'>('history');
   const [historyTab, setHistoryTab] = useState<'general' | 'logs'>('general');
-  const [logViewMode, setLogViewMode] = useState<'card' | 'list'>('card');
   const [trendsSubTab, setTrendsSubTab] = useState<'sleep' | 'energy'>('sleep');
-  const [selectedLog, setSelectedLog] = useState<any | null>(null);
 
   const tooltipStyles = useMemo(() => ({
     contentStyle: {
@@ -165,7 +152,7 @@ const PartnerInsightsView: React.FC<PartnerInsightsViewProps> = ({ logs, cycleSe
   return (
     <div className="flex flex-col gap-6 w-full">
       {/* Tab Switcher (Styled like Insights.tsx) */}
-      <SegmentedControl label="Shared insight sections" value={activeTab==='history'?historyTab:trendsSubTab} options={[{value:'general',label:'Cycle',icon:'calendar_today'},{value:'logs',label:'Logs',icon:'history'},{value:'sleep',label:'Sleep',icon:'bedtime'},{value:'energy',label:'Energy',icon:'bolt'}]} onChange={value=>{if(value==='general'||value==='logs'){setActiveTab('history');setHistoryTab(value);}else{setActiveTab('trends');setTrendsSubTab(value as 'sleep'|'energy');}}}/>
+      <SegmentedControl label="Shared insight sections" value={activeTab==='history'?historyTab:trendsSubTab} options={[{value:'general',label:'Cycle',icon:'calendar_today'},{value:'logs',label:'History',icon:'history'},{value:'sleep',label:'Sleep',icon:'bedtime'},{value:'energy',label:'Energy',icon:'bolt'}]} onChange={value=>{if(value==='general'||value==='logs'){setActiveTab('history');setHistoryTab(value);}else{setActiveTab('trends');setTrendsSubTab(value as 'sleep'|'energy');}}}/>
 
 
       <React.Fragment>
@@ -280,127 +267,7 @@ const PartnerInsightsView: React.FC<PartnerInsightsViewProps> = ({ logs, cycleSe
                   </div>
                 </motion.div>
               ) : (
-                <motion.div
-                  key="log-history"
-                  initial={animateCharts?{y:8}:false}
-                  animate={{y:0}} transition={motionTransition(springs.section,!animateCharts)}
-                  className="flex flex-col gap-4"
-                >
-                  <div className="flex items-center justify-between px-2">
-                    <h3 className="text-lg font-bold text-[var(--text-primary)] dark:text-white">Log History</h3>
-                    <div className="flex items-center bg-gray-100 dark:bg-white/5 rounded-xl p-1 gap-1 relative">
-                      <button
-                        onClick={() => setLogViewMode('card')}
-                        className={`relative z-10 p-1.5 rounded-lg transition-all ${logViewMode === 'card' ? 'text-primary' : 'text-gray-400 hover:text-gray-600 dark:hover:text-gray-200'}`}
-                      >
-                        {logViewMode === 'card' && (
-                          <motion.div
-                            layoutId="logViewToggle"
-                            className="absolute inset-0 bg-white dark:bg-white/10 rounded-lg shadow-sm"
-                            transition={motionTransition(springs.selection,!animateCharts)}
-                          />
-                        )}
-                        <span className="app-icon-glyph text-sm block relative z-20"><AppIcon name={"grid_view"}/></span>
-                      </button>
-                      <button
-                        onClick={() => setLogViewMode('list')}
-                        className={`relative z-10 p-1.5 rounded-lg transition-all ${logViewMode === 'list' ? 'text-primary' : 'text-gray-400 hover:text-gray-600 dark:hover:text-gray-200'}`}
-                      >
-                        {logViewMode === 'list' && (
-                          <motion.div
-                            layoutId="logViewToggle"
-                            className="absolute inset-0 bg-white dark:bg-white/10 rounded-lg shadow-sm"
-                            transition={motionTransition(springs.selection,!animateCharts)}
-                          />
-                        )}
-                        <span className="app-icon-glyph text-sm block relative z-20"><AppIcon name={"view_list"}/></span>
-                      </button>
-                    </div>
-                  </div>
-
-                  {logs && logs.length > 0 ? (
-                    <div className={logViewMode === 'card' ? "grid grid-cols-2 sm:grid-cols-3 gap-3" : "flex flex-col gap-3"}>
-                      {[...logs].sort((a,b) => new Date(b.date).getTime() - new Date(a.date).getTime()).map((log) => (
-                        logViewMode === 'card' ? (
-                          <div
-                            key={log.id}
-                            onClick={() => setSelectedLog(log)}
-                            className="bg-white dark:bg-surface-dark p-4 rounded-[2rem] border border-gray-100 dark:border-white/5 shadow-soft flex flex-col gap-4 transition-colors relative cursor-pointer hover:border-primary/30 dark:hover:border-primary/50"
-                          >
-                            <div className="flex items-start justify-between">
-                              <div className="flex flex-col items-center justify-center bg-gray-100 dark:bg-white/5 w-12 h-14 rounded-2xl">
-                                <span className="text-[10px] uppercase font-bold text-gray-400">
-                                  {new Date(log.date).toLocaleDateString('default', { month: 'short' })}
-                                </span>
-                                <span className="text-lg font-bold text-[var(--text-primary)] dark:text-white">
-                                  {new Date(log.date).getDate()}
-                                </span>
-                              </div>
-                              <span className="app-icon-glyph text-gray-300 text-lg"><AppIcon name={"north_east"}/></span>
-                            </div>
-
-                            <div className="flex flex-col gap-1.5">
-                              {log.flow && (
-                                <span className="px-2 py-0.5 bg-pink-500/10 text-pink-500 text-[10px] font-bold rounded-lg uppercase self-start">
-                                  {log.flow} Flow
-                                </span>
-                              )}
-                              <div className="flex items-center gap-1">
-                                <span className="text-xs">{getMoodEmoji(log.moods?.[0] || '')}</span>
-                                <span className="text-[11px] font-bold text-gray-500 dark:text-gray-400 capitalize">
-                                  {log.moods?.[0] || 'No Mood'}
-                                </span>
-                              </div>
-                            </div>
-                          </div>
-                        ) : (
-                          <div
-                            key={log.id}
-                            onClick={() => setSelectedLog(log)}
-                            className="bg-white dark:bg-surface-dark p-4 rounded-[2rem] border border-gray-100 dark:border-white/5 shadow-soft flex items-center justify-between transition-colors cursor-pointer hover:border-primary/30 dark:hover:border-primary/50"
-                          >
-                            <div className="flex items-center gap-4">
-                              <div className="flex flex-col items-center justify-center bg-gray-100 dark:bg-white/5 w-12 h-14 rounded-2xl">
-                                <span className="text-[10px] uppercase font-bold text-gray-400">
-                                  {new Date(log.date).toLocaleDateString('default', { month: 'short' })}
-                                </span>
-                                <span className="text-lg font-bold text-[var(--text-primary)] dark:text-white">
-                                  {new Date(log.date).getDate()}
-                                </span>
-                              </div>
-
-                              <div className="flex flex-col gap-1.5">
-                                {log.flow && (
-                                  <span className="px-2 py-0.5 bg-pink-500/10 text-pink-500 text-[10px] font-bold rounded-lg uppercase self-start">
-                                    {log.flow} Flow
-                                  </span>
-                                )}
-                                <div className="flex items-center gap-2">
-                                  <div className="flex items-center gap-1">
-                                    <span className="text-xs">{getMoodEmoji(log.moods?.[0] || '')}</span>
-                                    <span className="text-[11px] font-bold text-gray-500 dark:text-gray-400 capitalize">
-                                      {log.moods?.[0] || 'No Mood'}
-                                    </span>
-                                  </div>
-                                  <span className="text-gray-300 dark:text-gray-600">•</span>
-                                  <span className="text-[11px] text-gray-400">
-                                    {log.symptoms?.length || 0} symptoms
-                                  </span>
-                                </div>
-                              </div>
-                            </div>
-
-                            <span className="app-icon-glyph text-gray-300"><AppIcon name={"chevron_right"}/></span>
-                          </div>
-                        )
-                      ))}
-                    </div>
-                  ) : (
-                    <div className="text-center py-10 bg-white/5 rounded-[2rem] border border-dashed border-white/5">
-                      <p className="text-gray-500 text-sm">No log history yet.</p>
-                    </div>
-                  )}
-                </motion.div>
+                <LogHistoryView logs={logs} readOnly/>
               )}
             </React.Fragment>
           </motion.div>
@@ -533,71 +400,7 @@ const PartnerInsightsView: React.FC<PartnerInsightsViewProps> = ({ logs, cycleSe
         )}
       </React.Fragment>
 
-      {/* Log Details Modal */}
-      <AnimatePresence>
-        {selectedLog && (
-          <MotionPortal><motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/40 backdrop-blur-sm"
-            onClick={() => setSelectedLog(null)}
-          >
-            <motion.div
-              initial={{ scale: 0.95, opacity: 0, y: 20 }}
-              animate={{ scale: 1, opacity: 1, y: 0 }}
-              exit={{ scale: 0.95, opacity: 0, y: 20 }}
-              onClick={(e) => e.stopPropagation()}
-              className="bg-background-dark dark:bg-surface-dark w-full max-w-sm rounded-[2.5rem] p-6 shadow-2xl relative border border-gray-100 dark:border-white/5 max-h-[90vh] overflow-y-auto no-scrollbar"
-            >
-              <button
-                onClick={() => setSelectedLog(null)}
-                className="absolute top-4 right-4 p-2 bg-gray-100 dark:bg-white/5 rounded-full text-gray-500 hover:bg-gray-200 dark:hover:bg-white/10 transition-colors"
-              >
-                <span className="app-icon-glyph text-sm block"><AppIcon name={"close"}/></span>
-              </button>
-              <div className="flex flex-col items-center mb-6">
-                <div className="w-16 h-16 bg-primary/10 rounded-full flex items-center justify-center mb-3">
-                  <span className="text-3xl">{getMoodEmoji(selectedLog.moods?.[0] || '')}</span>
-                </div>
-                <h3 className="text-xl font-bold text-[var(--text-primary)] dark:text-white capitalize">
-                  {new Date(selectedLog.date).toLocaleDateString('default', { month: 'long', day: 'numeric', year: 'numeric' })}
-                </h3>
-                <p className="text-gray-500 dark:text-gray-400 capitalize">{selectedLog.moods?.[0] || 'No mood logged'}</p>
-              </div>
 
-              <div className="space-y-4">
-                {selectedLog.flow && (
-                  <div className="flex items-center justify-between p-3 rounded-2xl bg-pink-50 dark:bg-pink-500/10">
-                    <span className="text-sm font-semibold text-pink-600 dark:text-pink-400">Flow</span>
-                    <span className="text-sm font-bold text-pink-700 dark:text-pink-300 capitalize">{selectedLog.flow}</span>
-                  </div>
-                )}
-
-                {selectedLog.symptoms && selectedLog.symptoms.length > 0 && (
-                  <div className="p-4 rounded-2xl bg-gray-50 dark:bg-white/5">
-                    <span className="text-xs font-bold text-gray-400 uppercase tracking-wider block mb-2">Symptoms</span>
-                    <div className="flex flex-wrap gap-2">
-                      {selectedLog.symptoms.map((s: string) => (
-                        <span key={s} className="px-3 py-1 bg-white dark:bg-white/10 text-gray-700 dark:text-gray-300 text-xs font-medium rounded-xl border border-gray-100 dark:border-white/5 capitalize">
-                          {s}
-                        </span>
-                      ))}
-                    </div>
-                  </div>
-                )}
-
-                {selectedLog.note && (
-                  <div className="p-4 rounded-2xl bg-gray-50 dark:bg-white/5">
-                    <span className="text-xs font-bold text-gray-400 uppercase tracking-wider block mb-2">Note</span>
-                    <p className="text-sm text-gray-700 dark:text-gray-300 italic">"{selectedLog.note}"</p>
-                  </div>
-                )}
-              </div>
-            </motion.div>
-          </motion.div></MotionPortal>
-        )}
-      </AnimatePresence>
     </div>
   );
 };

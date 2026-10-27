@@ -24,7 +24,7 @@ const PartnerInsights: React.FC = () => {
         </div>
       </div>
 
-      {couple?.share_enabled ? (
+      {couple?.share_enabled && couple.status==='active' ? (
         <PartnerInsightsView 
           logs={logs} 
           cycleSettings={settings} 
