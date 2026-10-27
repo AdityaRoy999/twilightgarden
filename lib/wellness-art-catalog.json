@@ -1,0 +1,1419 @@
+[
+  {
+    "id": "morning-energy",
+    "label": "Waking with renewed energy",
+    "tags": [
+      "waking",
+      "wake",
+      "morning stretch",
+      "refreshed"
+    ],
+    "icon": "bolt",
+    "tone": "amber",
+    "src": "/art/wellness/morning-energy.webp",
+    "format": "raster"
+  },
+  {
+    "id": "gentle-stretch",
+    "label": "Gentle side stretching",
+    "tags": [
+      "stretch",
+      "stretching",
+      "movement"
+    ],
+    "icon": "spa",
+    "tone": "mint",
+    "src": "/art/wellness/gentle-stretch.webp",
+    "format": "raster"
+  },
+  {
+    "id": "herbal-hydration",
+    "label": "Herbal tea and hydration",
+    "tags": [
+      "herbal tea",
+      "herbal drink",
+      "hydration",
+      "hydration focus",
+      "warm water"
+    ],
+    "icon": "water_drop",
+    "tone": "blue",
+    "src": "/art/wellness/herbal-hydration.webp",
+    "format": "raster"
+  },
+  {
+    "id": "rest-recovery",
+    "label": "Rest and recovery",
+    "tags": [
+      "rest",
+      "recovery",
+      "recharge",
+      "relaxation"
+    ],
+    "icon": "bedtime",
+    "tone": "violet",
+    "src": "/art/wellness/rest-recovery.webp",
+    "format": "raster"
+  },
+  {
+    "id": "peaceful-sleep",
+    "label": "Peaceful sleep",
+    "tags": [
+      "sleep",
+      "sleeping",
+      "quality sleep"
+    ],
+    "icon": "bedtime",
+    "tone": "violet",
+    "src": "/art/wellness/peaceful-sleep.webp",
+    "format": "raster"
+  },
+  {
+    "id": "self-comfort",
+    "label": "Comfort and self-compassion",
+    "tags": [
+      "self compassion",
+      "self-compassion",
+      "cycle sync",
+      "embrace the reset",
+      "comfort"
+    ],
+    "icon": "favorite",
+    "tone": "rose",
+    "src": "/art/wellness/self-comfort.webp",
+    "format": "raster"
+  },
+  {
+    "id": "supportive-couple",
+    "label": "A reassuring presence",
+    "tags": [
+      "supportive embrace",
+      "listen without fixing",
+      "partner care",
+      "reassuring presence"
+    ],
+    "icon": "favorite",
+    "tone": "violet",
+    "src": "/art/wellness/supportive-couple.webp",
+    "format": "raster"
+  },
+  {
+    "id": "walking-shoes",
+    "label": "A gentle walk",
+    "tags": [
+      "walking",
+      "walk",
+      "steps",
+      "stroll"
+    ],
+    "icon": "spa",
+    "tone": "rose",
+    "src": "/art/wellness/walking-shoes.svg",
+    "darkSrc": "/art/wellness/walking-shoes.dark.svg",
+    "format": "vector"
+  },
+  {
+    "id": "yoga-mat",
+    "label": "Unroll your yoga mat",
+    "tags": [
+      "yoga",
+      "yoga mat",
+      "gentle practice"
+    ],
+    "icon": "spa",
+    "tone": "rose",
+    "src": "/art/wellness/yoga-mat.svg",
+    "darkSrc": "/art/wellness/yoga-mat.dark.svg",
+    "format": "vector"
+  },
+  {
+    "id": "breathing",
+    "label": "A quiet breathing pause",
+    "tags": [
+      "breathing",
+      "breathe",
+      "slow breath",
+      "exhale"
+    ],
+    "icon": "spa",
+    "tone": "rose",
+    "src": "/art/wellness/breathing.svg",
+    "darkSrc": "/art/wellness/breathing.dark.svg",
+    "format": "vector"
+  },
+  {
+    "id": "meditation",
+    "label": "A mindful moment",
+    "tags": [
+      "meditation",
+      "meditate",
+      "mindful",
+      "mindfulness"
+    ],
+    "icon": "spa",
+    "tone": "rose",
+    "src": "/art/wellness/meditation.svg",
+    "darkSrc": "/art/wellness/meditation.dark.svg",
+    "format": "vector"
+  },
+  {
+    "id": "stretch-band",
+    "label": "Easy resistance-band movement",
+    "tags": [
+      "resistance",
+      "band",
+      "strength"
+    ],
+    "icon": "spa",
+    "tone": "rose",
+    "src": "/art/wellness/stretch-band.svg",
+    "darkSrc": "/art/wellness/stretch-band.dark.svg",
+    "format": "vector"
+  },
+  {
+    "id": "dance",
+    "label": "Move to your own rhythm",
+    "tags": [
+      "dance",
+      "dancing",
+      "music movement"
+    ],
+    "icon": "spa",
+    "tone": "rose",
+    "src": "/art/wellness/dance.svg",
+    "darkSrc": "/art/wellness/dance.dark.svg",
+    "format": "vector"
+  },
+  {
+    "id": "swimming",
+    "label": "A gentle swim",
+    "tags": [
+      "swim",
+      "swimming",
+      "pool"
+    ],
+    "icon": "spa",
+    "tone": "rose",
+    "src": "/art/wellness/swimming.svg",
+    "darkSrc": "/art/wellness/swimming.dark.svg",
+    "format": "vector"
+  },
+  {
+    "id": "cycling",
+    "label": "A relaxed bike ride",
+    "tags": [
+      "cycle ride",
+      "cycling",
+      "bicycle",
+      "bike"
+    ],
+    "icon": "spa",
+    "tone": "rose",
+    "src": "/art/wellness/cycling.svg",
+    "darkSrc": "/art/wellness/cycling.dark.svg",
+    "format": "vector"
+  },
+  {
+    "id": "nature",
+    "label": "Time in nature",
+    "tags": [
+      "nature",
+      "outdoor",
+      "outside",
+      "fresh air"
+    ],
+    "icon": "spa",
+    "tone": "rose",
+    "src": "/art/wellness/nature.svg",
+    "darkSrc": "/art/wellness/nature.dark.svg",
+    "format": "vector"
+  },
+  {
+    "id": "balance",
+    "label": "Find a steadier pace",
+    "tags": [
+      "balance",
+      "steady",
+      "pace",
+      "pacing"
+    ],
+    "icon": "spa",
+    "tone": "rose",
+    "src": "/art/wellness/balance.svg",
+    "darkSrc": "/art/wellness/balance.dark.svg",
+    "format": "vector"
+  },
+  {
+    "id": "water-glass",
+    "label": "A glass of water",
+    "tags": [
+      "water",
+      "drink water",
+      "hydration",
+      "hydrate"
+    ],
+    "icon": "water_drop",
+    "tone": "blue",
+    "src": "/art/wellness/water-glass.svg",
+    "darkSrc": "/art/wellness/water-glass.dark.svg",
+    "format": "vector"
+  },
+  {
+    "id": "ginger-tea",
+    "label": "A warm ginger drink",
+    "tags": [
+      "ginger",
+      "warm drink",
+      "warm tea"
+    ],
+    "icon": "water_drop",
+    "tone": "amber",
+    "src": "/art/wellness/ginger-tea.svg",
+    "darkSrc": "/art/wellness/ginger-tea.dark.svg",
+    "format": "vector"
+  },
+  {
+    "id": "peppermint",
+    "label": "Peppermint and a pause",
+    "tags": [
+      "peppermint",
+      "mint tea"
+    ],
+    "icon": "water_drop",
+    "tone": "mint",
+    "src": "/art/wellness/peppermint.svg",
+    "darkSrc": "/art/wellness/peppermint.dark.svg",
+    "format": "vector"
+  },
+  {
+    "id": "lemon-water",
+    "label": "Refresh with lemon water",
+    "tags": [
+      "lemon",
+      "citrus",
+      "vitamin c"
+    ],
+    "icon": "water_drop",
+    "tone": "amber",
+    "src": "/art/wellness/lemon-water.svg",
+    "darkSrc": "/art/wellness/lemon-water.dark.svg",
+    "format": "vector"
+  },
+  {
+    "id": "smoothie",
+    "label": "A nourishing smoothie",
+    "tags": [
+      "smoothie",
+      "blend",
+      "blended"
+    ],
+    "icon": "restaurant",
+    "tone": "rose",
+    "src": "/art/wellness/smoothie.svg",
+    "darkSrc": "/art/wellness/smoothie.dark.svg",
+    "format": "vector"
+  },
+  {
+    "id": "soup",
+    "label": "A comforting bowl of soup",
+    "tags": [
+      "soup",
+      "broth",
+      "warm meal"
+    ],
+    "icon": "restaurant",
+    "tone": "amber",
+    "src": "/art/wellness/soup.svg",
+    "darkSrc": "/art/wellness/soup.dark.svg",
+    "format": "vector"
+  },
+  {
+    "id": "leafy-greens",
+    "label": "Add leafy greens",
+    "tags": [
+      "leafy",
+      "greens",
+      "spinach",
+      "iron-rich",
+      "iron rich"
+    ],
+    "icon": "restaurant",
+    "tone": "mint",
+    "src": "/art/wellness/leafy-greens.svg",
+    "darkSrc": "/art/wellness/leafy-greens.dark.svg",
+    "format": "vector"
+  },
+  {
+    "id": "lentils",
+    "label": "A bowl of lentils",
+    "tags": [
+      "lentil",
+      "beans",
+      "legumes",
+      "dal"
+    ],
+    "icon": "restaurant",
+    "tone": "amber",
+    "src": "/art/wellness/lentils.svg",
+    "darkSrc": "/art/wellness/lentils.dark.svg",
+    "format": "vector"
+  },
+  {
+    "id": "whole-grains",
+    "label": "Whole-grain nourishment",
+    "tags": [
+      "whole grain",
+      "oats",
+      "porridge",
+      "fiber",
+      "fibre"
+    ],
+    "icon": "restaurant",
+    "tone": "amber",
+    "src": "/art/wellness/whole-grains.svg",
+    "darkSrc": "/art/wellness/whole-grains.dark.svg",
+    "format": "vector"
+  },
+  {
+    "id": "protein",
+    "label": "A balanced protein snack",
+    "tags": [
+      "protein",
+      "eggs",
+      "egg",
+      "tofu"
+    ],
+    "icon": "restaurant",
+    "tone": "amber",
+    "src": "/art/wellness/protein.svg",
+    "darkSrc": "/art/wellness/protein.dark.svg",
+    "format": "vector"
+  },
+  {
+    "id": "salmon",
+    "label": "Nourishing omega fats",
+    "tags": [
+      "omega",
+      "salmon",
+      "fish"
+    ],
+    "icon": "restaurant",
+    "tone": "peach",
+    "src": "/art/wellness/salmon.svg",
+    "darkSrc": "/art/wellness/salmon.dark.svg",
+    "format": "vector"
+  },
+  {
+    "id": "nuts",
+    "label": "A handful of nuts",
+    "tags": [
+      "nuts",
+      "almonds",
+      "walnuts",
+      "magnesium"
+    ],
+    "icon": "restaurant",
+    "tone": "amber",
+    "src": "/art/wellness/nuts.svg",
+    "darkSrc": "/art/wellness/nuts.dark.svg",
+    "format": "vector"
+  },
+  {
+    "id": "fruit",
+    "label": "Colorful fruit",
+    "tags": [
+      "fruit",
+      "berries",
+      "berry",
+      "antioxidant"
+    ],
+    "icon": "restaurant",
+    "tone": "rose",
+    "src": "/art/wellness/fruit.svg",
+    "darkSrc": "/art/wellness/fruit.dark.svg",
+    "format": "vector"
+  },
+  {
+    "id": "banana",
+    "label": "A simple banana snack",
+    "tags": [
+      "banana",
+      "potassium"
+    ],
+    "icon": "restaurant",
+    "tone": "amber",
+    "src": "/art/wellness/banana.svg",
+    "darkSrc": "/art/wellness/banana.dark.svg",
+    "format": "vector"
+  },
+  {
+    "id": "dark-chocolate",
+    "label": "A little dark chocolate",
+    "tags": [
+      "chocolate",
+      "cocoa"
+    ],
+    "icon": "restaurant",
+    "tone": "rose",
+    "src": "/art/wellness/dark-chocolate.svg",
+    "darkSrc": "/art/wellness/dark-chocolate.dark.svg",
+    "format": "vector"
+  },
+  {
+    "id": "meal-prep",
+    "label": "Make meals easier",
+    "tags": [
+      "meal prep",
+      "prepare food",
+      "cooking",
+      "cook"
+    ],
+    "icon": "restaurant",
+    "tone": "mint",
+    "src": "/art/wellness/meal-prep.svg",
+    "darkSrc": "/art/wellness/meal-prep.dark.svg",
+    "format": "vector"
+  },
+  {
+    "id": "small-meals",
+    "label": "Enjoy smaller meals",
+    "tags": [
+      "small meal",
+      "small portion",
+      "regular meal",
+      "appetite"
+    ],
+    "icon": "restaurant",
+    "tone": "amber",
+    "src": "/art/wellness/small-meals.svg",
+    "darkSrc": "/art/wellness/small-meals.dark.svg",
+    "format": "vector"
+  },
+  {
+    "id": "caffeine",
+    "label": "A gentler caffeine routine",
+    "tags": [
+      "caffeine",
+      "coffee"
+    ],
+    "icon": "water_drop",
+    "tone": "amber",
+    "src": "/art/wellness/caffeine.svg",
+    "darkSrc": "/art/wellness/caffeine.dark.svg",
+    "format": "vector"
+  },
+  {
+    "id": "heat-pad",
+    "label": "Warmth for comfort",
+    "tags": [
+      "heat",
+      "heating pad",
+      "hot water bottle",
+      "cramps",
+      "cramping"
+    ],
+    "icon": "water_drop",
+    "tone": "rose",
+    "src": "/art/wellness/heat-pad.svg",
+    "darkSrc": "/art/wellness/heat-pad.dark.svg",
+    "format": "vector"
+  },
+  {
+    "id": "warm-bath",
+    "label": "A warm bath",
+    "tags": [
+      "bath",
+      "bathing",
+      "soak"
+    ],
+    "icon": "spa",
+    "tone": "blue",
+    "src": "/art/wellness/warm-bath.svg",
+    "darkSrc": "/art/wellness/warm-bath.dark.svg",
+    "format": "vector"
+  },
+  {
+    "id": "candle",
+    "label": "An evening wind-down",
+    "tags": [
+      "wind down",
+      "wind-down",
+      "candle",
+      "evening ritual"
+    ],
+    "icon": "bedtime",
+    "tone": "violet",
+    "src": "/art/wellness/candle.svg",
+    "darkSrc": "/art/wellness/candle.dark.svg",
+    "format": "vector"
+  },
+  {
+    "id": "bedtime-clock",
+    "label": "Keep a bedtime rhythm",
+    "tags": [
+      "bedtime",
+      "sleep schedule",
+      "consistent sleep",
+      "routine"
+    ],
+    "icon": "bedtime",
+    "tone": "violet",
+    "src": "/art/wellness/bedtime-clock.svg",
+    "darkSrc": "/art/wellness/bedtime-clock.dark.svg",
+    "format": "vector"
+  },
+  {
+    "id": "screen-break",
+    "label": "A break from screens",
+    "tags": [
+      "screen",
+      "digital",
+      "device",
+      "phone break"
+    ],
+    "icon": "bedtime",
+    "tone": "violet",
+    "src": "/art/wellness/screen-break.svg",
+    "darkSrc": "/art/wellness/screen-break.dark.svg",
+    "format": "vector"
+  },
+  {
+    "id": "cool-bedroom",
+    "label": "A cool quiet bedroom",
+    "tags": [
+      "bedroom",
+      "cool room",
+      "room temperature",
+      "sleep environment"
+    ],
+    "icon": "bedtime",
+    "tone": "blue",
+    "src": "/art/wellness/cool-bedroom.svg",
+    "darkSrc": "/art/wellness/cool-bedroom.dark.svg",
+    "format": "vector"
+  },
+  {
+    "id": "nap",
+    "label": "A short restful pause",
+    "tags": [
+      "nap",
+      "short rest",
+      "rest break"
+    ],
+    "icon": "bedtime",
+    "tone": "violet",
+    "src": "/art/wellness/nap.svg",
+    "darkSrc": "/art/wellness/nap.dark.svg",
+    "format": "vector"
+  },
+  {
+    "id": "sleep-mask",
+    "label": "Make space for darkness",
+    "tags": [
+      "darkness",
+      "sleep mask",
+      "light at night"
+    ],
+    "icon": "bedtime",
+    "tone": "violet",
+    "src": "/art/wellness/sleep-mask.svg",
+    "darkSrc": "/art/wellness/sleep-mask.dark.svg",
+    "format": "vector"
+  },
+  {
+    "id": "earplugs",
+    "label": "A quieter sleep space",
+    "tags": [
+      "noise",
+      "earplugs",
+      "quiet sleep"
+    ],
+    "icon": "bedtime",
+    "tone": "peach",
+    "src": "/art/wellness/earplugs.svg",
+    "darkSrc": "/art/wellness/earplugs.dark.svg",
+    "format": "vector"
+  },
+  {
+    "id": "lavender",
+    "label": "A calming lavender ritual",
+    "tags": [
+      "lavender",
+      "relaxing scent",
+      "aroma"
+    ],
+    "icon": "bedtime",
+    "tone": "violet",
+    "src": "/art/wellness/lavender.svg",
+    "darkSrc": "/art/wellness/lavender.dark.svg",
+    "format": "vector"
+  },
+  {
+    "id": "massage",
+    "label": "A little muscle comfort",
+    "tags": [
+      "massage",
+      "muscle",
+      "tension"
+    ],
+    "icon": "spa",
+    "tone": "peach",
+    "src": "/art/wellness/massage.svg",
+    "darkSrc": "/art/wellness/massage.dark.svg",
+    "format": "vector"
+  },
+  {
+    "id": "comfortable-clothes",
+    "label": "Soft comfortable clothes",
+    "tags": [
+      "clothes",
+      "clothing",
+      "loose",
+      "comfortable wear"
+    ],
+    "icon": "spa",
+    "tone": "rose",
+    "src": "/art/wellness/comfortable-clothes.svg",
+    "darkSrc": "/art/wellness/comfortable-clothes.dark.svg",
+    "format": "vector"
+  },
+  {
+    "id": "journal",
+    "label": "Put your thoughts on paper",
+    "tags": [
+      "journal",
+      "journaling",
+      "write",
+      "writing"
+    ],
+    "icon": "edit",
+    "tone": "violet",
+    "src": "/art/wellness/journal.svg",
+    "darkSrc": "/art/wellness/journal.dark.svg",
+    "format": "vector"
+  },
+  {
+    "id": "gratitude",
+    "label": "Notice a small good thing",
+    "tags": [
+      "gratitude",
+      "grateful",
+      "appreciation"
+    ],
+    "icon": "favorite",
+    "tone": "rose",
+    "src": "/art/wellness/gratitude.svg",
+    "darkSrc": "/art/wellness/gratitude.dark.svg",
+    "format": "vector"
+  },
+  {
+    "id": "reading",
+    "label": "A quiet reading moment",
+    "tags": [
+      "read",
+      "reading",
+      "book"
+    ],
+    "icon": "spa",
+    "tone": "violet",
+    "src": "/art/wellness/reading.svg",
+    "darkSrc": "/art/wellness/reading.dark.svg",
+    "format": "vector"
+  },
+  {
+    "id": "music",
+    "label": "Listen to something soothing",
+    "tags": [
+      "music",
+      "playlist",
+      "soothing sound"
+    ],
+    "icon": "spa",
+    "tone": "violet",
+    "src": "/art/wellness/music.svg",
+    "darkSrc": "/art/wellness/music.dark.svg",
+    "format": "vector"
+  },
+  {
+    "id": "art",
+    "label": "Make room for creativity",
+    "tags": [
+      "art",
+      "creative",
+      "draw",
+      "paint"
+    ],
+    "icon": "spa",
+    "tone": "rose",
+    "src": "/art/wellness/art.svg",
+    "darkSrc": "/art/wellness/art.dark.svg",
+    "format": "vector"
+  },
+  {
+    "id": "gardening",
+    "label": "Care for something growing",
+    "tags": [
+      "garden",
+      "gardening",
+      "plant"
+    ],
+    "icon": "spa",
+    "tone": "mint",
+    "src": "/art/wellness/gardening.svg",
+    "darkSrc": "/art/wellness/gardening.dark.svg",
+    "format": "vector"
+  },
+  {
+    "id": "boundaries",
+    "label": "Give yourself permission to pause",
+    "tags": [
+      "boundaries",
+      "boundary",
+      "say no",
+      "permission"
+    ],
+    "icon": "favorite",
+    "tone": "violet",
+    "src": "/art/wellness/boundaries.svg",
+    "darkSrc": "/art/wellness/boundaries.dark.svg",
+    "format": "vector"
+  },
+  {
+    "id": "self-talk",
+    "label": "Speak kindly to yourself",
+    "tags": [
+      "self talk",
+      "self-talk",
+      "kind to yourself",
+      "affirmation"
+    ],
+    "icon": "favorite",
+    "tone": "rose",
+    "src": "/art/wellness/self-talk.svg",
+    "darkSrc": "/art/wellness/self-talk.dark.svg",
+    "format": "vector"
+  },
+  {
+    "id": "check-in",
+    "label": "A gentle emotional check-in",
+    "tags": [
+      "check in",
+      "check-in",
+      "feeling",
+      "mood"
+    ],
+    "icon": "favorite",
+    "tone": "rose",
+    "src": "/art/wellness/check-in.svg",
+    "darkSrc": "/art/wellness/check-in.dark.svg",
+    "format": "vector"
+  },
+  {
+    "id": "grounding",
+    "label": "Come back to the present",
+    "tags": [
+      "grounding",
+      "ground",
+      "present moment",
+      "five senses"
+    ],
+    "icon": "spa",
+    "tone": "mint",
+    "src": "/art/wellness/grounding.svg",
+    "darkSrc": "/art/wellness/grounding.dark.svg",
+    "format": "vector"
+  },
+  {
+    "id": "sunlight",
+    "label": "A little morning daylight",
+    "tags": [
+      "sunlight",
+      "daylight",
+      "morning light",
+      "sunshine"
+    ],
+    "icon": "wb_sunny",
+    "tone": "amber",
+    "src": "/art/wellness/sunlight.svg",
+    "darkSrc": "/art/wellness/sunlight.dark.svg",
+    "format": "vector"
+  },
+  {
+    "id": "quiet-time",
+    "label": "A little quiet time",
+    "tags": [
+      "quiet time",
+      "alone",
+      "solitude",
+      "space"
+    ],
+    "icon": "spa",
+    "tone": "violet",
+    "src": "/art/wellness/quiet-time.svg",
+    "darkSrc": "/art/wellness/quiet-time.dark.svg",
+    "format": "vector"
+  },
+  {
+    "id": "social-connection",
+    "label": "Make a little connection",
+    "tags": [
+      "friend",
+      "friends",
+      "social",
+      "connection"
+    ],
+    "icon": "favorite",
+    "tone": "rose",
+    "src": "/art/wellness/social-connection.svg",
+    "darkSrc": "/art/wellness/social-connection.dark.svg",
+    "format": "vector"
+  },
+  {
+    "id": "therapy",
+    "label": "Reach out for support",
+    "tags": [
+      "therapy",
+      "therapist",
+      "counsel",
+      "professional support"
+    ],
+    "icon": "favorite",
+    "tone": "violet",
+    "src": "/art/wellness/therapy.svg",
+    "darkSrc": "/art/wellness/therapy.dark.svg",
+    "format": "vector"
+  },
+  {
+    "id": "listening",
+    "label": "Listen with care",
+    "tags": [
+      "listen",
+      "listening",
+      "heard",
+      "without fixing"
+    ],
+    "icon": "favorite",
+    "tone": "peach",
+    "src": "/art/wellness/listening.svg",
+    "darkSrc": "/art/wellness/listening.dark.svg",
+    "format": "vector"
+  },
+  {
+    "id": "kind-message",
+    "label": "A reassuring message",
+    "tags": [
+      "message",
+      "text",
+      "reassur",
+      "words",
+      "communicat"
+    ],
+    "icon": "chat",
+    "tone": "rose",
+    "src": "/art/wellness/kind-message.svg",
+    "darkSrc": "/art/wellness/kind-message.dark.svg",
+    "format": "vector"
+  },
+  {
+    "id": "shared-tea",
+    "label": "Share a warm drink",
+    "tags": [
+      "share tea",
+      "make tea",
+      "offer tea",
+      "warm drinks"
+    ],
+    "icon": "water_drop",
+    "tone": "peach",
+    "src": "/art/wellness/shared-tea.svg",
+    "darkSrc": "/art/wellness/shared-tea.dark.svg",
+    "format": "vector"
+  },
+  {
+    "id": "household-help",
+    "label": "Take a task off their plate",
+    "tags": [
+      "household",
+      "chores",
+      "task",
+      "clean",
+      "tidy"
+    ],
+    "icon": "favorite",
+    "tone": "rose",
+    "src": "/art/wellness/household-help.svg",
+    "darkSrc": "/art/wellness/household-help.dark.svg",
+    "format": "vector"
+  },
+  {
+    "id": "laundry",
+    "label": "Help with the laundry",
+    "tags": [
+      "laundry",
+      "washing",
+      "wash clothes"
+    ],
+    "icon": "favorite",
+    "tone": "violet",
+    "src": "/art/wellness/laundry.svg",
+    "darkSrc": "/art/wellness/laundry.dark.svg",
+    "format": "vector"
+  },
+  {
+    "id": "groceries",
+    "label": "Bring home the essentials",
+    "tags": [
+      "groceries",
+      "grocery",
+      "shopping",
+      "essentials"
+    ],
+    "icon": "favorite",
+    "tone": "mint",
+    "src": "/art/wellness/groceries.svg",
+    "darkSrc": "/art/wellness/groceries.dark.svg",
+    "format": "vector"
+  },
+  {
+    "id": "meal-together",
+    "label": "Share a nourishing meal",
+    "tags": [
+      "meal together",
+      "prepare dinner",
+      "make dinner",
+      "cook together"
+    ],
+    "icon": "restaurant",
+    "tone": "peach",
+    "src": "/art/wellness/meal-together.svg",
+    "darkSrc": "/art/wellness/meal-together.dark.svg",
+    "format": "vector"
+  },
+  {
+    "id": "flowers",
+    "label": "A thoughtful little gesture",
+    "tags": [
+      "flowers",
+      "bouquet",
+      "gesture"
+    ],
+    "icon": "favorite",
+    "tone": "rose",
+    "src": "/art/wellness/flowers.svg",
+    "darkSrc": "/art/wellness/flowers.dark.svg",
+    "format": "vector"
+  },
+  {
+    "id": "hug",
+    "label": "Offer a hug, if wanted",
+    "tags": [
+      "hug",
+      "embrace",
+      "cuddle",
+      "consent"
+    ],
+    "icon": "favorite",
+    "tone": "rose",
+    "src": "/art/wellness/hug.svg",
+    "darkSrc": "/art/wellness/hug.dark.svg",
+    "format": "vector"
+  },
+  {
+    "id": "shared-walk",
+    "label": "Walk side by side",
+    "tags": [
+      "walk together",
+      "side by side",
+      "company"
+    ],
+    "icon": "favorite",
+    "tone": "violet",
+    "src": "/art/wellness/shared-walk.svg",
+    "darkSrc": "/art/wellness/shared-walk.dark.svg",
+    "format": "vector"
+  },
+  {
+    "id": "checklist",
+    "label": "Ask what would help",
+    "tags": [
+      "help",
+      "ask",
+      "practical support",
+      "support plan"
+    ],
+    "icon": "favorite",
+    "tone": "rose",
+    "src": "/art/wellness/checklist.svg",
+    "darkSrc": "/art/wellness/checklist.dark.svg",
+    "format": "vector"
+  },
+  {
+    "id": "space-together",
+    "label": "Be present without pressure",
+    "tags": [
+      "presence",
+      "present",
+      "pressure",
+      "let them",
+      "their pace"
+    ],
+    "icon": "favorite",
+    "tone": "violet",
+    "src": "/art/wellness/space-together.svg",
+    "darkSrc": "/art/wellness/space-together.dark.svg",
+    "format": "vector"
+  },
+  {
+    "id": "gift",
+    "label": "A thoughtful surprise",
+    "tags": [
+      "gift",
+      "surprise",
+      "treat"
+    ],
+    "icon": "favorite",
+    "tone": "rose",
+    "src": "/art/wellness/gift.svg",
+    "darkSrc": "/art/wellness/gift.dark.svg",
+    "format": "vector"
+  },
+  {
+    "id": "cycle-calendar",
+    "label": "Keep track of your cycle",
+    "tags": [
+      "cycle",
+      "calendar",
+      "period tracking",
+      "track period"
+    ],
+    "icon": "calendar_today",
+    "tone": "rose",
+    "src": "/art/wellness/cycle-calendar.svg",
+    "darkSrc": "/art/wellness/cycle-calendar.dark.svg",
+    "format": "vector"
+  },
+  {
+    "id": "symptom-log",
+    "label": "Notice your symptoms",
+    "tags": [
+      "symptom",
+      "log",
+      "record",
+      "tracking"
+    ],
+    "icon": "edit",
+    "tone": "rose",
+    "src": "/art/wellness/symptom-log.svg",
+    "darkSrc": "/art/wellness/symptom-log.dark.svg",
+    "format": "vector"
+  },
+  {
+    "id": "period-pads",
+    "label": "Period supplies within reach",
+    "tags": [
+      "pad",
+      "pads",
+      "sanitary",
+      "period supplies"
+    ],
+    "icon": "water_drop",
+    "tone": "violet",
+    "src": "/art/wellness/period-pads.svg",
+    "darkSrc": "/art/wellness/period-pads.dark.svg",
+    "format": "vector"
+  },
+  {
+    "id": "tampons",
+    "label": "Pack your chosen essentials",
+    "tags": [
+      "tampon",
+      "tampons"
+    ],
+    "icon": "water_drop",
+    "tone": "rose",
+    "src": "/art/wellness/tampons.svg",
+    "darkSrc": "/art/wellness/tampons.dark.svg",
+    "format": "vector"
+  },
+  {
+    "id": "menstrual-cup",
+    "label": "Your reusable period care",
+    "tags": [
+      "menstrual cup",
+      "reusable cup"
+    ],
+    "icon": "water_drop",
+    "tone": "rose",
+    "src": "/art/wellness/menstrual-cup.svg",
+    "darkSrc": "/art/wellness/menstrual-cup.dark.svg",
+    "format": "vector"
+  },
+  {
+    "id": "period-kit",
+    "label": "A ready-to-go comfort kit",
+    "tags": [
+      "kit",
+      "pack",
+      "bag",
+      "travel essentials"
+    ],
+    "icon": "water_drop",
+    "tone": "violet",
+    "src": "/art/wellness/period-kit.svg",
+    "darkSrc": "/art/wellness/period-kit.dark.svg",
+    "format": "vector"
+  },
+  {
+    "id": "pharmacy",
+    "label": "Find nearby supplies",
+    "tags": [
+      "pharmacy",
+      "medical store",
+      "nearest",
+      "supplies"
+    ],
+    "icon": "location_on",
+    "tone": "rose",
+    "src": "/art/wellness/pharmacy.svg",
+    "darkSrc": "/art/wellness/pharmacy.dark.svg",
+    "format": "vector"
+  },
+  {
+    "id": "location",
+    "label": "A little help finding your way",
+    "tags": [
+      "location",
+      "directions",
+      "route",
+      "map"
+    ],
+    "icon": "location_on",
+    "tone": "rose",
+    "src": "/art/wellness/location.svg",
+    "darkSrc": "/art/wellness/location.dark.svg",
+    "format": "vector"
+  },
+  {
+    "id": "handwashing",
+    "label": "Gentle everyday hygiene",
+    "tags": [
+      "hygiene",
+      "wash hands",
+      "handwashing",
+      "clean hands"
+    ],
+    "icon": "spa",
+    "tone": "blue",
+    "src": "/art/wellness/handwashing.svg",
+    "darkSrc": "/art/wellness/handwashing.dark.svg",
+    "format": "vector"
+  },
+  {
+    "id": "skin-care",
+    "label": "Keep skincare gentle",
+    "tags": [
+      "skin",
+      "skincare",
+      "acne",
+      "cleanser"
+    ],
+    "icon": "spa",
+    "tone": "rose",
+    "src": "/art/wellness/skin-care.svg",
+    "darkSrc": "/art/wellness/skin-care.dark.svg",
+    "format": "vector"
+  },
+  {
+    "id": "warm-compress",
+    "label": "A soothing warm compress",
+    "tags": [
+      "compress",
+      "headache",
+      "soothing cloth"
+    ],
+    "icon": "spa",
+    "tone": "peach",
+    "src": "/art/wellness/warm-compress.svg",
+    "darkSrc": "/art/wellness/warm-compress.dark.svg",
+    "format": "vector"
+  },
+  {
+    "id": "dental-care",
+    "label": "Everyday care for yourself",
+    "tags": [
+      "dental",
+      "teeth",
+      "oral",
+      "toothbrush"
+    ],
+    "icon": "spa",
+    "tone": "blue",
+    "src": "/art/wellness/dental-care.svg",
+    "darkSrc": "/art/wellness/dental-care.dark.svg",
+    "format": "vector"
+  },
+  {
+    "id": "appointment",
+    "label": "Prepare for a health appointment",
+    "tags": [
+      "appointment",
+      "doctor",
+      "clinician",
+      "healthcare",
+      "seek care"
+    ],
+    "icon": "calendar_today",
+    "tone": "violet",
+    "src": "/art/wellness/appointment.svg",
+    "darkSrc": "/art/wellness/appointment.dark.svg",
+    "format": "vector"
+  },
+  {
+    "id": "questions",
+    "label": "Write down your questions",
+    "tags": [
+      "question",
+      "questions",
+      "ask a doctor"
+    ],
+    "icon": "edit",
+    "tone": "violet",
+    "src": "/art/wellness/questions.svg",
+    "darkSrc": "/art/wellness/questions.dark.svg",
+    "format": "vector"
+  },
+  {
+    "id": "medication",
+    "label": "Follow your prescribed care",
+    "tags": [
+      "medicine",
+      "medication",
+      "prescribed",
+      "prescription"
+    ],
+    "icon": "spa",
+    "tone": "violet",
+    "src": "/art/wellness/medication.svg",
+    "darkSrc": "/art/wellness/medication.dark.svg",
+    "format": "vector"
+  },
+  {
+    "id": "temperature",
+    "label": "Notice your temperature",
+    "tags": [
+      "temperature",
+      "thermometer",
+      "fever"
+    ],
+    "icon": "spa",
+    "tone": "rose",
+    "src": "/art/wellness/temperature.svg",
+    "darkSrc": "/art/wellness/temperature.dark.svg",
+    "format": "vector"
+  },
+  {
+    "id": "travel",
+    "label": "Comfort on the go",
+    "tags": [
+      "travel",
+      "journey",
+      "commute"
+    ],
+    "icon": "spa",
+    "tone": "violet",
+    "src": "/art/wellness/travel.svg",
+    "darkSrc": "/art/wellness/travel.dark.svg",
+    "format": "vector"
+  },
+  {
+    "id": "work-break",
+    "label": "Pause between tasks",
+    "tags": [
+      "work",
+      "desk",
+      "break",
+      "productivity"
+    ],
+    "icon": "spa",
+    "tone": "violet",
+    "src": "/art/wellness/work-break.svg",
+    "darkSrc": "/art/wellness/work-break.dark.svg",
+    "format": "vector"
+  },
+  {
+    "id": "planning",
+    "label": "Plan around your energy",
+    "tags": [
+      "plan",
+      "planning",
+      "prioritize",
+      "prioritise",
+      "to do"
+    ],
+    "icon": "edit",
+    "tone": "rose",
+    "src": "/art/wellness/planning.svg",
+    "darkSrc": "/art/wellness/planning.dark.svg",
+    "format": "vector"
+  },
+  {
+    "id": "energy-sun",
+    "label": "Make room for renewed energy",
+    "tags": [
+      "energy",
+      "energized",
+      "energetic",
+      "motivation"
+    ],
+    "icon": "bolt",
+    "tone": "amber",
+    "src": "/art/wellness/energy-sun.svg",
+    "darkSrc": "/art/wellness/energy-sun.dark.svg",
+    "format": "vector"
+  },
+  {
+    "id": "sleep-chart",
+    "label": "Explore your sleep pattern",
+    "tags": [
+      "sleep pattern",
+      "sleep trends",
+      "sleep quality"
+    ],
+    "icon": "bedtime",
+    "tone": "violet",
+    "src": "/art/wellness/sleep-chart.svg",
+    "darkSrc": "/art/wellness/sleep-chart.dark.svg",
+    "format": "vector"
+  },
+  {
+    "id": "correlation",
+    "label": "Explore sleep and energy together",
+    "tags": [
+      "correlation",
+      "relationship",
+      "pattern",
+      "compare"
+    ],
+    "icon": "insights",
+    "tone": "rose",
+    "src": "/art/wellness/correlation.svg",
+    "darkSrc": "/art/wellness/correlation.dark.svg",
+    "format": "vector"
+  },
+  {
+    "id": "general-care",
+    "label": "Care at your own pace",
+    "tags": [
+      "care",
+      "wellbeing",
+      "wellness",
+      "gentle",
+      "support"
+    ],
+    "icon": "favorite",
+    "tone": "rose",
+    "src": "/art/wellness/general-care.svg",
+    "darkSrc": "/art/wellness/general-care.dark.svg",
+    "format": "vector"
+  }
+]

@@ -1,4 +1,5 @@
 import { supabase } from './supabase';
+import { parseWellnessGuide, wellnessGuidePrompt } from './wellnessGuide';
 
 const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL;
 const SUPABASE_ANON_KEY = import.meta.env.VITE_SUPABASE_ANON_KEY || '';
@@ -72,6 +73,7 @@ async function callAI(customPrompt: string, mood: string = 'encouragement'): Pro
         }
 
         const data = await res.json();
+        if (typeof data.text !== 'string' || !data.text.trim()) throw new Error('We couldn’t finish your guide. Please try again.');
         return { text: data.text };
     } catch (error: any) {
         if (error.name === 'AbortError' || error.name === 'TimeoutError') {
@@ -82,45 +84,19 @@ async function callAI(customPrompt: string, mood: string = 'encouragement'): Pro
 }
 
 export async function generateWellnessTips(ctx: WellnessContext): Promise<AIResult> {
-    const prompt = `You are a compassionate women's health wellness advisor. Based on the following cycle data and user history, generate 3 highly personalized, concise wellness tips. Each tip MUST start with a real emoji, followed by a bold title, and 1-2 sentences of advice.
-
-Current Phase: ${ctx.phase} (Day ${ctx.cycleDay})
-Moods: ${ctx.moods.length > 0 ? ctx.moods.join(', ') : 'Not logged'}
-Symptoms: ${ctx.symptoms.length > 0 ? ctx.symptoms.join(', ') : 'None reported'}
-Sleep Quality: ${ctx.sleepQuality || 'Not tracked'}
-Energy Level: ${ctx.energyLevel || 'Not tracked'}
-
-Recent History (Last 15 logs):
-${ctx.logHistory || 'No history available yet.'}
-
-Format each tip as:
-[emoji] **[Title]**
-[Advice text]
-
-Ensure each tip is fully completed and do not cut off mid-sentence. Focus on actionable, phase-specific advice.`;
-
-    return callAI(prompt, 'raw');
+    return generateGuide(ctx, false);
 }
 
 export async function generateEmpathyAlerts(ctx: WellnessContext): Promise<AIResult> {
-    const prompt = `You are a relationship wellness advisor helping a partner understand and support their significant other. Generate 3 concise empathy alerts. Each alert MUST start with a real emoji, followed by a bold title, and 1-2 sentences of care advice.
+    return generateGuide(ctx, true);
+}
 
-Partner's Current Phase: ${ctx.phase} (Day ${ctx.cycleDay})
-Their Moods: ${ctx.moods.length > 0 ? ctx.moods.join(', ') : 'Not logged'}
-Their Symptoms: ${ctx.symptoms.length > 0 ? ctx.symptoms.join(', ') : 'None reported'}
-Their Sleep Quality: ${ctx.sleepQuality || 'Not tracked'}
-Their Energy Level: ${ctx.energyLevel || 'Not tracked'}
-
-Partner's Recent History (Last 15 logs):
-${ctx.logHistory || 'No history available yet.'}
-
-Format each alert as:
-[emoji] **[Title]**
-[How to react / what to do]
-
-Ensure the text is fully completed. Be warm, specific, and practical.`;
-
-    return callAI(prompt, 'raw');
+async function generateGuide(ctx: WellnessContext, partner: boolean): Promise<AIResult> {
+    const result = await callAI(wellnessGuidePrompt(ctx, partner), 'raw');
+    if (result.error) return result;
+    const cards = parseWellnessGuide(result.text || '');
+    if (cards.length !== 3 || new Set(cards.map(card => card.illustrationId)).size !== 3) return { text: '', error: 'We couldn’t finish your guide. Please try again.' };
+    return { text: JSON.stringify({ cards }) };
 }
 
 export async function generateGiftRecommendations(ctx: WellnessContext): Promise<AIResult> {
@@ -287,20 +263,20 @@ export function analyzeSleepEnergyCorrelations(logs: any[]) {
     };
 
     normalized.forEach(l => {
-        if (l.sleep && l.energy && sleepEnergyMap[l.sleep]) {
+        if (l.sleep && l.energy && sleepEnergyMap[l.sleep] && Object.hasOwn(sleepEnergyMap[l.sleep], l.energy)) {
             sleepEnergyMap[l.sleep][l.energy]++;
         }
     });
 
     // Generate insights
     const insights: string[] = [];
-    const totalWithBoth = normalized.filter(l => l.sleep && l.energy).length;
+    const totalWithBoth = normalized.filter(l => Object.hasOwn(sleepCounts, l.sleep) && Object.hasOwn(energyCounts, l.energy)).length;
 
     if (totalWithBoth >= 3) {
         const goodSleepHighEnergy = sleepEnergyMap.good.high;
         const poorSleepLowEnergy = sleepEnergyMap.poor.low;
-        const goodSleepTotal = sleepCounts.good;
-        const poorSleepTotal = sleepCounts.poor;
+        const goodSleepTotal = Object.values(sleepEnergyMap.good).reduce((a,b) => a+b, 0);
+        const poorSleepTotal = Object.values(sleepEnergyMap.poor).reduce((a,b) => a+b, 0);
 
         if (goodSleepTotal > 0) {
             const highEnergyRate = Math.round((goodSleepHighEnergy / goodSleepTotal) * 100);
