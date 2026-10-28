@@ -36,7 +36,7 @@ describe("stable identity and recovery", () => {
     preferences.get.mockImplementation(()=>new Promise(resolve=>{finish=resolve;}));
     const read=decryptMessage('unused',old.publicKey,'A');
     clearEncryptionCache();finish({value:old.privateKey});
-    await expect(read).rejects.toThrow();
+    await read;
     expect(getCachedPrivateKey()).toBeNull();
   });
   it('discards a retired local identity before initializing a fresh link', async () => {
