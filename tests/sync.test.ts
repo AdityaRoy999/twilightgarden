@@ -13,6 +13,7 @@ import {
   encryptIdentityWithPin,
   decryptIdentityWithPin,
   generateVerificationFingerprint,
+  decryptMessage,
 } from "../lib/encryption";
 import {
   resolveDeviceIdentity,
@@ -29,6 +30,15 @@ beforeEach(() => {
 });
 afterEach(() => vi.unstubAllGlobals());
 describe("stable identity and recovery", () => {
+  it('does not recache a retired private key from an in-flight message read',async()=>{
+    const old=await generateKeyPair();
+    let finish!:(value:{value:string})=>void;
+    preferences.get.mockImplementation(()=>new Promise(resolve=>{finish=resolve;}));
+    const read=decryptMessage('unused',old.publicKey,'A');
+    clearEncryptionCache();finish({value:old.privateKey});
+    await read;
+    expect(getCachedPrivateKey()).toBeNull();
+  });
   it('discards a retired local identity before initializing a fresh link', async () => {
     const old = await generateKeyPair();
     const store = new Map<string,string>([['A_private_key',old.privateKey],['A_public_key',old.publicKey],['A_chat_identity_generation','0']]);

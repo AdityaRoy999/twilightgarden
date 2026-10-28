@@ -150,9 +150,11 @@ export function derivePublicKeyFromPrivate(privateKeyB64: string): string {
  * Derives a shared secret between the current user and their partner
  */
 async function deriveSharedSecret(ownPrivateKeyB64: string, partnerPublicKeyB64: string): Promise<CryptoKey> {
+    const revision = identityRevision;
     // JWK suffixes contain common metadata, not a unique key identifier.
     const keyMaterial = new TextEncoder().encode(JSON.stringify([ownPrivateKeyB64, partnerPublicKeyB64]));
     const cacheKey = arrayBufferToBase64(await window.crypto.subtle.digest('SHA-256', keyMaterial));
+    if (revision !== identityRevision) throw new Error('Chat identity was reset.');
     const cached = sharedKeyCache.get(cacheKey);
     if (cached) return cached;
 
@@ -189,6 +191,7 @@ async function deriveSharedSecret(ownPrivateKeyB64: string, partnerPublicKeyB64:
         ['encrypt', 'decrypt']
     );
 
+    if (revision !== identityRevision) throw new Error('Chat identity was reset.');
     sharedKeyCache.set(cacheKey, sharedKey);
     return sharedKey;
 }
@@ -228,12 +231,14 @@ export async function encryptMessage(text: string, partnerPublicKeyB64: string):
  * Decrypts a message using a shared secret
  */
 export async function decryptMessage(encryptedB64: string, partnerPublicKeyB64: string, userId?: string): Promise<string> {
+    const revision = identityRevision;
     try {
         // Optimization: Use cached private key if available
         if (!cachedPrivateKey) {
             if (userId) {
                 const privKeyName = `${userId}_private_key`;
                 const { value } = await Preferences.get({ key: privKeyName });
+                if (revision !== identityRevision) throw new Error('Chat identity was reset.');
                 cachedPrivateKey = value;
 
             }
