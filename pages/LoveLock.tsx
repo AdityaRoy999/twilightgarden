@@ -677,7 +677,7 @@ const LoveLock: React.FC = () => {
     const handleDisconnect = async () => {
         setConfirmDialog({
             title: 'Disconnect',
-            message: 'Are you sure you want to disconnect? All messages, reactions, games and shared attachments will be permanently deleted for both of you. Personal health logs stay with their owner. Reconnecting starts a new conversation.',
+            message: 'Disconnect and reset chat? All messages, reactions, games, shared attachments, chat backups and registered encryption keys will be permanently deleted for both of you. Personal health logs stay with their owner. Reconnecting starts fresh and requires a new backup password.',
             confirmLabel: 'Disconnect',
             onConfirm: async () => {
                 try {

@@ -39,6 +39,12 @@ export type Database = {
   }
   public: {
     Tables: {
+      chat_identity_state: {
+        Row: { user_id: string; generation: number }
+        Insert: { user_id: string; generation?: number }
+        Update: { user_id?: string; generation?: number }
+        Relationships: []
+      }
       app_dataset: {
         Row: {
           epoch: string
@@ -253,6 +259,7 @@ export type Database = {
       }
       identity_backups: {
         Row: {
+          identity_generation: number
           backup_identity: string
           backup_salt: string
           created_at: string | null
@@ -261,6 +268,7 @@ export type Database = {
           user_id: string
         }
         Insert: {
+          identity_generation?: number
           backup_identity: string
           backup_salt: string
           created_at?: string | null
@@ -269,6 +277,7 @@ export type Database = {
           user_id: string
         }
         Update: {
+          identity_generation?: number
           backup_identity?: string
           backup_salt?: string
           created_at?: string | null
@@ -601,6 +610,7 @@ export type Database = {
       }
       sync_sessions: {
         Row: {
+          identity_generation: number
           created_at: string | null
           encrypted_payload: string | null
           ephemeral_public_key: string
@@ -610,6 +620,7 @@ export type Database = {
           user_id: string
         }
         Insert: {
+          identity_generation?: number
           created_at?: string | null
           encrypted_payload?: string | null
           ephemeral_public_key: string
@@ -619,6 +630,7 @@ export type Database = {
           user_id: string
         }
         Update: {
+          identity_generation?: number
           created_at?: string | null
           encrypted_payload?: string | null
           ephemeral_public_key?: string
@@ -658,6 +670,7 @@ export type Database = {
       }
       user_keys: {
         Row: {
+          identity_generation: number
           backup_identity: string | null
           backup_salt: string | null
           created_at: string
@@ -669,6 +682,7 @@ export type Database = {
           user_id: string
         }
         Insert: {
+          identity_generation?: number
           backup_identity?: string | null
           backup_salt?: string | null
           created_at?: string
@@ -680,6 +694,7 @@ export type Database = {
           user_id: string
         }
         Update: {
+          identity_generation?: number
           backup_identity?: string | null
           backup_salt?: string | null
           created_at?: string
@@ -750,6 +765,7 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      get_own_chat_identity_state: { Args: Record<PropertyKey, never>; Returns: Json }
       can_access_realtime_topic: { Args: never; Returns: boolean }
       choose_initial_account_role: {
         Args: { p_role: string }

@@ -35,6 +35,7 @@ export function SyncHistoryModal({
     completeSyncHandshake,
     refreshE2EE,
     notes,
+    identityGeneration,
   } = useCouples();
   const [passphrase, setPassphrase] = useState(""),
     [confirmation, setConfirmation] = useState(""),
@@ -145,7 +146,7 @@ export function SyncHistoryModal({
           .from("sync_sessions")
           .delete()
           .eq("id", sessionId.current);
-      const { session, ephemeralPrivate } = await createSyncSession(user.id);
+      const { session, ephemeralPrivate } = await createSyncSession(user.id,identityGeneration);
       if (current !== revision.current) {
         await supabase.from("sync_sessions").delete().eq("id", session.id);
         return;
@@ -178,7 +179,7 @@ export function SyncHistoryModal({
             envelope.senderPublicKey,
           );
           if (current !== revision.current) return;
-          await installRecoveredIdentity(user.id, key, canonical.data);
+          await installRecoveredIdentity(user.id, key, canonical.data,identityGeneration);
           await refreshE2EE();
           if (current !== revision.current) return;
           await supabase.from("sync_sessions").delete().eq("id", session.id);

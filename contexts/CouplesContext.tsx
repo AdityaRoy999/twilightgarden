@@ -1,4 +1,4 @@
-import { resolveDeviceIdentity, installRecoveredIdentity } from '../lib/identity';
+import { resolveDeviceIdentity, installRecoveredIdentity, reconcileIdentityGeneration } from '../lib/identity';
 import { mergeChatNotes, cursorFilter } from '../lib/chat';
 import { readOutbox, writeOutbox, type QueuedChat } from '../lib/chatOutbox';
 import { localDateKey } from '../lib/dates';
@@ -20,6 +20,7 @@ import {
   isContentDecrypted,
   derivePublicKeyFromPrivate,
   clearSharedKeyCache,
+  clearEncryptionCache,
 } from '../lib/encryption';
 import { sendSyncPayload } from '../lib/sync';
 import { Preferences } from '@capacitor/preferences';
@@ -72,6 +73,7 @@ interface CouplesContextType {
   isHistorySynced: boolean;
   isSyncRequired: boolean;
   identityReady:boolean;
+  identityGeneration:number;
   setupCloudBackup: (pin: string) => Promise<void>;
   restoreFromCloudBackup: (pin: string) => Promise<void>;
   completeSyncHandshake: (token: string) => Promise<void>;
@@ -122,6 +124,8 @@ export const CouplesProvider: React.FC<{ children: React.ReactNode }> = ({ child
   const [isSyncRequired, setIsSyncRequired] = useState(false);
   const [e2eeReady, setE2eeReady] = useState(false); // Prevents PIN popup race condition
   const [keyVersion, setKeyVersion] = useState(0);
+  const identityGenerationRef = React.useRef(0);
+  const identityRevisionRef = React.useRef(0);
   const [restorationState, setRestorationState] = useState({ isRestoring: false, progress: 0, status: '' });
 
 
@@ -194,7 +198,14 @@ export const CouplesProvider: React.FC<{ children: React.ReactNode }> = ({ child
   useEffect(()=>{
     if(!user?.id)return;
     const account=supabase.channel('couple_account_'+user.id,{config:{private:true}})
-      .on('broadcast',{event:'relationship:deleted'},({payload})=>clearRelationship(payload.couple_id)).subscribe();
+      .on('broadcast',{event:'relationship:deleted'},({payload})=>{
+        clearRelationship(payload.couple_id);
+        if(payload.identity_reset){
+          identityRevisionRef.current++;identityUsableRef.current=false;clearEncryptionCache();
+          setE2eeReady(false);setHasCloudBackup(false);setIsSyncRequired(false);
+          void refreshE2EE();
+        }
+      }).subscribe();
     return()=>{void supabase.removeChannel(account);};
   },[user?.id]);
 
@@ -204,25 +215,36 @@ export const CouplesProvider: React.FC<{ children: React.ReactNode }> = ({ child
   const initializeIdentity = async () => {
     if(!user){setCouple(null);setNotes([]);setIsLoading(false);return;}
     try{
-      const [device,canonical,backup]=await Promise.all([
+      const revision=identityRevisionRef.current;
+      const current=()=>aliveRef.current&&identityRevisionRef.current===revision;
+      const [device,result]=await Promise.all([
         Preferences.get({key:'tw_device_id'}),
-        supabase.rpc('get_chat_public_key',{p_user_id:user.id}).abortSignal(AbortSignal.timeout(10000)),
-        supabase.from('identity_backups').select('public_key').eq('user_id',user.id).abortSignal(AbortSignal.timeout(10000)).maybeSingle()
+        supabase.rpc('get_own_chat_identity_state').abortSignal(AbortSignal.timeout(10000))
       ]);
-      if(canonical.error)throw canonical.error;if(backup.error)throw backup.error;
-      if(!aliveRef.current)return;
+      if(result.error)throw result.error;
+      if(!current())return;
+      const state=result.data as unknown as {generation:number;public_key:string|null;has_backup:boolean;active:boolean};
+      const generation=state.generation;
+      identityGenerationRef.current=generation;
+      if(generation>0&&!state.active){
+        await reconcileIdentityGeneration(user.id,generation,current);
+        if(!current())return;
+        identityUsableRef.current=false;clearEncryptionCache();setE2eeReady(false);
+        setHasCloudBackup(false);setIsSyncRequired(false);setIsHistorySynced(true);
+        await fetchCoupleData();return;
+      }
       const currentDeviceId=device.value||crypto.randomUUID();
       if(!device.value)await Preferences.set({key:'tw_device_id',value:currentDeviceId});
-      setDeviceId(currentDeviceId);setHasCloudBackup(!!backup.data);
-      const identity=await resolveDeviceIdentity(user.id,canonical.data,()=>aliveRef.current);
-      if(!aliveRef.current)return;
+      setDeviceId(currentDeviceId);setHasCloudBackup(state.has_backup);
+      const identity=await resolveDeviceIdentity(user.id,state.public_key,current,generation);
+      if(!current())return;
       identityUsableRef.current=!identity.needsRestore;
       setIsSyncRequired(identity.needsRestore);setIsHistorySynced(!identity.needsRestore);
       if(identity.publicKey){
-        const {error}=await supabase.from('user_keys').upsert({user_id:user.id,device_id:currentDeviceId,public_key:identity.publicKey,device_name:navigator.platform||'Browser',last_active:new Date().toISOString()},{onConflict:'user_id,device_id'});
+        const {error}=await supabase.from('user_keys').upsert({user_id:user.id,device_id:currentDeviceId,public_key:identity.publicKey,identity_generation:generation,device_name:navigator.platform||'Browser',last_active:new Date().toISOString()},{onConflict:'user_id,device_id'});
         if(error)throw error;
       }
-      if(!aliveRef.current)return;
+      if(!current())return;
       setE2eeReady(true);
       await fetchCoupleData();
     }catch(error){if(aliveRef.current){setIsLoading(false);console.error('Identity initialization failed',error);}}
@@ -239,6 +261,12 @@ export const CouplesProvider: React.FC<{ children: React.ReactNode }> = ({ child
     if(user)void fetchCoupleData();
     void refreshE2EE();
   }},[user?.id,authLoading]);
+  useEffect(()=>{
+    if(!user||authLoading)return;
+    const check=()=>{if(document.visibilityState==='visible')void refreshE2EE();};
+    window.addEventListener('focus',check);window.addEventListener('online',check);document.addEventListener('visibilitychange',check);
+    return()=>{window.removeEventListener('focus',check);window.removeEventListener('online',check);document.removeEventListener('visibilitychange',check);};
+  },[user?.id,authLoading]);
 
 
   const fetchCoupleData = async () => {
@@ -415,7 +443,7 @@ export const CouplesProvider: React.FC<{ children: React.ReactNode }> = ({ child
                     partnerPublicKeyRef.current = null;
                     deviceKeysRef.current.clear();
                     setPartnerPubKey(null);
-                    fetchCoupleData();
+                    void refreshE2EE();
                 }
 
             }
@@ -423,6 +451,9 @@ export const CouplesProvider: React.FC<{ children: React.ReactNode }> = ({ child
         }
       )
       .on('broadcast',{event:'note:created'},({payload})=>{void receiveNote(payload as SharedNote);})
+      .on('postgres_changes',{event:'*',schema:'public',table:'user_keys',filter:'user_id=eq.'+partnerId},()=>{
+        partnerPublicKeyRef.current=null;deviceKeysRef.current.clear();void fetchCoupleData();
+      })
       .on('broadcast',{event:'note:updated'},({payload})=>{void receiveNote(payload as SharedNote);})
       .on('broadcast',{event:'note:deleted'},({payload})=>{setNotes(previous=>previous.filter(note=>note.id!==payload.id));})
       .on('broadcast',{event:'partner_data_updated'},({payload})=>{if(payload.senderId!==user.id)refreshPartner();})
@@ -522,7 +553,7 @@ export const CouplesProvider: React.FC<{ children: React.ReactNode }> = ({ child
     const {data,error}=await supabase.rpc('join_couple',{code_input:code.trim().toUpperCase()});
     if(error)throw error;
     relationshipRef.current=data as unknown as Couple;setCouple(data as unknown as Couple);setCachedCouple(data as unknown as Couple);
-    await fetchCoupleData();
+    await refreshE2EE();
   };
 
   const uploadMedia = async (file: File): Promise<string> => {
@@ -923,6 +954,9 @@ export const CouplesProvider: React.FC<{ children: React.ReactNode }> = ({ child
     const {data,error}=await supabase.functions.invoke('couple-action',{body:{action:'unlink',coupleId:id}});
     if(error||!data?.unlinked)throw new Error(data?.error||'Unable to unlink. Please retry.');
     clearRelationship(id);
+    identityRevisionRef.current++;identityUsableRef.current=false;clearEncryptionCache();
+    setE2eeReady(false);setHasCloudBackup(false);setIsSyncRequired(false);
+    await refreshE2EE();
     return {mediaDeleted:data.mediaDeleted===true};
   };
 
@@ -934,6 +968,7 @@ export const CouplesProvider: React.FC<{ children: React.ReactNode }> = ({ child
     if (!user) return;
     if(!identityUsableRef.current)throw new Error('Restore your existing identity first.');
     if(pin.length<8)throw new Error('Use at least 8 characters for your backup password.');
+    const generation=identityGenerationRef.current,revision=identityRevisionRef.current;
     const { value: privKey } = await Preferences.get({ key: `${user.id}_private_key` });
     const { value: pubKey } = await Preferences.get({ key: `${user.id}_public_key` }); // Get public key too
 
@@ -943,6 +978,7 @@ export const CouplesProvider: React.FC<{ children: React.ReactNode }> = ({ child
     }
 
     const { ciphertext, salt } = await encryptIdentityWithPin(privKey, pin);
+    if(!identityUsableRef.current||revision!==identityRevisionRef.current)throw new Error('This connection ended. Set up a new backup after reconnecting.');
     import.meta.env.DEV && console.log('[E2EE] Identity encrypted with PIN. Uploading to identity_backups...');
 
     const { error } = await (supabase
@@ -951,7 +987,8 @@ export const CouplesProvider: React.FC<{ children: React.ReactNode }> = ({ child
             user_id: user.id,
             backup_identity: ciphertext,
             backup_salt: salt,
-            public_key: pubKey // Populate public_key column
+            public_key: pubKey,
+            identity_generation:generation
         } as any) as any);
 
     if (error) {
@@ -964,13 +1001,14 @@ export const CouplesProvider: React.FC<{ children: React.ReactNode }> = ({ child
 
   const restoreFromCloudBackup=async(passphrase:string)=>{
     if(!user)return;
+    const generation=identityGenerationRef.current,revision=identityRevisionRef.current;
     setRestorationState({isRestoring:true,progress:20,status:'Unlocking your encrypted identity…'});
     try{
       const {data,error}=await supabase.from('identity_backups').select('backup_identity,backup_salt,public_key').eq('user_id',user.id).single();
       if(error)throw error;
       const privateKey=await decryptIdentityWithPin(data.backup_identity,passphrase,data.backup_salt);
-      if(!aliveRef.current)return;
-      await installRecoveredIdentity(user.id,privateKey,data.public_key);
+      if(!aliveRef.current||revision!==identityRevisionRef.current)throw new Error('This connection ended. Set up chat again.');
+      await installRecoveredIdentity(user.id,privateKey,data.public_key,generation);
       partnerPublicKeyRef.current=null;deviceKeysRef.current.clear();decryptedNotesCacheRef.current.clear();
       identityUsableRef.current=true;setIsSyncRequired(false);setIsHistorySynced(true);
       setRestorationState({isRestoring:true,progress:70,status:'Loading your history…'});
@@ -1027,6 +1065,7 @@ export const CouplesProvider: React.FC<{ children: React.ReactNode }> = ({ child
     isHistorySynced,
     isSyncRequired,
     identityReady:e2eeReady,
+    identityGeneration:identityGenerationRef.current,
     setupCloudBackup,
     restoreFromCloudBackup,
     completeSyncHandshake,
