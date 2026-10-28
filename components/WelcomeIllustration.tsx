@@ -1,4 +1,5 @@
 import React, { useId } from 'react';
+import {BotanicalBranch} from './ui/BotanicalBranch';
 
 /** Original decorative scenes, independent of live health data and dashboard controls. */
 export function WelcomeIllustration({ kind }: { kind: 'cycle' | 'care' | 'together' }) {
@@ -36,4 +37,4 @@ export function WelcomeIllustration({ kind }: { kind: 'cycle' | 'care' | 'togeth
 
 function Heart({x,y,size}:{x:number;y:number;size:number}) { return <path transform={`translate(${x} ${y}) scale(${size/32})`} d="M16 29 3 16C-6 6 8-5 16 5 24-5 38 6 29 16Z" fill="var(--welcome-rose)"/>; }
 function Flower({x,y}:{x:number;y:number}) { return <g transform={`translate(${x} ${y})`} fill="var(--welcome-rose-light)">{[0,72,144,216,288].map(angle=><ellipse key={angle} cx="0" cy="-10" rx="7" ry="11" transform={`rotate(${angle})`}/>)}<circle r="6" fill="var(--welcome-gold)"/></g>; }
-function Sprig({x,y,rotate}:{x:number;y:number;rotate:number}) { return <g transform={`translate(${x} ${y}) rotate(${rotate})`} stroke="var(--welcome-stem)" strokeWidth="2.5" strokeLinecap="round"><path d="M20 120Q50 75 24 8"/><path d="M34 83C0 85 0 56 0 56q34-1 34 27m2-30q32-6 31-32Q34 25 36 53M27 22Q3 16 11-8q26 8 16 30" fill="var(--welcome-leaf)" stroke="none"/></g>; }
+function Sprig({x,y,rotate}:{x:number;y:number;rotate:number}) { return <BotanicalBranch transform={`translate(${x-16} ${y-5}) rotate(${rotate} 36 80) scale(.65)`} stem="var(--welcome-stem)" leaf="var(--welcome-leaf)" opacity={1}/>; }

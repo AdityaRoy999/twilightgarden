@@ -1,5 +1,6 @@
 import React, { useMemo, useState } from "react";
 import { AppIcon } from "../ui/Icons";
+import { BotanicalBranch } from "../ui/BotanicalBranch";
 import { LogSymbol } from "../ui/LogSymbol";
 import { SpringModal } from "../ui/SpringModal";
 import {
@@ -37,17 +38,7 @@ function HistoryBotanical() {
         fill="currentColor"
         opacity=".1"
       />
-      <path
-        d="M110 150Q76 97 118 30"
-        stroke="currentColor"
-        strokeWidth="2"
-        fill="none"
-      />
-      <path
-        d="M100 129Q49 122 60 94Q97 96 100 129ZM100 106Q141 94 139 67Q106 69 100 106ZM106 80Q78 64 86 38Q112 47 106 80ZM118 55Q144 30 130 12Q109 30 118 55Z"
-        fill="currentColor"
-        opacity=".24"
-      />
+      <BotanicalBranch transform="translate(40 0) scale(.78)" opacity={.24}/>
       <circle cx="72" cy="30" r="3" fill="currentColor" opacity=".3" />
       <circle cx="61" cy="46" r="2" fill="currentColor" opacity=".4" />
     </svg>

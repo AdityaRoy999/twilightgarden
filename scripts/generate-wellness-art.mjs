@@ -1,6 +1,7 @@
 /** Original Twilight vector scenes. Each entry has its own subject geometry;
  * shared leaves, gradients and sparkles are the collection's visual language. */
 import { mkdirSync, writeFileSync } from 'node:fs';
+import { botanicalBranch } from './botanical-branch.mjs';
 const p = (d, fill='url(#rose)', extra='') => `<path d="${d}" fill="${fill}" ${extra}/>`;
 const line = d => p(d,'none','stroke="#a16a92" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"');
 const rect = (x,y,w,h,r=12,fill='url(#rose)') => `<rect x="${x}" y="${y}" width="${w}" height="${h}" rx="${r}" fill="${fill}"/>`;
@@ -10,7 +11,7 @@ const heart = (x,y,s=1) => `<g transform="translate(${x} ${y}) scale(${s})">${p(
 const steam = line('M135 93q-17-19 0-35t0-28M167 85q17-18 0-33');
 const cup = rect(88,103,104,82,15)+ellipse(140,105,52,12,'#fbd0b6')+p('M192 115q54-10 38 34q-8 18-39 14v-13q26 4 27-17q1-12-26-5Z')+ellipse(146,194,78,10,'#f6b7ce');
 const book = p('M54 82q45-20 86 4q42-24 86-4v113q-45-17-86 4q-44-22-86-4Z','url(#paper)')+line('M140 86v113M70 105q28-9 53 2M70 122q28-9 53 2M70 139q28-9 53 2M158 105q28-9 53 2M158 122q28-9 53 2');
-const leaf = p('M132 182Q71 130 88 78q64 9 55 95Q130 99 197 63q27 79-53 120Z','url(#mint)')+line('M142 197q-5-64 37-110M137 171l-34-67');
+const leaf = botanicalBranch({transform:'translate(25 1) scale(1.1)',stem:'#73ad9a',leaf:'url(#mint)',opacity:1});
 const bowl = p('M60 134h167q-12 75-83 75t-84-75Z','url(#violet)')+ellipse(144,135,84,23,'#ffe3bc');
 const phone = rect(95,44,100,167,17,'url(#violet)')+rect(103,58,84,133,10,'url(#paper)')+rect(124,49,42,4,2,'#d7b6ed')+circle(145,201,5,'#fff0f8');
 const clock = circle(145,125,77)+circle(145,125,66,'url(#paper)')+line('M145 81v44l30 19')+circle(145,125,5,'#c44b81');
@@ -124,7 +125,7 @@ const raster = [
 ];
 mkdirSync('public/art/wellness',{recursive:true});
 for(const e of entries){
- const svg=`<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 290 250" role="img"><title>${e.label}</title><defs><linearGradient id="rose" x2="1" y2="1"><stop stop-color="#ffadc9"/><stop offset="1" stop-color="#de6397"/></linearGradient><linearGradient id="violet" x2="1" y2="1"><stop stop-color="#e1c6ff"/><stop offset="1" stop-color="#a381d0"/></linearGradient><linearGradient id="paper" x2="1" y2="1"><stop stop-color="#fff8fa"/><stop offset="1" stop-color="#eedced"/></linearGradient><linearGradient id="mint" x2="1" y2="1"><stop stop-color="#cbe8c3"/><stop offset="1" stop-color="#73ad9a"/></linearGradient><linearGradient id="blue" x2="1" y2="1"><stop stop-color="#d4eaff"/><stop offset="1" stop-color="#8eafea"/></linearGradient><linearGradient id="amber" x2="1" y2="1"><stop stop-color="#ffe0a4"/><stop offset="1" stop-color="#eaaa65"/></linearGradient><linearGradient id="peach" x2="1" y2="1"><stop stop-color="#ffdbbf"/><stop offset="1" stop-color="#e79b9f"/></linearGradient></defs><path d="M42 194Q5 152 43 105Q53 47 122 40Q194 11 240 77Q288 110 246 178Q232 235 151 224Q71 249 42 194Z" fill="#f4b5d4" opacity=".12"/><g opacity=".55"><path d="M49 220Q33 166 51 130M48 190q-39-3-34-39q30 4 34 39M48 173q27-5 30-35q-25 3-30 35M241 221q-17-55 4-92m-5 61q-31-4-30-35q26 4 30 35m2-17q31-6 32-35q-25 4-32 35" fill="#eea0c1"/><path d="m41 67 4 9 9 4-9 4-4 9-4-9-9-4 9-4Zm201-23 3 7 7 3-7 3-3 7-3-7-7-3 7-3Z" fill="#eea0c1"/></g>${e.art}</svg>`;
+ const svg=`<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 290 250" role="img"><title>${e.label}</title><defs><linearGradient id="rose" x2="1" y2="1"><stop stop-color="#ffadc9"/><stop offset="1" stop-color="#de6397"/></linearGradient><linearGradient id="violet" x2="1" y2="1"><stop stop-color="#e1c6ff"/><stop offset="1" stop-color="#a381d0"/></linearGradient><linearGradient id="paper" x2="1" y2="1"><stop stop-color="#fff8fa"/><stop offset="1" stop-color="#eedced"/></linearGradient><linearGradient id="mint" x2="1" y2="1"><stop stop-color="#cbe8c3"/><stop offset="1" stop-color="#73ad9a"/></linearGradient><linearGradient id="blue" x2="1" y2="1"><stop stop-color="#d4eaff"/><stop offset="1" stop-color="#8eafea"/></linearGradient><linearGradient id="amber" x2="1" y2="1"><stop stop-color="#ffe0a4"/><stop offset="1" stop-color="#eaaa65"/></linearGradient><linearGradient id="peach" x2="1" y2="1"><stop stop-color="#ffdbbf"/><stop offset="1" stop-color="#e79b9f"/></linearGradient></defs><path d="M42 194Q5 152 43 105Q53 47 122 40Q194 11 240 77Q288 110 246 178Q232 235 151 224Q71 249 42 194Z" fill="#f4b5d4" opacity=".12"/>${botanicalBranch({transform:'translate(13 134) scale(.45)'})}${botanicalBranch({transform:'translate(205 135) scale(.45)'})}<g fill="#eea0c1" opacity=".55"><path d="m41 67 4 9 9 4-9 4-4 9-4-9-9-4 9-4Zm201-23 3 7 7 3-7 3-3 7-3-7-7-3 7-3Z"/></g>${e.art}</svg>`;
  writeFileSync(`public/art/wellness/${e.id}.svg`,svg);
  const darkPalette = { '#fff8fa':'#e7c4df','#eedced':'#aa769e','#ffadc9':'#f38bb5','#de6397':'#b5437a','#e1c6ff':'#c0a1f5','#a381d0':'#7654b5','#eea0c1':'#b94378','#cbe8c3':'#9ccfb9','#73ad9a':'#468e83','#f4b5d4':'#bc477f' };
  const darkSvg = svg.replace(/#[0-9a-f]{6}/g,color => darkPalette[color] || color);

@@ -4,6 +4,7 @@ import {SpringModal} from './SpringModal';
 import {useAppMotion} from '../../hooks/useAppMotion';
 import {useLocalClock} from '../../hooks/useLocalClock';
 import {cycleRingModel} from '../../lib/cycleRing';
+import {BotanicalBranch} from './BotanicalBranch';
 const enteredRings=new Set<string>();
 
 export function CycleBloom({day,length,periodLength=5,hasEstimate=true,introKey='cycle'}:{day:number;length:number;periodLength?:number;hasEstimate?:boolean;introKey?:string}){
@@ -30,5 +31,5 @@ export function CycleBloom({day,length,periodLength=5,hasEstimate=true,introKey=
 }
 
 export function BotanicalSprig({ className = '' }: { className?: string }) {
-  return <svg className={className} viewBox="0 0 150 190" fill="none" aria-hidden="true"><path d="M80 190C87 138 55 95 87 32" stroke="currentColor" strokeWidth="2"/><path d="M79 153C24 153 20 112 20 112C62 109 83 130 79 153ZM77 121C119 114 135 79 135 79C93 77 71 96 77 121ZM75 88C35 73 41 34 41 34C78 44 85 65 75 88ZM83 59C118 46 115 9 115 9C84 17 78 37 83 59Z" fill="currentColor" opacity=".45"/></svg>;
+  return <svg className={className} viewBox="0 0 150 190" fill="none" aria-hidden="true"><BotanicalBranch/></svg>;
 }
