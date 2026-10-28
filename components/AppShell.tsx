@@ -1,3 +1,5 @@
+import {useCouples} from '../contexts/CouplesContext';
+import {ConnectionScreen} from './ConnectionScreen';
 import React, { useEffect, useState } from "react";
 import { useTheme } from "../contexts/ThemeContext";
 import { motion } from 'framer-motion';
@@ -151,7 +153,7 @@ export default function AppShell({ mode = "tracker" }: { mode?: Mode }) {
           className="min-h-0 min-w-0 flex-1 overflow-y-auto overscroll-contain"
         >
           <motion.div key={location.pathname} className={`bloom-route mx-auto h-full min-h-full w-full ${chatPage ? '' : 'max-w-[1440px]'}`} initial={reduced ? false : { x: 10 }} animate={{ opacity: 1, x: 0 }} transition={motionTransition(springs.section, reduced)}>
-            <React.Suspense fallback={<div className="route-loading" role="status">Opening your space…</div>}><Outlet /></React.Suspense>
+            <React.Suspense fallback={<div className="route-loading" role="status">Opening your space…</div>}><ConnectionOutlet mode={mode} pathname={location.pathname}/></React.Suspense>
           </motion.div>
         </main>
       </div>
@@ -167,4 +169,11 @@ export default function AppShell({ mode = "tracker" }: { mode?: Mode }) {
 
     </div>
   );
+}
+
+// Keep conversation updates from rerendering the navigation shell.
+function ConnectionOutlet({mode,pathname}:{mode:Mode;pathname:string}){
+ const {couple,loading}=useCouples();
+ const sharedFeature=(mode==='partner'&&!/\/(?:profile|notifications)/.test(pathname))||/^\/games(?:\/|$)/.test(pathname);
+ return mode!=='admin'&&!loading&&couple?.status!=='active'&&sharedFeature?<ConnectionScreen/>:<Outlet/>;
 }

@@ -1,5 +1,5 @@
 {
   "nodeModulesDir": "auto",
   "compilerOptions": { "strict": true },
-  "tasks": { "check": "deno check game-action/index.ts ai-generate/index.ts push-notifications/index.ts check-reminders/index.ts health-check/index.ts call-credentials/index.ts" }
+  "tasks": { "check": "deno check couple-action/index.ts game-action/index.ts ai-generate/index.ts push-notifications/index.ts check-reminders/index.ts health-check/index.ts call-credentials/index.ts" }
 }

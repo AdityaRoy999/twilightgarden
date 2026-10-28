@@ -1,3 +1,4 @@
+import {ConnectionScreen} from '../components/ConnectionScreen';
 import { ReactionChips } from '../components/ReactionChips';
 import { useAppMotion } from '../hooks/useAppMotion';
 import { springs, motionTransition, newlyAppended, type MessageStamp } from '../lib/motion';
@@ -35,7 +36,7 @@ const isNative = () => {
 const LoveLock: React.FC = () => {
     const navigate = useNavigate(); // Added navigate
     const {
-        couple, notes, isLoading, createNote, retryNote, chatConnected, generatePairingCode, joinCouple,
+        couple, notes, isLoading, createNote, retryNote, chatConnected,
         addReaction, replyToNote, markAsRead, setIsChatOpen, uploadMedia,
         isSupporter, partnerProfile, disconnectCouple, hasMoreNotes,
         loadingOlder, loadOlderNotes, partnerPubKey,
@@ -47,8 +48,6 @@ const LoveLock: React.FC = () => {
     const { reduced } = useAppMotion();
     const { initiateCall } = useCall();
 
-    const [inputCode, setInputCode] = useState('');
-    const [generatedCode, setGeneratedCode] = useState<string | null>(null);
     const [noteContent, setNoteContent] = useState('');
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [emojiPickerNoteId, setEmojiPickerNoteId] = useState<string | null>(null);
@@ -261,9 +260,6 @@ const LoveLock: React.FC = () => {
     const isAdmin = user?.role === 'admin';
 
     // Pairing mode toggle — both roles can generate or enter
-    const [connectMode, setConnectMode] = useState<'generate' | 'enter'>(
-        user?.role === 'user' ? 'generate' : 'enter'
-    );
 
     // Track if chat is open + cleanup timers on unmount
     useEffect(() => {
@@ -353,12 +349,10 @@ const LoveLock: React.FC = () => {
         else if (freshMessages.size && (isAtBottomRef.current || notes.some(note => freshMessages.has(note.id) && note.sender_id === user?.id))) scrollToBottom();
     }, [notes, isLoading, couple?.id, freshMessages, user?.id]);
 
-    useEffect(() => {
-        if (couple?.pairing_code && couple.status === 'pending') {
-             setGeneratedCode(couple.pairing_code);
-             setConnectMode('generate'); // Show generated code tab
-        }
-    }, [couple]);
+    useEffect(()=>{
+        setNoteContent('');setSelectedImage(null);setReplyToNoteId(null);
+        setMessageInfoNote(null);setContextMenu(null);setShowRecorder(false);
+    },[couple?.id]);
 
     function scrollToBottom(immediate = false) {
         const el = chatContainerRef.current;
@@ -374,30 +368,7 @@ const LoveLock: React.FC = () => {
         scrollAnimation.current = animate(scrollValue, target, { ...springs.section, onUpdate: value => { el.scrollTop = value; }, onComplete: () => { scrollingAutomatically.current = false; isAtBottomRef.current = true; } });
     }
 
-    const handleGenerateCode = async () => {
-        try {
-            const code = await generatePairingCode();
-            setGeneratedCode(code);
-            showToast('Code Generated', 'Share this code with your partner');
-        } catch (error) {
-            console.error(error);
-            showToast('Error', error instanceof Error ? error.message : 'Failed to generate code', 'error');
-        }
-    };
 
-    const handleJoinCouple = async () => {
-        if (inputCode.length !== 6) {
-            showToast('Invalid Code', 'Code must be 6 characters', 'error');
-            return;
-        }
-        try {
-            await joinCouple(inputCode.toUpperCase());
-            showToast('Connected!', 'Welcome to your shared space');
-        } catch (error) {
-             console.error(error);
-             showToast('Error', error instanceof Error ? error.message : 'Invalid or incompatible pairing code', 'error');
-        }
-    };
 
     const handleAudioSend = async (blob: Blob) => {
         setShowRecorder(false);
@@ -706,12 +677,12 @@ const LoveLock: React.FC = () => {
     const handleDisconnect = async () => {
         setConfirmDialog({
             title: 'Disconnect',
-            message: 'Are you sure you want to disconnect? This will lock the dashboard and reset the connection. You can reconnect later.',
+            message: 'Are you sure you want to disconnect? All messages, reactions, games and shared attachments will be permanently deleted for both of you. Personal health logs stay with their owner. Reconnecting starts a new conversation.',
             confirmLabel: 'Disconnect',
             onConfirm: async () => {
                 try {
-                    await disconnectCouple();
-                    showToast('Disconnected', 'You have been depaired.');
+                    const result=await disconnectCouple();
+                    showToast('Disconnected', result.mediaDeleted?'Your shared conversation and attachments have been deleted.':'Your shared conversation has been deleted. Attachment cleanup is queued and will retry automatically.');
                 } catch (error) {
                     showToast('Error', error instanceof Error ? error.message : 'Failed to disconnect', 'error');
                 }
@@ -720,97 +691,7 @@ const LoveLock: React.FC = () => {
     };
 
     // Stage 1: Initial Pairing — both roles can generate or enter
-    if (!couple || couple.status === 'pending') {
-        return (
-            <div className="chat-pairing min-h-[80vh] flex flex-col items-center justify-center p-6 space-y-8">
-                <div className="relative w-24 h-24 bg-pink-100 dark:bg-pink-900/20 rounded-full flex items-center justify-center mb-4">
-                    <span className="app-icon-glyph text-5xl text-pink-500"><AppIcon name={"lock"}/></span>
-                    <motion.div animate={{ scale: [1, 1.2, 1] }} transition={{ repeat: Infinity, duration: 2 }} className="absolute -top-1 -right-1 text-2xl"><AppIcon name={"❤️"}/></motion.div>
-                </div>
-
-                <div className="text-center max-w-sm">
-                    <h1 className="text-3xl font-bold mb-3 font-display">Notes</h1>
-                    <p className="text-gray-500 dark:text-gray-400">A private space for just the two of us.</p>
-                </div>
-
-                <div className="w-full max-w-sm bg-white dark:bg-surface-dark p-6 rounded-2xl shadow-lg border border-gray-100 dark:border-gray-800">
-                    {/* Mode Toggle */}
-                    <div className="flex rounded-xl overflow-hidden mb-6 border border-gray-200 dark:border-gray-700">
-                        <button
-                            onClick={() => setConnectMode('generate')}
-                            className={`flex-1 py-2.5 text-sm font-bold transition-all ${
-                                connectMode === 'generate'
-                                    ? 'on-brand bg-pink-500 text-white'
-                                    : 'bg-transparent text-gray-400 hover:text-gray-600'
-                            }`}
-                        >
-                            Generate Code
-                        </button>
-                        <button
-                            onClick={() => setConnectMode('enter')}
-                            className={`flex-1 py-2.5 text-sm font-bold transition-all ${
-                                connectMode === 'enter'
-                                    ? 'on-brand bg-pink-500 text-white'
-                                    : 'bg-transparent text-gray-400 hover:text-gray-600'
-                            }`}
-                        >
-                            Enter Code
-                        </button>
-                    </div>
-
-                    {connectMode === 'generate' ? (
-                        <div className="space-y-6 text-center">
-                            {generatedCode || (couple?.pairing_code) ? (
-                                <>
-                                    <div className="space-y-2">
-                                        <p className="text-sm uppercase tracking-wider text-gray-400">Your Pairing Code</p>
-                                        <div className="text-4xl font-mono font-bold text-pink-500 tracking-[0.2em] py-4 bg-pink-50 dark:bg-pink-900/10 rounded-xl">
-                                            {generatedCode || couple?.pairing_code}
-                                        </div>
-                                    </div>
-                                    <p className="text-sm text-gray-500">Share this code with your partner to connect.</p>
-                                    <div className="flex items-center justify-center space-x-2 text-pink-500 text-sm animate-pulse">
-                                        <span className="app-icon-glyph text-lg"><AppIcon name={"sync"}/></span>
-                                        <span>Waiting for partner...</span>
-                                    </div>
-                                </>
-                            ) : (
-                                <button
-                                    onClick={handleGenerateCode}
-                                    className="on-brand w-full py-4 bg-pink-500 hover:bg-pink-600 active:bg-pink-700 text-white rounded-xl font-bold font-display text-base transition-all shadow-lg shadow-pink-500/30 flex items-center justify-center gap-2"
-                                >
-                                    <span className="app-icon-glyph text-xl"><AppIcon name={"key"}/></span>
-                                    Generate Access Code
-                                </button>
-                            )}
-                        </div>
-                    ) : (
-                         <div className="space-y-6">
-                            <div className="space-y-2">
-                                <label className="text-sm font-medium text-gray-700 dark:text-gray-300">Enter Partner's Code</label>
-                                <input
-                                    type="text"
-                                    value={inputCode}
-                                    onChange={(e) => setInputCode(e.target.value.toUpperCase())}
-                                    placeholder="e.g. A1B2C3"
-                                    maxLength={6}
-                                    className="w-full text-center text-2xl font-mono tracking-widest py-3 border-2 border-gray-200 dark:border-gray-700 rounded-xl focus:border-pink-500 outline-none bg-transparent"
-                                />
-                            </div>
-                            <button
-                                onClick={handleJoinCouple}
-                                disabled={inputCode.length !== 6}
-                                className="on-brand w-full py-4 bg-gradient-to-r from-pink-500 to-rose-500 disabled:opacity-50 disabled:cursor-not-allowed text-white rounded-xl font-bold transition-all shadow-lg shadow-pink-500/30"
-                            >
-
-                                Unlock My Heart <AppIcon name={"💖"}/>
-                            </button>
-                        </div>
-                    )}
-                </div>
-            </div>
-        );
-    }
+    if (!couple || couple.status === 'pending') return <ConnectionScreen/>;
 
     // STATE: Active (Chat Interface) — couple is paired and active, show chat directly
     return (

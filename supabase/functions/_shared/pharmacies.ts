@@ -29,12 +29,12 @@ export async function findPharmacies(
     let origin: [number, number];
     if (lat !== undefined && lon !== undefined) origin = [lat, lon];
     else {
-      const url = new URL("https://photon.komoot.io/api/");
+      const url = new URL('/api/',photonBase());
       url.searchParams.set("q", area || "");
       url.searchParams.set("limit", "1");
       const response = await fetch(url, {
         headers,
-        signal: AbortSignal.timeout(7000),
+        signal: AbortSignal.timeout(4000),
       });
       if (!response.ok) throw new Error("Area lookup is unavailable");
       const result = await response.json();
@@ -51,7 +51,7 @@ export async function findPharmacies(
     let features: any[] | undefined;
     for (const path of ["/reverse", "/reverse/"]) {
       try {
-        const url = new URL(`https://photon.komoot.io${path}`);
+        const url = new URL(path,photonBase());
         for (const [key, value] of Object.entries({
           lat: String(latitude),
           lon: String(longitude),
@@ -62,7 +62,7 @@ export async function findPharmacies(
           url.searchParams.set(key, value);
         const response = await fetch(url, {
           headers,
-          signal: AbortSignal.timeout(7000),
+          signal: AbortSignal.timeout(4000),
         });
         if (!response.ok) throw new Error("Places unavailable");
         const data = await response.json();
@@ -74,10 +74,22 @@ export async function findPharmacies(
         /* One bounded retry; no automatic requests while typing. */
       }
     }
-    if (!features)
-      throw new Error(
-        "The community map service is busy. Please retry shortly.",
-      );
+    // A geocoder index is not a complete POI database. Ask Overpass for actual
+    // pharmacy/chemist objects if Photon is empty or unavailable.
+    features=features?.filter(feature=>feature.properties?.osm_key==='amenity'&&feature.properties?.osm_value==='pharmacy');
+    if(!features?.length) {
+      const endpoint=overpassUrl();
+      const query=`[out:json][timeout:8];(nwr(around:5000,${latitude},${longitude})[amenity=pharmacy];nwr(around:5000,${latitude},${longitude})[shop=chemist];);out center tags 60;`;
+      try {
+        const response=await fetch(endpoint,{method:'POST',headers:{...headers,'Content-Type':'application/x-www-form-urlencoded'},body:new URLSearchParams({data:query}),signal:AbortSignal.timeout(10000)});
+        if(!response.ok)throw new Error('Places unavailable');
+        const data=await response.json();
+        if(!Array.isArray(data.elements))throw new Error('Invalid places response');
+        if(data.remark)throw new Error('Places query incomplete');
+        const value:SearchResult={places:data.elements,origin,source:'OpenStreetMap',fetchedAt:new Date().toISOString()};
+        save(key,value);return value;
+      }catch {throw new Error('Nearby search could not be completed. Please retry; the map data service may be busy.');}
+    }
     const places = features
       .filter(
         (feature) =>
@@ -112,8 +124,7 @@ export async function findPharmacies(
       source: "OpenStreetMap",
       fetchedAt: new Date().toISOString(),
     };
-    if (cache.size >= 100) cache.delete(cache.keys().next().value!);
-    cache.set(key, { expires: Date.now() + 600000, value });
+    save(key,value);
     return value;
   })();
   pending.set(key, work);
@@ -123,3 +134,9 @@ export async function findPharmacies(
     pending.delete(key);
   }
 }
+
+function save(key:string,value:SearchResult){if(cache.size>=100)cache.delete(cache.keys().next().value!);cache.set(key,{expires:Date.now()+(value.places.length?600000:60000),value});}
+function photonBase(){return setting('PHOTON_BASE_URL')||'https://photon.komoot.io';}
+function overpassUrl(){return setting('OVERPASS_URL')||'https://overpass-api.de/api/interpreter';}
+
+function setting(name:string){return (globalThis as typeof globalThis&{Deno?:{env:{get:(name:string)=>string|undefined}}}).Deno?.env.get(name);}
