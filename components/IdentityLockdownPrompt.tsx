@@ -1,32 +1,30 @@
-import {MotionPortal} from "./ui/MotionPortal";
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import { useLocation } from "react-router-dom";
 import { useCouples } from "../contexts/CouplesContext";
 const SyncHistoryModal = React.lazy(() => import('./SyncHistoryModal').then(module=>({default:module.SyncHistoryModal})));
 export function IdentityLockdownPrompt() {
-  const { isSyncRequired, identityReady, couple } = useCouples();
+  const { isSyncRequired, identityReady, couple, hasCloudBackup } = useCouples();
   const location = useLocation();
-  const needed = couple?.status === "active" && identityReady && isSyncRequired;
-  const [open, setOpen] = useState(true);
+  const active = couple?.status === "active" && identityReady;
+  const needed = active && (isSyncRequired || !hasCloudBackup);
+  const prompt = needed ? `${couple.id}:${isSyncRequired ? 'recover' : 'setup'}` : null;
+  const prompted = useRef<string | null>(null);
+  const [open, setOpen] = useState(false);
   useEffect(() => {
-    if (needed) setOpen(true);
-  }, [needed]);
+    if (!active) { prompted.current = null; setOpen(false); }
+    else if (prompt && prompt !== prompted.current) {
+      prompted.current = prompt;
+      setOpen(true);
+    }
+  }, [active, prompt]);
   useEffect(() => {
     const show = () => setOpen(true);
     window.addEventListener("recheck-lockdown", show);
     return () => window.removeEventListener("recheck-lockdown", show);
   }, []);
-  if (!/\/notes$/.test(location.pathname) || !needed) return null;
+  if (!/\/notes$/.test(location.pathname) || !active) return null;
   return (
     <>
-      {!open && (
-        <MotionPortal><button
-          onClick={() => setOpen(true)}
-          className="on-brand fixed bottom-40 right-4 z-50 rounded-full bg-primary px-5 py-3 text-sm font-semibold text-white shadow-lg"
-        >
-          Restore chats
-        </button></MotionPortal>
-      )}
       {open&&<React.Suspense fallback={null}><SyncHistoryModal isOpen={open} onClose={() => setOpen(false)} /></React.Suspense>}
     </>
   );

@@ -40,7 +40,7 @@ const LoveLock: React.FC = () => {
         addReaction, replyToNote, markAsRead, setIsChatOpen, uploadMedia,
         isSupporter, partnerProfile, disconnectCouple, hasMoreNotes,
         loadingOlder, loadOlderNotes, partnerPubKey,
-        isSyncRequired,
+        isSyncRequired, identityReady, hasCloudBackup,
         toggleStar, togglePin, deleteNote, forwardNote
     } = useCouples();
     const { user } = useAuth();
@@ -720,7 +720,7 @@ const LoveLock: React.FC = () => {
                                         onClick={() => window.dispatchEvent(new CustomEvent('recheck-lockdown'))}
                                         className="text-[10px] text-amber-500 font-bold uppercase tracking-wider cursor-pointer hover:underline"
                                     >
-                                        Restore chats
+                                        Unlock chats
                                     </span>
                                 </>
                             ) : (
@@ -788,6 +788,10 @@ const LoveLock: React.FC = () => {
             </div>
 
             {/* Notes List - Adjusted padding for fixed header */}
+            {identityReady && (isSyncRequired || !hasCloudBackup) && <div className="chat-identity-notice" role="status">
+                <p>{isSyncRequired ? 'Unlock your account’s encryption key on this device to use chat.' : 'Keep your encrypted chats safe when you change devices.'}</p>
+                <button type="button" onClick={() => window.dispatchEvent(new CustomEvent('recheck-lockdown'))}>{isSyncRequired ? 'Unlock chats' : 'Set backup password'}</button>
+            </div>}
             <div
                 ref={chatContainerRef}
                 onScroll={handleChatScroll}

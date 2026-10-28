@@ -150,7 +150,7 @@ export default function AppShell({ mode = "tracker" }: { mode?: Mode }) {
         <main
           id="main-content"
           data-chat={chatPage}
-          className="min-h-0 min-w-0 flex-1 overflow-y-auto overscroll-contain"
+          className="min-h-0 min-w-0 flex-1 overflow-x-hidden overflow-y-auto overscroll-contain"
         >
           <motion.div key={location.pathname} className={`bloom-route mx-auto h-full min-h-full w-full ${chatPage ? '' : 'max-w-[1440px]'}`} initial={reduced ? false : { x: 10 }} animate={{ opacity: 1, x: 0 }} transition={motionTransition(springs.section, reduced)}>
             <React.Suspense fallback={<div className="route-loading" role="status">Opening your space…</div>}><ConnectionOutlet mode={mode} pathname={location.pathname}/></React.Suspense>
