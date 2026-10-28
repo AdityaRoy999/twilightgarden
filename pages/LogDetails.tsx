@@ -8,6 +8,7 @@ import { useNavigate, useSearchParams } from 'react-router-dom';
 import { useData } from '../contexts/DataContext';
 import { FlowIntensity } from '../types';
 import { SymptomSelector } from '../components/ui/SymptomSelector';
+import { MotionPortal } from '../components/ui/MotionPortal';
 
 const LogDetails: React.FC = () => {
   const navigate = useNavigate();
@@ -170,7 +171,7 @@ const LogDetails: React.FC = () => {
         {([{ title: 'Physical', icon: 'accessibility_new', options: physicalOptions, id: 'log-symptoms', tone: 'rose' }, { title: 'Digestion', icon: 'restaurant', options: digestionOptions, id: 'log-digestion', tone: 'amber' }]).map(group => <section key={group.id} id={group.id} className={`reference-card journal-card journal-symptoms ${group.tone}`}><ReferenceArt kind="leaves" className="reference-card-art"/><div className="journal-section-title"><span className="reference-icon"><AppIcon name={group.icon} size={25}/></span><div><h2>{group.title}</h2><p>Select all symptoms you're experiencing.</p></div></div><div className="journal-chips">{group.options.map(item => <button key={item} type="button" aria-pressed={physical.includes(item.toLowerCase()) || digestion.includes(item.toLowerCase())} onClick={() => toggleSymptom(item)}>{item}</button>)}</div></section>)}
         <section className="reference-card journal-card journal-notes"><div className="journal-section-title"><AppIcon name="edit_note" size={24}/><h2>Daily Notes</h2></div><textarea aria-label="Daily notes" maxLength={500} value={notes} onChange={event => setNotes(event.target.value)} placeholder="Add a personal note about how you're feeling today..."/><small>{notes.length}/500</small></section>
       </main>
-      <footer className="journal-save">{saveError && <p role="alert">{saveError}</p>}<button className="reference-button" onClick={handleSave} disabled={saving || targetDate > today}><span><AppIcon name="check" size={18}/></span>{saving ? 'Saving…' : 'Save Log'}</button></footer>
+      <MotionPortal><footer className="journal-save">{saveError && <p role="alert">{saveError}</p>}<button className="reference-button" onClick={handleSave} disabled={saving || targetDate > today}><span><AppIcon name="check" size={18}/></span>{saving ? 'Saving…' : 'Save Log'}</button></footer></MotionPortal>
     </div>
   );
 };

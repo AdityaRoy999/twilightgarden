@@ -7,7 +7,8 @@ import { useCouples } from './CouplesContext';
 import { DailyLog, DailyLogInput, CycleSettings, CyclePhase, AppNotification } from '../types';
 import { calculateCyclePhase } from '../lib/cycleUtils';
 import {validateCycleSettings,cycleSettingsSaveError} from '../lib/cycleSettings';
-import { encryptData, decryptData } from '../lib/encryption';
+import { decryptData } from '../lib/encryption';
+import { encryptHealthSnapshot } from '../lib/healthSnapshot';
 import { loadHealthHistory } from '../lib/healthHistory';
 import { useToday } from '../hooks/useToday';
 
@@ -348,10 +349,7 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children
         sleepHours: newLog.sleepHours
       };
 
-      let encryptedPayload = null;
-      if (partnerPubKey) {
-        encryptedPayload = await encryptData(payload, partnerPubKey);
-      }
+      const encryptedPayload = await encryptHealthSnapshot(payload, partnerPubKey);
 
       const {data:result,error}=await supabase.rpc('save_daily_log',{
         p_date:newLog.date,p_period_start:!!newLog.periodStarted,p_encrypted:encryptedPayload,
@@ -397,10 +395,7 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children
                 const nickname = (partnerProfile as any)?.partner_nickname || 'partner';
                 const message = `Your ${nickname} has completed their daily log.`;
 
-                let encryptedPayload = null;
-                if (partnerPubKey) {
-                  encryptedPayload = await encryptData({ message }, partnerPubKey);
-                }
+                const encryptedPayload = await encryptHealthSnapshot({ message }, partnerPubKey);
 
                 await supabase.from('notifications').insert({
                   user_id: partnerId,
@@ -442,10 +437,7 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children
           irregularCycle: newSettings.irregularCycle
         };
 
-        let encryptedPayload = null;
-        if (partnerPubKey) {
-          encryptedPayload = await encryptData(payload, partnerPubKey);
-        }
+        const encryptedPayload = await encryptHealthSnapshot(payload, partnerPubKey);
 
         const { error } = await supabase.rpc('save_cycle_settings',{p_encrypted:encryptedPayload,p_values:{
           avg_cycle_length:newSettings.avgCycleLength,avg_period_length:newSettings.avgPeriodLength,

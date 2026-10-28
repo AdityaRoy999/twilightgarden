@@ -34,6 +34,7 @@ export function SyncHistoryModal({
     restoreFromCloudBackup,
     completeSyncHandshake,
     refreshE2EE,
+    notes,
   } = useCouples();
   const [passphrase, setPassphrase] = useState(""),
     [confirmation, setConfirmation] = useState(""),
@@ -234,6 +235,7 @@ export function SyncHistoryModal({
     }
   };
   const needsDeviceLink = isSyncRequired && !hasCloudBackup;
+  const restoringMessages = isSyncRequired && notes.length > 0;
   const confirming = !isSyncRequired && passwordStep === "confirm";
   const field =
     "h-12 w-full rounded-xl border border-gray-200 bg-transparent px-4 pr-12 text-base outline-none focus:border-primary focus:ring-2 focus:ring-primary/20 dark:border-white/10";
@@ -293,12 +295,12 @@ export function SyncHistoryModal({
             : needsDeviceLink
               ? "Link this device"
               : isSyncRequired
-                ? "Restore chats"
+                ? restoringMessages ? "Restore chats" : "Unlock chats on this device"
                 : confirming
                   ? "Confirm password"
                   : hasCloudBackup
                     ? "Change backup password"
-                    : "Back up chats"}
+                    : "Set backup password"}
         </h2>
         {done ? (
           <>
@@ -317,12 +319,12 @@ export function SyncHistoryModal({
             {!needsDeviceLink && (
               <p className="mb-5 mt-2 text-sm leading-relaxed text-gray-500 dark:text-gray-400">
                 {isSyncRequired
-                  ? "Enter your backup password once to restore your messages."
+                  ? restoringMessages ? "Enter your backup password once to restore your messages." : "Your account already has an encrypted backup from another device. Enter its password to unlock chat here. Linking a partner does not replace your account’s encryption key."
                   : confirming
                     ? "Enter the same password again."
                     : hasCloudBackup
                       ? "Choose a new password for restoring your chats."
-                      : "Optional. Keep your chats when you switch devices."}
+                      : "Choose a password to protect your encrypted chats when you switch devices. Keep it somewhere safe; we cannot recover it."}
               </p>
             )}
             {error && (
@@ -388,7 +390,7 @@ export function SyncHistoryModal({
                   {busy
                     ? "Please wait…"
                     : isSyncRequired
-                      ? "Restore chats"
+                      ? restoringMessages ? "Restore chats" : "Unlock chats"
                       : confirming
                         ? "Save backup"
                         : "Continue"}

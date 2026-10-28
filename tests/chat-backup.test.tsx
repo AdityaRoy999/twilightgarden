@@ -36,6 +36,7 @@ vi.mock("../contexts/CouplesContext", () => ({
     restoreFromCloudBackup: mocks.restore,
     completeSyncHandshake: mocks.approve,
     refreshE2EE: mocks.refresh,
+    notes: [],
   }),
 }));
 vi.mock("../lib/sync", () => ({ createSyncSession: mocks.create }));
@@ -82,6 +83,7 @@ beforeEach(() => {
 afterEach(() => cleanup());
 describe("simple optional chat backup", () => {
   it("does not block an existing device with a backup setup popup", () => {
+    mocks.backup = true;
     render(
       <MemoryRouter initialEntries={["/notes"]}>
         <IdentityLockdownPrompt />
@@ -91,7 +93,7 @@ describe("simple optional chat backup", () => {
   });
   it("shows one password field at a time and saves only after confirmation", async () => {
     render(<SyncHistoryModal isOpen onClose={vi.fn()} />);
-    expect(screen.getByRole("heading", { name: "Back up chats" })).toBeTruthy();
+    expect(screen.getByRole("heading", { name: "Set backup password" })).toBeTruthy();
     expect(screen.queryByLabelText("Confirm password")).toBeNull();
     expect(screen.queryByLabelText("Device code")).toBeNull();
     fireEvent.change(screen.getByLabelText("Backup password"), {
@@ -128,7 +130,7 @@ describe("simple optional chat backup", () => {
     fireEvent.change(screen.getByLabelText("Backup password"), {
       target: { value: "123456" },
     });
-    fireEvent.click(screen.getByRole("button", { name: "Restore chats" }));
+    fireEvent.click(screen.getByRole("button", { name: "Unlock chats" }));
     await waitFor(() => expect(mocks.restore).toHaveBeenCalledWith("123456"));
     expect(mocks.setup).not.toHaveBeenCalled();
     expect(screen.queryByLabelText("Confirm password")).toBeNull();
@@ -168,7 +170,7 @@ describe("simple optional chat backup", () => {
       </MemoryRouter>,
     );
     expect(await screen.findByRole("dialog")).toBeTruthy();
-    expect(screen.getByRole("heading", { name: "Restore chats" })).toBeTruthy();
+    expect(screen.getByRole("heading", { name: "Unlock chats on this device" })).toBeTruthy();
   });
   it("removes a device-link request that finishes after the modal was closed", async () => {
     mocks.locked = true;
