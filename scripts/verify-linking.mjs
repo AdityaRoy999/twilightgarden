@@ -41,7 +41,7 @@ try{
   const timer=setTimeout(()=>reject(Error('Unlink event missing for member '+i)),15000);
   const channel=client.channel('couple_account_'+users[i].id,{config:{private:true}}).on('broadcast',{event:'relationship:deleted'},({payload})=>{clearTimeout(timer);resolve(payload.couple_id);}).subscribe();channels.push(channel);
  }));
- await Promise.all(channels.map(channel=>new Promise((resolve,reject)=>{const timer=setTimeout(()=>reject(Error('Account subscription unavailable')),8000);const poll=setInterval(()=>{if(channel.state==='joined'){clearTimeout(timer);clearInterval(poll);resolve();}},100);}))); 
+ await Promise.all(channels.map(channel=>new Promise((resolve,reject)=>{const timer=setTimeout(()=>{clearInterval(poll);reject(Error('Account subscription unavailable'));},8000);const poll=setInterval(()=>{if(channel.state==='joined'){clearTimeout(timer);clearInterval(poll);resolve();}},100);})));
  const result=await endpoint(0,{action:'unlink',coupleId:couple.id});assert.equal(result.mediaDeleted,true);pass('Unlink removes the connection and completes media deletion');
  assert.deepEqual(await Promise.all(events),[couple.id,couple.id]);pass('Both members receive unlink events after relationship deletion');
  for(const [table,column,value] of [['couples','id',couple.id],['shared_notes','couple_id',couple.id],['game_sessions','couple_id',couple.id]]){assert.equal(checked(await db.from(table).select('id').eq(column,value)).length,0);pass(table+' deleted for both parties');}
