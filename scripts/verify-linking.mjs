@@ -11,6 +11,7 @@ const db=createClient(url,process.env.SUPABASE_SERVICE_ROLE_KEY,options),users=[
 let checks=0;
 const checked=r=>{if(r.error)throw new Error(r.error.message);return r.data;};
 const pass=label=>{checks++;console.log('PASS',label);};
+const publicKey=async()=>Buffer.from(JSON.stringify(await crypto.subtle.exportKey('jwk',(await crypto.subtle.generateKey({name:'ECDH',namedCurve:'P-256'},true,['deriveKey','deriveBits'])).publicKey))).toString('base64');
 async function endpoint(index,body,status=200){const r=await fetch(url+'/functions/v1/couple-action',{method:'POST',headers:{apikey:anon,Authorization:'Bearer '+tokens[index],'Content-Type':'application/json'},body:JSON.stringify(body),signal:AbortSignal.timeout(30000)});const data=await r.json();assert.equal(r.status,status,JSON.stringify(data));return data;}
 try{
  for(const role of ['user','partner','user']){
@@ -31,8 +32,16 @@ try{
  await endpoint(2,{action:'unlink',coupleId:couple.id,actor:users[0].id},403);pass('Outsider cannot unlink or spoof an actor');
  assert.ok((await clients[0].rpc('unlink_relationship',{p_couple:couple.id,p_actor:users[0].id})).error);pass('Privileged unlink RPC inaccessible to browser roles');
  assert.equal(checked(await clients[0].from('couples').delete().eq('id',couple.id).select()).length,0);pass('Direct browser delete cannot bypass cleanup');
+ const oldKeys=await Promise.all([publicKey(),publicKey()]),devices=[randomUUID(),randomUUID()];
+ for(let i=0;i<2;i++){
+  checked(await clients[i].from('user_keys').insert({user_id:users[i].id,device_id:devices[i],public_key:oldKeys[i]}));
+  checked(await clients[i].from('identity_backups').insert({user_id:users[i].id,public_key:oldKeys[i],backup_identity:randomBytes(80).toString('base64'),backup_salt:randomBytes(16).toString('base64')}));
+  checked(await clients[i].from('sync_sessions').insert({user_id:users[i].id,token:randomUUID(),ephemeral_public_key:oldKeys[i]}));
+ }
+ checked(await clients[0].rpc('save_daily_log',{p_date:'2026-10-20',p_values:{flow:'light',moods:['calm'],symptoms:[],notes:'Disposable unlink QA health log'},p_period_start:false}));
  const noteIds=[randomUUID(),randomUUID()];
  checked(await db.from('shared_notes').insert(noteIds.map((id,i)=>({id,couple_id:couple.id,sender_id:users[i].id,content:randomBytes(64).toString('base64'),type:'text'}))));
+ checked(await db.from('note_keys').insert(noteIds.map((note_id,i)=>({note_id,user_id:users[i].id,device_id:devices[i],encrypted_message_key:randomBytes(60).toString('base64')}))));
  const media=[couple.id+'/'+randomUUID()+'.enc',couple.id+'/legacy/'+randomUUID()+'.enc'];
  for(let i=0;i<2;i++){checked(await clients[i].storage.from('chat-media').upload(media[i],randomBytes(80),{contentType:'application/octet-stream'}));uploaded.push(media[i]);}
  const signed=checked(await clients[0].storage.from('chat-media').createSignedUrl(media[0],60)).signedUrl;
@@ -45,12 +54,30 @@ try{
  const result=await endpoint(0,{action:'unlink',coupleId:couple.id});assert.equal(result.mediaDeleted,true);pass('Unlink removes the connection and completes media deletion');
  assert.deepEqual(await Promise.all(events),[couple.id,couple.id]);pass('Both members receive unlink events after relationship deletion');
  for(const [table,column,value] of [['couples','id',couple.id],['shared_notes','couple_id',couple.id],['game_sessions','couple_id',couple.id]]){assert.equal(checked(await db.from(table).select('id').eq(column,value)).length,0);pass(table+' deleted for both parties');}
+ for(let i=0;i<2;i++){
+  for(const table of ['user_keys','identity_backups','sync_sessions','note_keys'])assert.equal(checked(await db.from(table).select('user_id').eq('user_id',users[i].id)).length,0);
+  const state=checked(await clients[i].rpc('get_own_chat_identity_state'));assert.equal(state.generation,1);assert.equal(state.public_key,null);assert.equal(state.has_backup,false);assert.equal(state.active,false);
+  pass('Member '+i+': all chat keys, backups and sync sessions erased');
+  assert.ok((await clients[i].from('user_keys').insert({user_id:users[i].id,device_id:devices[i],public_key:oldKeys[i]})).error);
+  assert.ok((await clients[i].from('identity_backups').insert({user_id:users[i].id,public_key:oldKeys[i],backup_identity:'obsolete-backup',backup_salt:'obsolete-salt'})).error);
+  assert.ok((await clients[i].from('sync_sessions').insert({user_id:users[i].id,token:randomUUID(),ephemeral_public_key:oldKeys[i]})).error);
+  pass('Member '+i+': offline/old app cannot republish retired keys, backups or sync sessions');
+ }
+ assert.equal(checked(await clients[0].from('daily_logs').select('notes').eq('date','2026-10-20'))[0].notes,'Disposable unlink QA health log');pass('Personal health log preserved');
  assert.equal(checked(await db.storage.from('chat-media').list(couple.id)).length,0);assert.equal((await fetch(signed)).ok,false);pass('Both senders’ media and nested legacy media removed; old URL fails');
  assert.equal(checked(await db.from('notifications').select('id').eq('data->>roomId',game.session.id)).length,0);pass('Stale game invitation deleted');
  assert.equal((await endpoint(1,{action:'unlink',coupleId:couple.id})).mediaDeleted,true);pass('Other member can safely retry an already completed unlink');
  await endpoint(2,{action:'unlink',coupleId:couple.id},403);pass('Completed cleanup does not grant outsider access');
  const fresh=checked(await clients[0].rpc('generate_pairing_code'));relationships.push(fresh.id);assert.notEqual(fresh.id,couple.id);
  checked(await clients[1].rpc('join_couple',{code_input:fresh.pairing_code}));assert.equal(checked(await clients[1].from('shared_notes').select('id').eq('couple_id',fresh.id)).length,0);pass('Reconnect creates a fresh conversation without old messages');
+ for(let i=0;i<2;i++){
+  const key=await publicKey();assert.notEqual(key,oldKeys[i]);
+  checked(await clients[i].from('user_keys').insert({user_id:users[i].id,device_id:devices[i],public_key:key,identity_generation:1}));
+  checked(await clients[i].from('identity_backups').insert({user_id:users[i].id,public_key:key,backup_identity:'new-backup-'+i,backup_salt:'new-salt',identity_generation:1}));
+ }
+ await endpoint(0,{action:'unlink',coupleId:couple.id});
+ for(let i=0;i<2;i++){const state=checked(await clients[i].rpc('get_own_chat_identity_state'));assert.equal(state.generation,1);assert.equal(state.has_backup,true);assert.notEqual(state.public_key,oldKeys[i]);}
+ pass('Relink accepts new backups; retrying an old unlink cannot reset the new connection');
  for(const body of [{mood:'places',lat:22.5726,lon:88.3639},{mood:'places',search_query:'Salt Lake, Kolkata'}]){
   const r=await fetch(url+'/functions/v1/ai-generate',{method:'POST',headers:{apikey:anon,Authorization:'Bearer '+tokens[0],'Content-Type':'application/json'},body:JSON.stringify(body),signal:AbortSignal.timeout(35000)});const data=await r.json();assert.equal(r.status,200,JSON.stringify(data));assert.ok(Array.isArray(data.origin));assert.ok(data.places.length>0);pass('Live nearby search returns stores and an origin: '+(body.search_query||'coordinates'));
  }

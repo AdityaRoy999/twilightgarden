@@ -17,6 +17,7 @@ import {
 import {
   resolveDeviceIdentity,
   installRecoveredIdentity,
+  reconcileIdentityGeneration,
 } from "../lib/identity";
 import { mergeChatNotes, cursorFilter } from "../lib/chat";
 import type { SharedNote } from "../types";
@@ -28,6 +29,35 @@ beforeEach(() => {
 });
 afterEach(() => vi.unstubAllGlobals());
 describe("stable identity and recovery", () => {
+  it('discards a retired local identity before initializing a fresh link', async () => {
+    const old = await generateKeyPair();
+    const store = new Map<string,string>([['A_private_key',old.privateKey],['A_public_key',old.publicKey],['A_chat_identity_generation','0']]);
+    preferences.get.mockImplementation(async({key})=>({value:store.get(key)||null}));
+    preferences.set.mockImplementation(async({key,value})=>{store.set(key,value);});
+    preferences.remove.mockImplementation(async({key})=>{store.delete(key);});
+    const next=await resolveDeviceIdentity('A',null,()=>true,1);
+    expect(next.needsRestore).toBe(false);
+    expect(next.publicKey).not.toBe(old.publicKey);
+    expect(store.get('A_chat_identity_generation')).toBe('1');
+    expect(store.get('A_private_key')).not.toBe(old.privateKey);
+  });
+  it('does not erase a current-generation identity on a normal refresh',async()=>{
+    preferences.get.mockResolvedValue({value:'2'});preferences.remove.mockClear();
+    await reconcileIdentityGeneration('A',2);
+    expect(preferences.remove).not.toHaveBeenCalled();
+  });
+  it('rejects a stale server snapshot rather than downgrading the identity generation',async()=>{
+    preferences.get.mockResolvedValue({value:'2'});preferences.remove.mockClear();
+    await expect(reconcileIdentityGeneration('A',1)).rejects.toThrow('changed');
+    expect(preferences.remove).not.toHaveBeenCalled();
+  });
+  it('rejects an old restore that finishes after the local unlink reset',async()=>{
+    const old=await generateKeyPair();
+    preferences.get.mockResolvedValue({value:'1'});
+    await expect(installRecoveredIdentity('A',old.privateKey,old.publicKey,0)).rejects.toThrow('reset conversation');
+    expect(getCachedPrivateKey()).toBeNull();
+    expect(preferences.set).not.toHaveBeenCalled();
+  });
   it("does not generate or publish a replacement identity on a new device", async () => {
     const canonical = await generateKeyPair();
     preferences.get.mockResolvedValue({ value: null });

@@ -12,7 +12,7 @@ export interface SyncSession {
 /**
  * Initiates a sync session on the NEW device
  */
-export async function createSyncSession(userId: string): Promise<{ session: any, ephemeralPrivate: string }> {
+export async function createSyncSession(userId: string, generation=0): Promise<{ session: any, ephemeralPrivate: string }> {
     const alphabet = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
     const token = Array.from(crypto.getRandomValues(new Uint8Array(8)), byte => alphabet[byte & 31]).join('');
     const { publicKey, privateKey } = await generateKeyPair();
@@ -23,7 +23,8 @@ export async function createSyncSession(userId: string): Promise<{ session: any,
             user_id: userId,
             token,
             ephemeral_public_key: publicKey,
-            status: 'pending'
+            status: 'pending',
+            identity_generation:generation
         } as any)
         .select()
         .single();
