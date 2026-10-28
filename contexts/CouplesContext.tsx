@@ -451,7 +451,7 @@ export const CouplesProvider: React.FC<{ children: React.ReactNode }> = ({ child
         }
       )
       .on('broadcast',{event:'note:created'},({payload})=>{void receiveNote(payload as SharedNote);})
-      .on('postgres_changes',{event:'*',schema:'public',table:'user_keys',filter:'user_id=eq.'+partnerId},()=>{
+      .on('postgres_changes',{event:'*',schema:'public',table:'user_keys',filter:'user_id=eq.'+(partnerId||user.id)},()=>{
         partnerPublicKeyRef.current=null;deviceKeysRef.current.clear();void fetchCoupleData();
       })
       .on('broadcast',{event:'note:updated'},({payload})=>{void receiveNote(payload as SharedNote);})
