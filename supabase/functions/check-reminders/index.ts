@@ -1,5 +1,6 @@
 import { GoogleAuth } from 'npm:google-auth-library@9.4.1';
 import { adminClient, corsHeaders, isInternal, json } from '../_shared/security.ts';
+import {retryChatCleanup} from '../_shared/chatCleanup.ts';
 
 const SITE='https://twilight-mocha.vercel.app';
 Deno.serve(async (req: Request) => {
@@ -7,6 +8,7 @@ Deno.serve(async (req: Request) => {
   if (req.method!=='POST') return json({error:'Method not allowed'},405);
   if (!await isInternal(req)) return json({error:'Internal authentication required'},401);
   const db=adminClient();
+  await retryChatCleanup(db);
   try {
     const {data:tokens,error:tokensError}=await db.from('user_fcm_tokens').select('id,user_id,token,device_type');
     if(tokensError)throw tokensError;

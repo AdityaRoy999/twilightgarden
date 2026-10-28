@@ -18,3 +18,5 @@ verify_jwt = false
 verify_jwt = false
 [functions.game-action]
 verify_jwt = false
+[functions.couple-action]
+verify_jwt = false

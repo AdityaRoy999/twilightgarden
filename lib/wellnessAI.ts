@@ -191,9 +191,9 @@ export async function searchShoppingProducts(query: string, expectedUserId?:stri
     }
 }
 
-// --- Nearest Pad (Serper Places API) ---
+// --- Nearby pharmacies from community OSM data ---
 
-export async function searchNearbyPharmacies(lat?:number,lon?:number,area?:string):Promise<PharmacyPlace[]> {
+export async function searchPharmacyArea(lat?:number,lon?:number,area?:string):Promise<{places:PharmacyPlace[];origin:[number,number]}> {
     const hasCoordinates=Number.isFinite(lat)&&Number.isFinite(lon);
     if(!hasCoordinates&&(!area||area.trim().length<2))throw new Error('Enter an area or use your location.');
     const session=await getAISession();
@@ -201,7 +201,13 @@ export async function searchNearbyPharmacies(lat?:number,lon?:number,area?:strin
     const response=await fetch(`${SUPABASE_URL}/functions/v1/ai-generate`,{method:'POST',signal:AbortSignal.timeout(30000),headers:{'Content-Type':'application/json','Authorization':`Bearer ${session.access_token}`,'apikey':SUPABASE_ANON_KEY},body:JSON.stringify({mood:'places',search_query:area?area.trim().slice(0,120):'pharmacy medical store',...(hasCoordinates?{lat,lon}:{})})});
     const data=await response.json();
     if(!response.ok)throw new Error(data.error||'Nearby search is unavailable. Please try again.');
-    return normalizePharmacies(data.places,hasCoordinates?[lat!,lon!]:undefined);
+    const origin=hasCoordinates?[lat!,lon!]:data.origin;
+    if(!Array.isArray(origin)||origin.length!==2||!origin.every(Number.isFinite)||Math.abs(origin[0])>90||Math.abs(origin[1])>180)throw new Error('The search location was not returned. Please retry.');
+    return {places:normalizePharmacies(data.places,origin as [number,number]),origin:origin as [number,number]};
+}
+
+export async function searchNearbyPharmacies(lat?:number,lon?:number,area?:string):Promise<PharmacyPlace[]> {
+    return (await searchPharmacyArea(lat,lon,area)).places;
 }
 
 export async function getRouteToShop(startLat: number, startLon: number, endLat: number, endLon: number): Promise<RouteGeometry | null> {

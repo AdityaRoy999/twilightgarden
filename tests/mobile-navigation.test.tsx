@@ -3,6 +3,7 @@ import React from 'react';
 import { cleanup, fireEvent, render, screen, within } from '@testing-library/react';
 import { MemoryRouter, Route, Routes } from 'react-router-dom';
 import { afterEach, expect, it, vi } from 'vitest';
+vi.mock('../contexts/CouplesContext',()=>({useCouples:()=>({couple:{status:'active'},loading:false})}));
 vi.mock('../hooks/useAppMotion', () => ({ useAppMotion: () => ({ reduced: true }) }));
 vi.mock('../contexts/ThemeContext', () => ({ useTheme: () => ({ solidNavBg: false }) }));
 import AppShell from '../components/AppShell';

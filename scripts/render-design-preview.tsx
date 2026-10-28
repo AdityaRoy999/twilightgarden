@@ -3,6 +3,7 @@
  * Run npm run design:preview, then open /tmp/design-preview.html on Vite.
  */
 import React from 'react';
+import {ConnectionScreen} from '../components/ConnectionScreen';
 import {ExerciseLibrary} from '../components/exercise/ExerciseLibrary';
 import {LogHistoryView} from '../components/history/LogHistoryView';
 import {ShoppingGrid} from '../components/wellness/ShoppingCards';
@@ -26,7 +27,7 @@ const fixture = vi.hoisted(() => {
   const profile = { id: 'preview-partner', full_name: 'Sam', avatar_url: '', email: 'sam@example.invalid' };
   const couple = { id: 'preview-couple', user_id: user.id, partner_id: profile.id, status: 'active', share_enabled: true, notes_unlocked: true, love_notes_unlocked: true };
   const notes = [{ id: 'sample-1', sender_id: profile.id, user_id: profile.id, couple_id: couple.id, content: 'How are you feeling today?', type: 'text', created_at: '2026-10-26T09:00:00Z', reactions: {}, is_read: true }, { id: 'sample-2', sender_id: user.id, user_id: user.id, couple_id: couple.id, content: 'A little tired. A quiet evening together sounds lovely.', type: 'text', created_at: '2026-10-26T09:01:00Z', reactions: {}, is_read: true }];
-  return { noop, settings, logs, user, profile, couple, notes, empty: false, game: false, theme: 'light' };
+  return { noop, settings, logs, user, profile, couple, notes, empty: false, game: false, theme: 'light', disconnected:false };
 });
 // Show games after the loading state, in their ready-to-start lobbies.
 vi.mock('react', async () => {
@@ -37,7 +38,7 @@ vi.mock('react', async () => {
 vi.mock('../contexts/AuthContext', () => ({ useAuth: () => ({ user: fixture.user, loading: false, profileRefreshed: true, sessionVerified: true, signOut: fixture.noop, refreshUser: fixture.noop }) }));
 vi.mock('../contexts/DataContext', () => ({ useData: () => ({ logs: fixture.empty ? [] : fixture.logs, cycleSettings: fixture.settings, getLog: () => fixture.empty ? undefined : fixture.logs[0], getCyclePhase: (date = '2026-10-26') => calculateCyclePhase(date, fixture.settings), updateSettings: fixture.noop, addLog: fixture.noop, notifications: [], markAsRead: fixture.noop, loading: false }) }));
 vi.mock('../contexts/ThemeContext', () => ({ useTheme: () => ({ theme: fixture.theme, primaryColor: '#c33367', animationsEnabled: true, solidNavBg: true, toggleTheme: fixture.noop, updatePrimaryColor: fixture.noop, resetTheme: fixture.noop, updateAnimationsEnabled: fixture.noop, updateSolidNavBg: fixture.noop }) }));
-vi.mock('../contexts/CouplesContext', () => ({ useCouples: () => new Proxy({ couple: fixture.couple, notes: fixture.notes, loading: false, isLoading: false, hasMoreNotes: false, partnerProfile: fixture.profile, partnerSettings: fixture.settings, partnerLogs: fixture.logs, partnerData: { profile: fixture.profile, settings: fixture.settings, logs: fixture.logs }, isSupporter: false, chatConnected: true, identityReady: true, isSyncRequired: false, hasCloudBackup: false, partnerPubKey: null, restorationState: { isRestoring: false } }, { get: (object, key) => key in object ? object[key as keyof typeof object] : fixture.noop }) }));
+vi.mock('../contexts/CouplesContext', () => ({ useCouples: () => new Proxy({ couple: fixture.disconnected?null:fixture.couple, notes: fixture.notes, loading: false, isLoading: false, hasMoreNotes: false, partnerProfile: fixture.profile, partnerSettings: fixture.settings, partnerLogs: fixture.logs, partnerData: { profile: fixture.profile, settings: fixture.settings, logs: fixture.logs }, isSupporter: false, chatConnected: true, identityReady: true, isSyncRequired: false, hasCloudBackup: false, partnerPubKey: null, restorationState: { isRestoring: false } }, { get: (object, key) => key in object ? object[key as keyof typeof object] : fixture.noop }) }));
 vi.mock('../contexts/CallContext', () => ({ useCall: () => ({ callStatus: 'idle', initiateCall: fixture.noop, acceptCall: fixture.noop, rejectCall: fixture.noop }) }));
 vi.mock('../contexts/TutorialContext', () => ({ useTutorial: () => ({ openTutorial: fixture.noop }) }));
 vi.mock('../contexts/AdminContext', () => ({ useAdmin: () => ({ users: [], recentLogs: [], stats: { totalUsers: 0, activeToday: 0 }, isLoading: false }) }));
@@ -105,6 +106,13 @@ it('generates mockups of every page without a live account or network access', a
       frames.push({theme,title,group:'Your space',markup});
     }
   }
+  fixture.disconnected=true;
+  for(const theme of ['light','dark']){
+    fixture.theme=theme;
+    const markup=renderToStaticMarkup(<MemoryRouter initialEntries={['/notes']}><Routes><Route element={<AppShell/>}><Route path="*" element={<ConnectionScreen/>}/></Route></Routes></MemoryRouter>);
+    frames.push({theme,title:'Before Connection',group:'Your space',markup});
+  }
+  fixture.disconnected=false;
   expect(errors).toEqual([]);
   expect(frames.length).toBeGreaterThan(45);
   const head = `<meta name="viewport" content="width=device-width,initial-scale=1"><link rel="stylesheet" href="/index.css?direct"><link rel="stylesheet" href="/styles/bloom.css?direct"><link rel="stylesheet" href="/styles/reference.css?direct"><link rel="stylesheet" href="/styles/spring.css?direct"><link rel="stylesheet" href="/styles/dark.css?direct"><link rel="stylesheet" href="/styles/refinements.css?direct"><link rel="stylesheet" href="/styles/polish.css?direct"><link rel="stylesheet" href="/styles/wellness.css?direct"><link rel="stylesheet" href="/styles/solar-polish.css?direct"><link rel="stylesheet" href="/styles/gentle.css?direct"><link rel="stylesheet" href="/styles/history.css?direct"><link rel="stylesheet" href="/styles/finish.css?direct"><link rel="stylesheet" href="/styles/games.css?direct"><link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet"><style>body{margin:0}.preview-page{height:100dvh;overflow:auto;background:var(--bg-base)}.preview-nav{position:fixed;bottom:0;left:0;right:0;display:flex;justify-content:space-around;padding:15px 7px;background:var(--bg-surface);border-radius:24px 24px 0 0;border:1px solid var(--border-color);font:11px 'Plus Jakarta Sans';color:var(--text-secondary)}.preview-nav span:first-child{color:var(--color-primary)}</style>`;

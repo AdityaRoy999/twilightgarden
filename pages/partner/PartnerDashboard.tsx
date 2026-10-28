@@ -1,3 +1,4 @@
+import {ConnectionScreen} from '../../components/ConnectionScreen';
 import { DailyGuidance } from '../../components/wellness/DailyGuidance';
 import { AppIcon } from '../../components/ui/Icons';
 import { CycleHero } from '../../components/ui/CycleHero';
@@ -16,53 +17,16 @@ import PartnerInsightsView from '../../components/PartnerInsightsView';
 import { useTheme } from '../../contexts/ThemeContext';
 
 const PartnerDashboard: React.FC = () => {
-    const { couple, partnerData, loading, joinCouple, generatePairingCode } = useCouples();
+    const { couple, partnerData, loading } = useCouples();
     const { user } = useAuth();
     const { theme } = useTheme();
     const todayStr = useToday();
     const [selectedLogDate, setSelectedLogDate] = React.useState<string | null>(null);
     const [isModalOpen, setIsModalOpen] = React.useState(false);
 
-    // Pairing State
-    const [pairingCode, setPairingCode] = React.useState('');
-    const [isPairing, setIsPairing] = React.useState(false);
-    const [pairingError, setPairingError] = React.useState<string | null>(null);
-    const [connectMode, setConnectMode] = React.useState<'enter' | 'generate'>('enter');
-    const [generatedCode, setGeneratedCode] = React.useState<string | null>(null);
-    const [isGenerating, setIsGenerating] = React.useState(false);
-
     // Use AuthContext user directly — refreshUser keeps it in sync after profile edits
     const myDisplayName = user?.name || user?.email?.split('@')[0] || 'Me';
     const myAvatarUrl = user?.avatar_url || null;
-
-    const handleJoin = async () => {
-        if (pairingCode.length !== 6) {
-            setPairingError('Code must be 6 characters');
-            return;
-        }
-        setIsPairing(true);
-        setPairingError(null);
-        try {
-            await joinCouple(pairingCode.toUpperCase());
-        } catch (err: any) {
-            setPairingError(err.message || 'Failed to connect');
-        } finally {
-            setIsPairing(false);
-        }
-    };
-
-    const handleGenerate = async () => {
-        setIsGenerating(true);
-        setPairingError(null);
-        try {
-            const code = await generatePairingCode();
-            setGeneratedCode(code);
-        } catch (err: any) {
-            setPairingError(err.message || 'Failed to generate code');
-        } finally {
-            setIsGenerating(false);
-        }
-    };
 
     if (loading) {
         return (
@@ -72,113 +36,7 @@ const PartnerDashboard: React.FC = () => {
         );
     }
 
-    if (!couple || couple.status === 'pending') {
-        return (
-            <div className="min-h-screen flex flex-col items-center justify-center p-6 text-center max-w-md mx-auto">
-                 <div className="w-24 h-24 bg-pink-100 dark:bg-pink-900/20 rounded-full flex items-center justify-center mb-6">
-                    <span className="app-icon-glyph text-5xl text-pink-500"><AppIcon name={"favorite"}/></span>
-                 </div>
-                 <h2 className="text-2xl font-bold mb-3 text-gray-900 dark:text-white">Connect with Partner</h2>
-
-                 {/* Mode Toggle */}
-                 <div className="flex bg-gray-100 dark:bg-white/10 rounded-xl p-1 mb-6 w-full">
-                    <button
-                        onClick={() => { setConnectMode('enter'); setPairingError(null); }}
-                        className={`flex-1 py-2.5 rounded-lg text-sm font-bold transition-all ${
-                            connectMode === 'enter'
-                                ? 'bg-white dark:bg-white/20 text-gray-900 dark:text-white shadow-sm'
-                                : 'text-gray-500'
-                        }`}
-                    >
-                        Enter Code
-                    </button>
-                    <button
-                        onClick={() => { setConnectMode('generate'); setPairingError(null); }}
-                        className={`flex-1 py-2.5 rounded-lg text-sm font-bold transition-all ${
-                            connectMode === 'generate'
-                                ? 'bg-white dark:bg-white/20 text-gray-900 dark:text-white shadow-sm'
-                                : 'text-gray-500'
-                        }`}
-                    >
-                        Generate Code
-                    </button>
-                 </div>
-
-                 {connectMode === 'enter' ? (
-                     <>
-                         <p className="text-gray-500 dark:text-gray-400 mb-6 text-sm">
-                            Enter your partner's pairing code to connect.
-                         </p>
-                         <div className="w-full space-y-4">
-                            <input
-                                type="text"
-                                value={pairingCode}
-                                onChange={(e) => setPairingCode(e.target.value.toUpperCase())}
-                                placeholder="e.g. A1B2C3"
-                                maxLength={6}
-                                className="w-full text-center text-3xl font-mono tracking-widest py-4 rounded-2xl border-2 border-gray-200 dark:border-white/10 bg-white dark:bg-white/5 focus:border-pink-500 outline-none transition-colors"
-                            />
-
-                            {pairingError && (
-                                <p className="text-red-500 text-sm font-medium">{pairingError}</p>
-                            )}
-
-                            <button
-                                onClick={handleJoin}
-                                disabled={pairingCode.length !== 6 || isPairing}
-                                className="on-brand w-full py-4 bg-primary hover:bg-primary/90 disabled:opacity-50 disabled:cursor-not-allowed text-white rounded-xl font-bold transition-all shadow-lg shadow-primary/30 flex items-center justify-center gap-2"
-                            >
-                                {isPairing ? (
-                                    <span className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin"/>
-                                ) : (
-                                    <>
-                                        <span>Connect</span>
-                                        <span className="app-icon-glyph"><AppIcon name={"arrow_forward"}/></span>
-                                    </>
-                                )}
-                            </button>
-                         </div>
-                     </>
-                 ) : (
-                     <>
-                         <p className="text-gray-500 dark:text-gray-400 mb-6 text-sm">
-                            Generate a code and share it with your partner so they can connect.
-                         </p>
-                         <div className="w-full space-y-4">
-                            {generatedCode || couple?.pairing_code ? (
-                                <div className="bg-gray-50 dark:bg-white/5 p-6 rounded-2xl border-2 border-dashed border-pink-200 dark:border-pink-500/30">
-                                    <p className="text-xs text-gray-400 uppercase tracking-widest mb-2 font-bold">Your Pairing Code</p>
-                                    <div className="text-4xl font-mono font-bold text-pink-500 tracking-[0.3em]">
-                                        {generatedCode || couple?.pairing_code}
-                                    </div>
-                                    <p className="text-xs text-gray-400 mt-3">Share this code with your partner</p>
-                                </div>
-                            ) : (
-                                <button
-                                    onClick={handleGenerate}
-                                    disabled={isGenerating}
-                                    className="on-brand w-full py-4 bg-pink-500 hover:bg-pink-600 disabled:opacity-50 text-white rounded-xl font-bold transition-all shadow-lg shadow-pink-500/20 flex items-center justify-center gap-2"
-                                >
-                                    {isGenerating ? (
-                                        <span className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin"/>
-                                    ) : (
-                                        <>
-                                            <span className="app-icon-glyph"><AppIcon name={"key"}/></span>
-                                            <span>Generate Pairing Code</span>
-                                        </>
-                                    )}
-                                </button>
-                            )}
-
-                            {pairingError && (
-                                <p className="text-red-500 text-sm font-medium">{pairingError}</p>
-                            )}
-                         </div>
-                     </>
-                 )}
-            </div>
-        );
-    }
+    if (!couple || couple.status === 'pending') return <ConnectionScreen/>;
 
     const { profile, settings, logs } = partnerData;
     const cycleSettings = settings || {

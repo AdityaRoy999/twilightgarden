@@ -19,6 +19,7 @@ import {
   getCachedPrivateKey,
   isContentDecrypted,
   derivePublicKeyFromPrivate,
+  clearSharedKeyCache,
 } from '../lib/encryption';
 import { sendSyncPayload } from '../lib/sync';
 import { Preferences } from '@capacitor/preferences';
@@ -62,7 +63,7 @@ interface CouplesContextType {
   toggleGhostMode: () => Promise<void>;
   generateLoveCode: () => Promise<string>;
   unlockLoveNotes: (code: string) => Promise<void>;
-  disconnectCouple: () => Promise<void>;
+  disconnectCouple: () => Promise<{mediaDeleted:boolean}>;
   broadcastUpdate: (type: 'log' | 'settings' | 'profile') => void;
   mapSettings: (row: any) => any;
   partnerPubKey: string | null;
@@ -87,7 +88,8 @@ export const CouplesProvider: React.FC<{ children: React.ReactNode }> = ({ child
   const getCachedCouple = (): Couple | null => {
     try {
       const cached = localStorage.getItem('tw_cached_couple');
-      return cached ? JSON.parse(cached) : null;
+      const value=cached?JSON.parse(cached):null;
+      return user&&value&&[value.partner_1_id,value.partner_2_id].includes(user.id)?value:null;
     } catch { return null; }
   };
 
@@ -177,6 +179,25 @@ export const CouplesProvider: React.FC<{ children: React.ReactNode }> = ({ child
   React.useEffect(()=>{relationshipRef.current=couple;},[couple]);
   React.useEffect(()=>{aliveRef.current=true;return()=>{aliveRef.current=false;fetchRevisionRef.current++;};},[]);
 
+  const clearRelationship = (id?:string) => {
+    if(id&&relationshipRef.current?.id&&relationshipRef.current.id!==id)return;
+    const removed=id||relationshipRef.current?.id;
+    fetchRevisionRef.current++;partnerFetchRevisionRef.current++;
+    if(removed&&user)writeOutbox(user.id,removed,[]);
+    outboxRef.current=[];sendingRef.current.clear();
+    decryptedNotesCacheRef.current.clear();deviceKeysRef.current.clear();clearSharedKeyCache();
+    partnerPublicKeyRef.current=null;cachedPartnerIdRef.current=null;relationshipRef.current=null;
+    setCachedCouple(null);setCachedNotes([]);setCouple(null);setNotes([]);
+    setPartnerProfile(null);setPartnerSettings(null);setPartnerLogs([]);setPartnerPubKey(null);
+    setHasMoreNotes(false);setLoadingOlder(false);setChatConnected(false);setIsLoading(false);
+  };
+  useEffect(()=>{
+    if(!user?.id)return;
+    const account=supabase.channel('couple_account_'+user.id,{config:{private:true}})
+      .on('broadcast',{event:'relationship:deleted'},({payload})=>clearRelationship(payload.couple_id)).subscribe();
+    return()=>{void supabase.removeChannel(account);};
+  },[user?.id]);
+
   // Wait for auth to be fully verified before fetching couple data.
   // Without this gate, the cached user triggers a fetch BEFORE the Supabase
   // client has restored its JWT session, so RLS blocks the query and couple = null.
@@ -228,8 +249,8 @@ export const CouplesProvider: React.FC<{ children: React.ReactNode }> = ({ child
       const {data:rows,error}=await supabase.from('couples').select('*').or('partner_1_id.eq.'+user.id+',partner_2_id.eq.'+user.id).order('created_at',{ascending:false}).abortSignal(AbortSignal.timeout(10000));
       if(error)throw error;if(!current())return;
       const relationship=(rows?.find(c=>c.status==='active')||rows?.find(c=>c.status==='pending')||null) as Couple|null;
+      if(!relationship){clearRelationship();return;}
       relationshipRef.current=relationship;setCouple(relationship);setCachedCouple(relationship);setIsLoading(false);
-      if(!relationship){setNotes([]);setPartnerProfile(null);setPartnerSettings(null);setPartnerLogs([]);return;}
       const other=relationship.partner_1_id===user.id?relationship.partner_2_id:relationship.partner_1_id;
       const [result,key]=await Promise.all([
         supabase.from('shared_notes').select('*').eq('couple_id',relationship.id).order('created_at',{ascending:false}).order('id',{ascending:false}).limit(NOTES_PAGE_SIZE+1),
@@ -362,10 +383,10 @@ export const CouplesProvider: React.FC<{ children: React.ReactNode }> = ({ child
 
     let active=true;
     const receiveNote=async(raw:SharedNote)=>{
-      if(raw.couple_id!==couple.id||![couple.partner_1_id,couple.partner_2_id].includes(raw.sender_id))return;
+      if(relationshipRef.current?.id!==couple.id||raw.couple_id!==couple.id||![couple.partner_1_id,couple.partner_2_id].includes(raw.sender_id))return;
       const cached=decryptedNotesCacheRef.current.get(raw.id);
       const note=cached&&cached._encryptedContent===raw.content?{...raw,content:cached.content,media_url:cached.media_url,reply_content:cached.reply_content}:await decryptNote(raw,raw.sender_id===user.id?raw.recipient_public_key||await fetchPartnerPublicKey():raw.sender_public_key||await fetchPartnerPublicKey(),user.id);
-      if(!active||!aliveRef.current)return;
+      if(!active||!aliveRef.current||relationshipRef.current?.id!==couple.id)return;
       if(isContentDecrypted(note.content)){note._encryptedContent=raw.content;decryptedNotesCacheRef.current.set(note.id,note);}
       if(decryptedNotesCacheRef.current.size>MAX_DECRYPTED_CACHE){const key=decryptedNotesCacheRef.current.keys().next().value;if(key)decryptedNotesCacheRef.current.delete(key);}
       setNotes(previous=>mergeChatNotes(previous,[note],user.id));
@@ -398,17 +419,7 @@ export const CouplesProvider: React.FC<{ children: React.ReactNode }> = ({ child
                 }
 
             }
-            if (payload.eventType === 'DELETE') {
-                import.meta.env.DEV && console.log('[Realtime] Couple deleted — cleaning up keys and state');
-                setCouple(null);
-                setNotes([]);
-                setPartnerProfile(null);
-                setPartnerSettings(null);
-                setPartnerLogs([]);
-                partnerPublicKeyRef.current = null;
-                setPartnerPubKey(null);
-                setIsSyncRequired(false);
-            }
+            if (payload.eventType === 'DELETE') clearRelationship(couple.id);
         }
       )
       .on('broadcast',{event:'note:created'},({payload})=>{void receiveNote(payload as SharedNote);})
@@ -470,6 +481,7 @@ export const CouplesProvider: React.FC<{ children: React.ReactNode }> = ({ child
         .limit(NOTES_PAGE_SIZE + 1) as any);
 
       if (error) throw error;
+      if(relationshipRef.current?.id!==couple.id)return;
       const fetched = (data || []) as SharedNote[];
       setHasMoreNotes(fetched.length > NOTES_PAGE_SIZE);
 
@@ -479,6 +491,7 @@ export const CouplesProvider: React.FC<{ children: React.ReactNode }> = ({ child
           if (cached && cached.content === n.content) return cached;
 
           const decrypted = await decryptNote(n, partnerPubKey, user.id);
+          if(relationshipRef.current?.id!==couple.id)return decrypted;
           decryptedNotesCacheRef.current.set(n.id, decrypted);
           if (decryptedNotesCacheRef.current.size > MAX_DECRYPTED_CACHE) {
             const firstKey = decryptedNotesCacheRef.current.keys().next().value;
@@ -487,6 +500,7 @@ export const CouplesProvider: React.FC<{ children: React.ReactNode }> = ({ child
           return decrypted;
       }));
 
+      if(relationshipRef.current?.id!==couple.id)return;
       setNotes(previous=>mergeChatNotes(previous,decryptedPage,user.id));
     } catch (err) {
       console.error('Error loading older notes:', err);
@@ -497,94 +511,19 @@ export const CouplesProvider: React.FC<{ children: React.ReactNode }> = ({ child
 
 
   const generatePairingCode = async () => {
-    if (!user) throw new Error('Not authenticated');
-
-    // Guard: if we already have ANY couple (active OR pending), block new pairing
-    if (couple) {
-      if (couple.status === 'active') {
-        throw new Error('You are already connected. Disconnect first to create a new pairing.');
-      }
-      // Already have a pending code — just return it
-      if (couple.status === 'pending' && couple.pairing_code && Date.parse(couple.created_at) > Date.now() - 86400000) {
-        return couple.pairing_code;
-      }
-    }
-
-    // Double-check against the DB to prevent race conditions
-    const { data: existing } = await (supabase
-      .from('couples')
-      .select('id, status, pairing_code, created_at') as any)
-      .or(`partner_1_id.eq.${user.id},partner_2_id.eq.${user.id}`)
-      .limit(1)
-      .maybeSingle();
-
-    if (existing) {
-      if (existing.status === 'active') {
-        throw new Error('You are already connected. Disconnect first to create a new pairing.');
-      }
-      if (existing.status === 'pending' && existing.pairing_code && existing.pairing_code.length === 6 && Date.parse(existing.created_at) > Date.now() - 86400000) {
-        // Return the existing pending code instead of creating another
-        return existing.pairing_code;
-      }
-      // Stale pending row OR legacy 4-char code — delete it to allow fresh 6-char generation
-      await (supabase.from('couples').delete().eq('id', existing.id) as any);
-    }
-
-    const arr = new Uint8Array(6);
-    crypto.getRandomValues(arr);
-    const code = Array.from(arr).map(b => (b % 36).toString(36)).join('').substring(0, 6).toUpperCase();
-
-    const { data, error } = await (supabase
-      .from('couples')
-      .insert({
-        partner_1_id: user.id,
-        partner_1_role: user.role === 'partner' ? 'supporter' : 'menstruator',
-        pairing_code: code,
-        status: 'pending'
-      } as any) as any)
-      .select()
-      .single();
-
-    if (error) throw error;
-    setCouple(data as any);
-    return code;
+    if(!user)throw new Error('Sign in first.');
+    const {data,error}=await (supabase.rpc as any)('generate_pairing_code');
+    if(error)throw error;
+    relationshipRef.current=data;setCouple(data);setCachedCouple(data);
+    return data.pairing_code as string;
   };
-
-  const joinCouple = async (code: string) => {
-  if (!user) throw new Error('Not authenticated');
-
-  // Guard: block joining if this user ALREADY has an ACTIVE pairing.
-  // If it's only 'pending' (e.g. they generated a code but now want to join instead),
-  // allow them to proceed but cleanup the existing pending record first.
-  if (couple) {
-    if (couple.status === 'active') {
-      throw new Error('You are already connected to a partner. Disconnect first to join another.');
-    }
-    // Delete our own pending record if we're now joining someone else's code
-    await (supabase.from('couples' as any).delete() as any).eq('id', couple.id as any);
-  }
-
-  // Double-check the DB
-  const { data: existingCouple } = await (supabase
-    .from('couples')
-    .select('id, status') as any)
-    .or(`partner_1_id.eq.${user.id},partner_2_id.eq.${user.id}`)
-    .not('status', 'eq', 'pending')
-    .limit(1)
-    .maybeSingle();
-
-  if (existingCouple) {
-    throw new Error('You are already connected to someone. Disconnect first.');
-  }
-
-  // The pairing RPC validates membership, account roles and code expiry atomically.
-  const rpcCall: any = supabase.rpc.bind(supabase);
-  const { data, error } = await rpcCall('join_couple', { code_input: code });
-
-  if (error) throw error;
-
-  setCouple(data as any);
-};
+  const joinCouple = async (code:string) => {
+    if(!user)throw new Error('Sign in first.');
+    const {data,error}=await supabase.rpc('join_couple',{code_input:code.trim().toUpperCase()});
+    if(error)throw error;
+    relationshipRef.current=data as unknown as Couple;setCouple(data as unknown as Couple);setCachedCouple(data as unknown as Couple);
+    await fetchCoupleData();
+  };
 
   const uploadMedia = async (file: File): Promise<string> => {
     if (!user || !couple) throw new Error('Not authenticated');
@@ -596,13 +535,16 @@ export const CouplesProvider: React.FC<{ children: React.ReactNode }> = ({ child
     const partnerKey = await fetchPartnerPublicKey();
     if (!partnerKey) throw new Error('Your partner must set up encryption before you can send attachments.');
     const encrypted = await encryptBlob(await file.arrayBuffer(), partnerKey);
+    if(relationshipRef.current?.id!==couple.id)throw new Error('This connection has ended.');
     const path = couple.id + '/' + crypto.randomUUID() + '.enc';
     const { error } = await supabase.storage.from('chat-media').upload(path, encrypted, { contentType: 'application/octet-stream' });
     if (error) throw error;
+    if(relationshipRef.current?.id!==couple.id)throw new Error('This connection has ended.');
     return 'chat-media:' + path;
   };
 
   const fetchPartnerPublicKey = async (manualUserId?: string, targetDeviceId?: string, forceRefresh = false): Promise<string | null> => {
+    const scope=relationshipRef.current?.id;
     const id = manualUserId || partnerId;
     if (!id) return null;
 
@@ -619,18 +561,20 @@ export const CouplesProvider: React.FC<{ children: React.ReactNode }> = ({ child
 
     const {data,error}=await supabase.rpc('get_chat_public_key',{p_user_id:id});
     if(error)throw error;
+    if(scope!==relationshipRef.current?.id)return null;
     if(data){partnerPublicKeyRef.current=data;cachedPartnerIdRef.current=id;setPartnerPubKey(data);}
     return data;
   };
 
   const persistChat=async(entry:QueuedChat)=>{
-    if(!user||sendingRef.current.has(entry.params.p_id))return;
+    if(!user||relationshipRef.current?.id!==entry.params.p_couple||sendingRef.current.has(entry.params.p_id))return;
     const id=entry.params.p_id;sendingRef.current.add(id);
     try{
       const {data,error}=await supabase.rpc('send_chat_note',entry.params).abortSignal(AbortSignal.timeout(12000));
       if(error)throw error;
-      if(!aliveRef.current)return;
+      if(!aliveRef.current||relationshipRef.current?.id!==entry.params.p_couple)return;
       const note=await decryptNote(data as unknown as SharedNote,entry.params.p_recipient_key,user.id);
+      if(relationshipRef.current?.id!==entry.params.p_couple)return;
       setNotes(previous=>mergeChatNotes(previous,[note],user.id));
       outboxRef.current=outboxRef.current.filter(item=>item.params.p_id!==id);
       writeOutbox(user.id,entry.params.p_couple,outboxRef.current);
@@ -655,6 +599,7 @@ export const CouplesProvider: React.FC<{ children: React.ReactNode }> = ({ child
     const privateKey=getCachedPrivateKey();if(!privateKey)throw new Error('Unlock your history first.');
     const senderKey=derivePublicKeyFromPrivate(privateKey);
     const [cipher,media]=await Promise.all([encryptMessage(content,partnerKey),mediaUrl?encryptMessage(mediaUrl,partnerKey):Promise.resolve(null)]);
+    if(relationshipRef.current?.id!==couple.id)throw new Error('This connection has ended.');
     const entry:QueuedChat={createdAt,params:{p_id:id,p_couple:couple.id,p_content:cipher,p_sender_key:senderKey,p_recipient_key:partnerKey,p_type:type,p_media:media,p_reply:replyToId||null,p_device:deviceId}};
     const queued=[...outboxRef.current,entry];writeOutbox(user.id,couple.id,queued);outboxRef.current=queued;
     setNotes(previous=>[...previous,{id,couple_id:couple.id,sender_id:user.id,content,type,media_url:mediaUrl,reply_to_id:replyToId||null,reply_content:null,reactions:null,starred_by:null,pinned_by:null,is_forwarded:false,deleted_by:null,status:'sent',localStatus:'sending',created_at:createdAt}]);
@@ -973,36 +918,12 @@ export const CouplesProvider: React.FC<{ children: React.ReactNode }> = ({ child
   };
 
   const disconnectCouple = async () => {
-    if (!user || !couple) throw new Error('Not authenticated');
-
-    try {
-      import.meta.env.DEV && console.log('[E2EE] Wiping relationship data...');
-      const partnerId = couple.partner_1_id === user.id ? couple.partner_2_id : couple.partner_1_id;
-
-      // 1. Delete shared notes
-      await (supabase
-        .from('shared_notes' as any)
-        .delete() as any)
-        .eq('couple_id', couple.id as any);
-
-      // 2. Delete the couple
-      const { error } = await (supabase.from('couples' as any) as any).delete().eq('id', couple.id as any);
-      if (error) throw error;
-
-      // 5. Reset local state
-      partnerPublicKeyRef.current = null;
-      setPartnerPubKey(null);
-      setCouple(null);
-      setNotes([]);
-      setPartnerProfile(null);
-      setPartnerSettings(null);
-      setPartnerLogs([]);
-      setIsSyncRequired(false);
-      setIsHistorySynced(true);
-    } catch (err) {
-      console.error('Disconnect failed:', err);
-      throw err;
-    }
+    const id=relationshipRef.current?.id;
+    if(!user||!id)throw new Error('No connection to unlink.');
+    const {data,error}=await supabase.functions.invoke('couple-action',{body:{action:'unlink',coupleId:id}});
+    if(error||!data?.unlinked)throw new Error(data?.error||'Unable to unlink. Please retry.');
+    clearRelationship(id);
+    return {mediaDeleted:data.mediaDeleted===true};
   };
 
   const fetchPartnerData = React.useCallback(() => {
