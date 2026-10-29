@@ -9,7 +9,7 @@ export const callFilters = {
 export type CallFilter = keyof typeof callFilters;
 export type CameraEffect = { filter: CallFilter; blur: boolean };
 export const naturalEffect: CameraEffect = { filter: 'original', blur: false };
-export type ProcessedCamera = { track: MediaStreamTrack; dispose: () => void };
+export type ProcessedCamera = { track: MediaStreamTrack; resume: () => Promise<void>; dispose: () => void };
 
 export function cameraEffectsSupported() {
   return typeof HTMLCanvasElement !== 'undefined' &&

@@ -2,6 +2,8 @@ import {applyCallQuality,CallStatsSampler,nextCallQuality,recommendedCallQuality
 import { encryptMessage, decryptMessage } from "../lib/encryption";
 import { loadCallIce, type CallIce } from "../lib/callIce";
 import { CallVideo } from '../lib/callVideo';
+import { Capacitor } from '@capacitor/core';
+import { App } from '@capacitor/app';
 import { naturalEffect, type CameraEffect } from '../lib/callEffects';
 import { appendCallReaction, isCallReaction, type CallReaction, type CallReactionName } from '../lib/callReactions';
 import React, {
@@ -37,6 +39,9 @@ interface CallContextType {
   cameraEffect: CameraEffect;
   isSharingScreen: boolean;
   remoteSharingScreen: boolean;
+  capturePaused: boolean;
+  remoteVideoPaused: boolean;
+  remoteVideoOff: boolean;
   isFrontCamera: boolean;
   mediaBusy: boolean;
   reactions: CallReaction[];
@@ -58,6 +63,8 @@ interface Signal {
   reaction?: string;
   reactionId?: string;
   sharingScreen?: boolean;
+  videoPaused?: boolean;
+  videoOff?: boolean;
 }
 const CallContext = createContext<CallContextType | undefined>(undefined);
 
@@ -105,6 +112,9 @@ export const CallProvider: React.FC<{ children: React.ReactNode }> = ({
   const [isSharingScreen, setIsSharingScreen] = useState(false);
   const [remoteSharingScreen, setRemoteSharingScreen] = useState(false);
   const sharingScreenRef = useRef(false);
+  const [capturePaused, setCapturePaused] = useState(false), capturePausedRef = useRef(false);
+  const [remoteVideoPaused, setRemoteVideoPaused] = useState(false);
+  const [remoteVideoOff, setRemoteVideoOff] = useState(false), videoOffRef = useRef(false);
   const [isFrontCamera, setIsFrontCamera] = useState(true);
   const [mediaBusy, setMediaBusy] = useState(false);
   const changingMedia = useRef(false);
@@ -152,6 +162,8 @@ export const CallProvider: React.FC<{ children: React.ReactNode }> = ({
     streamRef.current?.getTracks().forEach((track) => { if (!controller || track.kind !== 'video') track.stop(); });
     updateCameraEffect(naturalEffect); setIsSharingScreen(false); setIsFrontCamera(true);
     sharingScreenRef.current = false; setRemoteSharingScreen(false);
+    capturePausedRef.current = false; setCapturePaused(false); setRemoteVideoPaused(false);
+    videoOffRef.current = false; setRemoteVideoOff(false);
     setMediaBusy(false); changingMedia.current = false; setReactions([]);
     lastReaction.current = lastRemoteReaction.current = 0;
     streamRef.current = null;
@@ -325,6 +337,7 @@ export const CallProvider: React.FC<{ children: React.ReactNode }> = ({
       if (pc.connectionState === "connected") {
         clearTimeout(timeout.current);
         updateStatus("connected");
+        void signal('call:media', { sharingScreen: sharingScreenRef.current, videoPaused: capturePausedRef.current, videoOff: videoOffRef.current }).catch(() => {});
         clearInterval(statsTimer.current);
         const sampler=new CallStatsSampler();
         statsTimer.current = setInterval(() => {
@@ -461,8 +474,10 @@ export const CallProvider: React.FC<{ children: React.ReactNode }> = ({
         "broadcast",
         { event: "call:media" },
         onSignal(({ payload }: { payload: Signal }) => {
-          if (valid(payload) && payload.callId === callId.current && status.current === 'connected' && typeof payload.sharingScreen === 'boolean')
-            setRemoteSharingScreen(payload.sharingScreen);
+          if (!valid(payload) || payload.callId !== callId.current || status.current !== 'connected') return;
+          if (typeof payload.sharingScreen === 'boolean') setRemoteSharingScreen(payload.sharingScreen);
+          if (typeof payload.videoPaused === 'boolean') setRemoteVideoPaused(payload.videoPaused);
+          if (typeof payload.videoOff === 'boolean') setRemoteVideoOff(payload.videoOff);
         }),
       )
       .on(
@@ -533,10 +548,27 @@ export const CallProvider: React.FC<{ children: React.ReactNode }> = ({
         if (ready.current && identityReady && !isSyncRequired)
           void getIce().catch(() => {});
         if (ready.current && status.current === 'connected')
-          void signal('call:media', { sharingScreen: sharingScreenRef.current }).catch(() => {});
+          void signal('call:media', { sharingScreen: sharingScreenRef.current, videoPaused: capturePausedRef.current, videoOff: videoOffRef.current }).catch(() => {});
       });
+    const foreground = (isActive: boolean) => {
+      if (status.current === 'idle') return;
+      const revision = generation.current;
+      void videoController.current?.setBackgrounded(!isActive).then(() => {
+        if (revision !== generation.current || !isActive) return;
+        void signal('call:media', { sharingScreen: sharingScreenRef.current, videoPaused: capturePausedRef.current, videoOff: videoOffRef.current }).catch(() => {});
+      }).catch(error => { if (revision === generation.current) setCallError(error instanceof Error ? error.message : 'Could not resume video.'); });
+      if (isActive && pcRef.current?.connectionState === 'disconnected') recoverConnection();
+    };
+    const visibility = () => foreground(!document.hidden);
+    document.addEventListener('visibilitychange', visibility);
+    let removeAppListener: (() => void) | undefined, disposed = false;
+    if (Capacitor.isNativePlatform()) void App.addListener('appStateChange', ({ isActive }) => foreground(isActive)).then(listener => {
+      if (disposed) void listener.remove(); else removeAppListener = () => { void listener.remove(); };
+    }).catch(() => {});
     window.addEventListener("online", recoverConnection);
     return () => {
+      disposed = true; removeAppListener?.();
+      document.removeEventListener('visibilitychange', visibility);
       window.removeEventListener("online", recoverConnection);
       active = false;
       ready.current = false;
@@ -581,9 +613,13 @@ export const CallProvider: React.FC<{ children: React.ReactNode }> = ({
           setIsSharingScreen(sharing); setIsFrontCamera(front);
           if (sharingScreenRef.current !== sharing) {
             sharingScreenRef.current = sharing;
-            void signal('call:media', { sharingScreen: sharing }).catch(() => {});
+            void signal('call:media', { sharingScreen: sharing, videoPaused: capturePausedRef.current, videoOff: videoOffRef.current }).catch(() => {});
           }
-        }, error => { if (revision === generation.current) setCallError(error instanceof Error ? error.message : 'Could not change video.'); });
+        }, error => { if (revision === generation.current) setCallError(error instanceof Error ? error.message : 'Could not change video.'); }, paused => {
+          if (revision !== generation.current) return;
+          capturePausedRef.current = paused; setCapturePaused(paused);
+          void signal('call:media', { sharingScreen: sharingScreenRef.current, videoPaused: paused, videoOff: videoOffRef.current }).catch(() => {});
+        });
     }
     return stream;
   };
@@ -674,7 +710,9 @@ export const CallProvider: React.FC<{ children: React.ReactNode }> = ({
   };
   const toggleVideo = () => {
     if (videoController.current) {
-      setIsVideoOff(videoController.current.toggleCamera());
+      const off = videoController.current.toggleCamera();
+      videoOffRef.current = off; setIsVideoOff(off);
+      void signal('call:media', { sharingScreen: sharingScreenRef.current, videoPaused: capturePausedRef.current, videoOff: off }).catch(() => {});
       return;
     }
     const tracks = streamRef.current?.getVideoTracks() || [];
@@ -732,6 +770,7 @@ export const CallProvider: React.FC<{ children: React.ReactNode }> = ({
         toggleVideo,
         switchCamera, toggleScreenShare, setCameraEffect, cameraEffect,
         isSharingScreen, remoteSharingScreen, isFrontCamera, mediaBusy, reactions, sendReaction,
+        capturePaused, remoteVideoPaused, remoteVideoOff,
         isMuted,
         isVideoOff,
       }}

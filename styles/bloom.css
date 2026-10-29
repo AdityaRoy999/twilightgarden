@@ -53,6 +53,16 @@
   --cycle-lavender: #dcd8ee;
   --ease-bloom: cubic-bezier(.22, 1, .36, 1);
   --ease-press: cubic-bezier(.2, .8, .2, 1);
+  --call-base: #fffafd;
+  --call-panel: #ffffff;
+  --call-button: #f7f2f6;
+  --call-ink: #231a2d;
+  --call-muted: #686174;
+  --call-accent: #aa315e;
+  --call-selection: #fbe5ee;
+  --call-person-wash: radial-gradient(ellipse at 50% 30%,#f9e3ee,transparent 70%);
+  --call-heading-wash: linear-gradient(#fffffff5,#ffffffcb,transparent);
+  --call-footer-wash: linear-gradient(transparent,#ffffffb8,#fffffff5);
 }
 :root.dark {
   color-scheme: dark;
