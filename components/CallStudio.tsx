@@ -128,7 +128,7 @@ export function CallStudioView({ call }: { call: ReturnType<typeof useCall> }) {
       else if (document.pictureInPictureEnabled && video.requestPictureInPicture) await video.requestPictureInPicture();
       else video.webkitSetPresentationMode?.('picture-in-picture');
       setMinimized(true); setPanel(null);
-    } catch { setNotice('This device cannot open picture-in-picture for this call. You can still minimize inside the app.'); }
+    } catch { setPipAvailable(false); setNotice('This device cannot open picture-in-picture for this call. You can still minimize inside the app.'); }
   };
   const toggleMinimized = async () => {
     if (document.fullscreenElement) await document.exitFullscreen().catch(() => {});

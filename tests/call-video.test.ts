@@ -12,6 +12,12 @@ function fixture() {
 }
 afterEach(() => vi.restoreAllMocks());
 describe('video source lifecycle', () => {
+  it('does not interrupt the current camera on a single-camera device', async () => {
+    const f = fixture(), media = vi.fn();
+    Object.defineProperty(navigator, 'mediaDevices', { configurable: true, value: { getUserMedia: media, enumerateDevices: vi.fn().mockResolvedValue([{ kind: 'videoinput', deviceId: 'only-camera' }]) } });
+    await expect(f.controller.switchCamera()).rejects.toThrow('No second camera');
+    expect(f.camera.stop).not.toHaveBeenCalled(); expect(media).not.toHaveBeenCalled(); f.controller.dispose();
+  });
   it('stops screen permission granted after hangup and never replaces the sender', async () => {
     const grant = deferred<MediaStream>(), screen = track(), f = fixture();
     Object.defineProperty(navigator, 'mediaDevices', { configurable: true, value: { getDisplayMedia: vi.fn(() => grant.promise) } });

@@ -43,17 +43,29 @@ export class CallVideo {
   }); }
   switchCamera() { return this.queue(async () => {
     if (this.screen) throw new Error('Stop screen sharing before switching cameras.');
+    const settings = this.camera.getSettings?.() || {};
+    const devices = navigator.mediaDevices.enumerateDevices
+      ? (await navigator.mediaDevices.enumerateDevices()).filter(device => device.kind === 'videoinput') : [];
+    const alternate = devices.find(device => device.deviceId !== settings.deviceId);
+    if (devices.length === 1 && (!settings.deviceId || devices[0].deviceId === settings.deviceId))
+      throw new Error('No second camera was found. Your current camera stays on.');
+    if (this.stopped) return;
     // iOS commonly cannot open both physical cameras simultaneously. Stop the
     // current camera, then restore its facing mode if acquiring the other fails.
     const enabled = this.camera.enabled, wasFront = this.front;
     this.processed?.dispose(); this.processed = undefined; this.camera.stop();
-    const acquire = (front: boolean) => navigator.mediaDevices.getUserMedia({ audio: false,
-      video: { facingMode: { ideal: front ? 'user' : 'environment' }, width: { ideal: 1280 }, height: { ideal: 720 }, frameRate: { ideal: 24, max: 30 } } });
+    const acquire = (front: boolean, deviceId?: string, exact = true) => navigator.mediaDevices.getUserMedia({ audio: false,
+      video: { ...(deviceId ? { deviceId: { exact: deviceId } } : { facingMode: exact ? { exact: front ? 'user' : 'environment' } : { ideal: front ? 'user' : 'environment' } }), width: { ideal: 1280 }, height: { ideal: 720 }, frameRate: { ideal: 24, max: 30 } } });
     let stream: MediaStream;
-    try { stream = await acquire(!wasFront); this.front = !wasFront; }
-    catch (error) { stream = await acquire(wasFront); this.report(error); }
+    try {
+      try { stream = await acquire(!wasFront); }
+      catch (error) { if (!alternate?.deviceId) throw error; stream = await acquire(!wasFront, alternate.deviceId); }
+      this.front = !wasFront;
+    } catch (error) { stream = await acquire(wasFront, settings.deviceId, false); this.report(error); }
     if (this.stopped) { stream.getTracks().forEach(track => track.stop()); return; }
     this.camera = stream.getVideoTracks()[0]; this.camera.enabled = enabled;
+    const facing = this.camera.getSettings?.().facingMode;
+    if (facing) this.front = facing === 'user';
     this.effect = naturalEffect;
     await this.replace(this.camera, false);
   }); }
