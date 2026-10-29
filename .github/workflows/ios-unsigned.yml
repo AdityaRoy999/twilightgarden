@@ -26,6 +26,7 @@ jobs:
         env:
           VITE_SUPABASE_URL: ${{ vars.VITE_SUPABASE_URL }}
           VITE_SUPABASE_ANON_KEY: ${{ vars.VITE_SUPABASE_ANON_KEY }}
+          VITE_GIPHY_API_KEY: ${{ vars.VITE_GIPHY_API_KEY }}
       - name: Sync native dependencies
         run: npx cap sync ios
       - name: Build device app without Apple signing credentials

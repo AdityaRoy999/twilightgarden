@@ -11,6 +11,7 @@ import './styles/gentle.css';
 import './styles/history.css';
 import './styles/finish.css';
 import './styles/games.css';
+import './styles/calling.css';
 import React from 'react';
 import ReactDOM from 'react-dom/client';
 import App from './App';

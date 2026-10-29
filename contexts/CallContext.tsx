@@ -1,6 +1,9 @@
 import {applyCallQuality,CallStatsSampler,nextCallQuality,recommendedCallQuality,preferSpeechCodec,type CallQuality,type CallNetwork} from '../lib/callQuality';
 import { encryptMessage, decryptMessage } from "../lib/encryption";
 import { loadCallIce, type CallIce } from "../lib/callIce";
+import { CallVideo } from '../lib/callVideo';
+import { naturalEffect, type CameraEffect } from '../lib/callEffects';
+import { appendCallReaction, isCallReaction, type CallReaction, type CallReactionName } from '../lib/callReactions';
 import React, {
   createContext,
   useContext,
@@ -28,6 +31,16 @@ interface CallContextType {
   endCall: () => void;
   toggleMute: () => void;
   toggleVideo: () => void;
+  switchCamera: () => Promise<void>;
+  toggleScreenShare: () => Promise<void>;
+  setCameraEffect: (effect: CameraEffect) => Promise<void>;
+  cameraEffect: CameraEffect;
+  isSharingScreen: boolean;
+  remoteSharingScreen: boolean;
+  isFrontCamera: boolean;
+  mediaBusy: boolean;
+  reactions: CallReaction[];
+  sendReaction: (name: CallReactionName) => Promise<void>;
   isMuted: boolean;
   isVideoOff: boolean;
   callError: string | null;
@@ -42,6 +55,9 @@ interface Signal {
   answer?: RTCSessionDescriptionInit;
   candidate?: RTCIceCandidateInit;
   isVideo?: boolean;
+  reaction?: string;
+  reactionId?: string;
+  sharingScreen?: boolean;
 }
 const CallContext = createContext<CallContextType | undefined>(undefined);
 
@@ -84,6 +100,16 @@ export const CallProvider: React.FC<{ children: React.ReactNode }> = ({
   const [isVideoCall, setIsVideoCall] = useState(true);
   const [isMuted, setIsMuted] = useState(false);
   const [isVideoOff, setIsVideoOff] = useState(false);
+  const videoController = useRef<CallVideo | null>(null);
+  const [cameraEffect, updateCameraEffect] = useState<CameraEffect>(naturalEffect);
+  const [isSharingScreen, setIsSharingScreen] = useState(false);
+  const [remoteSharingScreen, setRemoteSharingScreen] = useState(false);
+  const sharingScreenRef = useRef(false);
+  const [isFrontCamera, setIsFrontCamera] = useState(true);
+  const [mediaBusy, setMediaBusy] = useState(false);
+  const changingMedia = useRef(false);
+  const [reactions, setReactions] = useState<CallReaction[]>([]);
+  const lastReaction = useRef(0), lastRemoteReaction = useRef(0);
   const status = useRef<CallStatus>("idle");
   const streamRef = useRef<MediaStream | null>(null);
   const pcRef = useRef<RTCPeerConnection | null>(null);
@@ -121,7 +147,13 @@ export const CallProvider: React.FC<{ children: React.ReactNode }> = ({
       pc.onconnectionstatechange = null;
       pc.close();
     }
-    streamRef.current?.getTracks().forEach((track) => track.stop());
+    const controller = videoController.current;
+    controller?.dispose(); videoController.current = null;
+    streamRef.current?.getTracks().forEach((track) => { if (!controller || track.kind !== 'video') track.stop(); });
+    updateCameraEffect(naturalEffect); setIsSharingScreen(false); setIsFrontCamera(true);
+    sharingScreenRef.current = false; setRemoteSharingScreen(false);
+    setMediaBusy(false); changingMedia.current = false; setReactions([]);
+    lastReaction.current = lastRemoteReaction.current = 0;
     streamRef.current = null;
     callId.current = null;
     offerRef.current = null;
@@ -201,7 +233,7 @@ export const CallProvider: React.FC<{ children: React.ReactNode }> = ({
       pc.restartIce();
       const offer = await pc.createOffer({ iceRestart: true });
       await pc.setLocalDescription(offer);
-      await signal("call:renegotiate", { offer });
+      await signal("call:renegotiate", { offer, sharingScreen: sharingScreenRef.current });
       await flushLocalCandidates();
     } catch {
       stopCall();
@@ -397,6 +429,7 @@ export const CallProvider: React.FC<{ children: React.ReactNode }> = ({
           try {
             const pc = pcRef.current;
             await pc.setRemoteDescription(payload.answer);
+            if (typeof payload.sharingScreen === 'boolean') setRemoteSharingScreen(payload.sharingScreen);
             await flushCandidates(pc);
             if (pcRef.current === pc) connecting();
           } catch {
@@ -422,6 +455,26 @@ export const CallProvider: React.FC<{ children: React.ReactNode }> = ({
           } catch {
             /* A superseded ICE candidate may arrive after hangup. */
           }
+        }),
+      )
+      .on(
+        "broadcast",
+        { event: "call:media" },
+        onSignal(({ payload }: { payload: Signal }) => {
+          if (valid(payload) && payload.callId === callId.current && status.current === 'connected' && typeof payload.sharingScreen === 'boolean')
+            setRemoteSharingScreen(payload.sharingScreen);
+        }),
+      )
+      .on(
+        "broadcast",
+        { event: "call:reaction" },
+        onSignal(({ payload }: { payload: Signal }) => {
+          if (!valid(payload) || payload.callId !== callId.current || status.current !== 'connected' ||
+              !isCallReaction(payload.reaction) || typeof payload.reactionId !== 'string' || payload.reactionId.length > 64) return;
+          const now = Date.now();
+          if (now - lastRemoteReaction.current < 400) return;
+          lastRemoteReaction.current = now;
+          setReactions(previous => appendCallReaction(previous, { id: payload.reactionId!, name: payload.reaction as CallReactionName, mine: false, at: now }));
         }),
       )
       .on(
@@ -463,11 +516,12 @@ export const CallProvider: React.FC<{ children: React.ReactNode }> = ({
             descriptionSent.current = false;
             localCandidates.current = [];
             await pc.setRemoteDescription(payload.offer);
+            if (typeof payload.sharingScreen === 'boolean') setRemoteSharingScreen(payload.sharingScreen);
             await flushCandidates(pc);
             preferSpeechCodec(pc);
       const answer = await pc.createAnswer();
             await pc.setLocalDescription(answer);
-            await signal("call:answer", { answer });
+            await signal("call:answer", { answer, sharingScreen: sharingScreenRef.current });
             await flushLocalCandidates();
           } catch {
             stopCall();
@@ -478,6 +532,8 @@ export const CallProvider: React.FC<{ children: React.ReactNode }> = ({
         ready.current = state === "SUBSCRIBED";
         if (ready.current && identityReady && !isSyncRequired)
           void getIce().catch(() => {});
+        if (ready.current && status.current === 'connected')
+          void signal('call:media', { sharingScreen: sharingScreenRef.current }).catch(() => {});
       });
     window.addEventListener("online", recoverConnection);
     return () => {
@@ -516,6 +572,19 @@ export const CallProvider: React.FC<{ children: React.ReactNode }> = ({
     for(const track of stream.getTracks()){try{if(track.kind==='video')track.contentHint='motion';if(track.kind==='audio')track.contentHint='speech';}catch{}}
     streamRef.current = stream;
     setLocalStream(stream);
+    if (video && stream.getVideoTracks()[0]) {
+      videoController.current = new CallVideo(stream.getVideoTracks()[0],
+        () => pcRef.current?.getSenders().find(sender => sender.track?.kind === 'video'),
+        (track, sharing, front) => {
+          if (revision !== generation.current) return;
+          setLocalStream(new MediaStream([...stream.getAudioTracks(), track]));
+          setIsSharingScreen(sharing); setIsFrontCamera(front);
+          if (sharingScreenRef.current !== sharing) {
+            sharingScreenRef.current = sharing;
+            void signal('call:media', { sharingScreen: sharing }).catch(() => {});
+          }
+        }, error => { if (revision === generation.current) setCallError(error instanceof Error ? error.message : 'Could not change video.'); });
+    }
     return stream;
   };
   const reportError = (error: unknown) => {
@@ -588,7 +657,7 @@ export const CallProvider: React.FC<{ children: React.ReactNode }> = ({
       await pc.setLocalDescription(answer);
       await applyCallQuality(pc,'clear');
       if (revision !== generation.current) return;
-      await signal("call:answer", { answer });
+      await signal("call:answer", { answer, sharingScreen: sharingScreenRef.current });
       await flushLocalCandidates();
       connecting();
     } catch (error) {
@@ -604,12 +673,43 @@ export const CallProvider: React.FC<{ children: React.ReactNode }> = ({
     setIsMuted(muted);
   };
   const toggleVideo = () => {
+    if (videoController.current) {
+      setIsVideoOff(videoController.current.toggleCamera());
+      return;
+    }
     const tracks = streamRef.current?.getVideoTracks() || [];
     const off = tracks[0]?.enabled ?? false;
     tracks.forEach((track) => {
       track.enabled = !off;
     });
     setIsVideoOff(off);
+  };
+  const changeVideo = async (operation: (controller: CallVideo) => Promise<void>) => {
+    const controller = videoController.current, revision = generation.current;
+    if (!controller || changingMedia.current || status.current !== 'connected') return;
+    changingMedia.current = true; setMediaBusy(true); setCallError(null);
+    try { await operation(controller); }
+    catch (error) {
+      if (revision === generation.current && !(error instanceof DOMException && error.name === 'NotAllowedError'))
+        setCallError(error instanceof Error ? error.message : 'Could not change video. Your call is still connected.');
+    } finally {
+      if (revision === generation.current) { changingMedia.current = false; setMediaBusy(false); }
+    }
+  };
+  const switchCamera = () => changeVideo(async controller => { await controller.switchCamera(); if (videoController.current === controller) updateCameraEffect(naturalEffect); });
+  const toggleScreenShare = () => changeVideo(controller => isSharingScreen ? controller.stopScreen() : controller.startScreen());
+  const setCameraEffect = (effect: CameraEffect) => changeVideo(async controller => {
+    await controller.setEffect(effect); if (videoController.current === controller) updateCameraEffect(effect);
+  });
+  const sendReaction = async (name: CallReactionName) => {
+    const now = Date.now();
+    if (status.current !== 'connected' || !isCallReaction(name) || now - lastReaction.current < 600) return;
+    lastReaction.current = now;
+    const revision = generation.current;
+    const id = crypto.randomUUID();
+    setReactions(previous => appendCallReaction(previous, { id, name, mine: true, at: now }));
+    try { await signal('call:reaction', { reaction: name, reactionId: id }); }
+    catch { if (revision === generation.current) setCallError('Reaction could not reach your partner.'); }
   };
   return (
     <CallContext.Provider
@@ -630,6 +730,8 @@ export const CallProvider: React.FC<{ children: React.ReactNode }> = ({
         endCall: stopCall,
         toggleMute,
         toggleVideo,
+        switchCamera, toggleScreenShare, setCameraEffect, cameraEffect,
+        isSharingScreen, remoteSharingScreen, isFrontCamera, mediaBusy, reactions, sendReaction,
         isMuted,
         isVideoOff,
       }}

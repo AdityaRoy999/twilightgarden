@@ -38,6 +38,7 @@
     "@capacitor/share": "^8.0.1",
     "@capacitor/splash-screen": "^8.0.1",
     "@capawesome-team/capacitor-file-opener": "^8.0.1",
+    "@mediapipe/tasks-vision": "1.2.0",
     "@remotion/player": "4.0.539",
     "@supabase/supabase-js": "^2.98.0",
     "@tauri-apps/plugin-deep-link": "^2.4.7",

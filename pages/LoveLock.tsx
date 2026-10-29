@@ -18,7 +18,8 @@ import { decryptBlob } from '../lib/encryption';
 import { AudioPlayer } from '../components/ui/AudioPlayer';
 import { AudioRecorder } from '../components/AudioRecorder';
 import { SecureImage, SecureAudio } from '../components/SecureMedia';
-import { generateLoveNote, AI_MOODS, AIMood } from '../lib/ai';
+import { GifPicker } from '../components/GifPicker';
+import { LoveNoteSheet } from '../components/LoveNoteSheet';
 import { Shield, Phone, Video, EllipsisVertical } from '../components/ui/Icons';
 import { useCall } from '../contexts/CallContext';
 import { SecurityVerification } from '../components/SecurityVerification';
@@ -90,64 +91,23 @@ const LoveLock: React.FC = () => {
     // Long press timer for mobile
     const longPressTimerRef = useRef<NodeJS.Timeout | null>(null);
 
-    // Auto-resize textarea (WhatsApp-style: grows upward)
-    const autoResizeTextarea = () => {
-        const el = textareaRef.current;
-        if (!el) return;
-        el.style.height = 'auto'; // Reset to auto to measure scrollHeight
-        el.style.height = Math.min(el.scrollHeight, 128) + 'px'; // Cap at max-h-32 (128px)
-    };
-
-    // AI Love Note state
+    const resizeFrame = useRef<number | null>(null);
+    useLayoutEffect(() => {
+        resizeFrame.current = requestAnimationFrame(() => {
+            const el = textareaRef.current;
+            if (!el) return;
+            el.style.height = 'auto';
+            el.style.height = Math.min(el.scrollHeight, 128) + 'px';
+        });
+        return () => { if (resizeFrame.current !== null) cancelAnimationFrame(resizeFrame.current); };
+    }, [noteContent, showRecorder]);
     const [showAISheet, setShowAISheet] = useState(false);
-    const [aiMood, setAIMood] = useState<AIMood | null>(null);
-    const [aiCustomPrompt, setAICustomPrompt] = useState('');
-    const [showSecurity, setShowSecurity] = useState(false);
-    const [aiGenerating, setAIGenerating] = useState(false);
-
-    // GIF Picker state
     const [showGifPicker, setShowGifPicker] = useState(false);
-    const [gifSearch, setGifSearch] = useState('');
-    const [gifResults, setGifResults] = useState<any[]>([]);
-    const [gifLoading, setGifLoading] = useState(false);
-    const gifSearchTimeout = useRef<NodeJS.Timeout | null>(null);
-
-    // GIPHY API — key must be set via VITE_GIPHY_API_KEY env variable
-    const GIPHY_API_KEY = import.meta.env.VITE_GIPHY_API_KEY || '';
-
-    const searchGifs = async (query: string) => {
-        if (gifLoading || !GIPHY_API_KEY) return;
-        setGifLoading(true);
-        try {
-            const endpoint = query.trim()
-                ? `https://api.giphy.com/v1/gifs/search?api_key=${GIPHY_API_KEY}&q=${encodeURIComponent(query)}&limit=24&rating=pg-13`
-                : `https://api.giphy.com/v1/gifs/trending?api_key=${GIPHY_API_KEY}&limit=24&rating=pg-13`;
-            const res = await fetch(endpoint);
-            const data = await res.json();
-            setGifResults(data.data || []);
-        } catch (e) {
-            console.error('GIF search failed', e);
-        } finally {
-            setGifLoading(false);
-        }
-    };
-
-    // Load trending GIFs when picker opens
-    useEffect(() => {
-        if (showGifPicker && gifResults.length === 0) {
-            searchGifs('');
-        }
-    }, [showGifPicker]);
-
-    const handleGifSearchChange = (val: string) => {
-        setGifSearch(val);
-        if (gifSearchTimeout.current) clearTimeout(gifSearchTimeout.current);
-        gifSearchTimeout.current = setTimeout(() => searchGifs(val), 400);
-    };
+    const [showAttachments, setShowAttachments] = useState(false);
+    const [showSecurity, setShowSecurity] = useState(false);
 
     const handleSendGif = async (gifUrl: string) => {
         setShowGifPicker(false);
-        setGifSearch('');
         setIsSubmitting(true);
         try {
         // DB constraint updated to support 'gif'
@@ -266,7 +226,6 @@ const LoveLock: React.FC = () => {
         setIsChatOpen(true);
         return () => {
             setIsChatOpen(false);
-            if (gifSearchTimeout.current) clearTimeout(gifSearchTimeout.current);
             if (longPressTimerRef.current) clearTimeout(longPressTimerRef.current);
         };
     }, []);
@@ -446,27 +405,6 @@ const LoveLock: React.FC = () => {
             showToast('Error', 'Failed to upload image', 'error');
         } finally {
             setIsSubmitting(false);
-        }
-    };
-
-    // AI Love Note Generator
-    const handleAIGenerate = async () => {
-        if (!aiMood) return;
-        setAIGenerating(true);
-        try {
-            const result = await generateLoveNote(aiMood, aiCustomPrompt.trim() || undefined);
-            if (result.error) {
-                showToast('AI Error', result.error, 'error');
-            } else {
-                setNoteContent(result.text);
-                setShowAISheet(false);
-                setAIMood(null);
-                setAICustomPrompt('');
-            }
-        } catch (error) {
-            showToast('Error', 'Failed to generate message', 'error');
-        } finally {
-            setAIGenerating(false);
         }
     };
 
@@ -1084,104 +1022,20 @@ const LoveLock: React.FC = () => {
               )}
             </AnimatePresence>
 
-            <div className={`p-1.5 bg-white/95 dark:bg-background-dark/95 backdrop-blur-md border border-gray-100 dark:border-white/5 shadow-2xl shadow-black/20 transition-all ${replyNote ? 'rounded-b-[32px] rounded-t-none' : 'rounded-[32px]'}`}>
-                <AnimatePresence mode="wait">
-                {showRecorder ? (
-                    <motion.div
-                        key="recorder"
-                        initial={{ opacity: 0, scale: 0.95 }}
-                        animate={{ opacity: 1, scale: 1 }}
-                        exit={{ opacity: 0, scale: 0.95 }}
-                        className="w-full max-w-md md:max-w-full mx-auto"
-                    >
-                        <AudioRecorder
-                            onSend={handleAudioSend}
-                            onCancel={() => setShowRecorder(false)}
-                        />
-                    </motion.div>
-                ) : (
-                    <motion.div
-                        key="input"
-                        initial={{ opacity: 0, scale: 0.95 }}
-                        animate={{ opacity: 1, scale: 1 }}
-                        exit={{ opacity: 0, scale: 0.95 }}
-                        className="flex items-end gap-2 max-w-md md:max-w-full mx-auto w-full"
-                    >
-                        {/* Left Side Action Buttons (Camera & GIF) */}
-                        <div className="flex items-center gap-2 shrink-0">
-                            <button
-                                onClick={handlePickImage}
-                                className="w-[44px] h-[44px] flex items-center justify-center rounded-full bg-gray-100 dark:bg-surface-dark text-gray-500 hover:text-pink-500 hover:bg-white dark:hover:bg-white/10 transition-all border border-transparent hover:border-pink-500/20 active:scale-95 shadow-sm dark:shadow-none"
-                                title="Photos"
-                            >
-                                <span className="app-icon-glyph text-[22px]"><AppIcon name={"add_a_photo"}/></span>
-                            </button>
-
-                            <button
-                                onClick={() => setShowGifPicker(true)}
-                                className="w-[44px] h-[44px] flex items-center justify-center rounded-full bg-gray-100 dark:bg-surface-dark text-gray-500 hover:text-purple-500 hover:bg-white dark:hover:bg-white/10 transition-all border border-transparent hover:border-purple-500/20 active:scale-95 shadow-sm dark:shadow-none"
-                                title="GIFs"
-                            >
-                                <span className="app-icon-glyph text-[23px]"><AppIcon name={"gif_box"}/></span>
-                            </button>
-                        </div>
-
-                        {/* Center Pill Container (Text + AI) */}
-                        <div className="flex-1 min-w-0 bg-gray-100 dark:bg-white/5 rounded-[28px] flex items-center p-1 gap-2 border border-transparent focus-within:border-gray-200 dark:focus-within:border-white/10 transition-colors">
-                            <button
-                                onClick={() => setShowAISheet(true)}
-                                className="w-8 h-8 flex items-center justify-center rounded-full text-gray-400 hover:text-violet-500 hover:bg-white dark:hover:bg-white/10 transition-all shrink-0 ml-1"
-                                title="AI Love Note"
-                            >
-                                <span className="app-icon-glyph text-[20px]"><AppIcon name={"auto_awesome"}/></span>
-                            </button>
-
-                            <textarea
-                                ref={textareaRef}
-                                aria-label="Message"
-                                maxLength={8000}
-                                value={noteContent}
-                                onChange={(e) => {
-                                    setNoteContent(e.target.value);
-                                    autoResizeTextarea();
-                                }}
-                                placeholder="Message..."
-                                className="flex-1 bg-transparent border-none focus:ring-0 resize-none max-h-32 min-h-[36px] py-2 px-2 text-[15px] outline-none placeholder:text-gray-400 leading-[20px]"
-                                rows={1}
-                                onKeyDown={(e) => {
-                                    if(e.key === 'Enter' && !e.shiftKey && !e.nativeEvent.isComposing) {
-                                        e.preventDefault();
-                                        handleSendText();
-                                    }
-                                }}
-                            />
-                        </div>
-
-                        {/* Right Side Action Button (Send/Mic) */}
-                        <div className="shrink-0">
-                            {noteContent.trim() ? (
-                                <button
-                                    onClick={handleSendText}
-                                    aria-label="Send message"
-                                    disabled={isSubmitting}
-                                    className="on-brand w-[44px] h-[44px] flex items-center justify-center bg-primary text-white rounded-full hover:brightness-110 active:scale-95 disabled:opacity-50 transition-all shadow-md shadow-primary/20"
-                                >
-                                    <span className="app-icon-glyph text-[22px] ml-0.5"><AppIcon name={"arrow_upward"}/></span>
-                                </button>
-                            ) : (
-                                <button
-                                    onClick={() => setShowRecorder(true)}
-                                    aria-label="Record voice message"
-                                    className="w-[44px] h-[44px] flex items-center justify-center rounded-full bg-gray-100 dark:bg-surface-dark text-gray-500 hover:text-primary hover:bg-white dark:hover:bg-white/10 transition-all border border-transparent hover:border-primary/20 active:scale-95 shadow-sm dark:shadow-none"
-                                >
-                                    <span className="app-icon-glyph text-[22px]"><AppIcon name={"mic"}/></span>
-                                </button>
-                            )}
-                        </div>
-                    </motion.div>
-                )}
-                </AnimatePresence>
-            </div>
+            <AnimatePresence>{showAttachments && !showRecorder && <motion.div
+                className="chat-attach-options" initial={{ opacity: 0, y: reduced ? 0 : 8 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }} transition={motionTransition(springs.sheet, reduced)}>
+                <button onClick={() => { setShowAttachments(false); void handlePickImage(); }}><AppIcon name="Camera"/>Photos</button>
+                <button onClick={() => { setShowAttachments(false); setShowGifPicker(true); }}><AppIcon name="Gif"/>GIFs</button>
+                <button onClick={() => { setShowAttachments(false); setShowAISheet(true); }}><AppIcon name="Sparkles"/>AI note</button>
+            </motion.div>}</AnimatePresence>
+            {showRecorder ? <AudioRecorder onSend={handleAudioSend} onCancel={() => setShowRecorder(false)}/>
+            : <div className="chat-compose-row">
+                <button aria-label={showAttachments ? 'Close attachments' : 'Add attachment'} aria-expanded={showAttachments} onClick={() => setShowAttachments(value => !value)}><AppIcon name={showAttachments ? 'X' : 'Plus'} size={24}/></button>
+                <textarea ref={textareaRef} aria-label="Message" maxLength={8000} value={noteContent} onChange={event => setNoteContent(event.target.value)} placeholder="Message" rows={1}
+                    onKeyDown={event => { if (event.key === 'Enter' && !event.shiftKey && !event.nativeEvent.isComposing) { event.preventDefault(); void handleSendText(); } }}/>
+                {noteContent.trim() ? <button className="chat-send" aria-label="Send message" disabled={isSubmitting} onClick={() => void handleSendText()}><AppIcon name="Send" size={23}/></button>
+                : <button aria-label="Record voice message" onClick={() => { setShowAttachments(false); setShowRecorder(true); }}><AppIcon name="Mic" size={23}/></button>}
+            </div>}
             </div>
 
             <Toast
@@ -1289,144 +1143,8 @@ const LoveLock: React.FC = () => {
                 )}
             </AnimatePresence>
 
-            {/* AI Love Note Bottom Sheet */}
-            <AnimatePresence>
-                {showAISheet && (
-                    <MotionPortal><motion.div
-                        initial={{ opacity: 0 }}
-                        animate={{ opacity: 1 }}
-                        exit={{ opacity: 0 }}
-                        className="fixed inset-0 z-[100] bg-black/60 backdrop-blur-sm flex items-end justify-center"
-                        onClick={() => !aiGenerating && setShowAISheet(false)}
-                    >
-                        <motion.div
-                            initial={{ y: '100%' }}
-                            animate={{ y: 0 }}
-                            exit={{ y: '100%' }}
-                            transition={motionTransition(springs.sheet, reduced)}
-                            className="w-full max-w-md bg-white dark:bg-surface-dark rounded-t-3xl p-6 pb-8"
-                            onClick={(e) => e.stopPropagation()}
-                        >
-                            {/* Handle bar */}
-                            <div className="w-10 h-1 bg-gray-300 dark:bg-gray-600 rounded-full mx-auto mb-5" />
-
-                            <div className="flex items-center gap-2 mb-5">
-                                <span className="app-icon-glyph text-violet-500"><AppIcon name={"auto_awesome"}/></span>
-                                <h3 className="text-lg font-bold">AI Love Note</h3>
-                            </div>
-
-                            {/* Mood chips */}
-                            <p className="text-sm opacity-50 mb-3">Pick a mood</p>
-                            <div className="grid grid-cols-3 gap-2 mb-5">
-                                {AI_MOODS.map((m) => (
-                                    <button
-                                        key={m.key}
-                                        onClick={() => setAIMood(m.key)}
-                                        className={`px-3 py-2.5 rounded-xl text-sm font-medium transition-all active:scale-95 ${
-                                            aiMood === m.key
-                                                ? 'bg-violet-500 text-white shadow-lg shadow-violet-500/30'
-                                                : 'bg-gray-100 dark:bg-white/5 hover:bg-gray-200 dark:hover:bg-white/10'
-                                        }`}
-                                    >
-                                        <AppIcon name={m.emoji}/> {m.label}
-                                    </button>
-                                ))}
-                            </div>
-
-                            {/* Optional custom prompt */}
-                            <p className="text-sm opacity-50 mb-2">Add context <span className="text-xs">(optional)</span></p>
-                            <input
-                                type="text"
-                                value={aiCustomPrompt}
-                                onChange={(e) => setAICustomPrompt(e.target.value)}
-                                placeholder='e.g. "about our trip last weekend"'
-                                className="w-full px-4 py-3 rounded-xl text-sm bg-gray-100 dark:bg-white/5 border border-transparent focus:border-violet-500 outline-none transition-colors mb-5"
-                            />
-
-                            {/* Generate button */}
-                            <button
-                                onClick={handleAIGenerate}
-                                disabled={!aiMood || aiGenerating}
-                                className={`w-full py-3.5 rounded-2xl font-bold text-white transition-all active:scale-[0.98] ${
-                                    !aiMood || aiGenerating
-                                        ? 'bg-gray-300 dark:bg-gray-700 cursor-not-allowed'
-                                        : 'bg-gradient-to-r from-violet-500 to-purple-600 shadow-lg shadow-violet-500/30 hover:brightness-110'
-                                }`}
-                            >
-                                {aiGenerating ? (
-                                    <span className="flex items-center justify-center gap-2">
-                                        <motion.span animate={{ rotate: 360 }}
-                                            transition={{ repeat: Infinity, duration: 1, ease: 'linear' }}
-                                            className="app-icon-glyph text-lg"><AppIcon name={"progress_activity"}/></motion.span>
-                                        Generating...
-                                    </span>
-                                ) : (
-                                    '✨ Generate Message'
-                                )}
-                            </button>
-                        </motion.div>
-                    </motion.div></MotionPortal>
-                )}
-            </AnimatePresence>
-            {/* GIF Picker Sheet */}
-            <AnimatePresence>
-                {showGifPicker && (
-                    <MotionPortal><motion.div
-                        initial={{ opacity: 0 }}
-                        animate={{ opacity: 1 }}
-                        exit={{ opacity: 0 }}
-                        className="fixed inset-0 z-[100] bg-black/60 backdrop-blur-sm flex items-end justify-center"
-                        onClick={() => setShowGifPicker(false)}
-                    >
-                        <motion.div
-                            initial={{ y: '100%' }}
-                            animate={{ y: 0 }}
-                            exit={{ y: '100%' }}
-                            transition={motionTransition(springs.sheet, reduced)}
-                            className="w-full max-w-lg bg-white dark:bg-surface-dark rounded-t-3xl p-4 h-[70vh] flex flex-col"
-                            onClick={(e) => e.stopPropagation()}
-                        >
-                            <div className="w-12 h-1 bg-gray-300 dark:bg-gray-600 rounded-full mx-auto mb-4" />
-
-                            <div className="relative mb-4">
-                                <span className="absolute left-3 top-1/2 -translate-y-1/2 app-icon-glyph text-gray-400"><AppIcon name={"search"}/></span>
-                                <input
-                                    type="text"
-                                    value={gifSearch}
-                                    onChange={(e) => handleGifSearchChange(e.target.value)}
-                                    placeholder="Search GIPHY..."
-                                    className="w-full pl-10 pr-4 py-3 bg-gray-100 dark:bg-white/5 rounded-xl outline-none focus:ring-2 ring-primary/50 transition-all"
-                                    autoFocus
-                                />
-                            </div>
-
-                            <div className="flex-1 overflow-y-auto no-scrollbar columns-2 gap-2 pb-safe px-1">
-                                {gifLoading && gifResults.length === 0 ? (
-                                    <div className="col-span-2 flex justify-center py-10 w-full">
-                                        <span className="app-icon-glyph animate-spin text-gray-400"><AppIcon name={"progress_activity"}/></span>
-                                    </div>
-                                ) : (
-                                    (gifResults.length > 0 ? gifResults : []).map((gif: any) => (
-                                        <button
-                                            key={gif.id}
-                                            // Use fixed_width for best balance of quality/speed in chat
-                                            onClick={() => handleSendGif(gif.images.fixed_width?.url || gif.images.fixed_height?.url)}
-                                            className="w-full mb-2 rounded-lg overflow-hidden group break-inside-avoid bg-gray-100 dark:bg-white/5"
-                                        >
-                                            <img
-                                                src={gif.images.fixed_width.url}
-                                                alt={gif.title}
-                                                className="w-full h-auto object-cover transition-transform group-hover:scale-105"
-                                                loading="lazy"
-                                            />
-                                        </button>
-                                    ))
-                                )}
-                            </div>
-                        </motion.div>
-                    </motion.div></MotionPortal>
-                )}
-            </AnimatePresence>
+            <LoveNoteSheet open={showAISheet} onClose={() => setShowAISheet(false)} onGenerated={text => setNoteContent(text)}/>
+            <GifPicker open={showGifPicker} onClose={() => setShowGifPicker(false)} onSend={url => void handleSendGif(url)}/>
             {/* Security Verification Modal */}
             <SecurityVerification
                 isOpen={showSecurity}

@@ -1,0 +1,2 @@
+# Preserve the upstream generated MediaPipe runtime byte-for-byte.
+public/call-effects/wasm/* binary
