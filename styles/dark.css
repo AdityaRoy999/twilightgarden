@@ -4,6 +4,16 @@
 :root.dark :is(.text-gray-400, .text-gray-500, .text-gray-600) { color: var(--text-secondary); }
 :root.dark #main-content, :root.dark .bloom-auth, :root.dark .reference-welcome, :root.dark .reference-onboarding { background: var(--bg-base) url('/art/bloom-background-dark.svg') center top / cover no-repeat; }
 :root.dark {
+  --call-base: #17121f;
+  --call-panel: #292331;
+  --call-button: #3c3545;
+  --call-ink: #fff8fc;
+  --call-muted: #cbc0d2;
+  --call-accent: #ffb6d2;
+  --call-selection: #643d53;
+  --call-person-wash: radial-gradient(ellipse at 50% 30%,#65415a60,transparent 70%);
+  --call-heading-wash: linear-gradient(#17121ff2,#17121f90,transparent);
+  --call-footer-wash: linear-gradient(transparent,#17121f90,#17121ff2);
   --welcome-rose: #cd608c;
   --welcome-rose-light: #e7a0bd;
   --welcome-lilac: #9380ba;

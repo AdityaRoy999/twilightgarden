@@ -80,6 +80,10 @@ export async function processCamera(track: MediaStreamTrack, effect: CameraEffec
     frame = requestAnimationFrame(draw);
     const processed = output.getVideoTracks()[0];
     processed.contentHint = 'motion'; processed.enabled = track.enabled;
-    return { track: processed, dispose };
+    return { track: processed, dispose, resume: async () => {
+      if (stopped) return;
+      await video.play();
+      lastFrame = lastMask = -Infinity;
+    } };
   } catch (error) { dispose(); throw error; }
 }
