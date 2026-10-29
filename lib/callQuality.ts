@@ -55,10 +55,16 @@ export async function applyCallQuality(pc:RTCPeerConnection,quality:CallQuality)
   if(!sender.track||!sender.getParameters||!sender.setParameters)return;
   const parameters=sender.getParameters();if(!parameters.encodings?.length)return;
   const video=sender.track.kind==='video';if(!video&&sender.track.kind!=='audio')return;
+  const settings=video?sender.track.getSettings?.():undefined;
+  const dimensions=[settings?.width,settings?.height].filter((value):value is number=>typeof value==='number'&&value>0);
+  // Profiles target the short edge of a 1080p source. Recompute the divisor
+  // after a camera, effect or screen-share replacement instead of shrinking a
+  // 720p processed stream again as though it were still a 1080p camera.
+  const scale=dimensions.length===2?Math.max(1,Math.min(...dimensions)/(1080/profile.scale)):profile.scale;
   let changed=false;
   if(video&&parameters.degradationPreference!=='balanced'){parameters.degradationPreference='balanced';changed=true;}
   for(const encoding of parameters.encodings){
-   const values=video?{active:quality!=='voice',maxBitrate:profile.videoBitrate||70000,maxFramerate:profile.fps,scaleResolutionDownBy:profile.scale}:{maxBitrate:profile.audioBitrate};
+   const values=video?{active:quality!=='voice',maxBitrate:profile.videoBitrate||70000,maxFramerate:profile.fps,scaleResolutionDownBy:scale}:{maxBitrate:profile.audioBitrate};
    for(const [key,value]of Object.entries(values))if((encoding as any)[key]!==value){(encoding as any)[key]=value;changed=true;}
   }
   try{if(changed)await sender.setParameters(parameters);if(video&&quality==='voice')paused=true;}catch{/* Built-in WebRTC congestion control remains active if tuning is unsupported. */}

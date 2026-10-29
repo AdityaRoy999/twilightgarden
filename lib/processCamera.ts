@@ -62,8 +62,11 @@ export async function processCamera(track: MediaStreamTrack, effect: CameraEffec
     const draw = (now: number) => {
       if (stopped) return;
       frame = requestAnimationFrame(draw);
-      if (now - lastFrame < 1000 / 24 || video.readyState < 2) return;
-      lastFrame = now;
+      const interval = 1000 / 24;
+      if (now - lastFrame < interval || video.readyState < 2) return;
+      // Carry the remainder across display frames. Resetting to `now` would
+      // quantize a 24fps target to 20fps on a 60Hz display.
+      lastFrame = Number.isFinite(lastFrame) ? now - ((now - lastFrame) % interval) : now;
       // Until the first mask is ready (or after inference fails), blur the whole
       // frame rather than briefly exposing the unprocessed background.
       renderer.draw(video, maskDirty ? mask : null, maskReady); maskDirty = false;
