@@ -40,3 +40,16 @@ it('pauses and resumes the video encoding without unmuting the user’s tracks',
 it('falls back to browser congestion control when sender tuning is unsupported',async()=>{
  expect(await applyCallQuality({getSenders:()=>[]} as unknown as RTCPeerConnection,'voice')).toBe(false);
 });
+it('keeps the intended resolution after replacing a camera with 720p effects or a portrait source',async()=>{
+ const settings={width:1920,height:1080};
+ const video={track:{kind:'video',getSettings:()=>settings},getParameters:()=>({encodings:[{}]}),setParameters:vi.fn(async()=>{})};
+ const pc={getSenders:()=>[video]} as unknown as RTCPeerConnection;
+ await applyCallQuality(pc,'clear');
+ expect(video.setParameters).toHaveBeenLastCalledWith(expect.objectContaining({encodings:[expect.objectContaining({scaleResolutionDownBy:1.5})]}));
+ settings.width=1280;settings.height=720;await applyCallQuality(pc,'clear');
+ expect(video.setParameters).toHaveBeenLastCalledWith(expect.objectContaining({encodings:[expect.objectContaining({scaleResolutionDownBy:1})]}));
+ settings.width=720;settings.height=1280;await applyCallQuality(pc,'clear');
+ expect(video.setParameters).toHaveBeenLastCalledWith(expect.objectContaining({encodings:[expect.objectContaining({scaleResolutionDownBy:1})]}));
+ await applyCallQuality(pc,'low');
+ expect(video.setParameters).toHaveBeenLastCalledWith(expect.objectContaining({encodings:[expect.objectContaining({scaleResolutionDownBy:4,maxBitrate:70000})]}));
+});
