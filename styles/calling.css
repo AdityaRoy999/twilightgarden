@@ -5,6 +5,8 @@
 .call-room button:focus-visible { text-decoration:underline; text-underline-offset:4px; background:var(--call-selection); }
 .call-room .solar-icon { color:inherit; --icon-secondary:currentColor; }
 .call-room audio { display:none; }
+.call-room * { scrollbar-width:none; }
+.call-room *::-webkit-scrollbar { display:none; width:0; height:0; }
 .call-remote { position:absolute; inset:0; width:100%; height:100%; object-fit:contain; background:var(--call-base); }
 .call-stage-hit { position:absolute; inset:0; width:100%; height:100%; z-index:1; background:transparent; }
 .call-person { position:absolute; inset:0; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:14px; pointer-events:none; background:var(--call-person-wash); padding:24px; text-align:center; }
