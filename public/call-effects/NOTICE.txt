@@ -1,0 +1,4 @@
+MediaPipe Tasks Vision 1.2.0, Google / MediaPipe Authors, Apache License 2.0.
+Selfie Segmenter model: https://storage.googleapis.com/mediapipe-models/image_segmenter/selfie_segmenter/float16/latest/selfie_segmenter.tflite
+SHA-256: 191ac9529ae506ee0beefa6b2c945a172dab9d07d1e802a290a4e4038226658b
+Loaded locally only when the user enables background blur. Camera frames are not uploaded for processing.

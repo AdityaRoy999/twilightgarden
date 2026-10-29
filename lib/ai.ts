@@ -1,4 +1,5 @@
 import { supabase } from './supabase';
+import { requestSignal } from './requestSignal';
 
 export type AIMood = 'missing' | 'morning' | 'appreciation' | 'flirty' | 'apology' | 'encouragement';
 
@@ -19,7 +20,8 @@ export const AI_MOODS: { key: AIMood; label: string; emoji: string }[] = [
 const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL;
 const SUPABASE_ANON_KEY = import.meta.env.VITE_SUPABASE_ANON_KEY || '';
 
-export async function generateLoveNote(mood: AIMood, customPrompt?: string): Promise<AIGenerateResult> {
+export async function generateLoveNote(mood: AIMood, customPrompt?: string, cancel?: AbortSignal): Promise<AIGenerateResult> {
+    const request = requestSignal(30000, cancel);
     try {
         const { data: { session } } = await supabase.auth.getSession();
         if (!session) throw new Error('Not authenticated');
@@ -27,7 +29,7 @@ export async function generateLoveNote(mood: AIMood, customPrompt?: string): Pro
         console.log('[AI] Calling ai-generate with mood:', mood);
 
         // Add a 30s timeout
-        const signal = AbortSignal.timeout(30000);
+        const signal = request.signal;
 
         const res = await fetch(
             `${SUPABASE_URL}/functions/v1/ai-generate`,
@@ -67,5 +69,5 @@ export async function generateLoveNote(mood: AIMood, customPrompt?: string): Pro
         }
         console.error('[AI] Generation error:', error);
         return { text: '', error: error.message || 'Failed to generate message' };
-    }
+    } finally { request.dispose(); }
 }

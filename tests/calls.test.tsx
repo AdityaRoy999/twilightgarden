@@ -26,6 +26,7 @@ const mocks = vi.hoisted(() => ({
   handlers: {} as Record<string, (event: any) => unknown>,
   channel: { on: vi.fn(), subscribe: vi.fn(), send: vi.fn() },
   remove: vi.fn(),
+  peer: null as any,
 }));
 vi.mock("../lib/supabase", () => ({
   supabase: { channel: () => mocks.channel, removeChannel: mocks.remove },
@@ -59,6 +60,8 @@ function Probe() {
       <p>{call.callStatus}</p>
       <button onClick={() => void call.initiateCall(false)}>Call</button>
       <button onClick={call.endCall}>End</button>
+      <button onClick={() => void call.sendReaction('heart')}>React</button>
+      <output data-testid="call-extras">{JSON.stringify({ reactions: call.reactions, sharing: call.remoteSharingScreen })}</output>
     </>
   );
 }
@@ -86,6 +89,8 @@ beforeEach(() => {
   vi.stubGlobal(
     "RTCPeerConnection",
     class {
+      constructor() { mocks.peer = this; }
+      connectionState = 'new';
       close = close;
       addTrack = vi.fn();
       createOffer = vi
@@ -105,6 +110,28 @@ const stream = () => ({
   getVideoTracks: () => [],
 });
 describe("call lifecycle", () => {
+  it('encrypts call reactions and rejects media state from another call or sender', async () => {
+    getMedia.mockResolvedValue(stream());
+    render(<CallProvider><Probe/></CallProvider>);
+    fireEvent.click(screen.getByText('Call'));
+    await waitFor(() => expect(mocks.channel.send).toHaveBeenCalled());
+    const offer = mocks.channel.send.mock.calls.find(([message]) => message.event === 'call:offer')![0];
+    const id = JSON.parse(offer.payload.sealed).callId;
+    await act(async () => { mocks.peer.connectionState = 'connected'; mocks.peer.onconnectionstatechange(); });
+    fireEvent.click(screen.getByText('React'));
+    await waitFor(() => expect(mocks.channel.send.mock.calls.some(([message]) => message.event === 'call:reaction')).toBe(true));
+    const reaction = mocks.channel.send.mock.calls.find(([message]) => message.event === 'call:reaction')![0];
+    expect(Object.keys(reaction.payload)).toEqual(['sealed']);
+    expect(JSON.parse(reaction.payload.sealed)).toMatchObject({ callId: id, senderId: 'A', reaction: 'heart' });
+    for (const [senderId, callId] of [['outsider', id], ['B', 'old-call']]) {
+      await act(async () => { await mocks.handlers['call:media']({ payload: { sealed: JSON.stringify({ senderId, callId, sharingScreen: true }) } }); });
+    }
+    expect(JSON.parse(screen.getByTestId('call-extras').textContent!).sharing).toBe(false);
+    await act(async () => { await mocks.handlers['call:media']({ payload: { sealed: JSON.stringify({ senderId: 'B', callId: id, sharingScreen: true }) } }); });
+    expect(JSON.parse(screen.getByTestId('call-extras').textContent!).sharing).toBe(true);
+    fireEvent.click(screen.getByText('End'));
+    expect(JSON.parse(screen.getByTestId('call-extras').textContent!)).toEqual({ reactions: [], sharing: false });
+  });
   it("starts an encrypted call on a ready device without requiring a cloud backup", async () => {
     getMedia.mockResolvedValue(stream());
     render(
