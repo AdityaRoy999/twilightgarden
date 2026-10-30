@@ -544,6 +544,9 @@ export class EncryptedGameRoom {
       }, 15000);
       this.commandWaiters.set(command.id, { resolve, reject, timer });
     });
+    // Observe rejection immediately: a slow insert can outlive the ack deadline.
+    // The caller still receives the rejection when it awaits completion below.
+    void completed.catch(() => {});
     // Install the waiter before insertion so even a very fast commit is observed.
     const { error } = await (this.transport.rpc as any)(
       "queue_private_game_command",

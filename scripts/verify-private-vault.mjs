@@ -608,6 +608,37 @@ try {
   } finally {
     for (const client of rooms) client.dispose();
   }
+  if(process.env.VERIFY_PRIVATE_BOUNDARY==='1'){
+  const authFields=check(await admin.from('profiles').select('full_name,email,bio,avatar_url').eq('id',users[0].id).single());
+  assert.ok(Object.values(authFields).every(value=>value===null));
+  assert.ok((await clients[0].from('daily_logs').insert({user_id:users[0].id,date:'2026-10-19'})).error);
+  assert.ok((await admin.from('user_settings').insert({user_id:users[0].id})).error);
+  pass('deployed plaintext boundary rejects legacy writes and keeps profile content out of metadata');
+  }
+  if(process.env.VERIFY_PRIVATE_AI==='1'){
+  const aiRooms=[];let aiView;
+  try{
+    activate(0);
+    const hostAI=new EncryptedGameRoom(users[0].id,couple.id,users[1].id,'truth_dare',message=>console.log('AI host transport:',message),clients[0],bundles[0]);aiRooms.push(hostAI);hostAI.subscribe(value=>{aiView=value});await hostAI.start();
+    activate(1);
+    const guestAI=new EncryptedGameRoom(users[1].id,couple.id,users[0].id,'truth_dare',message=>console.log('AI guest transport:',message),clients[1],bundles[1]);aiRooms.push(guestAI);await guestAI.start();
+    await assert.rejects(hostAI.action({kind:'prefetch'}),/privacy/i);
+    check(await consent(0,{p_ai:true}));
+    const began=performance.now();
+    const prefetch=hostAI.action({kind:'prefetch'});
+    await hostAI.action({kind:'ready'});
+    await prefetch;
+    await wait(()=>aiView?.board_state.promptCount>=3,'AI encrypted prefetch');
+    assert.ok(aiView.board_state.ready.includes('X'));
+    await guestAI.action({kind:'ready'});
+    await wait(()=>aiView?.board_state.phase==='play','AI question round starts');
+    const question=aiView.board_state.prompt.question;
+    assert.ok(question.length>5);
+    const opaque=check(await admin.from('game_sessions').select('encrypted_state,host_secret,board_state').eq('id',aiView.id).single());
+    assert.ok(!JSON.stringify(opaque).includes(question));
+    pass('deployed AI respects consent and preserves readiness while encrypting generated questions',{generationAndRoundStartMs:Math.round(performance.now()-began)});
+  }finally{for(const client of aiRooms)client.dispose()}
+  }
   // Verify disconnect revokes envelopes and removes game queues while preserving
   // the owner's personal vault. The storage cleanup service is exercised separately.
   check(
@@ -671,4 +702,3 @@ try {
   for (const client of clients) await client.removeAllChannels();
   await vite.close();
 }
-

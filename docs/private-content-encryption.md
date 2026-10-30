@@ -90,6 +90,10 @@ Verification: `npm test`, `npm run build`, Deno checks, `npm run verify:ui`, and
 only and exercises the real encryption facade, recovery, RLS, sharing withdrawal,
 encrypted game transport, revision conflicts and unlink. Runtime measurements
 are saved in `tmp/verification/private-vault-live.json` (excluded from Git).
+After the enforcement migration and edge deployment, set
+`VERIFY_PRIVATE_BOUNDARY=1` and `VERIFY_PRIVATE_AI=1` for additional live checks
+of rejected plaintext writes, metadata-only profiles, AI consent and concurrent
+readiness during question generation. The AI check uses one external generation.
 
 ## Performance boundaries and measurements
 
