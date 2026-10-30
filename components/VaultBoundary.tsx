@@ -2,6 +2,7 @@ import React, { useState } from "react";
 import { useAuth } from "../contexts/AuthContext";
 import { useVault } from "../contexts/VaultContext";
 import { AppIcon } from "./ui/Icons";
+import {OnboardingArt} from './ui/OnboardingArt';
 export function VaultBoundary({ children }: { children: React.ReactNode }) {
   const { user, signOut } = useAuth(),
     vault = useVault();
@@ -38,9 +39,9 @@ export function VaultBoundary({ children }: { children: React.ReactNode }) {
     }
   };
   return (
-    <main className="privacy-center">
+    <main className="privacy-center vault-onboarding safe-screen">
       <section className="reference-card mx-auto w-full max-w-lg p-6 sm:p-9">
-        <AppIcon name="lock" size={36} />
+        <OnboardingArt variant="vault"/>
         <h1 className="mt-5 text-3xl font-bold">
           {vault.exists
             ? "Unlock your private space"
@@ -94,12 +95,13 @@ export function VaultBoundary({ children }: { children: React.ReactNode }) {
                   onChange={(e) => setConfirm(e.target.value)}
                 />
               </label>
-              <label className="flex gap-3 items-start">
+              <label className="vault-saved-check">
                 <input
                   type="checkbox"
                   checked={saved}
                   onChange={(e) => setSaved(e.target.checked)}
                 />
+                <span className="vault-check-mark" aria-hidden="true"><AppIcon name="check" size={20}/></span>
                 <span>
                   I saved this password. Twilight cannot recover it. Losing it
                   and all unlocked devices means losing access to my encrypted

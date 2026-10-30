@@ -5,7 +5,7 @@ import {initialGame} from '../supabase/functions/_shared/gameEngine';
 const fixture=vi.hoisted(()=>({event:null as any,user:{id:'owner'},couple:{id:'pair',status:'active',partner_1_id:'owner',partner_2_id:'partner'}}));
 vi.mock('../contexts/AuthContext',()=>({useAuth:()=>({user:fixture.user})}));
 vi.mock('../contexts/CouplesContext',()=>({useCouples:()=>({couple:fixture.couple})}));
-vi.mock('../lib/supabase',()=>({rawSupabase:{}}));
+vi.mock('../lib/supabase',()=>({rawSupabase:{rpc:vi.fn().mockResolvedValue({data:false,error:null})}}));
 vi.mock('../lib/vaultRuntime',()=>({unlockedVault:()=>({userId:'owner'})}));
 // Mock the encrypted transport boundary, retaining the same delayed-commit,
 // rejection and out-of-order realtime scenarios for optimistic rendering.

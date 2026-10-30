@@ -20,12 +20,17 @@ async function handle(req:Request):Promise<Response>{
    if(!await consumeBudget(actor,'game-move',100))return json({error:'Please slow down'},429);
    return json({invited:await inviteToGame(db,req,actor,{id:room.id,game_type:room.game_type as GameType},couple)});
   }
-  if(room.player_x!==actor||!needsPrompts(room.game_type as GameType)||!['gentle','playful','bold'].includes(String(body.level)))return json({error:'Invalid question request'},400);
+  if(room.player_x!==actor||!needsPrompts(room.game_type as GameType)||!['gentle','playful','bold','after_hours'].includes(String(body.level)))return json({error:'Invalid question request'},400);
+  if(body.level==='after_hours'){
+   const {data:ages,error:ageError}=await db.from('privacy_preferences').select('user_id,age_band,core_consent,deleting').in('user_id',[room.player_x,room.player_o].filter(Boolean));
+   if(ageError)throw ageError;
+   if(!room.player_o||ages?.length!==2||!ages.every(p=>p.age_band==='18+'&&p.core_consent&&!p.deleting))return json({error:'Both players must declare they are 18 or older before choosing After hours.'},403);
+  }
   await requirePurpose(actor,'ai',db);
   if(!await consumeBudget(actor,'game-ai',4))return json({error:'Please wait before generating more questions'},429);
   // AI is the explicitly consented external exception. Prompts exist only for
   // this response; clients encrypt them before persistence in an opaque room.
-  const prompts=await generateGamePrompts(room.game_type as GameType,body.level as 'gentle'|'playful'|'bold');
+  const prompts=await generateGamePrompts(room.game_type as GameType,String(body.level));
   return json({prompts});
  }catch(error){return json({error:error instanceof Error?error.message:'Game unavailable'},error instanceof RequestBodyError?error.status:503);}
 }

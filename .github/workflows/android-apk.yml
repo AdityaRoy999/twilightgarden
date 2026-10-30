@@ -1,0 +1,61 @@
+name: Build Android test APK
+on:
+  workflow_dispatch:
+permissions:
+  contents: read
+concurrency:
+  group: android-test-${{ github.ref }}
+  cancel-in-progress: true
+jobs:
+  android:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version: 22
+          cache: npm
+      - uses: actions/setup-java@cf277c60eb25467037889841efdb72551f06f6c3 # v4
+        with:
+          distribution: temurin
+          java-version: "21"
+      - run: npm ci
+      - name: Build bundled web app
+        run: |
+          test -n "$VITE_SUPABASE_URL" && test -n "$VITE_SUPABASE_ANON_KEY"
+          node -e "require('node:fs').writeFileSync('public/build-info.json',JSON.stringify({commit:process.env.GITHUB_SHA,run:process.env.GITHUB_RUN_ID,builtAt:new Date().toISOString()}))"
+          npm run build
+        env:
+          VITE_SUPABASE_URL: ${{ vars.VITE_SUPABASE_URL }}
+          VITE_SUPABASE_ANON_KEY: ${{ vars.VITE_SUPABASE_ANON_KEY }}
+          VITE_GIPHY_API_KEY: ${{ vars.VITE_GIPHY_API_KEY }}
+          VITE_LEGAL_OPERATOR_NAME: ${{ vars.VITE_LEGAL_OPERATOR_NAME }}
+          VITE_LEGAL_SERVICE_ADDRESS: ${{ vars.VITE_LEGAL_SERVICE_ADDRESS }}
+          VITE_LEGAL_SUPPORT_EMAIL: ${{ vars.VITE_LEGAL_SUPPORT_EMAIL }}
+          VITE_GRIEVANCE_OFFICER_NAME: ${{ vars.VITE_GRIEVANCE_OFFICER_NAME }}
+          VITE_GRIEVANCE_OFFICER_EMAIL: ${{ vars.VITE_GRIEVANCE_OFFICER_EMAIL }}
+      - name: Create and sync Android test project
+        run: |
+          npx cap add android
+          node scripts/prepare-android.mjs
+          npx cap sync android
+      - name: Build installable test APK
+        working-directory: android
+        run: |
+          chmod +x gradlew
+          ./gradlew assembleDebug --no-daemon
+      - name: Package
+        run: |
+          mkdir -p artifacts
+          cp android/app/build/outputs/apk/debug/app-debug.apk artifacts/TwilightGarden-test.apk
+          sha256sum artifacts/TwilightGarden-test.apk > artifacts/SHA256SUMS.txt
+          cp docs/mobile-builds.md artifacts/READ-ME.md
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        with:
+          name: TwilightGarden-Android-APK
+          path: artifacts/
+          retention-days: 7
+          if-no-files-found: error

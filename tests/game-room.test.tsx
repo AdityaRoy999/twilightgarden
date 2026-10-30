@@ -19,3 +19,23 @@ it('shows a closed room distinctly from a completed match',()=>{fixture.value.ro
 it('prefetches a fresh set when the host changes the round count',()=>{fixture.value.room.board_state.phase='setup';fixture.value.room.board_state.promptCount=0;const view=render(<GameRoom game="truth_dare"/>);expect(fixture.action).toHaveBeenCalledWith({kind:'prefetch'});fixture.action.mockClear();fixture.value.room.board_state.total=3;view.rerender(<GameRoom game="truth_dare"/>);expect(fixture.action).toHaveBeenCalledWith({kind:'prefetch'});});
 
 it('prepares host questions before the partner joins',()=>{fixture.value.room.player_o=null;fixture.value.room.board_state.promptCount=0;render(<GameRoom game="truth_dare"/>);expect(fixture.action).toHaveBeenCalledWith({kind:'prefetch'});});
+
+it('keeps level and round drafts local until the host explicitly confirms',()=>{
+ fixture.value.room.board_state.promptCount=10;render(<GameRoom game="truth_dare"/>);
+ fireEvent.click(screen.getByRole('button',{name:'bold'}));fireEvent.click(screen.getByRole('button',{name:'10'}));
+ expect(fixture.action).not.toHaveBeenCalled();expect((screen.getByRole('button',{name:'I’m ready'}) as HTMLButtonElement).disabled).toBe(true);
+ fireEvent.click(screen.getByRole('button',{name:'Confirm settings'}));expect(fixture.action).toHaveBeenCalledWith({kind:'configure',level:'bold',total:10});
+});
+it('only exposes the adult level for an eligible pair and keeps peer settings read-only',()=>{
+ fixture.value.room.board_state.promptCount=10;fixture.value.player='O';fixture.value.adultAllowed=false;const view=render(<GameRoom game="truth_dare"/>);
+ expect(screen.queryByRole('button',{name:'After hours · 18+'})).toBeNull();expect((screen.getByRole('button',{name:'bold'}) as HTMLButtonElement).disabled).toBe(true);
+ fixture.value.adultAllowed=true;view.rerender(<GameRoom game="truth_dare"/>);expect(screen.getByRole('button',{name:'After hours · 18+'})).toBeTruthy();
+});
+it('does not send a selected answer until it is confirmed',()=>{
+ Object.assign(fixture.value.room.board_state,{phase:'play',promptCount:10,prompt:{question:'A surprising dilemma?',options:['A','B']}});render(<GameRoom game="would_you_rather"/>);
+ fireEvent.click(screen.getByRole('button',{name:'B'}));expect(fixture.action).not.toHaveBeenCalled();fireEvent.click(screen.getByRole('button',{name:'Confirm answer'}));expect(fixture.action).toHaveBeenCalledWith({kind:'answer',text:'B'});
+});
+it('shows final results even when the question queue is empty and never fetches another batch',()=>{
+ Object.assign(fixture.value.room.board_state,{phase:'reveal',round:5,total:5,promptCount:0,result:'You both chose differently.',replies:{X:'A',O:'B'}});render(<GameRoom game="would_you_rather"/>);
+ expect(screen.getByRole('button',{name:'See results'})).toBeTruthy();expect(fixture.action).not.toHaveBeenCalled();fireEvent.click(screen.getByRole('button',{name:'See results'}));expect(fixture.action).toHaveBeenCalledWith({kind:'next'});
+});

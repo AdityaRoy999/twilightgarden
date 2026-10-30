@@ -9,5 +9,5 @@ it('rejects malformed or duplicate prompts and bounds provider output',()=>{
  const valid={question:'Pick a favorite sound.',options:null};
  expect(validateGamePrompts('rapid_fire',[null,{},valid,valid])).toHaveLength(1);
  expect(validateGamePrompts('riddle_me',[{question:'I have keys but no locks.',answer:''}])).toHaveLength(0);
- expect(validateGamePrompts('rapid_fire',Array.from({length:20},(_,i)=>({question:`Original question ${i}`})))).toHaveLength(8);
+ expect(validateGamePrompts('rapid_fire',Array.from({length:20},(_,i)=>({question:`Original question ${i}`})))).toHaveLength(10);
 });

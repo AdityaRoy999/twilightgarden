@@ -34,7 +34,10 @@ export interface State {
   turn: Player;
   round: number;
   total: number;
-  level: "gentle" | "playful" | "bold";
+  level: "gentle" | "playful" | "bold" | "after_hours";
+  nextReady?: Player[];
+  history?: {round:number;question:string;replies:Partial<Record<Player,string>>;answer?:string;result:string}[];
+  settingsRevision?: number;
   scores: Record<Player, number>;
   ready: Player[];
   board: (string | null)[];
@@ -117,6 +120,8 @@ function reveal(state: State, secret: Secret, message: string) {
   state.phase = "reveal";
   state.result = message;
   state.replies = { ...secret.choices };
+  state.nextReady = [];
+  state.history = [...(state.history || []), {round:state.round,question:state.prompt?.question || `Round ${state.round}`,replies:{...state.replies},answer:state.answer,result:message}];
   secret.choices = {};
 }
 function nextPrompt(state: State, secret: Secret, type: GameType) {
@@ -163,7 +168,7 @@ export function play(
     assert(state.phase === "setup", "The game has already started");
     assert(player === "X", "The host chooses the game settings");
     assert(
-      ["gentle", "playful", "bold"].includes(String(action.level)),
+      ["gentle", "playful", "bold", "after_hours"].includes(String(action.level)),
       "Choose a valid level",
     );
     assert(
@@ -175,6 +180,7 @@ export function play(
     }
     state.level = action.level as State["level"];
     state.total = Number(action.total);
+    state.settingsRevision=(state.settingsRevision||0)+1;
     secret.prompts = [];
     state.ready = [];
     return { state, secret };
@@ -213,6 +219,12 @@ export function play(
       kind === "skip" || state.phase === "reveal",
       "Finish the current round first",
     );
+    // A reveal belongs to both people. Neither player may dismiss the other's
+    // answer before they have read it, including the final round.
+    if (kind === "next") {
+      state.nextReady = [...new Set([...(state.nextReady || []), player])];
+      if (state.nextReady.length < 2) return {state,secret};
+    }
     if (state.round >= state.total) {
       const winner =
         state.scores.X === state.scores.O
@@ -241,6 +253,7 @@ export function play(
     state.turn = other(state.turn);
     state.guesses = [];
     state.replies = {};
+    state.nextReady = [];
     state.result = undefined;
     state.answer = undefined;
     state.prompt = undefined;
