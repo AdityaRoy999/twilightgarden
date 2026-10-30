@@ -11,7 +11,7 @@ globalThis.indexedDB = indexedDB;
 const url = process.env.VITE_SUPABASE_URL,
   anon = process.env.VITE_SUPABASE_ANON_KEY;
 assert.equal(new URL(url).hostname, "awijrkxrhlisixufiukw.supabase.co");
-const options = { auth: { persistSession: false, autoRefreshToken: false } },
+const options = { auth: { persistSession: false, autoRefreshToken: false },global:{fetch:(input,init)=>fetch(input,{...init,signal:AbortSignal.timeout(20000)})} },
   admin = createClient(url, process.env.SUPABASE_SERVICE_ROLE_KEY, options);
 const vite = await createServer({
   server: { middlewareMode: true },
@@ -616,12 +616,18 @@ try {
   pass('deployed plaintext boundary rejects legacy writes and keeps profile content out of metadata');
   }
   if(process.env.VERIFY_PRIVATE_AI==='1'){
-  const aiRooms=[];let aiView;
+  const aiRooms=[];let aiView,guestView;
   try{
     activate(0);
     const hostAI=new EncryptedGameRoom(users[0].id,couple.id,users[1].id,'truth_dare',message=>console.log('AI host transport:',message),clients[0],bundles[0]);aiRooms.push(hostAI);hostAI.subscribe(value=>{aiView=value});await hostAI.start();
     activate(1);
-    const guestAI=new EncryptedGameRoom(users[1].id,couple.id,users[0].id,'truth_dare',message=>console.log('AI guest transport:',message),clients[1],bundles[1]);aiRooms.push(guestAI);await guestAI.start();
+    const guestAI=new EncryptedGameRoom(users[1].id,couple.id,users[0].id,'truth_dare',message=>console.log('AI guest transport:',message),clients[1],bundles[1]);aiRooms.push(guestAI);guestAI.subscribe(value=>{guestView=value});await guestAI.start();
+    await wait(()=>aiView?.player_o===users[1].id,'AI host sees second player');
+    assert.equal(check(await clients[0].rpc('game_adult_pair_eligible',{p_id:aiView.id})),true);
+    assert.equal(check(await clients[2].rpc('game_adult_pair_eligible',{p_id:aiView.id})),false);
+    assert.ok((await clients[2].rpc('end_private_game',{p_id:aiView.id})).error);
+    await assert.rejects(guestAI.action({kind:'configure',level:'bold',total:3}));
+    await hostAI.action({kind:'configure',level:'playful',total:3});
     await assert.rejects(hostAI.action({kind:'prefetch'}),/privacy/i);
     check(await consent(0,{p_ai:true}));
     const began=performance.now();
@@ -635,6 +641,34 @@ try {
     const opaque=check(await admin.from('game_sessions').select('encrypted_state,host_secret,board_state').eq('id',aiView.id).single());
     assert.ok(!JSON.stringify(opaque).includes(question));
     pass('deployed AI respects consent and preserves readiness while encrypting generated questions',{generationAndRoundStartMs:Math.round(performance.now()-began)});
+    for(let round=1;round<=3;round++){
+      await wait(()=>guestView?.board_state.phase==='play'&&guestView.board_state.round===round,'peer sees question');
+      await Promise.all([hostAI.action({kind:'answer',text:'A synthetic answer'}),guestAI.action({kind:'answer',text:'Another synthetic answer'})]);
+      await wait(()=>[aiView,guestView].every(v=>v?.board_state.phase==='reveal'),'both see reveal');
+      await hostAI.action({kind:'next'});
+      assert.equal(aiView.board_state.phase,'reveal');
+      await wait(()=>guestView?.board_state.nextReady?.includes('X'),'peer sees host acknowledgement');
+      await guestAI.action({kind:'next'});
+    }
+    await wait(()=>[aiView,guestView].every(v=>v?.status==='finished'&&v?.board_state.phase==='result'),'both see final result');
+    assert.equal(aiView.board_state.history.length,3);
+    pass('simultaneous encrypted answers, mutual reveal acknowledgements and full final history reach both clients');
+    // A separate room: ending from the guest must work even while the host is offline.
+    const endRoom=check(await clients[0].rpc('open_private_game',{p_couple:couple.id,p_type:'never_have_i_ever'}));
+    check(await clients[1].rpc('open_private_game',{p_couple:couple.id,p_type:'never_have_i_ever'}));
+    const key=await crypto.sharingKey(bundles[0],bundles[1].publicKey,`game:${couple.id}`),init=engine.initialGame('never_have_i_ever');
+    const saved=check(await clients[0].rpc('commit_private_game',{p_id:endRoom.id,p_revision:endRoom.revision,p_state:await crypto.seal(key,init.state,`twilight:game:1:${couple.id}:${endRoom.id}:${endRoom.revision+1}:state`),p_secret:await crypto.seal(await crypto.aes(bundles[0].master),init.secret,`twilight:game:1:${couple.id}:${endRoom.id}:${endRoom.revision+1}:host`),p_status:'active'}));
+    const stopped=check(await clients[1].rpc('end_private_game',{p_id:endRoom.id}));
+    assert.equal(stopped.status,'ended');assert.equal(stopped.revision,saved.revision);
+    assert.equal((await crypto.open(key,stopped.encrypted_state,`twilight:game:1:${couple.id}:${endRoom.id}:${stopped.revision}:state`)).phase,'setup');
+    assert.ok((await clients[0].rpc('commit_private_game',{p_id:endRoom.id,p_revision:saved.revision,p_state:saved.encrypted_state,p_secret:saved.host_secret,p_status:'active'})).error);
+    check(await admin.from('privacy_preferences').update({age_band:'13-17'}).eq('user_id',users[1].id));
+    assert.equal(check(await clients[0].rpc('game_adult_pair_eligible',{p_id:endRoom.id})),false);
+    const token=check(await clients[0].auth.getSession()).session.access_token;
+    const denied=await fetch(url+'/functions/v1/game-action',{method:'POST',headers:{Authorization:`Bearer ${token}`,apikey:anon,'Content-Type':'application/json'},body:JSON.stringify({kind:'prompts',id:endRoom.id,level:'after_hours'}),signal:AbortSignal.timeout(20000)});
+    assert.equal(denied.status,403);await denied.body?.cancel();
+    check(await admin.from('privacy_preferences').update({age_band:'18+'}).eq('user_id',users[1].id));
+    pass('guest can end with host offline; late commits cannot reopen it; adult eligibility rejects outsiders and a teen pair');
   }finally{for(const client of aiRooms)client.dispose()}
   }
   // Verify disconnect revokes envelopes and removes game queues while preserving

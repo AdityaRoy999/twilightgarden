@@ -1114,6 +1114,31 @@ export type Database = {
         Args: { p_actor: string }
         Returns: undefined
       }
+      end_private_game: {
+        Args: { p_id: string }
+        Returns: {
+          board_state: Json
+          couple_id: string
+          created_at: string | null
+          current_turn: string | null
+          encrypted_state: Json | null
+          engine_version: number
+          game_type: string
+          host_secret: Json | null
+          id: string
+          player_o: string | null
+          player_x: string
+          revision: number
+          status: string
+          winner: string | null
+        }
+        SetofOptions: {
+          from: "*"
+          to: "game_sessions"
+          isOneToOne: true
+          isSetofReturn: false
+        }
+      }
       ensure_own_profile: {
         Args: never
         Returns: {
@@ -1135,6 +1160,7 @@ export type Database = {
           isSetofReturn: false
         }
       }
+      game_adult_pair_eligible: { Args: { p_id: string }; Returns: boolean }
       generate_pairing_code: { Args: never; Returns: Json }
       get_chat_public_key: { Args: { p_user_id: string }; Returns: string }
       get_data_epoch: { Args: never; Returns: string }

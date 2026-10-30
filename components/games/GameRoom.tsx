@@ -15,7 +15,7 @@ import {
 } from "../../supabase/functions/_shared/gameEngine";
 import { GameMascot } from "./GameMascot";
 import { AppIcon } from "../ui/Icons";
-import { MotionPortal } from '../ui/MotionPortal';
+import { MotionPortal } from "../ui/MotionPortal";
 
 const symbols: Record<string, string> = {
   heart: "favorite",
@@ -43,6 +43,7 @@ export default function GameRoom({ game }: { game: GameType }) {
     couple,
     invitationSent,
     optimistic,
+    adultAllowed,
   } = useGameRoom(game);
   const { user } = useAuth();
   const { openTutorial } = useTutorial();
@@ -54,15 +55,25 @@ export default function GameRoom({ game }: { game: GameType }) {
     [copied, setCopied] = useState(false),
     [inviting, setInviting] = useState(false),
     [inviteSent, setInviteSent] = useState(false);
+  const [draftLevel, setDraftLevel] = useState<State["level"]>("gentle"),
+    [draftTotal, setDraftTotal] = useState(5),
+    [selectedAnswer, setSelectedAnswer] = useState<string | null>(null);
+  useEffect(() => {
+    if (room) {
+      setDraftLevel(room.board_state.level);
+      setDraftTotal(room.board_state.total);
+    }
+  }, [room?.id, room?.board_state.level, room?.board_state.total]);
   useEffect(() => {
     setText("");
     setStatements(["", "", ""]);
     setLie(0);
+    setSelectedAnswer(null);
   }, [room?.id, room?.board_state.round]);
   useEffect(() => {
     setInviteSent(!!invitationSent);
     setCopied(false);
-  }, [room?.id,invitationSent]);
+  }, [room?.id, invitationSent]);
   const requested = useRef("");
   const [generatingPrompts, setGeneratingPrompts] = useState(false);
   const state = room?.board_state;
@@ -86,14 +97,18 @@ export default function GameRoom({ game }: { game: GameType }) {
       busy ||
       !needsPrompts(game) ||
       state.phase === "result" ||
-      (state.promptCount ?? 0) >= 3
+      (state.promptCount ?? 0) >= (state.phase === "setup" ? 1 : 2) ||
+      (state.phase === "reveal" && state.round >= state.total) ||
+      ["ended", "finished", "completed"].includes(room.status)
     )
       return;
     const key = `${room.id}:${state.level}:${state.total}:${state.round}`;
     if (requested.current === key) return;
     requested.current = key;
     setGeneratingPrompts(true);
-    void action({ kind: "prefetch" }).finally(() => setGeneratingPrompts(false));
+    void action({ kind: "prefetch" }).finally(() =>
+      setGeneratingPrompts(false),
+    );
   }, [
     room?.id,
     room?.player_o,
@@ -157,6 +172,15 @@ export default function GameRoom({ game }: { game: GameType }) {
     );
   const ended = room.status === "ended" || state.phase === "result";
   const mine = state.turn === player;
+  const settingsDirty =
+    draftLevel !== state.level || draftTotal !== state.total;
+  const romantic = [
+    "truth_dare",
+    "never_have_i_ever",
+    "would_you_rather",
+    "this_or_that",
+    "rapid_fire",
+  ].includes(game);
   return (
     <main className="game-room" data-game={game}>
       <header className="game-header">
@@ -171,7 +195,13 @@ export default function GameRoom({ game }: { game: GameType }) {
           <AppIcon name="help" size={24} />
         </button>
       </header>
-      {(optimistic || (busy && state.phase === 'play')) && <MotionPortal><p className="game-sync-status" role="status">Syncing move…</p></MotionPortal>}
+      {(optimistic || (busy && state.phase === "play")) && (
+        <MotionPortal>
+          <p className="game-sync-status" role="status">
+            Syncing move…
+          </p>
+        </MotionPortal>
+      )}
       <div className="game-players">
         {(["X", "O"] as Player[]).map((p) => (
           <div key={p} className={state.turn === p && !ended ? "is-turn" : ""}>
@@ -240,6 +270,24 @@ export default function GameRoom({ game }: { game: GameType }) {
               ))}
             </div>
           )}
+          {!!state.history?.length && (
+            <div className="game-match-history">
+              <h3>Your rounds together</h3>
+              {state.history.map((entry) => (
+                <article key={entry.round}>
+                  <small>Round {entry.round}</small>
+                  <strong>{entry.question}</strong>
+                  {(["X", "O"] as Player[]).map((p) => (
+                    <p key={p}>
+                      <b>{p === player ? "You" : "Partner"}:</b>{" "}
+                      {entry.replies[p] || "Skipped"}
+                    </p>
+                  ))}
+                  {entry.answer && <p>Answer: {entry.answer}</p>}
+                </article>
+              ))}
+            </div>
+          )}
           <button className="reference-button" onClick={() => void reopen()}>
             Play again
           </button>
@@ -292,26 +340,33 @@ export default function GameRoom({ game }: { game: GameType }) {
             <>
               <label>Choose the mood</label>
               <div className="game-levels">
-                {(["gentle", "playful", "bold"] as const).map((level) => (
+                {(
+                  [
+                    "gentle",
+                    "playful",
+                    "bold",
+                    ...(adultAllowed && romantic ? ["after_hours"] : []),
+                  ] as State["level"][]
+                ).map((level) => (
                   <button
                     key={level}
                     disabled={busy || player !== "X"}
-                    aria-pressed={state.level === level}
-                    onClick={() =>
-                      void action({
-                        kind: "configure",
-                        level,
-                        total: state.total,
-                      })
+                    aria-pressed={
+                      (player === "X" ? draftLevel : state.level) === level
                     }
+                    onClick={() => setDraftLevel(level)}
                   >
-                    {level}
+                    {level === "after_hours" ? "After hours · 18+" : level}
                   </button>
                 ))}
               </div>
               <small>
-                Bold means more adventurous and candid. Skip any prompt, for any
-                reason.
+                Gentle: curious. Playful: unpredictable. Bold: candid
+                challenges.
+                {adultAllowed && romantic
+                  ? " After hours: flirty, intimate and non-graphic; both players opt in by tapping Ready."
+                  : ""}{" "}
+                Skip any prompt, for any reason.
               </small>
             </>
           )}
@@ -328,14 +383,10 @@ export default function GameRoom({ game }: { game: GameType }) {
                   <button
                     key={total}
                     disabled={busy || player !== "X"}
-                    aria-pressed={state.total === total}
-                    onClick={() =>
-                      void action({
-                        kind: "configure",
-                        level: state.level,
-                        total,
-                      })
+                    aria-pressed={
+                      (player === "X" ? draftTotal : state.total) === total
                     }
+                    onClick={() => setDraftTotal(total)}
                   >
                     {total}
                   </button>
@@ -343,23 +394,47 @@ export default function GameRoom({ game }: { game: GameType }) {
               </div>
             </>
           )}
+          {player === "X" && settingsDirty && (
+            <button
+              className="reference-button secondary"
+              disabled={busy}
+              onClick={() =>
+                void action({
+                  kind: "configure",
+                  level: draftLevel,
+                  total: draftTotal,
+                })
+              }
+            >
+              Confirm settings
+            </button>
+          )}
           <p role="status">
             {generatingPrompts
               ? "Preparing fresh AI questions…"
               : generating && error
                 ? "Questions couldn’t load. Tap Retry AI questions above."
-              : state.ready.includes(player)
-                ? "You’re ready. Waiting for your partner."
-                : player === "O"
-                  ? "Your partner chooses the settings."
-                  : "Both players tap Ready to begin."}
+                : state.ready.includes(player)
+                  ? "You’re ready. Waiting for your partner."
+                  : player === "O"
+                    ? "Your partner chooses the settings."
+                    : "Both players tap Ready to begin."}
           </p>
           <button
             className="reference-button"
-            disabled={busy || generating || state.ready.includes(player)}
+            disabled={
+              busy ||
+              generating ||
+              (player === "X" && settingsDirty) ||
+              state.ready.includes(player)
+            }
             onClick={() => void action({ kind: "ready" })}
           >
-            {generatingPrompts ? "Preparing questions…" : state.ready.includes(player) ? "Ready!" : "I’m ready"}
+            {generatingPrompts
+              ? "Preparing questions…"
+              : state.ready.includes(player)
+                ? "Ready!"
+                : "I’m ready"}
           </button>
         </section>
       ) : (
@@ -414,11 +489,18 @@ export default function GameRoom({ game }: { game: GameType }) {
               )}
               <button
                 className="reference-button"
-                disabled={busy}
+                disabled={busy || state.nextReady?.includes(player)}
                 onClick={() => void action({ kind: "next" })}
               >
-                {state.round >= state.total ? "See results" : "Next round"}
+                {state.nextReady?.includes(player)
+                  ? "Waiting for your partner…"
+                  : state.round >= state.total
+                    ? "See results"
+                    : "Next round"}
               </button>
+              <small>
+                Both players continue when they’ve finished reading.
+              </small>
             </section>
           ) : (
             <section className="game-play-area">
@@ -677,11 +759,32 @@ export default function GameRoom({ game }: { game: GameType }) {
                       <button
                         key={text}
                         disabled={busy || !!state.replies[player]}
-                        onClick={() => void action({ kind: "answer", text })}
+                        aria-pressed={selectedAnswer === text}
+                        onClick={() => setSelectedAnswer(text)}
                       >
                         {text}
                       </button>
                     ))}
+                    <button
+                      className="reference-button game-confirm-answer"
+                      disabled={
+                        busy ||
+                        selectedAnswer === null ||
+                        !!state.replies[player]
+                      }
+                      onClick={async () => {
+                        if (
+                          selectedAnswer !== null &&
+                          (await action({
+                            kind: "answer",
+                            text: selectedAnswer,
+                          }))
+                        )
+                          setSelectedAnswer(null);
+                      }}
+                    >
+                      Confirm answer
+                    </button>
                   </div>
                 ) : (
                   <TextAnswer

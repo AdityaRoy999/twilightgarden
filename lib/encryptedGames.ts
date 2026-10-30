@@ -129,6 +129,14 @@ export class EncryptedGameRoom {
       (this.latest && room.revision < this.latest.revision)
     )
       return;
+    // End notifications can race an older read at the same encrypted revision.
+    if (
+      this.latest &&
+      ["ended", "finished", "completed"].includes(this.latest.status) &&
+      !["ended", "finished", "completed"].includes(room.status) &&
+      room.revision <= this.latest.revision
+    )
+      return;
     this.latest = room;
     if (!room.encrypted_state) return;
     const signature = `${room.revision}:${room.player_o}:${room.status}`;
@@ -368,13 +376,26 @@ export class EncryptedGameRoom {
               command.ciphertext,
               this.commandContext(command),
             );
-            if (room.revision !== command.base_revision)
-              throw new Error("STALE_ROOM");
             const state = await open<State>(
               await this.stateKey(),
               room.encrypted_state,
               this.stateContext(room),
             );
+            const basis = action._basis as any;
+            const independent = ["ready", "next", "answer", "choose"].includes(
+              String(action.kind),
+            );
+            if (
+              room.revision !== command.base_revision &&
+              !(
+                independent &&
+                basis &&
+                basis.round === state.round &&
+                basis.phase === state.phase &&
+                basis.settings === (state.settingsRevision || 0)
+              )
+            )
+              throw new Error("STALE_ROOM");
             const secret = await open<Secret>(
               await this.masterKey(),
               room.host_secret,
@@ -429,10 +450,32 @@ export class EncryptedGameRoom {
   }
   async action(action: Record<string, unknown>) {
     if (!this.latest || this.disposed) throw new Error("Open the game first.");
+    if (action.kind === "leave") {
+      const { data, error } = await (this.transport.rpc as any)(
+        "end_private_game",
+        { p_id: this.latest.id },
+      );
+      if (error) throw error;
+      await this.accept(data as WireRoom);
+      this.hint();
+      return {};
+    }
+    if (action.kind === "configure" && action.level === "after_hours") {
+      const { data, error } = await (this.transport.rpc as any)(
+        "game_adult_pair_eligible",
+        { p_id: this.latest.id },
+      );
+      if (error || data !== true)
+        throw new Error(
+          "After hours is available only when both players have declared they are 18 or older.",
+        );
+    }
     if (action.kind === "invite")
       return this.request({ kind: "invite-private", id: this.latest.id });
     if (action.kind === "prefetch") {
       if (this.latest.player_x !== this.ownId || !needsPrompts(this.game))
+        return {};
+      if (["ended", "finished", "completed"].includes(this.latest.status))
         return {};
       const before = await this.read();
       if (!before.encrypted_state || !before.host_secret) return {};
@@ -511,7 +554,27 @@ export class EncryptedGameRoom {
         );
       } catch (error: any) {
         if (error.code === "40001") {
-          await this.read();
+          const fresh = await this.read();
+          if (
+            !action._retry &&
+            fresh.encrypted_state &&
+            ["ready", "next", "answer", "choose"].includes(
+              String(action.kind),
+            ) &&
+            !["ended", "finished", "completed"].includes(fresh.status)
+          ) {
+            const updated = await open<State>(
+              await this.stateKey(),
+              fresh.encrypted_state,
+              this.stateContext(fresh),
+            );
+            if (
+              updated.round === state.round &&
+              updated.phase === state.phase &&
+              (updated.settingsRevision || 0) === (state.settingsRevision || 0)
+            )
+              return this.action({ ...action, _retry: 1 });
+          }
           throw new Error(
             "The game changed on another device. Retry your move.",
           );
@@ -528,9 +591,21 @@ export class EncryptedGameRoom {
       status: "pending",
       ciphertext: null as any,
     };
+    const basis = await open<State>(
+      await this.stateKey(),
+      this.latest.encrypted_state!,
+      this.stateContext(this.latest),
+    );
     command.ciphertext = await seal(
       await this.stateKey(),
-      action,
+      {
+        ...action,
+        _basis: {
+          round: basis.round,
+          phase: basis.phase,
+          settings: basis.settingsRevision || 0,
+        },
+      },
       this.commandContext(command),
     );
     const completed = new Promise<void>((resolve, reject) => {

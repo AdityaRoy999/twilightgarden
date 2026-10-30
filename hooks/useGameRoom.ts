@@ -24,6 +24,7 @@ export function useGameRoom(game: GameType) {
     [error, setError] = useState(""),
     [invitationSent, setInvitationSent] = useState(false),
     [restart, setRestart] = useState(0);
+  const [adultAllowed, setAdultAllowed] = useState(false);
   const [preview, setPreview] = useState<{
     revision: number;
     state: State;
@@ -34,11 +35,13 @@ export function useGameRoom(game: GameType) {
   current.current = room;
   useEffect(() => {
     let active = true;
+    let eligibilityFor = "";
     setRoom(null);
     setLoading(true);
     setError("");
     setBusy(false);
     setPreview(null);
+    setAdultAllowed(false);
     lock.current = false;
     if (!user || !couple || couple.status !== "active") {
       setLoading(false);
@@ -65,6 +68,14 @@ export function useGameRoom(game: GameType) {
     );
     engine.current = client;
     client.subscribe((next) => {
+      if (active && next.player_o && eligibilityFor !== next.id) {
+        eligibilityFor = next.id;
+        void (rawSupabase.rpc as any)("game_adult_pair_eligible", {
+          p_id: next.id,
+        }).then(({ data, error }: any) => {
+          if (active) setAdultAllowed(!error && data === true);
+        });
+      }
       if (active)
         setRoom((old) =>
           !old ||
@@ -99,6 +110,20 @@ export function useGameRoom(game: GameType) {
     async (action: Record<string, unknown>) => {
       const client = engine.current,
         session = current.current;
+      if (client && session && action.kind === "prefetch") {
+        try {
+          await client.action(action);
+          return true;
+        } catch (e) {
+          if (engine.current === client)
+            setError(
+              e instanceof Error
+                ? e.message
+                : "Questions could not be prepared.",
+            );
+          return false;
+        }
+      }
       if (!client || !session || lock.current) return false;
       lock.current = true;
       setBusy(true);
@@ -134,6 +159,7 @@ export function useGameRoom(game: GameType) {
   return {
     room: room && optimistic ? { ...room, board_state: preview!.state } : room,
     optimistic,
+    adultAllowed,
     loading,
     busy,
     error,

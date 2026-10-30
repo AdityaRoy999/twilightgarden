@@ -43,7 +43,7 @@ export function validateGamePrompts(type:GameType,input:unknown):Prompt[]{
       seen.add(p.question);
       return true;
     })
-    .slice(0, 8)
+    .slice(0, 10)
     .map((p: Prompt) => ({
       question: p.question,
       options: choices || type === "song_lyrics" ? p.options : undefined,

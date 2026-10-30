@@ -6,6 +6,7 @@ import {afterEach,beforeEach,describe,expect,it,vi} from 'vitest';
 const mocks=vi.hoisted(()=>({updateSettings:vi.fn()}));
 vi.mock('../contexts/DataContext',()=>({useData:()=>({updateSettings:mocks.updateSettings})}));
 vi.mock('../contexts/AuthContext',()=>({useAuth:()=>({user:{role:'user'}})}));
+vi.mock('../hooks/useAppMotion',()=>({useAppMotion:()=>({reduced:true})}));
 vi.mock('../hooks/useToday',()=>({useToday:()=> '2026-10-26'}));
 vi.mock('framer-motion',()=>({AnimatePresence:({children}:{children:React.ReactNode})=><>{children}</>,motion:{div:({children}:{children:React.ReactNode})=><div>{children}</div>}}));
 import Onboarding from '../pages/Onboarding';
