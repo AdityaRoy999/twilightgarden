@@ -60,8 +60,7 @@ export async function checkNotificationPermission(): Promise<boolean> {
   }
 }
 
-// Scheduled reminders are delivered by the authenticated server job. Retire old
-// device schedules so one preference does not produce six daily alerts.
+// Health reminders are scheduled locally from the unlocked private vault.
 // Cancel all scheduled notifications
 export async function cancelAllNotifications(): Promise<void> {
   if (!isCapacitor()) return;

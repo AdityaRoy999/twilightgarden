@@ -3,10 +3,11 @@ import React from 'react';
 import { act, cleanup, render, screen, waitFor } from '@testing-library/react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 const mocks=vi.hoisted(()=>({listener:null as null|((event:string,session:unknown)=>void),profile:vi.fn(),register:vi.fn(),epoch:vi.fn(),getSession:vi.fn()}));
-vi.mock('@capacitor/preferences',()=>({Preferences:{remove:vi.fn().mockResolvedValue(undefined)}}));
-vi.mock('../lib/supabase',()=>({supabase:{rpc:()=>({abortSignal:()=>mocks.epoch()}),channel:()=>({on(){return this;},subscribe(){return this;}}),removeChannel:vi.fn(),auth:{getSession:mocks.getSession,onAuthStateChange:(listener:typeof mocks.listener)=>{mocks.listener=listener;return {data:{subscription:{unsubscribe:vi.fn()}}};}},from:()=>({select:()=>({eq:()=>({abortSignal:()=>({single:mocks.profile})})})})}}));
+vi.mock('../lib/securePreferences',()=>({SecurePreferences:{remove:vi.fn().mockResolvedValue(undefined)}}));
+vi.mock('../lib/supabase',()=>{const client={rpc:()=>({abortSignal:()=>mocks.epoch()}),channel:()=>({on(){return this;},subscribe(){return this;}}),removeChannel:vi.fn(),auth:{getSession:mocks.getSession,onAuthStateChange:(listener:typeof mocks.listener)=>{mocks.listener=listener;return {data:{subscription:{unsubscribe:vi.fn()}}};}},from:()=>({select:()=>({eq:()=>({abortSignal:()=>({single:mocks.profile})})})})};return {supabase:client,rawSupabase:client};});
 vi.mock('../lib/notifications',()=>({registerPushNotifications:mocks.register,resetPushRegistration:vi.fn()}));
 vi.mock('../lib/encryption',()=>({clearEncryptionCache:vi.fn()}));
+vi.mock('../lib/privateData',()=>({readPrivateRows:vi.fn().mockResolvedValue([])}));
 import { AuthProvider,useAuth } from '../contexts/AuthContext';
 const session=(id:string)=>({user:{id,email:'synthetic@example.invalid',user_metadata:{role:'admin',is_partner:true}}});
 function Probe(){const a=useAuth();return <><button onClick={()=>void a.refreshUser()}>Retry</button><b>{a.loading?'checking':'idle'}</b><p>{a.user?.id||'signed-out'}|{a.user?.role}|{a.sessionVerified?'verified':'unverified'}|{a.error}</p></>;}

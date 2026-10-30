@@ -116,10 +116,10 @@ const AdminDashboard: React.FC = () => {
                     }`}>
                         <div className="flex items-center gap-2 mb-3">
                             <span className="app-icon-glyph text-[#4ECDC4] text-lg"><AppIcon name={"trending_up"}/></span>
-                            <span className="text-[10px] font-bold text-gray-400 uppercase tracking-wide">Active Today</span>
+                            <span className="text-[10px] font-bold text-gray-400 uppercase tracking-wide">Private health activity</span>
                         </div>
                         <div className="flex flex-col">
-                            <span className={`text-2xl font-bold mb-0.5 ${isDark ? 'text-white' : 'text-[var(--text-primary)]'}`}>{stats.activeToday}</span>
+                            <span className={`text-2xl font-bold mb-0.5 ${isDark ? 'text-white' : 'text-[var(--text-primary)]'}`}>Encrypted</span>
                             <span className="text-xs font-medium text-gray-400">logged today</span>
                         </div>
                     </div>

@@ -2,10 +2,18 @@
 import {act,cleanup,renderHook,waitFor} from '@testing-library/react';
 import {afterEach,beforeEach,expect,it,vi} from 'vitest';
 import {initialGame} from '../supabase/functions/_shared/gameEngine';
-const fixture=vi.hoisted(()=>({event:null as any,user:{id:'owner'},couple:{id:'pair'}}));
+const fixture=vi.hoisted(()=>({event:null as any,user:{id:'owner'},couple:{id:'pair',status:'active',partner_1_id:'owner',partner_2_id:'partner'}}));
 vi.mock('../contexts/AuthContext',()=>({useAuth:()=>({user:fixture.user})}));
 vi.mock('../contexts/CouplesContext',()=>({useCouples:()=>({couple:fixture.couple})}));
-vi.mock('../lib/supabase',()=>({supabase:{auth:{getSession:async()=>({data:{session:{access_token:'test-token'}}})},channel:()=>({on(_event:any,_filter:any,listener:any){fixture.event=listener;return this;},subscribe(){return this;}}),removeChannel:vi.fn()}}));
+vi.mock('../lib/supabase',()=>({rawSupabase:{}}));
+vi.mock('../lib/vaultRuntime',()=>({unlockedVault:()=>({userId:'owner'})}));
+// Mock the encrypted transport boundary, retaining the same delayed-commit,
+// rejection and out-of-order realtime scenarios for optimistic rendering.
+vi.mock('../lib/encryptedGames',()=>({EncryptedGameRoom:class{
+ listener:any;subscribe(callback:any){this.listener=callback;fixture.event=(event:any)=>callback(event.new);return()=>{};}
+ async request(body:any){const response=await fetch('/encrypted-game-test',{method:'POST',body:JSON.stringify(body)});const result=await response.json();if(result.session)this.listener(result.session);if(!response.ok)throw new Error(result.error);return result;}
+ start(){return this.request({kind:'open'});}action(action:any){return this.request({action});}dispose(){}
+}}));
 import {useGameRoom} from '../hooks/useGameRoom';
 import {previewGameMove} from '../lib/gamePreview';
 const room=()=>({id:'room',revision:1,player_x:'owner',player_o:'partner',game_type:'tictactoe',status:'active',board_state:{...initialGame('tictactoe').state,phase:'play'}});

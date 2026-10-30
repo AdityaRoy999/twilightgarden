@@ -20,8 +20,7 @@ export default function AuthScreen({
 }) {
   const navigate = useNavigate();
   const [email, setEmail] = useState(""),
-    [password, setPassword] = useState(""),
-    [name, setName] = useState("");
+    [password, setPassword] = useState("");
   const [visible, setVisible] = useState(false),
     [busy, setBusy] = useState(false),
     [error, setError] = useState("");
@@ -53,7 +52,7 @@ export default function AuthScreen({
         const { data, error } = await supabase.auth.signUp({
           email: email.trim(),
           password,
-          options: { data: { full_name: name.trim(), is_partner: partner } },
+          options: { data: { is_partner: partner } },
         });
         if (error) throw error;
         if (!data.session) {
@@ -238,25 +237,6 @@ export default function AuthScreen({
               </div>
             ) : (
               <>
-                {signup && (
-                  <div>
-                    <label
-                      htmlFor="fullName"
-                      className="mb-2 block text-sm font-medium"
-                    >
-                      Full name
-                    </label>
-                    <input
-                      id="fullName"
-                      autoComplete="name"
-                      maxLength={100}
-                      required
-                      value={name}
-                      onChange={(e) => setName(e.target.value)}
-                      className={input}
-                    />
-                  </div>
-                )}
                 <div>
                   <label
                     htmlFor="email"

@@ -8,9 +8,10 @@ import { DailyLog, DailyLogInput, CycleSettings, CyclePhase, AppNotification } f
 import { calculateCyclePhase } from '../lib/cycleUtils';
 import {validateCycleSettings,cycleSettingsSaveError} from '../lib/cycleSettings';
 import { decryptData } from '../lib/encryption';
-import { encryptHealthSnapshot } from '../lib/healthSnapshot';
 import { loadHealthHistory } from '../lib/healthHistory';
 import { useToday } from '../hooks/useToday';
+import {schedulePrivateReminders} from '../lib/privateReminders';
+import {getPrivatePeer} from '../lib/privateData';
 
 interface DataContextType {
   logs: DailyLog[];
@@ -137,7 +138,7 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children
             });
           } else if (payload.eventType === 'UPDATE') {
             const updatedLog = await mapLog(payload.new);
-            setLogs(prev => { const next=prev.map(l => l.date === updatedLog.date ? updatedLog : l); setCachedLogs(user.id,next); return next; });
+            setLogs(prev => { const next=[...prev.filter(l => l.date !== updatedLog.date),updatedLog].sort((a,b)=>b.date.localeCompare(a.date)); setCachedLogs(user.id,next); return next; });
           } else if (payload.eventType === 'DELETE') {
             const deletedId = payload.old.id;
             setLogs(prev => { const next=prev.filter(l => l.id !== deletedId); setCachedLogs(user.id,next); return next; });
@@ -322,7 +323,7 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children
         sleepHours: newLog.sleepHours
       };
 
-      const encryptedPayload = await encryptHealthSnapshot(payload, partnerPubKey);
+      const encryptedPayload = null; // The private RPC facade seals the complete record, including its date.
 
       const {data:result,error}=await supabase.rpc('save_daily_log',{
         p_date:newLog.date,p_period_start:!!newLog.periodStarted,p_encrypted:encryptedPayload,
@@ -346,6 +347,7 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children
       if (existingIndex === -1) {
         (async () => {
           try {
+            if(!(await getPrivatePeer())?.shareHealth)return;
             const { data: couple } = await supabase
               .from('couples')
               .select('partner_1_id, partner_2_id')
@@ -359,21 +361,12 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children
               const partnerId = coupleData.partner_1_id === user.id ? coupleData.partner_2_id : coupleData.partner_1_id;
 
               if (partnerId) {
-                const { data: partnerProfile } = await supabase
-                  .from('profiles')
-                  .select('partner_nickname')
-                  .eq('id', partnerId)
-                  .single();
-
-                const nickname = (partnerProfile as any)?.partner_nickname || 'partner';
-                const message = `Your ${nickname} has completed their daily log.`;
-
-                const encryptedPayload = await encryptHealthSnapshot({ message }, partnerPubKey);
+                const encryptedPayload = null;
 
                 await supabase.from('notifications').insert({
                   user_id: partnerId,
                   type: 'log',
-                  message: '[Encrypted Message]',
+                  message: 'Your partner shared a private update.',
                   encrypted_payload: encryptedPayload,
                   created_at: new Date().toISOString(),
                   is_read: false
@@ -394,6 +387,8 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
   };
 
+  useEffect(()=>{if(!user||user.role==='partner'||!cycleSettings.onboardingCompleted)return;const schedule=()=>{void schedulePrivateReminders(cycleSettings,logs).catch(()=>{});};schedule();window.addEventListener('twilight-private-preferences',schedule);return()=>window.removeEventListener('twilight-private-preferences',schedule);},[user?.id,cycleSettings,logs]);
+
   const getLog = (date: string) => logs.find(l => l.date === date);
 
   const updateSettings = async (updates: Partial<CycleSettings>) => {
@@ -410,7 +405,7 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children
           irregularCycle: newSettings.irregularCycle
         };
 
-        const encryptedPayload = await encryptHealthSnapshot(payload, partnerPubKey);
+        const encryptedPayload = null; // The private RPC facade seals the complete record, including its date.
 
         const { error } = await supabase.rpc('save_cycle_settings',{p_encrypted:encryptedPayload,p_values:{
           avg_cycle_length:newSettings.avgCycleLength,avg_period_length:newSettings.avgPeriodLength,

@@ -96,7 +96,7 @@ const EditProfile: React.FC = () => {
 
         // Update twilight_profile cache with timestamp for staleness tracking
         try {
-          localStorage.setItem('twilight_profile', JSON.stringify({ ...updates, _cachedAt: Date.now() }));
+          localStorage.removeItem('twilight_profile');
         } catch {}
 
         // Refresh AuthContext user state + cache so all pages see the new avatar instantly

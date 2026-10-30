@@ -5,7 +5,7 @@ const preferences = vi.hoisted(() => ({
   set: vi.fn(),
   remove: vi.fn(),
 }));
-vi.mock("@capacitor/preferences", () => ({ Preferences: preferences }));
+vi.mock("../lib/securePreferences", () => ({ SecurePreferences: preferences }));
 import {
   generateKeyPair,
   clearEncryptionCache,

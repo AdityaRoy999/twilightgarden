@@ -1,5 +1,6 @@
 import { supabase } from './supabase';
 import { decryptBlob } from './encryption';
+import {encryptPrivateAvatar} from './privateData';
 
 const PREFIX = 'chat-media:';
 
@@ -33,9 +34,5 @@ export function validateAvatar(file: File): void {
 
 export async function uploadAvatar(file: File, userId: string): Promise<string> {
   validateAvatar(file);
-  const extension = { 'image/jpeg': 'jpg', 'image/png': 'png', 'image/webp': 'webp' }[file.type];
-  const path = `${userId}/${crypto.randomUUID()}.${extension}`;
-  const { error } = await supabase.storage.from('avatars').upload(path, file, { contentType: file.type });
-  if (error) throw error;
-  return supabase.storage.from('avatars').getPublicUrl(path).data.publicUrl;
+  return encryptPrivateAvatar(file,userId);
 }

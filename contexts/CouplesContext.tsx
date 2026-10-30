@@ -23,7 +23,7 @@ import {
   clearEncryptionCache,
 } from '../lib/encryption';
 import { sendSyncPayload } from '../lib/sync';
-import { Preferences } from '@capacitor/preferences';
+import {SecurePreferences as Preferences} from '../lib/securePreferences';
 
 const NOTES_PAGE_SIZE = 50;
 
@@ -87,20 +87,9 @@ const CouplesContext = createContext<CouplesContextType | undefined>(undefined);
 export const CouplesProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const { user, loading: authLoading } = useAuth();
   // Cache couple data to prevent flash on resume/re-mount
-  const getCachedCouple = (): Couple | null => {
-    try {
-      const cached = localStorage.getItem('tw_cached_couple');
-      const value=cached?JSON.parse(cached):null;
-      return user&&value&&[value.partner_1_id,value.partner_2_id].includes(user.id)?value:null;
-    } catch { return null; }
-  };
-
-  const setCachedCouple = (v: Couple | null) => {
-    try {
-      if (v) localStorage.setItem('tw_cached_couple', JSON.stringify(v));
-      else localStorage.removeItem('tw_cached_couple');
-    } catch { }
-  };
+  // Connection state is revalidated instead of persisting private invite codes.
+  const getCachedCouple = ():Couple|null => null;
+  const setCachedCouple = (_value:Couple|null) => {localStorage.removeItem('tw_cached_couple');};
 
   // Load cached decrypted notes from localStorage for instant display
   const getCachedNotes = (): SharedNote[] => [];
@@ -310,10 +299,10 @@ export const CouplesProvider: React.FC<{ children: React.ReactNode }> = ({ child
   const decryptNote = async (note: SharedNote, partnerPubKey: string | null, userId: string): Promise<SharedNote> => {
     if (!note.content) return note;
 
-    const decryptFn = async (cipher: string, pKey: string | null) => {
+    const decryptFn = async (cipher: string, pKey: string | null, field='content') => {
         if (!pKey || !identityUsableRef.current) return '🔐 Unlock your history to read this message';
         try {
-            return await decryptMessage(cipher, pKey, userId);
+            return await decryptMessage(cipher, pKey, userId,`twilight:chat:2:${note.couple_id}:${note.id}:${field}`);
         } catch (e) {
             console.warn('[E2EE] Decryption failed:', e);
             return '🔐 Unlock your history to read this message';
@@ -362,18 +351,18 @@ export const CouplesProvider: React.FC<{ children: React.ReactNode }> = ({ child
       decrypted.content = content;
 
       if (note.media_url) {
-          decrypted.media_url = await decryptFn(note.media_url, currentPartnerKey);
+          decrypted.media_url = await decryptFn(note.media_url, currentPartnerKey,'media');
       }
 
       if (note.reply_content) {
-          decrypted.reply_content = await decryptFn(note.reply_content, currentPartnerKey);
+          decrypted.reply_content = await decryptFn(note.reply_content, currentPartnerKey,'reply');
       }
 
       // Handle reactions — reactions are now stored as plain JSON (not encrypted).
       // Only attempt decryption for legacy string-format reactions.
       if (decrypted.reactions && typeof decrypted.reactions === 'string') {
           try {
-              const decryptedReactions = await decryptData<any[]>(decrypted.reactions as any, currentPartnerKey as any, userId);
+              const decryptedReactions = await decryptData<any[]>(decrypted.reactions as any, currentPartnerKey as any, userId,`twilight:chat:2:${note.couple_id}:${note.id}:reactions`);
               decrypted.reactions = decryptedReactions || [];
           } catch (e) {
               // Legacy encrypted reaction that can't be decrypted — set to empty
@@ -413,7 +402,7 @@ export const CouplesProvider: React.FC<{ children: React.ReactNode }> = ({ child
     const receiveNote=async(raw:SharedNote)=>{
       if(relationshipRef.current?.id!==couple.id||raw.couple_id!==couple.id||![couple.partner_1_id,couple.partner_2_id].includes(raw.sender_id))return;
       const cached=decryptedNotesCacheRef.current.get(raw.id);
-      const note=cached&&cached._encryptedContent===raw.content?{...raw,content:cached.content,media_url:cached.media_url,reply_content:cached.reply_content}:await decryptNote(raw,raw.sender_id===user.id?raw.recipient_public_key||await fetchPartnerPublicKey():raw.sender_public_key||await fetchPartnerPublicKey(),user.id);
+      const note=cached&&cached._encryptedContent===raw.content&&typeof raw.reactions!=='string'?{...raw,content:cached.content,media_url:cached.media_url,reply_content:cached.reply_content}:await decryptNote(raw,raw.sender_id===user.id?raw.recipient_public_key||await fetchPartnerPublicKey():raw.sender_public_key||await fetchPartnerPublicKey(),user.id);
       if(!active||!aliveRef.current||relationshipRef.current?.id!==couple.id)return;
       if(isContentDecrypted(note.content)){note._encryptedContent=raw.content;decryptedNotesCacheRef.current.set(note.id,note);}
       if(decryptedNotesCacheRef.current.size>MAX_DECRYPTED_CACHE){const key=decryptedNotesCacheRef.current.keys().next().value;if(key)decryptedNotesCacheRef.current.delete(key);}
@@ -629,7 +618,7 @@ export const CouplesProvider: React.FC<{ children: React.ReactNode }> = ({ child
     if(!partnerKey)throw new Error('Your partner needs to open Twilight and set up their secure identity.');
     const privateKey=getCachedPrivateKey();if(!privateKey)throw new Error('Unlock your history first.');
     const senderKey=derivePublicKeyFromPrivate(privateKey);
-    const [cipher,media]=await Promise.all([encryptMessage(content,partnerKey),mediaUrl?encryptMessage(mediaUrl,partnerKey):Promise.resolve(null)]);
+    const [cipher,media]=await Promise.all([encryptMessage(content,partnerKey,`twilight:chat:2:${couple.id}:${id}:content`),mediaUrl?encryptMessage(mediaUrl,partnerKey,`twilight:chat:2:${couple.id}:${id}:media`):Promise.resolve(null)]);
     if(relationshipRef.current?.id!==couple.id)throw new Error('This connection has ended.');
     const entry:QueuedChat={createdAt,params:{p_id:id,p_couple:couple.id,p_content:cipher,p_sender_key:senderKey,p_recipient_key:partnerKey,p_type:type,p_media:media,p_reply:replyToId||null,p_device:deviceId}};
     const queued=[...outboxRef.current,entry];writeOutbox(user.id,couple.id,queued);outboxRef.current=queued;
@@ -664,10 +653,11 @@ export const CouplesProvider: React.FC<{ children: React.ReactNode }> = ({ child
       ));
 
       try {
-        // Store reactions as plain JSON — they are not sensitive (just emoji + user_id)
-        // and encrypting them caused key-mismatch bugs when the note sender's device key
-        // differs from the partner's general public key.
-        const query: any = (supabase.from('shared_notes') as any).update({ reactions: updatedReactions });
+        // The emoji and actor list are private message content.
+        const key=note.sender_id===user.id?note.recipient_public_key:note.sender_public_key;
+        if(!key)throw new Error('Unlock the original message identity before reacting.');
+        const encrypted=await encryptData(updatedReactions,key,`twilight:chat:2:${note.couple_id}:${note.id}:reactions`);
+        const query: any = (supabase.from('shared_notes') as any).update({ reactions: encrypted });
         const { error } = await query.eq('id', noteId);
 
         if(error) throw error;
@@ -798,13 +788,17 @@ export const CouplesProvider: React.FC<{ children: React.ReactNode }> = ({ child
     const pKey = await fetchPartnerPublicKey(resolvedPartnerId);
     if (!pKey) return;
 
-    const encryptedContent = await encryptMessage(note.content, pKey);
+    const id=crypto.randomUUID();
+    const encryptedContent = await encryptMessage(note.content, pKey,`twilight:chat:2:${couple.id}:${id}:content`);
     let encryptedMediaUrl = note.media_url;
-    if (note.media_url && note.type !== 'gif') {
-      encryptedMediaUrl = await encryptMessage(note.media_url, pKey);
+    if (note.media_url) {
+      encryptedMediaUrl = await encryptMessage(note.media_url, pKey,`twilight:chat:2:${couple.id}:${id}:media`);
     }
 
     const insertPayload: any = {
+      id,
+      sender_public_key: getCachedPrivateKey()?derivePublicKeyFromPrivate(getCachedPrivateKey()!):null,
+      recipient_public_key:pKey,
       couple_id: couple.id,
       sender_id: user.id,
       sender_device_id: deviceId,
@@ -831,11 +825,9 @@ export const CouplesProvider: React.FC<{ children: React.ReactNode }> = ({ child
       ));
 
       try {
-        let finalReply = reply;
         const partnerPubKey = await fetchPartnerPublicKey();
-        if (partnerPubKey) {
-            finalReply = await encryptMessage(reply, partnerPubKey);
-        }
+        if(!partnerPubKey||!note)throw new Error('Unlock your chat before replying.');
+        const finalReply=await encryptMessage(reply,partnerPubKey,`twilight:chat:2:${note.couple_id}:${note.id}:reply`);
 
         const { error } = await (supabase
           .from('shared_notes' as any)

@@ -99,7 +99,7 @@ const Settings: React.FC = () => {
 
           if (data) {
               setProfile(data);
-              localStorage.setItem('twilight_profile', JSON.stringify({ ...data, _cachedAt: Date.now() }));
+              localStorage.removeItem('twilight_profile');
           }
 
       } catch (error) {

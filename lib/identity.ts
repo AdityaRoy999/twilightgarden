@@ -1,4 +1,4 @@
-import { Preferences } from "@capacitor/preferences";
+import {SecurePreferences as Preferences} from './securePreferences';
 import {
   derivePublicKeyFromPrivate,
   initializeEncryptionKeys,

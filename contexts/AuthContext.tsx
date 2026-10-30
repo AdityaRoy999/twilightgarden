@@ -1,7 +1,9 @@
-import { Preferences } from '@capacitor/preferences';
+import {SecurePreferences as Preferences} from '../lib/securePreferences';
 import React, { createContext, useCallback, useContext, useEffect, useRef, useState } from 'react';
 import type { Session, User as AuthUser } from '@supabase/supabase-js';
-import { supabase } from '../lib/supabase';
+import { supabase, rawSupabase } from '../lib/supabase';
+import {optionalVault,installVault} from '../lib/vaultRuntime';
+import {readPrivateRows} from '../lib/privateData';
 import { User } from '../types';
 import { resetPushRegistration } from '../lib/notifications';
 import { clearEncryptionCache } from '../lib/encryption';
@@ -29,13 +31,14 @@ export const useAuth = () => {
 
 function clearPrivateCaches() {
   clearEncryptionCache();
+  installVault(null);
   for (const key of Object.keys(localStorage)) {
     if (key.startsWith('tw_') || key.startsWith('twilight')) localStorage.removeItem(key);
   }
 }
 
 async function loadProfile(authUser: AuthUser, signal: AbortSignal): Promise<User> {
-  let { data, error } = await supabase.from('profiles')
+  let { data, error } = await rawSupabase.from('profiles')
     .select('role, full_name, avatar_url').eq('id', authUser.id)
     .abortSignal(signal).single();
   if(error?.code==='PGRST116'){
@@ -43,10 +46,11 @@ async function loadProfile(authUser: AuthUser, signal: AbortSignal): Promise<Use
   }
   if (error) throw error;
   if (!data || !['user', 'partner', 'admin'].includes(data.role)) throw new Error('Your profile could not be verified. Please retry.');
+  const privateProfile=optionalVault()?.userId===authUser.id?(await readPrivateRows(authUser.id,'profile'))[0]:null;
   return {
     id: authUser.id, email: authUser.email || '',
-    name: data.full_name || authUser.user_metadata?.full_name,
-    avatar_url: data.avatar_url || undefined,
+    name: privateProfile?.full_name || undefined,
+    avatar_url: privateProfile?.avatar_url || undefined,
     role: data.role as User['role'], user_metadata: authUser.user_metadata,
   };
 }
@@ -98,7 +102,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       if (userIdRef.current && userIdRef.current !== profile.id) clearPrivateCaches();
       userIdRef.current=profile.id; epochRef.current=epoch;
       setDataEpoch(epoch);
-      localStorage.setItem('twilight-cached-user',JSON.stringify(profile));
+      localStorage.setItem('twilight-cached-user',JSON.stringify({id:profile.id,role:profile.role}));
       setUser(profile); setSessionVerified(true); setProfileRefreshed(true); setError(null);
 
   };

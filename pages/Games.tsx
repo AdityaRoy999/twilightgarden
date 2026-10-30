@@ -257,7 +257,7 @@ const Games: React.FC = () => {
 
         const fetchLive = async () => {
             const { data } = await (supabase.from('game_sessions') as any)
-                .select('game_type').eq('engine_version',2)
+                .select('game_type').eq('engine_version',3)
                 .eq('couple_id', couple.id)
                 .eq('status', 'waiting')
                 .eq('player_x', partnerId)
@@ -293,37 +293,8 @@ const Games: React.FC = () => {
         // Navigate immediately for responsiveness
         navigate(`${routePrefix}${game.route}`);
 
-        // Trigger Notification (Fire & Forget)
-        if (user && couple) {
-            try {
-                const partnerId = couple.partner_1_id === user.id ? couple.partner_2_id : couple.partner_1_id;
-                if (!partnerId) return;
+        // The encrypted room persists one deduplicated invitation when it opens.
 
-                // Create notification logic
-                // 1. Get nickname
-                const { data: partnerProfile } = await supabase
-                    .from('profiles')
-                    .select('partner_nickname')
-                    .eq('id', partnerId)
-                    .single();
-
-                const nickname = (partnerProfile as any)?.partner_nickname || 'partner';
-                const message = `Your ${nickname} wants to play ${game.title} with you!`;
-
-                // 2. Insert Notification
-                await supabase.from('notifications').insert({
-                    user_id: partnerId,
-                    type: 'game_invite',
-                    message: message,
-                    data: { url: `${routePrefix}${game.route}`, gameName: game.title },
-                    created_at: new Date().toISOString(),
-                    is_read: false
-                } as any);
-
-            } catch (err) {
-                console.error("Failed to send game invite:", err);
-            }
-        }
     };
 
     const activeCategory = categories.find(c => c.key === activeTab) || categories[0];

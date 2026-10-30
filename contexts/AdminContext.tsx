@@ -1,6 +1,5 @@
-import { localDateKey } from '../lib/dates';
 import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
-import { supabase } from '../lib/supabase';
+import { rawSupabase } from '../lib/supabase';
 import { Database } from '../types';
 
 type UserProfile = Database['public']['Tables']['profiles']['Row'];
@@ -31,7 +30,7 @@ export const AdminProvider: React.FC<{ children: React.ReactNode }> = ({ childre
 
         try {
             // Fetch Profiles
-            const { data: profiles, error: profilesError } = await supabase
+            const { data: profiles, error: profilesError } = await rawSupabase
                 .from('profiles')
                 .select('*')
                 .neq('role', 'admin') // Filter out admins if needed, usually admins want to see users
@@ -41,20 +40,9 @@ export const AdminProvider: React.FC<{ children: React.ReactNode }> = ({ childre
 
             setUsers(profiles || []);
 
-            // Fetch Logs Stats
-            const today = localDateKey();
-            const { data: logs, error: logsError } = await supabase
-                .from('daily_logs')
-                .select('*')
-                .eq('date', today);
-
-            if (!logsError) {
-                setStats({
-                    totalUsers: profiles?.length || 0,
-                    activeToday: logs?.length || 0
-                });
-                setRecentLogs(logs || []);
-            }
+            // Administration sees account metadata, never decrypted health.
+            setStats({ totalUsers: profiles?.length || 0, activeToday: 0 });
+            setRecentLogs([]);
 
         } catch (error) {
             console.error('Error fetching admin data:', error);
