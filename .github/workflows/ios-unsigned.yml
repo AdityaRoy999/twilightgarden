@@ -22,11 +22,17 @@ jobs:
       - name: Build bundled web app
         run: |
           test -n "$VITE_SUPABASE_URL" && test -n "$VITE_SUPABASE_ANON_KEY"
+          node -e "require('node:fs').writeFileSync('public/build-info.json', JSON.stringify({commit:process.env.GITHUB_SHA,run:process.env.GITHUB_RUN_ID,builtAt:new Date().toISOString()}))"
           npm run build
         env:
           VITE_SUPABASE_URL: ${{ vars.VITE_SUPABASE_URL }}
           VITE_SUPABASE_ANON_KEY: ${{ vars.VITE_SUPABASE_ANON_KEY }}
           VITE_GIPHY_API_KEY: ${{ vars.VITE_GIPHY_API_KEY }}
+          VITE_LEGAL_OPERATOR_NAME: ${{ vars.VITE_LEGAL_OPERATOR_NAME }}
+          VITE_LEGAL_SERVICE_ADDRESS: ${{ vars.VITE_LEGAL_SERVICE_ADDRESS }}
+          VITE_LEGAL_SUPPORT_EMAIL: ${{ vars.VITE_LEGAL_SUPPORT_EMAIL }}
+          VITE_GRIEVANCE_OFFICER_NAME: ${{ vars.VITE_GRIEVANCE_OFFICER_NAME }}
+          VITE_GRIEVANCE_OFFICER_EMAIL: ${{ vars.VITE_GRIEVANCE_OFFICER_EMAIL }}
       - name: Sync native dependencies
         run: npx cap sync ios
       - name: Build device app without Apple signing credentials

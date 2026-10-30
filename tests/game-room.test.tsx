@@ -17,3 +17,5 @@ it('shows a shared final result rather than an unexplained game-ended message',(
 it('shows a closed room distinctly from a completed match',()=>{fixture.value.room.status='ended';render(<GameRoom game="tictactoe"/>);expect(screen.getByText('Game closed')).toBeTruthy();expect(screen.queryByText('You won!')).toBeNull();});
 
 it('prefetches a fresh set when the host changes the round count',()=>{fixture.value.room.board_state.phase='setup';fixture.value.room.board_state.promptCount=0;const view=render(<GameRoom game="truth_dare"/>);expect(fixture.action).toHaveBeenCalledWith({kind:'prefetch'});fixture.action.mockClear();fixture.value.room.board_state.total=3;view.rerender(<GameRoom game="truth_dare"/>);expect(fixture.action).toHaveBeenCalledWith({kind:'prefetch'});});
+
+it('prepares host questions before the partner joins',()=>{fixture.value.room.player_o=null;fixture.value.room.board_state.promptCount=0;render(<GameRoom game="truth_dare"/>);expect(fixture.action).toHaveBeenCalledWith({kind:'prefetch'});});

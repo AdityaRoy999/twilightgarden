@@ -318,6 +318,33 @@ html:not(.dark) .bloom-checkin { color: white; }
 /* One vertical scroll owner; decorative art must never widen the iOS viewport. */
 html, body, #root { max-width:100%; overflow-x:clip; overscroll-behavior-x:none; }
 .app-shell-content, .bloom-route { min-width:0; max-width:100%; }
+/* Grow ordinary routes with their content; only chat uses a fixed-height pane. */
+#main-content:not([data-chat='true']) > .bloom-route { height:auto; display:flow-root; padding-bottom:32px; }
+.confirm-action { padding:28px; }
+.confirm-action-art { display:flex; align-items:center; justify-content:center; height:112px; color:var(--color-primary); }
+.confirm-action-art svg { height:108px; width:180px; }
+.confirm-action h2 { text-align:center; font-size:25px; font-weight:750; margin:12px 0; }
+.confirm-action p { font-size:14px; line-height:1.7; color:var(--text-secondary); }
+.confirm-action-buttons { display:flex; gap:12px; margin-top:24px; }
+.confirm-action-buttons button { flex:1; min-height:50px; border-radius:16px; background:var(--bloom-tint); color:var(--text-primary); font-weight:650; }
+.confirm-action-buttons .confirm-action-destructive { background:var(--color-primary); color:white; }
+.privacy-center { max-width:900px; margin:auto; padding: max(28px,var(--safe-area-top)) 24px max(40px,var(--safe-area-bottom)); color:var(--text-primary); }
+.privacy-center h1 { font-size:32px; font-weight:800; margin:12px 0; }
+.privacy-center h2 { font-size:22px; font-weight:750; margin-bottom:16px; }
+.privacy-center p { line-height:1.7; color:var(--text-secondary); margin:10px 0 18px; }
+.privacy-center section { padding:24px; margin:24px 0; border-radius:24px; background:var(--bg-surface); }
+.privacy-launch-note { padding:18px; border-radius:16px; margin:20px 0; background:var(--bloom-tint); font-size:14px; line-height:1.6; }
+.privacy-links { display:flex; flex-wrap:wrap; gap:20px; color:var(--color-primary); }
+.privacy-links a { text-decoration:underline; }
+.privacy-choices > .privacy-choice { display:flex; align-items:center; gap:24px; padding:18px 0; }
+.privacy-choices > .privacy-choice > div { flex:1; }
+.privacy-choices strong { font-weight:700; }
+.privacy-choices p { font-size:14px; margin:6px 0; }
+.privacy-center select,.privacy-center textarea { display:block; width:100%; padding:14px; margin:10px 0 20px; border-radius:14px; background:var(--bg-base); color:var(--text-primary); }
+.privacy-center textarea { min-height:120px; }
+.privacy-center small { display:block; overflow-wrap:anywhere; }
+.privacy-delete { padding:14px 20px; border-radius:14px; color:white; background:#b52f50; }
+.privacy-center a:focus-visible,.privacy-center button:focus-visible,.privacy-center select:focus-visible,.privacy-center textarea:focus-visible { text-decoration:underline; background:var(--bloom-tint); }
 .journal-page { --journal-gutter:24px; padding:0 0 calc(130px + var(--safe-area-bottom)); min-width:0; }
 .journal-header { width:100%; padding:14px var(--journal-gutter); gap:12px; }
 .journal-header h1 { flex:1; text-align:center; }

@@ -38,6 +38,9 @@ Deno.serve(async (req: Request) => {
       targetId = partnerId;
     }
     if (!senderId || !targetId) return json({ error: 'Recipient unavailable' }, 400);
+    const {data:recipientPermissions,error:privacyError}=await db.rpc('privacy_permissions',{p_actor:targetId});
+    if(privacyError)throw privacyError;
+    if(!recipientPermissions?.core)return json({success:true,accepted:0,failed:0});
     if (!await consumeBudget(senderId, 'push', 30)) return json({ error: 'Too many notification requests' }, 429);
     const { data: profile } = await db.from('profiles').select('role').eq('id',targetId).single();
     const prefix = profile?.role === 'partner' ? '/partner' : profile?.role === 'admin' ? '/admin' : '';

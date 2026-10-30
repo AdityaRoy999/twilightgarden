@@ -10,3 +10,9 @@ export function buildWellnessContext({phase,cycleDay,logs,today,partnerName}: {p
   for(const log of history){const line=`${log.date}: moods=${(log.moods||[]).join('/')||'unknown'}; symptoms=${(log.symptoms||[]).join('/')||'unknown'}; sleep=${log.sleepQuality||log.sleep_quality||'unknown'}; energy=${log.energyLevel||log.energy_level||'unknown'}`;if(lines.join('\n').length+line.length>3500)break;lines.push(line);}
   return {phase,cycleDay,partnerName,moods:current?.moods||[],symptoms:current?.symptoms||[],sleepQuality:current?.sleepQuality||current?.sleep_quality,energyLevel:current?.energyLevel||current?.energy_level,logHistory:lines.length?lines.join('\n'):'No prior non-demo observations available.',observedDays:actual.length};
 }
+
+/** Keep sequencing for the model without sending profile names or calendar dates. */
+export function minimizeWellnessContext(ctx:WellnessContext):WellnessContext {
+ let index=0;
+ return {...ctx,partnerName:undefined,logHistory:ctx.logHistory?.replace(/\b\d{4}-\d{2}-\d{2}\b/g,()=>`Prior observation ${++index}`)};
+}

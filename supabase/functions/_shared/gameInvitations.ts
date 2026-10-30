@@ -10,6 +10,9 @@ export async function gameInvitationId(room: string, actor: string) {
 export async function inviteToGame(db: ReturnType<typeof adminClient>, req: Request, actor: string, room: {id:string;game_type:GameType}, couple: {partner_1_id:string;partner_2_id:string|null}) {
   const recipient = actor === couple.partner_1_id ? couple.partner_2_id : couple.partner_1_id;
   if (!recipient || recipient === actor) return false;
+  const {data:permissions,error:privacyError}=await db.rpc('privacy_permissions',{p_actor:recipient});
+  if(privacyError)throw new Error('Recipient preferences unavailable');
+  if(!permissions?.core)return false;
   const id = await gameInvitationId(room.id,actor);
   const url = `/games/${games[room.game_type][1]}`;
   const {data,error} = await db.from('notifications').upsert({id,user_id:recipient,type:'game',message:`Your partner invited you to ${games[room.game_type][0]}.`,is_read:false,data:{url,gameName:games[room.game_type][0],roomId:room.id}},{onConflict:'id',ignoreDuplicates:true}).select('id').maybeSingle();

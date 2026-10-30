@@ -5,7 +5,7 @@ Deno.serve(async req=>{
  if(req.method==='OPTIONS')return new Response('ok',{headers:corsHeaders});
  if(req.method!=='POST')return json({error:'Method not allowed'},405);
  try {
-  const actor=await requireUser(req);if(!actor)return json({error:'Authentication required'},401);
+  const actor=await requireUser(req,null);if(!actor)return json({error:'Authentication required'},401);
   const body=await readBody(req);
   if(body.action!=='unlink'||typeof body.coupleId!=='string'||!/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(body.coupleId))return json({error:'Invalid connection request'},400);
   if(!await consumeBudget(actor,'unlink',12))return json({error:'Please wait before retrying.'},429);

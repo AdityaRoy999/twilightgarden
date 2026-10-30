@@ -1,3 +1,4 @@
+import {minimizeWellnessContext} from './wellnessContext';
 import { supabase } from './supabase';
 import { parseWellnessGuide, wellnessGuidePrompt, caregiverGuideHasRoleMismatch } from './wellnessGuide';
 import { normalizePharmacies, type PharmacyPlace } from './places';
@@ -54,7 +55,7 @@ async function getAISession() {
     return data.session;
 }
 
-async function callAI(customPrompt: string, mood: string = 'encouragement', pinnedSession?:{access_token:string}): Promise<AIResult> {
+async function callAI(customPrompt: string, mood: string = 'encouragement', pinnedSession?:{access_token:string},purpose:'wellness'|'gift'='wellness'): Promise<AIResult> {
     try {
         const session = pinnedSession || await getAISession();
         if (!session) throw new Error('Not authenticated');
@@ -69,7 +70,7 @@ async function callAI(customPrompt: string, mood: string = 'encouragement', pinn
                     'Authorization': `Bearer ${session.access_token}`,
                     'apikey': SUPABASE_ANON_KEY,
                 },
-                body: JSON.stringify({ mood, customPrompt }),
+                body: JSON.stringify({ mood, customPrompt, purpose }),
             }
         );
 
@@ -114,7 +115,7 @@ async function generateGuide(ctx: WellnessContext, partner: boolean,refresh=fals
         const job=(async()=>{
             let validated:AIResult;
             try {
-                const result=await withinDeadline(()=>callAI(wellnessGuidePrompt(ctx,partner),'raw',session),30000,'Your AI guide is taking too long. Please try again.');
+                const result=await withinDeadline(()=>callAI(wellnessGuidePrompt(minimizeWellnessContext(ctx),partner),'raw',session),30000,'Your AI guide is taking too long. Please try again.');
                 const cards=result.error?[]:parseWellnessGuide(result.text||'');
                 validated=result.error?result:cards.length===3&&new Set(cards.map(card=>card.illustrationId)).size===3&&(!partner||!caregiverGuideHasRoleMismatch(cards))?{text:JSON.stringify({cards})}:{text:'',error:'We couldn’t finish your guide. Please try again.'};
             } catch(error) {validated={text:'',error:requestError(error,'Your guide could not be prepared. Please retry.')};}
@@ -129,6 +130,7 @@ async function generateGuide(ctx: WellnessContext, partner: boolean,refresh=fals
 }
 
 export async function generateGiftRecommendations(ctx: WellnessContext, expectedUserId?:string): Promise<AIResult> {
+    ctx=minimizeWellnessContext(ctx);
     const prompt = `You are a professional gift curator in India. Based on the partner's context, generate 5 SPECIFIC search queries to find gifts on Myntra, Nykaa, Flipkart, Amazon, and Blinkit.
 
 Partner's Current Context:
@@ -154,7 +156,7 @@ DO NOT include any greeting or conversational text.`;
     try {
         const session=await getAISession();
         if(!session||expectedUserId&&session.user.id!==expectedUserId)return {text:'',error:'Your account changed. Please reopen gift ideas.'};
-        return callAI(prompt,'raw',session);
+        return callAI(prompt,'raw',session,'gift');
     }catch(error){return {text:'',error:requestError(error,'Gift ideas could not be prepared. Please retry.')};}
 }
 

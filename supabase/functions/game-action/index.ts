@@ -6,6 +6,7 @@ import {
   readBody,
   requireUser,
   RequestBodyError,
+  requirePurpose,
 } from "../_shared/security.ts";
 import {
   games,
@@ -30,8 +31,8 @@ async function handleGameRequest(req: Request): Promise<Response> {
   let actor: string | null;
   try {
     actor = await requireUser(req);
-  } catch {
-    return json({ error: "Session verification unavailable" }, 503);
+  } catch (error) {
+    return json({ error: error instanceof RequestBodyError ? error.message : "Session verification unavailable" }, error instanceof RequestBodyError ? error.status : 503);
   }
   if (!actor) return json({ error: "Authentication required" }, 401);
   try {
@@ -91,7 +92,7 @@ async function handleGameRequest(req: Request): Promise<Response> {
     const privateRow = Array.isArray(privateData) ? privateData[0] : privateData;
     if (![room.player_x,room.player_o].includes(actor)) return json({error:'Room unavailable'},403);
     if (!couple || couple.status !== 'active' || ![couple.partner_1_id,couple.partner_2_id].includes(actor)) return json({error:'Relationship is not active'},403);
-    if (room.revision !== body.revision)
+    if (room.revision !== body.revision && (body.action as Record<string,unknown>).kind !== 'prefetch')
       return json(
         {
           error: "Your partner just updated the game. Try again.",
@@ -109,6 +110,7 @@ async function handleGameRequest(req: Request): Promise<Response> {
     let state = room.board_state,
       secret = privateRow.payload;
     if (action.kind === "prefetch") {
+      await requirePurpose(actor,'ai',db);
       if (!needsPrompts(type)) return json({ session: room });
       if (secret.prompts.length >= 3) return json({ session: room });
       if (!(await consumeBudget(actor, "game-ai", 4)))
@@ -116,7 +118,31 @@ async function handleGameRequest(req: Request): Promise<Response> {
           { error: "Please wait before generating more questions" },
           429,
         );
-      secret.prompts.push(...(await generateGamePrompts(type, state.level)));
+      // Generation runs outside a transaction. Never commit the stale room that
+      // we read before calling the model: joining/Ready can change its revision.
+      const level = state.level;
+      let prompts;
+      try{prompts=await generateGamePrompts(type, level);}
+      catch(error){return json({error:error instanceof Error?error.message:'AI questions are unavailable. Please retry.',code:'AI_GENERATION_UNAVAILABLE'},503);}
+      for (let attempt = 0; attempt < 3; attempt++) {
+        const {data: fresh, error: readError} = await db.from('game_sessions')
+          .select('*,couples!inner(status,partner_1_id,partner_2_id),game_room_secrets(payload)').eq('id',room.id).single();
+        if (readError || !fresh) return json({error:'Room unavailable'},404);
+        const {couples: relation, game_room_secrets: hidden, ...publicRoom} = fresh;
+        const active = Array.isArray(relation) ? relation[0] : relation;
+        const saved = (Array.isArray(hidden) ? hidden[0] : hidden)?.payload;
+        if (active?.status !== 'active' || ![active.partner_1_id, active.partner_2_id].includes(actor)) return json({error:'Relationship is not active'},403);
+        if (!saved || publicRoom.status === 'ended' || publicRoom.board_state.level !== level) return json({session:publicRoom});
+        if (saved.prompts.length >= 3) return json({session:publicRoom});
+        const nextSecret = {...saved,prompts:[...saved.prompts,...prompts]};
+        const {data: committed,error: conflict} = await db.rpc('commit_game_action', {
+          p_actor:actor,p_id:room.id,p_revision:publicRoom.revision,
+          p_state:{...publicRoom.board_state,promptCount:nextSecret.prompts.length},p_secret:nextSecret,p_leave:false,
+        });
+        if (!conflict) return json({session:committed,promptCount:nextSecret.prompts.length});
+        if (!conflict.message.includes('STALE_ROOM')) throw new Error('Questions could not be saved. Please retry.');
+      }
+      return json({error:'The game changed while questions were prepared. Tap Retry AI questions.'},409);
     } else if (action.kind !== "leave") {
       const output = play(
         type,

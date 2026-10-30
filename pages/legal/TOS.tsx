@@ -1,66 +1,9 @@
-import { AppIcon } from '../../components/ui/Icons';
 import React from 'react';
-import { useNavigate } from 'react-router-dom';
-
-const TOS: React.FC = () => {
-    const navigate = useNavigate();
-
-    return (
-        <div className="min-h-screen bg-background-dark text-white p-6 pb-20">
-            <div className="max-w-2xl mx-auto pt-10">
-                <button 
-                    onClick={() => navigate(-1)} 
-                    className="flex items-center gap-2 text-white/60 hover:text-white transition-colors mb-8 group"
-                >
-                    <span className="app-icon-glyph group-hover:-translate-x-1 transition-transform"><AppIcon name={"arrow_back"}/></span>
-                    <span>Back</span>
-                </button>
-
-                <div className="bg-surface-dark/40 backdrop-blur-xl p-8 rounded-3xl border border-white/10 shadow-2xl relative overflow-hidden">
-                    <div className="absolute inset-0 bg-primary/5 z-0"></div>
-                    <div className="relative z-10 space-y-6">
-                        <h1 className="text-3xl font-bold bg-gradient-to-r from-white to-white/60 bg-clip-text text-transparent">
-                            Terms of Service
-                        </h1>
-                        <p className="text-white/40 text-sm">Last Updated: February 20, 2026</p>
-
-                        <div className="space-y-6 text-white/80 leading-relaxed text-base">
-                            <section>
-                                <h2 className="text-xl font-semibold text-white mb-3">1. Description of Service</h2>
-                                <p>Twilight Garden is a cycle tracking and wellness application designed for individuals and couples. Features include period tracking, shared cycle insights, and AI-generated wellness suggestions.</p>
-                            </section>
-
-                            <section>
-                                <h2 className="text-xl font-semibold text-white mb-3">2. No Medical Advice</h2>
-                                <p className="p-4 bg-primary/10 rounded-2xl border border-primary/20 text-primary-light">
-                                    <strong>The App is not a medical device.</strong> Content provided, including AI suggestions, does not constitute medical advice. Always consult a professional for medical concerns.
-                                </p>
-                            </section>
-
-                            <section>
-                                <h2 className="text-xl font-semibold text-white mb-3">3. Partner Sharing</h2>
-                                <p>By joining a "Couple," you explicitly consent to sharing your cycle and symptom data with your linked partner. You can disable this sharing ("Ghost Mode") at any time in settings.</p>
-                            </section>
-
-                            <section>
-                                <h2 className="text-xl font-semibold text-white mb-3">4. AI Features</h2>
-                                <p>We use Google Gemini AI to analyze your logged symptoms and moods to provide helpful reflections. Your identity is not shared with the AI processing service.</p>
-                            </section>
-
-                            <section>
-                                <h2 className="text-xl font-semibold text-white mb-3">5. Termination</h2>
-                                <p>We reserve the right to suspend or terminate access to the App for violations of these Terms or for any other reason at our discretion.</p>
-                            </section>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            {/* Decorative background gradients */}
-            <div className="fixed top-[-10%] right-[-10%] w-[40%] h-[30%] bg-primary/10 blur-[120px] rounded-full -z-10"></div>
-            <div className="fixed bottom-[-5%] left-[-5%] w-[50%] h-[40%] bg-primary/5 blur-[100px] rounded-full -z-10"></div>
-        </div>
-    );
-};
-
-export default TOS;
+import {LegalDocument} from '../../components/LegalDocument';
+export default function TOS(){return <LegalDocument title="Terms & safety">
+<section><h2>Using Twilight Garden</h2><p>A private wellness tracker with optional partner connection, chat and social games. Use an account you control and give accurate information, including your age group. The intended audience is 13+; teen sensitive features remain unavailable pending verified guardian permission. Do not impersonate anyone, bypass age restrictions or provide someone else’s health data without authorization.</p></section>
+<section><h2>Health and AI</h2><p>Cycle phases, fertile windows and next-period dates are estimates, not confirmation of ovulation, contraception, diagnosis or medical advice. Optional NVIDIA AI can be wrong. Do not make treatment, pregnancy or contraceptive decisions from predictions. Seek qualified medical care for concerns; the app is not an emergency service. The operator must assess medical-device/intended-use obligations before making clinical claims.</p></section>
+<section><h2>Connections, content and games</h2><p>Only link with someone you trust. Choose health-history sharing separately. Either member can disconnect, resetting shared chat data and backups for both. Do not share illegal content, threats, harassment, nonconsensual intimate imagery, child sexual exploitation material, dangerous instructions, copyrighted material without permission or another person’s confidential information. Games have no money stakes or cash rewards. Every conversation prompt can be skipped; no one owes an answer or physical activity. Report concerns in Privacy & safety without re-uploading unlawful imagery. A staffed operator process is required for urgent safety, legal orders and mandatory reporting; automated tickets do not replace it.</p></section>
+<section><h2>External services and exports</h2><p>Nearby listings are community data and may be incomplete or outdated. Call stores to confirm products and hours. Shopping links are external suggestions, not verified offers or app checkout. No affiliate commission is represented in this testing release; any future commercial arrangement must be disclosed. Retailers control prices, delivery and returns. Check health exports before sharing.</p></section>
+<section><h2>Ending use and future releases</h2><p>Withdraw optional permissions, disconnect or delete your account in Privacy & safety. Statutory rights are not waived by these terms. New purposes, clinical claims, commercial features, child access or launch in another market need review and updated notice/consent. These testing terms are not worldwide legal clearance.</p></section>
+</LegalDocument>;}

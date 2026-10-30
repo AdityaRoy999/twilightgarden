@@ -1,5 +1,8 @@
 import { GameInvitationBanner } from './components/GameInvitationBanner';
 import { AppIcon } from './components/ui/Icons';
+import { PrivacyProvider } from './contexts/PrivacyContext';
+import { PrivacyBoundary } from './components/PrivacyBoundary';
+import { ConsentedPushRegistration } from './components/ConsentedPushRegistration';
 import { Flower2 } from './components/ui/Icons';
 import { NotificationProvider } from './contexts/NotificationContext';
 import React, { useEffect } from 'react';
@@ -63,9 +66,7 @@ const PartnerSignUp = React.lazy(() => import('./pages/partner/PartnerSignUp'));
 const PartnerForgotPassword = React.lazy(() => import('./pages/partner/PartnerForgotPassword'));
 const PartnerAuthCallback = React.lazy(() => import('./pages/partner/PartnerAuthCallback'));
 
-// Legal Pages Lazy Load
-const TOS = React.lazy(() => import('./pages/legal/TOS'));
-const PrivacyPolicy = React.lazy(() => import('./pages/legal/PrivacyPolicy'));
+// Public legal and privacy routes are handled before sensitive providers.
 
 // Admin Pages Lazy Load
 const AdminDashboard = React.lazy(() => import('./pages/Admin/AdminDashboard'));
@@ -334,7 +335,6 @@ const App: React.FC = () => {
     // Listen for Deep Links (OAuth Redirects)
     const handleDeepLink = async (url: string) => {
       try {
-        console.log('[App] handleDeepLink called with:', url);
 
         // Custom-scheme URLs (twilight-garden://...) may not parse correctly
         // with new URL() on some platforms. Use manual extraction as fallback.
@@ -393,7 +393,6 @@ const App: React.FC = () => {
 
     // Set up the listener for URL deep links
     const listener = CapacitorApp.addListener('appUrlOpen', (data) => {
-      console.log('[App] App opened with URL:', data.url);
       if (data.url.includes('com.twilight.garden')) {
         handleDeepLink(data.url);
       }
@@ -451,14 +450,17 @@ const App: React.FC = () => {
       <ThemeProvider>
         <AuthProvider>
           <AccountScope>
+          <HashRouter>
+          <PrivacyProvider>
+          <PrivacyBoundary>
           <CouplesProvider>
             <NotificationProvider>
           <CallProvider>
               <DataProvider>
                 <TutorialProvider>
-                <HashRouter>
                   <AuthStatusBoundary>
                   <RestorationOverlay />
+                  <ConsentedPushRegistration />
                   <WidgetSyncHandler />
                   <NotificationNavigationHandler />
                   <GameInvitationBanner />
@@ -484,10 +486,6 @@ const App: React.FC = () => {
                     <Route path="/partner/auth-callback" element={<PartnerAuthCallback />} />
 
                     <Route path="/share/:code" element={<SharedCard />} />
-
-                    {/* Legal Routes */}
-                    <Route path="/tos" element={<TOS />} />
-                    <Route path="/privacy" element={<PrivacyPolicy />} />
 
                     {/* Admin Routes - completely isolated with AdminProvider */}
                     <Route element={<AdminRoute><AdminProvider><AdminLayout /></AdminProvider></AdminRoute>}>
@@ -616,12 +614,14 @@ const App: React.FC = () => {
                     </Routes>
                   </React.Suspense>
                   </AuthStatusBoundary>
-                </HashRouter>
             </TutorialProvider>
           </DataProvider>
           </CallProvider>
           </NotificationProvider>
           </CouplesProvider>
+          </PrivacyBoundary>
+          </PrivacyProvider>
+          </HashRouter>
           </AccountScope>
         </AuthProvider>
       </ThemeProvider>

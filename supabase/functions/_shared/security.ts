@@ -12,11 +12,43 @@ export function json(data: unknown, status = 200): Response {
 export function adminClient() {
   return createClient(Deno.env.get('SUPABASE_URL')!, Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!, { auth: { persistSession: false, autoRefreshToken: false } });
 }
-export async function requireUser(req: Request): Promise<string | null> {
+export async function requireUser(req: Request, purpose: 'core' | 'ai' | 'shopping' | null = 'core'): Promise<string | null> {
   const token = req.headers.get('authorization')?.replace(/^Bearer\s+/i, '');
   if (!token) return null;
   const client = createClient(Deno.env.get('SUPABASE_URL')!, Deno.env.get('SUPABASE_ANON_KEY')!, { auth: { persistSession: false, autoRefreshToken: false } });
-  return verifiedUser(()=>client.auth.getUser(token));
+  const actor = await verifiedUser(()=>client.auth.getUser(token));
+  if (!actor) return null;
+  let sessionId: string;
+  try { sessionId=JSON.parse(atob(token.split('.')[1].replace(/-/g,'+').replace(/_/g,'/'))).session_id; } catch { return null; }
+  if (!sessionId || !/^[a-f0-9-]{36}$/i.test(sessionId)) return null;
+  const db=adminClient();
+  const {data:active,error:sessionError}=await db.rpc('session_is_active',{p_actor:actor,p_session:sessionId});
+  if(sessionError) throw new Error('Session verification unavailable');
+  if(!active) return null;
+  if(purpose) await requirePurpose(actor,purpose,db);
+  return actor;
+}
+export async function requirePurpose(actor:string,purpose:'core'|'ai'|'shopping',db=adminClient()) {
+  const {data,error}=await db.rpc('privacy_permissions',{p_actor:actor});
+  if(error) throw new Error('Privacy preferences unavailable');
+  if(!data?.[purpose]) throw new RequestBodyError('Review your privacy choices in Account → Privacy before using this feature.',403);
+}
+/** A caregiver's choice cannot authorize sending the other member's health
+ * context to an AI/search provider. Check the data owner's choices separately. */
+export async function requireHealthPurpose(actor:string,purpose:'ai'|'shopping',db=adminClient()){
+ const {data:profile,error:profileError}=await db.from('profiles').select('role').eq('id',actor).single();
+ if(profileError)throw new Error('Privacy preferences unavailable');
+ if(profile.role!=='partner'){
+  if(purpose==='ai') {const {data,error}=await db.rpc('privacy_permissions',{p_actor:actor});if(error)throw error;if(!data?.health)throw new RequestBodyError('Health consent is required for a personalized guide.',403);}
+  return;
+ }
+ const {data:couple,error:coupleError}=await db.from('couples').select('partner_1_id,partner_2_id,share_enabled').eq('status','active').or(`partner_1_id.eq.${actor},partner_2_id.eq.${actor}`).maybeSingle();
+ if(coupleError)throw coupleError;
+ if(!couple?.share_enabled)throw new RequestBodyError('Your partner must choose health sharing before personalized suggestions can be generated.',403);
+ const owner=couple.partner_1_id===actor?couple.partner_2_id:couple.partner_1_id;
+ const {data:preferences,error}=await db.from('privacy_preferences').select('age_band,core_consent,health_consent,share_health,ai_consent,shopping_consent,deleting,notice_version').eq('user_id',owner).maybeSingle();
+ if(error)throw error;
+ if(!preferences||preferences.age_band!=='18+'||!preferences.core_consent||!preferences.health_consent||!preferences.share_health||preferences.deleting||preferences.notice_version!=='2026-10-30'||!(purpose==='ai'?preferences.ai_consent:preferences.shopping_consent))throw new RequestBodyError('Your partner has not permitted this use of their health context. They can review it in Privacy & safety.',403);
 }
 async function sameSecret(actual: string | null, expected: string | undefined): Promise<boolean> {
   if (!actual || !expected) return false;

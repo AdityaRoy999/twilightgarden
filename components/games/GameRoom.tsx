@@ -64,6 +64,7 @@ export default function GameRoom({ game }: { game: GameType }) {
     setCopied(false);
   }, [room?.id,invitationSent]);
   const requested = useRef("");
+  const [generatingPrompts, setGeneratingPrompts] = useState(false);
   const state = room?.board_state;
   const title = games[game][0];
   const route = games[game][1];
@@ -79,7 +80,7 @@ export default function GameRoom({ game }: { game: GameType }) {
     state?.phase === "setup";
   useEffect(() => {
     if (
-      !room?.player_o ||
+      !room ||
       !state ||
       player !== "X" ||
       busy ||
@@ -91,7 +92,8 @@ export default function GameRoom({ game }: { game: GameType }) {
     const key = `${room.id}:${state.level}:${state.total}:${state.round}`;
     if (requested.current === key) return;
     requested.current = key;
-    void action({ kind: "prefetch" });
+    setGeneratingPrompts(true);
+    void action({ kind: "prefetch" }).finally(() => setGeneratingPrompts(false));
   }, [
     room?.id,
     room?.player_o,
@@ -342,8 +344,10 @@ export default function GameRoom({ game }: { game: GameType }) {
             </>
           )}
           <p role="status">
-            {busy && generating
+            {generatingPrompts
               ? "Preparing fresh AI questions…"
+              : generating && error
+                ? "Questions couldn’t load. Tap Retry AI questions above."
               : state.ready.includes(player)
                 ? "You’re ready. Waiting for your partner."
                 : player === "O"
@@ -355,7 +359,7 @@ export default function GameRoom({ game }: { game: GameType }) {
             disabled={busy || generating || state.ready.includes(player)}
             onClick={() => void action({ kind: "ready" })}
           >
-            {state.ready.includes(player) ? "Ready!" : "I’m ready"}
+            {generatingPrompts ? "Preparing questions…" : state.ready.includes(player) ? "Ready!" : "I’m ready"}
           </button>
         </section>
       ) : (

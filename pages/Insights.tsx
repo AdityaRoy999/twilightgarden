@@ -113,45 +113,8 @@ const Insights: React.FC = () => {
   const [copied, setCopied] = useState(false);
 
   // Share functionality
-  const handleShare = async () => {
-    shareIconRef.current?.startAnimation();
-    if (!user) {
-      alert('Please log in to share');
-      return;
-    }
-    if (isSharing) return; // Prevent double-click race
-
-    setIsSharing(true);
-    setCopied(false);
-    try {
-      const shareCode = crypto.randomUUID().replaceAll('-', '');
-      const cardData = {
-        userName: profile?.full_name || 'Anonymous',
-        avatarUrl: profile?.avatar_url || '',
-        cycleDay: cycleData.currentDay,
-        phase: cycleData.phase,
-        nextPeriodIn: cycleData.nextPeriodIn,
-        moods: todayLog?.moods || [],
-        symptoms: todayLog?.symptoms || [],
-        flow: todayLog?.flow || null,
-        date: todayStr
-      };
-
-      const { error } = await supabase.from('shared_cards').upsert({
-        user_id: user.id, share_code: shareCode, card_data: cardData,
-        expires_at: new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString()
-      }, { onConflict: 'user_id' });
-      if (error) throw error;
-      const url = window.location.origin + '/#/share/' + shareCode;
-      setShareUrl(url);
-      setShowShareModal(true);
-    } catch (err: any) {
-      console.error('Share error:', err);
-      alert('Failed to create share link: ' + err.message);
-    } finally {
-      setIsSharing(false);
-    }
-  };
+  // Health exports are explicit local downloads. Public bearer links are disabled.
+  const handleShare = async () => { setShowTodayReport(true); };
 
   const handleCopyLink = async () => {
     try {
