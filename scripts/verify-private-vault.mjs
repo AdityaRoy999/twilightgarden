@@ -625,9 +625,7 @@ try {
     await assert.rejects(hostAI.action({kind:'prefetch'}),/privacy/i);
     check(await consent(0,{p_ai:true}));
     const began=performance.now();
-    const prefetch=hostAI.action({kind:'prefetch'});
-    await hostAI.action({kind:'ready'});
-    await prefetch;
+    await Promise.all([hostAI.action({kind:'prefetch'}),hostAI.action({kind:'ready'})]);
     await wait(()=>aiView?.board_state.promptCount>=3,'AI encrypted prefetch');
     assert.ok(aiView.board_state.ready.includes('X'));
     await guestAI.action({kind:'ready'});
