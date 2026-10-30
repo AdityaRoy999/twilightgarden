@@ -42,7 +42,7 @@ const LoveLock: React.FC = () => {
         addReaction, replyToNote, markAsRead, setIsChatOpen, uploadMedia,
         isSupporter, partnerProfile, disconnectCouple, hasMoreNotes,
         loadingOlder, loadOlderNotes, partnerPubKey,
-        isSyncRequired, identityReady, hasCloudBackup,
+        isSyncRequired, identityReady, hasCloudBackup, identityError, refreshE2EE,
         toggleStar, togglePin, deleteNote, forwardNote
     } = useCouples();
     const { user } = useAuth();
@@ -616,7 +616,7 @@ const LoveLock: React.FC = () => {
     const handleDisconnect = async () => {
         setConfirmDialog({
             title: 'Disconnect',
-            message: 'Disconnect and reset chat? All messages, reactions, games, shared attachments, chat backups and registered encryption keys will be permanently deleted for both of you. Personal health logs stay with their owner. Reconnecting starts fresh and requires a new backup password.',
+            message: 'Disconnect and reset chat? All messages, reactions, games, shared attachments and chat encryption keys will be permanently deleted for both of you. Personal records and your account backup password stay with you. Reconnecting creates fresh chat keys automatically.',
             confirmLabel: 'Disconnect',
             onConfirm: async () => {
                 try {
@@ -665,7 +665,7 @@ const LoveLock: React.FC = () => {
                             ) : (
                                 <>
                                     <div className="w-1.5 h-1.5 rounded-full bg-green-500" />
-                                    <span className="text-[10px] text-gray-400 font-medium uppercase tracking-wider">{chatConnected?'Connected · encrypted':'Reconnecting…'}</span>
+                                    <span className="text-[10px] text-gray-400 font-medium uppercase tracking-wider">{identityReady?(chatConnected?'Connected · encrypted':'Reconnecting…'):identityError?'Secure chat needs retry':'Setting up encryption…'}</span>
                                 </>
                             )}
                         </div>
@@ -727,9 +727,10 @@ const LoveLock: React.FC = () => {
             </div>
 
             {/* Notes List - Adjusted padding for fixed header */}
-            {identityReady && (isSyncRequired || !hasCloudBackup) && <div className="chat-identity-notice" role="status">
-                <p>{isSyncRequired ? 'Unlock your account’s encryption key on this device to use chat.' : 'Keep your encrypted chats safe when you change devices.'}</p>
-                <button type="button" onClick={() => window.dispatchEvent(new CustomEvent('recheck-lockdown'))}>{isSyncRequired ? 'Unlock chats' : 'Set backup password'}</button>
+            {identityError && <div className="chat-identity-notice" role="alert"><p>{identityError}</p><button type="button" onClick={()=>void refreshE2EE()}>Retry secure chat</button></div>}
+            {identityReady && isSyncRequired && <div className="chat-identity-notice" role="status">
+                <p>Import your old chat identity once. Afterwards, chat uses your account backup password.</p>
+                <button type="button" onClick={() => window.dispatchEvent(new CustomEvent('recheck-lockdown'))}>Import previous chats</button>
             </div>}
             <div
                 ref={chatContainerRef}

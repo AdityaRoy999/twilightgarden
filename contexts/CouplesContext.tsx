@@ -1,4 +1,5 @@
-import { resolveDeviceIdentity, installRecoveredIdentity, reconcileIdentityGeneration } from '../lib/identity';
+import { installRecoveredIdentity, reconcileIdentityGeneration } from '../lib/identity';
+import { resolveVaultChatIdentity } from '../lib/vaultChatIdentity';
 import { mergeChatNotes, cursorFilter } from '../lib/chat';
 import { readOutbox, writeOutbox, type QueuedChat } from '../lib/chatOutbox';
 import { localDateKey } from '../lib/dates';
@@ -14,7 +15,6 @@ import {
   decryptData,
   encryptBlob,
   decryptBlob,
-  encryptIdentityWithPin,
   decryptIdentityWithPin,
   getCachedPrivateKey,
   isContentDecrypted,
@@ -73,6 +73,7 @@ interface CouplesContextType {
   isHistorySynced: boolean;
   isSyncRequired: boolean;
   identityReady:boolean;
+  identityError:string;
   identityGeneration:number;
   setupCloudBackup: (pin: string) => Promise<void>;
   restoreFromCloudBackup: (pin: string) => Promise<void>;
@@ -112,6 +113,7 @@ export const CouplesProvider: React.FC<{ children: React.ReactNode }> = ({ child
   const [isHistorySynced, setIsHistorySynced] = useState(true);
   const [isSyncRequired, setIsSyncRequired] = useState(false);
   const [e2eeReady, setE2eeReady] = useState(false); // Prevents PIN popup race condition
+  const [identityError, setIdentityError] = useState('');
   const [keyVersion, setKeyVersion] = useState(0);
   const identityGenerationRef = React.useRef(0);
   const identityRevisionRef = React.useRef(0);
@@ -204,6 +206,7 @@ export const CouplesProvider: React.FC<{ children: React.ReactNode }> = ({ child
   const initializeIdentity = async () => {
     if(!user){setCouple(null);setNotes([]);setIsLoading(false);return;}
     try{
+      setIdentityError('');
       const revision=identityRevisionRef.current;
       const current=()=>aliveRef.current&&identityRevisionRef.current===revision;
       const [device,result]=await Promise.all([
@@ -225,18 +228,15 @@ export const CouplesProvider: React.FC<{ children: React.ReactNode }> = ({ child
       const currentDeviceId=device.value||crypto.randomUUID();
       if(!device.value)await Preferences.set({key:'tw_device_id',value:currentDeviceId});
       setDeviceId(currentDeviceId);setHasCloudBackup(state.has_backup);
-      const identity=await resolveDeviceIdentity(user.id,state.public_key,current,generation);
+      const identity=await resolveVaultChatIdentity(supabase,user.id,state.public_key,generation,currentDeviceId,current);
       if(!current())return;
       identityUsableRef.current=!identity.needsRestore;
       setIsSyncRequired(identity.needsRestore);setIsHistorySynced(!identity.needsRestore);
-      if(identity.publicKey){
-        const {error}=await supabase.from('user_keys').upsert({user_id:user.id,device_id:currentDeviceId,public_key:identity.publicKey,identity_generation:generation,device_name:navigator.platform||'Browser',last_active:new Date().toISOString()},{onConflict:'user_id,device_id'});
-        if(error)throw error;
-      }
+      if(identity.publicKey)setHasCloudBackup(true);
       if(!current())return;
       setE2eeReady(true);
       await fetchCoupleData();
-    }catch(error){if(aliveRef.current){setIsLoading(false);console.error('Identity initialization failed',error);}}
+    }catch(error){if(aliveRef.current){identityUsableRef.current=false;setE2eeReady(false);setIsLoading(false);setIdentityError('Secure chat could not finish syncing. Retry to open this connection.');console.error('Identity initialization failed',error);}}
   };
   const refreshE2EE = async () => {
     // Recovery must run again after an initial device check has completed.
@@ -956,39 +956,10 @@ export const CouplesProvider: React.FC<{ children: React.ReactNode }> = ({ child
     return couple && user ? fetchPartnerDataInternal(couple, user.id) : Promise.resolve();
   }, [couple, user]);
 
-  const setupCloudBackup = async (pin: string) => {
-    if (!user) return;
-    if(!identityUsableRef.current)throw new Error('Restore your existing identity first.');
-    if(pin.length<8)throw new Error('Use at least 8 characters for your backup password.');
-    const generation=identityGenerationRef.current,revision=identityRevisionRef.current;
-    const { value: privKey } = await Preferences.get({ key: `${user.id}_private_key` });
-    const { value: pubKey } = await Preferences.get({ key: `${user.id}_public_key` }); // Get public key too
-
-    if (!privKey || !pubKey) {
-        console.error('[E2EE] Keys not found locally during backup setup!');
-        throw new Error('Keys not found locally');
-    }
-
-    const { ciphertext, salt } = await encryptIdentityWithPin(privKey, pin);
-    if(!identityUsableRef.current||revision!==identityRevisionRef.current)throw new Error('This connection ended. Set up a new backup after reconnecting.');
-    import.meta.env.DEV && console.log('[E2EE] Identity encrypted with PIN. Uploading to identity_backups...');
-
-    const { error } = await (supabase
-        .from('identity_backups' as any)
-        .upsert({
-            user_id: user.id,
-            backup_identity: ciphertext,
-            backup_salt: salt,
-            public_key: pubKey,
-            identity_generation:generation
-        } as any) as any);
-
-    if (error) {
-        console.error('[E2EE] Backup upload failed:', error);
-        throw error;
-    }
-    import.meta.env.DEV && console.log('[E2EE] Cloud Backup successfully enabled.');
-    setHasCloudBackup(true);
+  // Chat is protected automatically by the account vault; no second password.
+  const setupCloudBackup = async (_legacyPassword:string) => {
+    await refreshE2EE();
+    if(!identityUsableRef.current)throw new Error('Open your previous device to import its chat identity first.');
   };
 
   const restoreFromCloudBackup=async(passphrase:string)=>{
@@ -1004,7 +975,7 @@ export const CouplesProvider: React.FC<{ children: React.ReactNode }> = ({ child
       partnerPublicKeyRef.current=null;deviceKeysRef.current.clear();decryptedNotesCacheRef.current.clear();
       identityUsableRef.current=true;setIsSyncRequired(false);setIsHistorySynced(true);
       setRestorationState({isRestoring:true,progress:70,status:'Loading your history…'});
-      await refreshE2EE();setKeyVersion(v=>v+1);
+      await refreshE2EE();if(!identityUsableRef.current)throw new Error('Chat import could not finish. Retry.');setKeyVersion(v=>v+1);
     }finally{if(aliveRef.current)setRestorationState({isRestoring:false,progress:100,status:'Complete'});}
   };
 
@@ -1057,6 +1028,7 @@ export const CouplesProvider: React.FC<{ children: React.ReactNode }> = ({ child
     isHistorySynced,
     isSyncRequired,
     identityReady:e2eeReady,
+    identityError,
     identityGeneration:identityGenerationRef.current,
     setupCloudBackup,
     restoreFromCloudBackup,
@@ -1068,7 +1040,7 @@ export const CouplesProvider: React.FC<{ children: React.ReactNode }> = ({ child
     couple, notes, chatConnected, isLoading, authLoading, hasMoreNotes, loadingOlder,
     isSupporter, partnerProfile, partnerSettings, partnerLogs, partnerPubKey,
     partnerData, deviceId, hasCloudBackup, isHistorySynced, isSyncRequired,
-    keyVersion, restorationState, e2eeReady
+    keyVersion, restorationState, e2eeReady, identityError
   ]);
 
   return (

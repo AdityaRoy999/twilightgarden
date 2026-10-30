@@ -49,7 +49,7 @@ export function VaultBoundary({ children }: { children: React.ReactNode }) {
         <p className="my-5 text-[var(--text-secondary)]">
           {vault.exists
             ? "Enter your backup password to unlock this device. Your records stay encrypted while locked."
-            : "Set a separate backup password for your health records, profile and private preferences. Your partner receives only the records you choose to share."}
+            : "Set one backup password for your private records, profile, preferences and chats. Your partner receives only the records you choose to share."}
         </p>
         <form
           onSubmit={(event) => void submit(event)}

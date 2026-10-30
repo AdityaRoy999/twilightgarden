@@ -3,20 +3,20 @@ import { useLocation } from "react-router-dom";
 import { useCouples } from "../contexts/CouplesContext";
 const SyncHistoryModal = React.lazy(() => import('./SyncHistoryModal').then(module=>({default:module.SyncHistoryModal})));
 export function IdentityLockdownPrompt() {
-  const { isSyncRequired, identityReady, couple, hasCloudBackup } = useCouples();
+  const { isSyncRequired, identityReady, couple } = useCouples();
   const location = useLocation();
   const active = couple?.status === "active" && identityReady;
-  const needed = active && (isSyncRequired || !hasCloudBackup);
+  const needed = active && isSyncRequired;
   const prompt = needed ? `${couple.id}:${isSyncRequired ? 'recover' : 'setup'}` : null;
   const prompted = useRef<string | null>(null);
   const [open, setOpen] = useState(false);
   useEffect(() => {
-    if (!active) { prompted.current = null; setOpen(false); }
+    if (!active || !needed) { prompted.current = null; setOpen(false); }
     else if (prompt && prompt !== prompted.current) {
       prompted.current = prompt;
       setOpen(true);
     }
-  }, [active, prompt]);
+  }, [active, needed, prompt]);
   useEffect(() => {
     const show = () => setOpen(true);
     window.addEventListener("recheck-lockdown", show);

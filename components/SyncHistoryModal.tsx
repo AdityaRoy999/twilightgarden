@@ -16,8 +16,21 @@ import { createSyncSession } from "../lib/sync";
 import { decryptWithEphemeralKey } from "../lib/encryption";
 import { installRecoveredIdentity } from "../lib/identity";
 import { SpringModal } from "./ui/SpringModal";
+import {VaultPasswordModal} from './VaultPasswordModal';
 
-export function SyncHistoryModal({
+export function SyncHistoryModal(props:{isOpen:boolean;onClose:()=>void;initialTab?:'sync'|'backup'}){
+  const {isSyncRequired,completeSyncHandshake}=useCouples();
+  const recovering=useRef(isSyncRequired);
+  useEffect(()=>{
+    if(props.isOpen&&recovering.current&&!isSyncRequired)props.onClose();
+    recovering.current=isSyncRequired;
+  },[props.isOpen,isSyncRequired,props.onClose]);
+  // Modern devices recover chat automatically when the account vault opens.
+  // Only a one-time import of an older, separately encrypted chat may need help.
+  if(props.isOpen&&recovering.current&&!isSyncRequired)return null;
+  return isSyncRequired?<LegacySyncHistoryModal {...props}/>:<VaultPasswordModal isOpen={props.isOpen} onClose={props.onClose} onApproveDevice={completeSyncHandshake}/>;
+}
+function LegacySyncHistoryModal({
   isOpen,
   onClose,
   initialTab = "backup",
@@ -243,7 +256,7 @@ export function SyncHistoryModal({
   const deviceLink = (
     <div className="space-y-4">
       <p className="text-sm leading-relaxed text-gray-500 dark:text-gray-400">
-        On a device already signed in to your account, open Chat backup → More
+        On a device already signed in to your account, open Backup password → More
         options and enter this code.
       </p>
       {linkCode && !expired ? (
@@ -320,7 +333,7 @@ export function SyncHistoryModal({
             {!needsDeviceLink && (
               <p className="mb-5 mt-2 text-sm leading-relaxed text-gray-500 dark:text-gray-400">
                 {isSyncRequired
-                  ? restoringMessages ? "Enter your backup password once to restore your messages." : "Your account already has an encrypted backup from another device. Enter its password to unlock chat here. Linking a partner does not replace your account’s encryption key."
+                  ? "One-time import: enter the old chat backup password, or use an already signed-in device. After import, chat uses your account backup password automatically."
                   : confirming
                     ? "Enter the same password again."
                     : hasCloudBackup

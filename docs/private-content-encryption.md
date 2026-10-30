@@ -10,7 +10,7 @@ cryptographic audit or a claim that all metadata is hidden.
 | --- | --- |
 | Health logs, dates, cycle settings, profile, avatar, private preferences | Personal account vault; per-record AES-256-GCM keys wrapped by its random master key |
 | Explicitly shared health and profile | Separate per-record key envelopes for the current partner using P-256 ECDH + HKDF-SHA-256; personal master key is never shared |
-| Chat, attachments, GIF references, replies and reactions | Existing conversation ECDH/AES-GCM identity, protected separately from the personal vault |
+| Chat, attachments, GIF references, replies and reactions | Independent conversation ECDH/AES-GCM key; its recovery envelope is protected by the personal account vault |
 | Call signalling and reactions | Encrypted conversation signals; WebRTC encrypts peer media |
 | Game state, moves, answers and stored generated questions | Encrypted room state and commands; the host device alone decrypts the hidden answer state |
 | AI, map, GIF and shopping requests | Explicit external-service exceptions; the chosen provider receives the submitted context/query |
@@ -40,8 +40,18 @@ unlocked keys and decrypted avatar URLs. Remembered keys remain device-protected
 for later login, bound to account/data/vault epochs. A new device needs the backup
 password. There is no administrator decryption or forgotten-password recovery.
 
-Personal vault keys survive partner disconnect. Chat identities and backups are
-reset by disconnect, and a new connection needs fresh chat backup setup. Health
+Each account has one backup password for private records and chat. Chat recovery
+keys are wrapped with the personal master key in an owner-only envelope, bound to
+the account vault epoch and conversation generation. New devices recover chat
+automatically after unlocking their personal vault. Existing local chat keys
+migrate without a new password. If a legacy chat key exists only in an old
+password-encrypted backup, that old password or another signed-in device is needed
+once to import it; the old separate backup is then removed.
+
+Personal vault keys and the account backup password survive partner disconnect.
+Chat identities and recovery envelopes are deleted atomically on disconnect.
+Relinking automatically creates fresh chat keys under the same account vault.
+Generation checks reject delayed registrations from a disconnected device. Health
 sharing is independently opt-in; RLS, active-session checks and key envelopes all
 apply. Consent withdrawal/unlink revokes server access and removes sharing
 envelopes. Already decrypted, exported or copied information cannot be recalled.

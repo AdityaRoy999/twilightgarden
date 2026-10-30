@@ -14,7 +14,7 @@ const mocks = vi.hoisted(() => ({
   locked: false,
   backup: false,
   ready: true,
-  setup: vi.fn(),
+  setup: vi.fn(), change:vi.fn(),
   restore: vi.fn(),
   approve: vi.fn(),
   refresh: vi.fn(),
@@ -39,6 +39,7 @@ vi.mock("../contexts/CouplesContext", () => ({
     notes: [],
   }),
 }));
+vi.mock('../contexts/VaultContext',()=>({useVault:()=>({changePassword:mocks.change})}));
 vi.mock("../lib/sync", () => ({ createSyncSession: mocks.create }));
 vi.mock("../lib/supabase", () => ({
   supabase: {
@@ -91,37 +92,24 @@ describe("simple optional chat backup", () => {
     );
     expect(screen.queryByRole("dialog")).toBeNull();
   });
-  it("shows one password field at a time and saves only after confirmation", async () => {
-    render(<SyncHistoryModal isOpen onClose={vi.fn()} />);
-    expect(screen.getByRole("heading", { name: "Set backup password" })).toBeTruthy();
-    expect(screen.queryByLabelText("Confirm password")).toBeNull();
-    expect(screen.queryByLabelText("Device code")).toBeNull();
-    fireEvent.change(screen.getByLabelText("Backup password"), {
-      target: { value: "synthetic-backup-password" },
-    });
-    fireEvent.click(screen.getByRole("button", { name: "Continue" }));
+  it('uses one account password and requires matching confirmation on both roles',async()=>{
+    mocks.change.mockResolvedValue(undefined);
+    render(<SyncHistoryModal isOpen onClose={vi.fn()}/>);
+    expect(screen.getByRole('heading',{name:'One backup password'})).toBeTruthy();
+    fireEvent.change(screen.getByLabelText('Current backup password'),{target:{value:'current-password'}});
+    fireEvent.change(screen.getByLabelText('New backup password'),{target:{value:'new-password-for-vault'}});
+    fireEvent.change(screen.getByLabelText('Confirm new backup password'),{target:{value:'different-password'}});
+    fireEvent.click(screen.getByRole('button',{name:'Change backup password'}));
+    await screen.findByRole('alert');expect(mocks.change).not.toHaveBeenCalled();
+    fireEvent.change(screen.getByLabelText('Confirm new backup password'),{target:{value:'new-password-for-vault'}});
+    fireEvent.click(screen.getByRole('button',{name:'Change backup password'}));
+    await screen.findByRole('heading',{name:'Backup password changed'});
+    expect(mocks.change).toHaveBeenCalledWith('current-password','new-password-for-vault');
     expect(mocks.setup).not.toHaveBeenCalled();
-    fireEvent.change(
-      screen.getByLabelText("Confirm password", { selector: "input" }),
-      { target: { value: "different-password" } },
-    );
-    fireEvent.click(screen.getByRole("button", { name: "Save backup" }));
-    await screen.findByRole("alert");
-    expect(mocks.setup).not.toHaveBeenCalled();
-    fireEvent.change(
-      screen.getByLabelText("Confirm password", { selector: "input" }),
-      { target: { value: "synthetic-backup-password" } },
-    );
-    fireEvent.click(screen.getByRole("button", { name: "Save backup" }));
-    await screen.findByRole("heading", { name: "All set" });
-    expect(mocks.setup).toHaveBeenCalledWith("synthetic-backup-password");
   });
-  it("lets the user skip optional backup without making a server request", () => {
-    const close = vi.fn();
-    render(<SyncHistoryModal isOpen onClose={close} />);
-    fireEvent.click(screen.getByRole("button", { name: "Not now" }));
-    expect(close).toHaveBeenCalledTimes(1);
-    expect(mocks.setup).not.toHaveBeenCalled();
+  it('can close account backup settings without changing a password',()=>{
+    const close=vi.fn();render(<SyncHistoryModal isOpen onClose={close}/>);
+    fireEvent.click(screen.getByRole('button',{name:'Close'}));expect(close).toHaveBeenCalledOnce();expect(mocks.change).not.toHaveBeenCalled();
   });
   it("restores existing backups with one entry, including legacy PINs", async () => {
     mocks.locked = true;
@@ -135,7 +123,7 @@ describe("simple optional chat backup", () => {
     expect(mocks.setup).not.toHaveBeenCalled();
     expect(screen.queryByLabelText("Confirm password")).toBeNull();
   });
-  it("keeps linking under More options on a trusted device", async () => {
+  it("keeps trusted-device approval available without a second password", async () => {
     render(<SyncHistoryModal isOpen onClose={vi.fn()} />);
     expect(screen.queryByLabelText("Device code")).toBeNull();
     fireEvent.click(screen.getByRole("button", { name: "More options" }));
@@ -143,7 +131,7 @@ describe("simple optional chat backup", () => {
       target: { value: "abcdefgh" },
     });
     fireEvent.click(screen.getByRole("button", { name: "Link device" }));
-    await screen.findByRole("heading", { name: "All set" });
+    await screen.findByRole("heading", { name: "Device linked" });
     expect(mocks.approve).toHaveBeenCalledWith("ABCDEFGH");
     expect(
       screen.getByText("The other device can now load your chats."),
