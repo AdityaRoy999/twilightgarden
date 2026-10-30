@@ -619,9 +619,9 @@ try {
   const aiRooms=[];let aiView;
   try{
     activate(0);
-    const hostAI=new EncryptedGameRoom(users[0].id,couple.id,users[1].id,'truth_dare',()=>{},clients[0],bundles[0]);aiRooms.push(hostAI);hostAI.subscribe(value=>{aiView=value});await hostAI.start();
+    const hostAI=new EncryptedGameRoom(users[0].id,couple.id,users[1].id,'truth_dare',message=>console.log('AI host transport:',message),clients[0],bundles[0]);aiRooms.push(hostAI);hostAI.subscribe(value=>{aiView=value});await hostAI.start();
     activate(1);
-    const guestAI=new EncryptedGameRoom(users[1].id,couple.id,users[0].id,'truth_dare',()=>{},clients[1],bundles[1]);aiRooms.push(guestAI);await guestAI.start();
+    const guestAI=new EncryptedGameRoom(users[1].id,couple.id,users[0].id,'truth_dare',message=>console.log('AI guest transport:',message),clients[1],bundles[1]);aiRooms.push(guestAI);await guestAI.start();
     await assert.rejects(hostAI.action({kind:'prefetch'}),/privacy/i);
     check(await consent(0,{p_ai:true}));
     const began=performance.now();
