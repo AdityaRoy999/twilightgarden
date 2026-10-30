@@ -342,6 +342,8 @@ html, body, #root { max-width:100%; overflow-x:clip; overscroll-behavior-x:none;
 .privacy-choices p { font-size:14px; margin:6px 0; }
 .privacy-center select,.privacy-center textarea { display:block; width:100%; padding:14px; margin:10px 0 20px; border-radius:14px; background:var(--bg-base); color:var(--text-primary); }
 .privacy-center textarea { min-height:120px; }
+.privacy-center input:not([type=checkbox]) { background:var(--bg-base); color:var(--text-primary); font-size:16px; }
+.privacy-center input:focus-visible { background:var(--bloom-tint); text-decoration:underline; }
 .privacy-center small { display:block; overflow-wrap:anywhere; }
 .privacy-delete { padding:14px 20px; border-radius:14px; color:white; background:#b52f50; }
 .privacy-center a:focus-visible,.privacy-center button:focus-visible,.privacy-center select:focus-visible,.privacy-center textarea:focus-visible { text-decoration:underline; background:var(--bloom-tint); }

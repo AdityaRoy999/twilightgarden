@@ -1,6 +1,12 @@
 /** Own and explicitly shared history use the same complete date-key pagination.
  * daily_logs is unique per (user_id,date), so new inserts do not shift pages. */
 export async function loadHealthHistory(client: any, userId: string, signal?: AbortSignal): Promise<any[]> {
+  if(client.privateContentVersion===1){
+    // The encrypted repository already paginates opaque records and decrypts
+    // locally. Applying date pagination again would repeatedly load all pages.
+    let query=client.from('daily_logs').select('*').eq('user_id',userId).order('date',{ascending:false});
+    if(signal)query=query.abortSignal(signal);const {data,error}=await query;if(error)throw error;return data||[];
+  }
   const history: any[] = [];
   let before: string | undefined;
   const pageSize = 500;
@@ -19,7 +25,7 @@ export async function loadHealthHistory(client: any, userId: string, signal?: Ab
   }
 }
 
-/** Authorized plaintext health rows do not depend on private chat keys. */
+/** Authorization is independent of the personal-vault decryption envelope. */
 export function canReadSharedHealth(couple: {status: string; share_enabled: boolean}, ownId: string, members: readonly (string|null|undefined)[]) {
   return couple.status === 'active' && couple.share_enabled === true && members.includes(ownId);
 }

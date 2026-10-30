@@ -1,4 +1,4 @@
-import { Preferences } from '@capacitor/preferences';
+import {SecurePreferences as Preferences} from './securePreferences';
 
 /**
  * End-to-End Encryption (E2EE) Utility
@@ -6,7 +6,7 @@ import { Preferences } from '@capacitor/preferences';
  *
  * Architecture: Simple, reliable ECDH + AES-GCM
  * - Each user has one stable ECDH key pair (P-256)
- * - Private key stored locally via Capacitor Preferences
+ * - Private key protected with Keychain/Keystore or a non-extractable device wrapping key
  * - Public key uploaded to Supabase (user_keys)
  * - Messages encrypted with a shared secret derived from ECDH
  * - Identity can be backed up/restored via PIN
@@ -199,7 +199,7 @@ async function deriveSharedSecret(ownPrivateKeyB64: string, partnerPublicKeyB64:
 /**
  * Encrypts a message using a shared secret
  */
-export async function encryptMessage(text: string, partnerPublicKeyB64: string): Promise<string> {
+export async function encryptMessage(text: string, partnerPublicKeyB64: string, context?: string): Promise<string> {
     const ownPrivateKeyB64 = cachedPrivateKey;
     if (!ownPrivateKeyB64) {
         throw new Error('Private key missing. Call initializeEncryptionKeys first.');
@@ -214,6 +214,7 @@ export async function encryptMessage(text: string, partnerPublicKeyB64: string):
         {
             name: 'AES-GCM',
             iv: iv,
+            ...(context ? {additionalData:new TextEncoder().encode(context)} : {}),
         },
         sharedKey,
         encoded
@@ -230,7 +231,7 @@ export async function encryptMessage(text: string, partnerPublicKeyB64: string):
 /**
  * Decrypts a message using a shared secret
  */
-export async function decryptMessage(encryptedB64: string, partnerPublicKeyB64: string, userId?: string): Promise<string> {
+export async function decryptMessage(encryptedB64: string, partnerPublicKeyB64: string, userId?: string, context?: string): Promise<string> {
     const revision = identityRevision;
     try {
         // Optimization: Use cached private key if available
@@ -257,6 +258,7 @@ export async function decryptMessage(encryptedB64: string, partnerPublicKeyB64: 
             {
                 name: 'AES-GCM',
                 iv: iv,
+            ...(context ? {additionalData:new TextEncoder().encode(context)} : {}),
             },
             sharedKey,
             ciphertext
@@ -265,30 +267,25 @@ export async function decryptMessage(encryptedB64: string, partnerPublicKeyB64: 
         return new TextDecoder().decode(decrypted);
     } catch (e) {
         console.warn('[E2EE] Decryption failed, likely a legacy message or key mismatch');
-        // If it looks like a long Base64 string, it's a failed decryption, not plain text
-        const noSpaces = !/\s/.test(encryptedB64);
-        const onlyBase64Chars = /^[A-Za-z0-9+/=]+$/.test(encryptedB64);
-        if (encryptedB64.length > 30 && noSpaces && onlyBase64Chars) {
-            return "🔐 Message locked (Key changed — restore identity via PIN)";
-        }
-        return encryptedB64;
+        // Never downgrade an encrypted channel to displaying server-supplied plaintext.
+        return "🔐 Message locked — unlock your identity or retry.";
     }
 }
 
 /**
  * Encrypts any JSON-serializable data
  */
-export async function encryptData(data: any, partnerPublicKeyB64: string): Promise<string> {
+export async function encryptData(data: any, partnerPublicKeyB64: string, context?: string): Promise<string> {
     const json = JSON.stringify(data);
-    return await encryptMessage(json, partnerPublicKeyB64);
+    return await encryptMessage(json, partnerPublicKeyB64, context);
 }
 
 /**
  * Decrypts and parses JSON-encoded data
  */
-export async function decryptData<T>(encryptedB64: string, partnerPublicKeyB64: string, userId?: string): Promise<T | null> {
+export async function decryptData<T>(encryptedB64: string, partnerPublicKeyB64: string, userId?: string, context?: string): Promise<T | null> {
     try {
-        const decrypted = await decryptMessage(encryptedB64, partnerPublicKeyB64, userId);
+        const decrypted = await decryptMessage(encryptedB64, partnerPublicKeyB64, userId, context);
         // If decryption failed, decryptMessage returns either the original ciphertext OR a fallback string starting with 🔐
         if (decrypted === encryptedB64 || decrypted.startsWith("🔐")) return null;
         return JSON.parse(decrypted) as T;
@@ -355,9 +352,9 @@ export async function decryptBlob(encryptedData: ArrayBuffer, partnerPublicKeyB6
 /**
  * Generates a 60-digit fingerprint for manual verification (WhatsApp style)
  */
-export async function generateVerificationFingerprint(ownPubKey: string, partnerPubKey: string): Promise<string> {
+export async function generateVerificationFingerprint(ownPubKey: string, partnerPubKey: string, vaultKeys: string[] = []): Promise<string> {
     const canonical=(value:string)=>{const key=JSON.parse(window.atob(value));return JSON.stringify({kty:key.kty,crv:key.crv,x:key.x,y:key.y});};
-    const sortedKeys = [canonical(ownPubKey), canonical(partnerPubKey)].sort();
+    const sortedKeys = [ownPubKey,partnerPubKey,...vaultKeys].map(canonical).sort();
     const combined = sortedKeys.join('');
     const encoder = new TextEncoder();
     const data = encoder.encode(combined);

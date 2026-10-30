@@ -12,6 +12,6 @@ export function canEnterPrivateApp(p: PrivacyPreferences | null, role?: string) 
 export function clearHealthSnapshots(storage: Pick<Storage,'length'|'key'|'removeItem'>) {
   for (let i=storage.length-1;i>=0;i--) {
     const key=storage.key(i);
-    if(key && /^(tw_logs_|tw_settings_|twilight-guide|twilight-wellness)/.test(key)) storage.removeItem(key);
+    if(key && /^(tw_logs_|tw_settings_|twilight-guide|twilight-wellness|twilight_profile$|tw_cached_couple$|tw_cached_notes$)/.test(key)) storage.removeItem(key);
   }
 }

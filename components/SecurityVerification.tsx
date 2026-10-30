@@ -8,6 +8,8 @@ import {
   getCachedPrivateKey,
 } from "../lib/encryption";
 import { useCouples } from "../contexts/CouplesContext";
+import {getPrivatePeer} from '../lib/privateData';
+import {unlockedVault} from '../lib/vaultRuntime';
 
 export function SecurityVerification({
   isOpen,
@@ -38,10 +40,11 @@ export function SecurityVerification({
     setCopied(false);
     const privateKey = getCachedPrivateKey();
     if (isOpen && privateKey && partnerPubKey && !isSyncRequired)
-      void generateVerificationFingerprint(
-        derivePublicKeyFromPrivate(privateKey),
-        partnerPubKey,
-      )
+      void (async()=>{
+        const peer=await getPrivatePeer();if(!peer)throw new Error('Partner vault unavailable');
+        return generateVerificationFingerprint(derivePublicKeyFromPrivate(privateKey),partnerPubKey,
+          [btoa(JSON.stringify(unlockedVault().publicKey)),btoa(JSON.stringify(peer.publicKey))]);
+      })()
         .then((value) => {
           if (active) setFingerprint(value);
         })

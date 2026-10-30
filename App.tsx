@@ -2,6 +2,8 @@ import { GameInvitationBanner } from './components/GameInvitationBanner';
 import { AppIcon } from './components/ui/Icons';
 import { PrivacyProvider } from './contexts/PrivacyContext';
 import { PrivacyBoundary } from './components/PrivacyBoundary';
+import {VaultProvider} from './contexts/VaultContext';
+import {VaultBoundary} from './components/VaultBoundary';
 import { ConsentedPushRegistration } from './components/ConsentedPushRegistration';
 import { Flower2 } from './components/ui/Icons';
 import { NotificationProvider } from './contexts/NotificationContext';
@@ -452,7 +454,9 @@ const App: React.FC = () => {
           <AccountScope>
           <HashRouter>
           <PrivacyProvider>
+          <VaultProvider>
           <PrivacyBoundary>
+          <VaultBoundary>
           <CouplesProvider>
             <NotificationProvider>
           <CallProvider>
@@ -619,7 +623,9 @@ const App: React.FC = () => {
           </CallProvider>
           </NotificationProvider>
           </CouplesProvider>
+          </VaultBoundary>
           </PrivacyBoundary>
+          </VaultProvider>
           </PrivacyProvider>
           </HashRouter>
           </AccountScope>

@@ -6,12 +6,12 @@ import {canEnterPrivateApp} from '../lib/privacy';
 import PrivacyCenter from '../pages/legal/PrivacyCenter';
 import PrivacyPolicy from '../pages/legal/PrivacyPolicy';
 import TOS from '../pages/legal/TOS';
-import ForgotPassword from '../pages/ForgotPassword';
+const ForgotPassword = React.lazy(() => import('../pages/ForgotPassword'));
 
 export function PrivacyBoundary({children}:{children:React.ReactNode}){
  const {user,loading:authLoading,recoveringPassword}=useAuth(),{preferences,loading,error,refresh}=usePrivacy();
  const {pathname}=useLocation();
- if(recoveringPassword || /\/(?:reset-password|forgot-password)$/.test(pathname))return <ForgotPassword/>;
+ if(recoveringPassword || /\/(?:reset-password|forgot-password)$/.test(pathname))return <React.Suspense fallback={<main className="privacy-center" role="status">Opening account recovery…</main>}><ForgotPassword/></React.Suspense>;
  if(pathname==='/privacy')return <PrivacyPolicy/>;
  if(pathname==='/tos')return <TOS/>;
  if(pathname==='/privacy-controls')return <PrivacyCenter/>;

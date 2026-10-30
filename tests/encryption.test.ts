@@ -1,13 +1,24 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { webcrypto } from 'node:crypto';
-vi.mock('@capacitor/preferences', () => ({ Preferences: { get: vi.fn(), set: vi.fn() } }));
-import { clearEncryptionCache, clearSharedKeyCache, decryptWithEphemeralKey, encryptMessage, generateKeyPair, setCachedPrivateKey, initializeEncryptionKeys, getCachedPrivateKey } from '../lib/encryption';
-import { Preferences } from '@capacitor/preferences';
+vi.mock('../lib/securePreferences', () => ({ SecurePreferences: { get: vi.fn(), set: vi.fn() } }));
+import { clearEncryptionCache, clearSharedKeyCache, decryptWithEphemeralKey, encryptMessage, decryptMessage, encryptData, decryptData, generateKeyPair, setCachedPrivateKey, initializeEncryptionKeys, getCachedPrivateKey } from '../lib/encryption';
+import { SecurePreferences as Preferences } from '../lib/securePreferences';
 
 beforeEach(() => { vi.stubGlobal('window', { crypto: webcrypto, atob, btoa }); clearEncryptionCache(); });
 afterEach(() => vi.unstubAllGlobals());
 
 describe('identity-key encryption', () => {
+  it('binds private chat fields to their message and never displays a plaintext downgrade',async()=>{
+    const a=await generateKeyPair(),b=await generateKeyPair();setCachedPrivateKey(a.privateKey);
+    const cipher=await encryptMessage('private note',b.publicKey,'pair:note-1:content');
+    const reactions=await encryptData([{user_id:'a',emoji:'❤️'}],b.publicKey,'pair:note-1:reactions');
+    setCachedPrivateKey(b.privateKey);
+    expect(await decryptMessage(cipher,a.publicKey,undefined,'pair:note-1:content')).toBe('private note');
+    expect(await decryptMessage(cipher,a.publicKey,undefined,'pair:note-2:content')).toContain('🔐');
+    expect(await decryptMessage('unencrypted server text',a.publicKey)).toContain('🔐');
+    expect(await decryptData(reactions,a.publicKey,undefined,'pair:note-1:reactions')).toEqual([{user_id:'a',emoji:'❤️'}]);
+    expect(await decryptData(reactions,a.publicKey,undefined,'pair:note-2:reactions')).toBeNull();
+  });
   it('cannot repopulate the previous account identity after logout', async () => {
     let release!: (value: {value:string}) => void;
     vi.mocked(Preferences.get).mockImplementationOnce(() => new Promise(resolve => {release=resolve;})).mockResolvedValue({value:'old-private-key'});

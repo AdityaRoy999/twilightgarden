@@ -14,6 +14,7 @@ declare global {
 }
 
 import { CapacitorStorage } from './storageAdapter';
+import { privateClient } from './privateQueries';
 
 // Detect Tauri at module init time
 const isTauri = typeof window !== 'undefined' && (!!(window as any).__TAURI_INTERNALS__ || !!(window as any).__TAURI__);
@@ -42,9 +43,8 @@ function getSupabaseClient(): SupabaseClient<Database> {
       // waits so an unavailable auth service cannot hold the client lock forever.
       fetch: (input, init) => {
         const url = typeof input === 'string' ? input : input instanceof URL ? input.href : input.url;
-        if (!url.startsWith(`${supabaseUrl}/auth/v1/`)) return fetch(input, init);
         const inherited=init?.signal || (input instanceof Request ? input.signal : undefined);
-        const timeout=AbortSignal.timeout(12000);
+        const timeout=AbortSignal.timeout(url.startsWith(`${supabaseUrl}/auth/v1/`)?12000:20000);
         return fetch(input,{...init,signal:inherited?AbortSignal.any([inherited,timeout]):timeout});
       },
       headers: {
@@ -72,4 +72,7 @@ function getSupabaseClient(): SupabaseClient<Database> {
   return client;
 }
 
-export const supabase = getSupabaseClient();
+// rawSupabase is reserved for account/consent/vault metadata. Screen queries
+// use the facade, which encrypts private content before any network request.
+export const rawSupabase = getSupabaseClient();
+export const supabase = privateClient(rawSupabase);

@@ -14,6 +14,30 @@ export type Database = {
   }
   public: {
     Tables: {
+      account_vaults: {
+        Row: {
+          backup: Json
+          created_at: string
+          epoch: string
+          public_key: Json
+          user_id: string
+        }
+        Insert: {
+          backup: Json
+          created_at?: string
+          epoch?: string
+          public_key: Json
+          user_id: string
+        }
+        Update: {
+          backup?: Json
+          created_at?: string
+          epoch?: string
+          public_key?: Json
+          user_id?: string
+        }
+        Relationships: []
+      }
       app_dataset: {
         Row: {
           epoch: string
@@ -218,6 +242,44 @@ export type Database = {
         }
         Relationships: []
       }
+      encrypted_game_commands: {
+        Row: {
+          actor_id: string
+          base_revision: number
+          ciphertext: Json
+          created_at: string
+          id: string
+          session_id: string
+          status: string
+        }
+        Insert: {
+          actor_id: string
+          base_revision: number
+          ciphertext: Json
+          created_at?: string
+          id: string
+          session_id: string
+          status?: string
+        }
+        Update: {
+          actor_id?: string
+          base_revision?: number
+          ciphertext?: Json
+          created_at?: string
+          id?: string
+          session_id?: string
+          status?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "encrypted_game_commands_session_id_fkey"
+            columns: ["session_id"]
+            isOneToOne: false
+            referencedRelation: "game_sessions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       game_room_secrets: {
         Row: {
           payload: Json
@@ -247,8 +309,10 @@ export type Database = {
           couple_id: string
           created_at: string | null
           current_turn: string | null
+          encrypted_state: Json | null
           engine_version: number
           game_type: string
+          host_secret: Json | null
           id: string
           player_o: string | null
           player_x: string
@@ -261,8 +325,10 @@ export type Database = {
           couple_id: string
           created_at?: string | null
           current_turn?: string | null
+          encrypted_state?: Json | null
           engine_version?: number
           game_type?: string
+          host_secret?: Json | null
           id?: string
           player_o?: string | null
           player_x: string
@@ -275,8 +341,10 @@ export type Database = {
           couple_id?: string
           created_at?: string | null
           current_turn?: string | null
+          encrypted_state?: Json | null
           engine_version?: number
           game_type?: string
+          host_secret?: Json | null
           id?: string
           player_o?: string | null
           player_x?: string
@@ -509,6 +577,63 @@ export type Database = {
           user_id?: string | null
         }
         Relationships: []
+      }
+      private_records: {
+        Row: {
+          ciphertext: Json
+          couple_id: string | null
+          epoch: string
+          id: string
+          kind: string
+          owner_id: string
+          owner_key: Json
+          recipient_id: string | null
+          recipient_key: Json | null
+          revision: number
+          updated_at: string
+        }
+        Insert: {
+          ciphertext: Json
+          couple_id?: string | null
+          epoch: string
+          id: string
+          kind: string
+          owner_id: string
+          owner_key: Json
+          recipient_id?: string | null
+          recipient_key?: Json | null
+          revision?: number
+          updated_at?: string
+        }
+        Update: {
+          ciphertext?: Json
+          couple_id?: string | null
+          epoch?: string
+          id?: string
+          kind?: string
+          owner_id?: string
+          owner_key?: Json
+          recipient_id?: string | null
+          recipient_key?: Json | null
+          revision?: number
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "private_records_couple_id_fkey"
+            columns: ["couple_id"]
+            isOneToOne: false
+            referencedRelation: "couples"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "private_records_owner_id_fkey"
+            columns: ["owner_id"]
+            isOneToOne: false
+            referencedRelation: "account_vaults"
+            referencedColumns: ["user_id"]
+          },
+        ]
       }
       profiles: {
         Row: {
@@ -901,6 +1026,38 @@ export type Database = {
         }
         Returns: Json
       }
+      commit_private_game: {
+        Args: {
+          p_command?: string
+          p_id: string
+          p_revision: number
+          p_secret: Json
+          p_state: Json
+          p_status?: string
+        }
+        Returns: {
+          board_state: Json
+          couple_id: string
+          created_at: string | null
+          current_turn: string | null
+          encrypted_state: Json | null
+          engine_version: number
+          game_type: string
+          host_secret: Json | null
+          id: string
+          player_o: string | null
+          player_x: string
+          revision: number
+          status: string
+          winner: string | null
+        }
+        SetofOptions: {
+          from: "*"
+          to: "game_sessions"
+          isOneToOne: true
+          isSetofReturn: false
+        }
+      }
       complete_account_deletion: {
         Args: { p_actor: string }
         Returns: undefined
@@ -945,6 +1102,7 @@ export type Database = {
       get_own_chat_identity_state: { Args: never; Returns: Json }
       get_partner_id: { Args: never; Returns: string }
       get_shared_card: { Args: { p_code: string }; Returns: Json }
+      get_vault_public_key: { Args: { p_user: string }; Returns: Json }
       is_admin: { Args: never; Returns: boolean }
       join_couple: { Args: { code_input: string }; Returns: Json }
       join_couple_love_lock: { Args: { code_input: string }; Returns: Json }
@@ -958,6 +1116,31 @@ export type Database = {
         }
         Returns: Json
       }
+      open_private_game: {
+        Args: { p_couple: string; p_type: string }
+        Returns: {
+          board_state: Json
+          couple_id: string
+          created_at: string | null
+          current_turn: string | null
+          encrypted_state: Json | null
+          engine_version: number
+          game_type: string
+          host_secret: Json | null
+          id: string
+          player_o: string | null
+          player_x: string
+          revision: number
+          status: string
+          winner: string | null
+        }
+        SetofOptions: {
+          from: "*"
+          to: "game_sessions"
+          isOneToOne: true
+          isSetofReturn: false
+        }
+      }
       pending_account_deletions: {
         Args: never
         Returns: {
@@ -969,6 +1152,19 @@ export type Database = {
         Returns: undefined
       }
       privacy_permissions: { Args: { p_actor: string }; Returns: Json }
+      queue_private_game_command: {
+        Args: {
+          p_ciphertext: Json
+          p_id: string
+          p_revision: number
+          p_session: string
+        }
+        Returns: undefined
+      }
+      reject_private_game_command: {
+        Args: { p_id: string }
+        Returns: undefined
+      }
       run_reminder_job: { Args: never; Returns: number }
       save_cycle_settings: {
         Args: { p_encrypted?: string; p_values: Json }
@@ -1013,6 +1209,7 @@ export type Database = {
         }
         Returns: undefined
       }
+      save_private_records: { Args: { p_records: Json }; Returns: undefined }
       send_chat_note: {
         Args: {
           p_content: string
