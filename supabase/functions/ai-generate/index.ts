@@ -1,6 +1,6 @@
 import {findPharmacies} from '../_shared/pharmacies.ts';
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
-import { consumeBudget, json, readBody, requireUser, RequestBodyError } from '../_shared/security.ts';
+import { consumeBudget, json, readBody, requireUser, requirePurpose, requireHealthPurpose, RequestBodyError } from '../_shared/security.ts';
 
 const NVIDIA_API_KEY = Deno.env.get('NVIDIA_API_KEY');
 const SERPER_API_KEY = Deno.env.get('SERPER_API_KEY') || Deno.env.get('VITE_SERPER_API');
@@ -103,11 +103,11 @@ serve(async (req) => {
     }
     if (req.method !== 'POST') return json({ error: 'Method not allowed' }, 405);
     let userId: string | null;
-    try { userId = await requireUser(req); } catch { return json({error:'Sign-in verification is temporarily unavailable. Please retry.',code:'AUTH_UNAVAILABLE'},503); }
+    try { userId = await requireUser(req); } catch(error) { return json({error:error instanceof RequestBodyError?error.message:'Sign-in verification is temporarily unavailable. Please retry.',code:error instanceof RequestBodyError?'PRIVACY_REQUIRED':'AUTH_UNAVAILABLE'},error instanceof RequestBodyError?error.status:503); }
     if (!userId) return json({ error: 'Authentication required' }, 401);
 
     try {
-        const { mood, customPrompt, search_query, lat, lon } = await readBody(req);
+        const { mood, customPrompt, search_query, lat, lon, purpose } = await readBody(req);
         const supportedModes = ['search','places','raw','missing','morning','appreciation','flirty','apology','encouragement'];
         if (typeof mood !== 'string' || !supportedModes.includes(mood) ||
             (customPrompt !== undefined && (typeof customPrompt !== 'string' || customPrompt.length > 12000)) ||
@@ -122,6 +122,12 @@ serve(async (req) => {
             if (hasCoordinates && (typeof lat !== 'number' || typeof lon !== 'number' || !Number.isFinite(lat) || !Number.isFinite(lon) || Math.abs(lat) > 90 || Math.abs(lon) > 180)) return json({ error: 'Valid coordinates are required' }, 400);
             if (!hasCoordinates && (typeof search_query !== 'string' || search_query.trim().length < 2)) return json({ error: 'Coordinates or an area search are required' }, 400);
         }
+        if(mood !== 'places') await requirePurpose(userId,mood==='search'?'shopping':'ai');
+        if(mood==='raw'){
+            if(purpose!=='wellness'&&purpose!=='gift')return json({error:'Choose a supported AI purpose.'},400);
+            await requireHealthPurpose(userId,'ai');
+        }
+        if(mood==='search')await requireHealthPurpose(userId,'shopping');
         if (!await consumeBudget(userId, 'ai', 10)) return json({ error: 'Please wait before making another request.' }, 429);
 
         // ── Product Search Mode ──

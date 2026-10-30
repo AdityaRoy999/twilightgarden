@@ -1,66 +1,10 @@
-import { AppIcon } from '../../components/ui/Icons';
 import React from 'react';
-import { useNavigate } from 'react-router-dom';
-
-const PrivacyPolicy: React.FC = () => {
-    const navigate = useNavigate();
-
-    return (
-        <div className="min-h-screen bg-background-dark text-white p-6 pb-20">
-            <div className="max-w-2xl mx-auto pt-10">
-                <button 
-                    onClick={() => navigate(-1)} 
-                    className="flex items-center gap-2 text-white/60 hover:text-white transition-colors mb-8 group"
-                >
-                    <span className="app-icon-glyph group-hover:-translate-x-1 transition-transform"><AppIcon name={"arrow_back"}/></span>
-                    <span>Back</span>
-                </button>
-
-                <div className="bg-surface-dark/40 backdrop-blur-xl p-8 rounded-3xl border border-white/10 shadow-2xl relative overflow-hidden">
-                    <div className="absolute inset-0 bg-blue-500/5 z-0"></div>
-                    <div className="relative z-10 space-y-6">
-                        <h1 className="text-3xl font-bold bg-gradient-to-r from-white to-white/60 bg-clip-text text-transparent">
-                            Privacy Policy
-                        </h1>
-                        <p className="text-white/40 text-sm">Last Updated: February 20, 2026</p>
-
-                        <div className="space-y-6 text-white/80 leading-relaxed text-base">
-                            <section>
-                                <h2 className="text-xl font-semibold text-white mb-3">1. Information We Collect</h2>
-                                <p>We collect information you provide directly to us, including account details (name, email), health and cycle data (period dates, symptoms), and partner connection information.</p>
-                            </section>
-
-                            <section>
-                                <h2 className="text-xl font-semibold text-white mb-3">2. How We Use Information</h2>
-                                <p>Your data is used to provide accurate cycle predictions, send personalized reminders, and enable sharing with your linked partner. AI-generated insights use anonymized symptom data.</p>
-                            </section>
-
-                            <section>
-                                <h2 className="text-xl font-semibold text-white mb-3">3. Data Sharing & Sharing</h2>
-                                <p className="p-4 bg-blue-500/10 rounded-2xl border border-blue-500/20 text-blue-300">
-                                    <strong>Partner Visibility:</strong> If you are in "Couples Mode," your data is shared with your partner. You can use "Ghost Mode" at any time to temporarily pause sharing.
-                                </p>
-                            </section>
-
-                            <section>
-                                <h2 className="text-xl font-semibold text-white mb-3">4. Data Security</h2>
-                                <p>We implement strict security measures, including database-level isolation (RLS), to ensure your health data remains private and inaccessible to unauthorized parties.</p>
-                            </section>
-
-                            <section>
-                                <h2 className="text-xl font-semibold text-white mb-3">5. Data Deletion</h2>
-                                <p>You have the right to delete your account and all associated health data at any time through the App settings.</p>
-                            </section>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            {/* Decorative background gradients */}
-            <div className="fixed top-[-10%] right-[-10%] w-[40%] h-[30%] bg-blue-500/10 blur-[120px] rounded-full -z-10"></div>
-            <div className="fixed bottom-[-5%] left-[-5%] w-[50%] h-[40%] bg-blue-500/5 blur-[100px] rounded-full -z-10"></div>
-        </div>
-    );
-};
-
-export default PrivacyPolicy;
+import {LegalDocument} from '../../components/LegalDocument';
+export default function PrivacyPolicy(){return <LegalDocument title="Privacy notice">
+<section><h2>What we collect and why</h2><p>Login email, profile name/avatar, account role and session/device information support your account. With health consent, cycle dates, flow, moods, symptoms, sleep, energy and notes support tracking, estimates and reports. These records can be sensitive. Connections store member IDs and invitation state. Messages and attachments support your conversation. Games store moves, prompts and results. Push tokens deliver notifications if enabled. Reports to the operator contain the description you submit.</p></section>
+<section><h2>Your choices and sharing</h2><p>Account processing and health tracking have separate choices. Optional AI, shopping search and partner health sharing start off. Linking alone does not authorize health sharing. Withdraw consent in Privacy & safety to stop future use/access. Previously viewed, copied or exported data cannot be recalled. Public health-report links are disabled. Exported PNG/PDF files are under your control; check them before sharing.</p></section>
+<section><h2>Providers and external requests</h2><p>Supabase supplies authentication, database, storage and realtime services; the configured project is in Mumbai. Vercel hosts the web app. Optional AI requests go to NVIDIA and can contain selected prompt text and relevant historical check-in context. This is not guaranteed anonymity. Never put identity documents, passwords or unnecessary identifiers into prompts. Optional shopping terms go to Serper; retailer links open third-party sites. Nearby search sends your requested area/location to community geocoding and Overpass services. Leaflet uses OpenStreetMap tiles, and routes may use OSRM. Listings do not verify stock or opening status. GIPHY receives searches when opened. Firebase/FCM and Apple/Google services can process push tokens. Cloudflare TURN relays encrypted call media. Provider locations, contracts and retention need confirmation before launch: a Mumbai database does not mean all processing stays in India.</p></section>
+<section><h2>Encryption and devices</h2><p>Chat bodies and encrypted chat attachments use device-managed end-to-end encryption. Account IDs, timestamps, reactions, game state and structured health records are not all end-to-end encrypted. WebRTC encrypts call transport. Do not infer that every app record is E2EE. Keys and sessions are stored on your device. Backups use your backup password; the app cannot recover a forgotten password. Plaintext localStorage health-history snapshots are no longer persisted. Exported files, browser/device backups and screenshots may remain outside app control. Removing a device key registration does not sign it out.</p></section>
+<section><h2>Retention, withdrawal and deletion</h2><p>Account and health history remain until account deletion or supported individual-record deletion. Disconnect resets shared messages, attachments, games, backups and registered chat keys for both members; independent health records remain with their owner. Failed attachment cleanup retries automatically. Reconnecting requires a fresh backup password. Account deletion requires recent sign-in, disables access, revokes sessions and removes personal account data and owned storage. Failed cleanup is queued for retry. Completed deletion job IDs expire after 7 days. Resolved requests are purged after 90 days from submission; unresolved cases remain for review. Expired health links are purged daily. Provider backups and narrowly applicable legal-preservation obligations require an operator policy; instant removal from every third-party backup is not promised.</p></section>
+<section><h2>Age, rights and safety</h2><p>The intended audience is 13+. Under-13 users cannot enter sensitive features. Ages 13–17 remain blocked until a genuine guardian-verification and permission process is implemented. Self-declared age is not identity verification. A younger age band cannot be changed with a checkbox; send an age-correction request for review. Record access, correction, withdrawal, deletion, grievance and safety requests in Privacy & safety. A receipt is not human acknowledgement. Targets are human acknowledgement within 24 hours and ordinary resolution within 7 days; urgent safety categories need faster review. Operator staffing and statutory-specific escalation still need setup. Do not submit child-abuse images or intimate media as evidence; give a minimal description.</p></section>
+</LegalDocument>;}

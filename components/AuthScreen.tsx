@@ -332,7 +332,8 @@ export default function AuthScreen({
                     : "Log in"}
               {!busy && <ArrowRight size={18} />}
             </button>
-          </form>
+          <p className="mt-4 text-sm text-[var(--text-secondary)]">For ages 13+. Teen sensitive features require a verified guardian process and are not yet enabled. Review <Link className="text-primary underline" to="/privacy">Privacy</Link> and <Link className="text-primary underline" to="/tos">Terms & safety</Link>. You’ll choose data permissions after sign-in.</p>
+                </form>
           {verifying ? (
             <button
               disabled={busy || cooldown > 0}

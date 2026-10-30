@@ -47,39 +47,12 @@ const getSyncUserId = (): string | null => {
   return null;
 };
 
-// Cache helpers scoped by UserId
-const getCachedSettings = (userId: string | null): CycleSettings => {
-  if (!userId) return DEFAULT_SETTINGS;
-  try {
-    const cached = localStorage.getItem(`tw_settings_${userId}`);
-    if (cached) return JSON.parse(cached);
-  } catch { return DEFAULT_SETTINGS; }
-  // Only fallback to legacy flag if no full settings exist
-  try {
-      const done = localStorage.getItem('tw_onboarding_done') === 'true';
-      return done ? { ...DEFAULT_SETTINGS, onboardingCompleted: true } : DEFAULT_SETTINGS;
-  } catch { return DEFAULT_SETTINGS; }
-};
-
-const getCachedLogs = (userId: string | null): DailyLog[] => {
-  if (!userId) return [];
-  try {
-    const cached = localStorage.getItem(`tw_logs_${userId}`);
-    if (cached) return JSON.parse(cached);
-  } catch { return []; }
-  return [];
-};
-
-const setCachedSettings = (userId: string | null, settings: CycleSettings) => {
-  if (!userId) return;
-  try { localStorage.setItem(`tw_settings_${userId}`, JSON.stringify(settings)); } catch { }
-};
-
-const setCachedLogs = (userId: string | null, logs: DailyLog[]) => {
-  if (!userId) return;
-  // Keep cache small (e.g. only last 90 days) if needed, but for now cache all since logs might be small
-  try { localStorage.setItem(`tw_logs_${userId}`, JSON.stringify(logs)); } catch { }
-};
+// Health snapshots stay in provider memory. Never persist plaintext health
+// history into localStorage; legacy snapshots are removed by PrivacyProvider.
+const getCachedSettings = (_userId: string | null): CycleSettings => DEFAULT_SETTINGS;
+const getCachedLogs = (_userId: string | null): DailyLog[] => [];
+const setCachedSettings = (_userId: string | null, _settings: CycleSettings) => {};
+const setCachedLogs = (_userId: string | null, _logs: DailyLog[]) => {};
 
 export const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const todayKey = useToday();

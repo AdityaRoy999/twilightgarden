@@ -243,6 +243,7 @@ const Settings: React.FC = () => {
       </SpringModal>
 
       <ReferenceHeading title="Settings"/>
+      <button className="reference-button secondary mb-5" onClick={()=>navigate('/privacy-controls')}>Privacy, safety & account deletion</button>
       <section className="reference-card reference-profile">
         <ReferenceArt kind="leaves" className="reference-card-art"/>
         <button className="reference-profile-avatar" aria-label="Edit your profile" onClick={() => navigate('/settings/profile')}>

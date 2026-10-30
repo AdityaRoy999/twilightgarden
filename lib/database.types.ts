@@ -12,39 +12,8 @@ export type Database = {
   __InternalSupabase: {
     PostgrestVersion: "14.1"
   }
-  graphql_public: {
-    Tables: {
-      [_ in never]: never
-    }
-    Views: {
-      [_ in never]: never
-    }
-    Functions: {
-      graphql: {
-        Args: {
-          extensions?: Json
-          operationName?: string
-          query?: string
-          variables?: Json
-        }
-        Returns: Json
-      }
-    }
-    Enums: {
-      [_ in never]: never
-    }
-    CompositeTypes: {
-      [_ in never]: never
-    }
-  }
   public: {
     Tables: {
-      chat_identity_state: {
-        Row: { user_id: string; generation: number }
-        Insert: { user_id: string; generation?: number }
-        Update: { user_id?: string; generation?: number }
-        Relationships: []
-      }
       app_dataset: {
         Row: {
           epoch: string
@@ -90,6 +59,45 @@ export type Database = {
           message?: string | null
           version_code?: number
           version_name?: string
+        }
+        Relationships: []
+      }
+      chat_cleanup_jobs: {
+        Row: {
+          attempts: number
+          cleaned_at: string | null
+          couple_id: string
+          member_ids: string[]
+          requested_at: string
+        }
+        Insert: {
+          attempts?: number
+          cleaned_at?: string | null
+          couple_id: string
+          member_ids: string[]
+          requested_at?: string
+        }
+        Update: {
+          attempts?: number
+          cleaned_at?: string | null
+          couple_id?: string
+          member_ids?: string[]
+          requested_at?: string
+        }
+        Relationships: []
+      }
+      chat_identity_state: {
+        Row: {
+          generation: number
+          user_id: string
+        }
+        Insert: {
+          generation?: number
+          user_id: string
+        }
+        Update: {
+          generation?: number
+          user_id?: string
         }
         Relationships: []
       }
@@ -210,16 +218,41 @@ export type Database = {
         }
         Relationships: []
       }
+      game_room_secrets: {
+        Row: {
+          payload: Json
+          session_id: string
+        }
+        Insert: {
+          payload?: Json
+          session_id: string
+        }
+        Update: {
+          payload?: Json
+          session_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "game_room_secrets_session_id_fkey"
+            columns: ["session_id"]
+            isOneToOne: true
+            referencedRelation: "game_sessions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       game_sessions: {
         Row: {
           board_state: Json
           couple_id: string
           created_at: string | null
           current_turn: string | null
+          engine_version: number
           game_type: string
           id: string
           player_o: string | null
           player_x: string
+          revision: number
           status: string
           winner: string | null
         }
@@ -228,10 +261,12 @@ export type Database = {
           couple_id: string
           created_at?: string | null
           current_turn?: string | null
+          engine_version?: number
           game_type?: string
           id?: string
           player_o?: string | null
           player_x: string
+          revision?: number
           status?: string
           winner?: string | null
         }
@@ -240,10 +275,12 @@ export type Database = {
           couple_id?: string
           created_at?: string | null
           current_turn?: string | null
+          engine_version?: number
           game_type?: string
           id?: string
           player_o?: string | null
           player_x?: string
+          revision?: number
           status?: string
           winner?: string | null
         }
@@ -259,28 +296,28 @@ export type Database = {
       }
       identity_backups: {
         Row: {
-          identity_generation: number
           backup_identity: string
           backup_salt: string
           created_at: string | null
+          identity_generation: number
           public_key: string | null
           updated_at: string | null
           user_id: string
         }
         Insert: {
-          identity_generation?: number
           backup_identity: string
           backup_salt: string
           created_at?: string | null
+          identity_generation?: number
           public_key?: string | null
           updated_at?: string | null
           user_id: string
         }
         Update: {
-          identity_generation?: number
           backup_identity?: string
           backup_salt?: string
           created_at?: string | null
+          identity_generation?: number
           public_key?: string | null
           updated_at?: string | null
           user_id?: string
@@ -398,6 +435,78 @@ export type Database = {
           message?: string
           type?: string
           user_id?: string
+        }
+        Relationships: []
+      }
+      privacy_preferences: {
+        Row: {
+          age_band: string
+          ai_consent: boolean
+          core_consent: boolean
+          deleting: boolean
+          health_consent: boolean
+          notice_version: string
+          share_health: boolean
+          shopping_consent: boolean
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          age_band: string
+          ai_consent?: boolean
+          core_consent?: boolean
+          deleting?: boolean
+          health_consent?: boolean
+          notice_version?: string
+          share_health?: boolean
+          shopping_consent?: boolean
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          age_band?: string
+          ai_consent?: boolean
+          core_consent?: boolean
+          deleting?: boolean
+          health_consent?: boolean
+          notice_version?: string
+          share_health?: boolean
+          shopping_consent?: boolean
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      privacy_requests: {
+        Row: {
+          acknowledge_by: string
+          created_at: string
+          description: string
+          id: string
+          kind: string
+          resolve_by: string
+          status: string
+          user_id: string | null
+        }
+        Insert: {
+          acknowledge_by?: string
+          created_at?: string
+          description: string
+          id?: string
+          kind: string
+          resolve_by?: string
+          status?: string
+          user_id?: string | null
+        }
+        Update: {
+          acknowledge_by?: string
+          created_at?: string
+          description?: string
+          id?: string
+          kind?: string
+          resolve_by?: string
+          status?: string
+          user_id?: string | null
         }
         Relationships: []
       }
@@ -610,31 +719,31 @@ export type Database = {
       }
       sync_sessions: {
         Row: {
-          identity_generation: number
           created_at: string | null
           encrypted_payload: string | null
           ephemeral_public_key: string
           id: string
+          identity_generation: number
           status: string | null
           token: string
           user_id: string
         }
         Insert: {
-          identity_generation?: number
           created_at?: string | null
           encrypted_payload?: string | null
           ephemeral_public_key: string
           id?: string
+          identity_generation?: number
           status?: string | null
           token: string
           user_id: string
         }
         Update: {
-          identity_generation?: number
           created_at?: string | null
           encrypted_payload?: string | null
           ephemeral_public_key?: string
           id?: string
+          identity_generation?: number
           status?: string | null
           token?: string
           user_id?: string
@@ -670,36 +779,36 @@ export type Database = {
       }
       user_keys: {
         Row: {
-          identity_generation: number
           backup_identity: string | null
           backup_salt: string | null
           created_at: string
           device_id: string
           device_name: string | null
+          identity_generation: number
           last_active: string | null
           public_key: string
           updated_at: string
           user_id: string
         }
         Insert: {
-          identity_generation?: number
           backup_identity?: string | null
           backup_salt?: string | null
           created_at?: string
           device_id?: string
           device_name?: string | null
+          identity_generation?: number
           last_active?: string | null
           public_key: string
           updated_at?: string
           user_id: string
         }
         Update: {
-          identity_generation?: number
           backup_identity?: string | null
           backup_salt?: string | null
           created_at?: string
           device_id?: string
           device_name?: string | null
+          identity_generation?: number
           last_active?: string | null
           public_key?: string
           updated_at?: string
@@ -765,7 +874,13 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
-      get_own_chat_identity_state: { Args: Record<PropertyKey, never>; Returns: Json }
+      account_storage_objects: {
+        Args: { p_actor: string }
+        Returns: {
+          bucket_id: string
+          name: string
+        }[]
+      }
       can_access_realtime_topic: { Args: never; Returns: boolean }
       choose_initial_account_role: {
         Args: { p_role: string }
@@ -774,6 +889,21 @@ export type Database = {
       claim_reminder_delivery: {
         Args: { p_kind: string; p_local_date: string; p_user_id: string }
         Returns: boolean
+      }
+      commit_game_action: {
+        Args: {
+          p_actor: string
+          p_id: string
+          p_leave?: boolean
+          p_revision: number
+          p_secret: Json
+          p_state: Json
+        }
+        Returns: Json
+      }
+      complete_account_deletion: {
+        Args: { p_actor: string }
+        Returns: undefined
       }
       complete_reminder_delivery: {
         Args: { p_kind: string; p_local_date: string; p_user_id: string }
@@ -784,6 +914,10 @@ export type Database = {
         Returns: boolean
       }
       delete_old_notifications: { Args: never; Returns: undefined }
+      delete_owned_account_rows: {
+        Args: { p_actor: string }
+        Returns: undefined
+      }
       ensure_own_profile: {
         Args: never
         Returns: {
@@ -805,13 +939,36 @@ export type Database = {
           isSetofReturn: false
         }
       }
+      generate_pairing_code: { Args: never; Returns: Json }
       get_chat_public_key: { Args: { p_user_id: string }; Returns: string }
       get_data_epoch: { Args: never; Returns: string }
+      get_own_chat_identity_state: { Args: never; Returns: Json }
       get_partner_id: { Args: never; Returns: string }
       get_shared_card: { Args: { p_code: string }; Returns: Json }
       is_admin: { Args: never; Returns: boolean }
       join_couple: { Args: { code_input: string }; Returns: Json }
       join_couple_love_lock: { Args: { code_input: string }; Returns: Json }
+      open_game_room: {
+        Args: {
+          p_actor: string
+          p_couple: string
+          p_secret: Json
+          p_state: Json
+          p_type: string
+        }
+        Returns: Json
+      }
+      pending_account_deletions: {
+        Args: never
+        Returns: {
+          user_id: string
+        }[]
+      }
+      prepare_account_deletion: {
+        Args: { p_actor: string; p_session: string }
+        Returns: undefined
+      }
+      privacy_permissions: { Args: { p_actor: string }; Returns: Json }
       run_reminder_job: { Args: never; Returns: number }
       save_cycle_settings: {
         Args: { p_encrypted?: string; p_values: Json }
@@ -844,6 +1001,17 @@ export type Database = {
           p_values: Json
         }
         Returns: Json
+      }
+      save_privacy_preferences: {
+        Args: {
+          p_age: string
+          p_ai: boolean
+          p_core: boolean
+          p_health: boolean
+          p_share: boolean
+          p_shopping: boolean
+        }
+        Returns: undefined
       }
       send_chat_note: {
         Args: {
@@ -884,6 +1052,14 @@ export type Database = {
           isOneToOne: true
           isSetofReturn: false
         }
+      }
+      session_is_active: {
+        Args: { p_actor: string; p_session: string }
+        Returns: boolean
+      }
+      unlink_relationship: {
+        Args: { p_actor: string; p_couple: string }
+        Returns: undefined
       }
     }
     Enums: {
@@ -1013,9 +1189,6 @@ export type CompositeTypes<
     : never
 
 export const Constants = {
-  graphql_public: {
-    Enums: {},
-  },
   public: {
     Enums: {},
   },

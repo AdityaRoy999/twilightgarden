@@ -1,6 +1,10 @@
 import {expect,it} from 'vitest';
-import {buildWellnessContext} from '../lib/wellnessContext';
+import {buildWellnessContext,minimizeWellnessContext} from '../lib/wellnessContext';
 import {wellnessGuidePrompt} from '../lib/wellnessGuide';
+it('omits a profile name and exact historical dates from outbound context',()=>{
+ const ctx={phase:'Menstrual',cycleDay:2,moods:['calm'],symptoms:['cramps'],partnerName:'Synthetic Name',logHistory:'2026-10-20: sleep=good\n2026-10-19: sleep=fair'};
+ const minimized=minimizeWellnessContext(ctx);expect(minimized.partnerName).toBeUndefined();expect(minimized.logHistory).not.toContain('2026-10');expect(minimized.logHistory).toContain('Prior observation 2');expect(ctx.partnerName).toBe('Synthetic Name');
+});
 it('uses actual historical check-ins and excludes demo and future records',()=>{
  const ctx=buildWellnessContext({phase:'Luteal',cycleDay:20,today:'2026-10-27',logs:[
   {date:'2026-10-27',moods:['calm'],symptoms:['cramps'],energy_level:'low'},

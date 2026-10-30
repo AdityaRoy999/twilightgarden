@@ -1,4 +1,5 @@
 import {ConnectionScreen} from '../components/ConnectionScreen';
+import { ConfirmAction } from '../components/ConfirmAction';
 import { ReactionChips } from '../components/ReactionChips';
 import { useAppMotion } from '../hooks/useAppMotion';
 import { springs, motionTransition, newlyAppended, type MessageStamp } from '../lib/motion';
@@ -1046,50 +1047,16 @@ const LoveLock: React.FC = () => {
                 type={toast.type}
             />
 
-            {/* Confirmation Dialog (replaces native confirm()) */}
-            <AnimatePresence>
-                {confirmDialog && (
-                    <MotionPortal><motion.div
-                        initial={{ opacity: 0 }}
-                        animate={{ opacity: 1 }}
-                        exit={{ opacity: 0 }}
-                        className="fixed inset-0 z-[200] flex items-center justify-center bg-black/60 p-6"
-                        onClick={() => setConfirmDialog(null)}
-                    >
-                        <motion.div
-                            initial={{ scale: 0.9, opacity: 0 }}
-                            animate={{ scale: 1, opacity: 1 }}
-                            exit={{ scale: 0.9, opacity: 0 }}
-                            className="bg-white dark:bg-gray-800 rounded-2xl p-6 max-w-sm w-full shadow-xl"
-                            onClick={e => e.stopPropagation()}
-                        >
-                            <h3 className="text-lg font-semibold mb-2 dark:text-white">{confirmDialog.title}</h3>
-                            <p className="text-sm text-gray-600 dark:text-gray-300 mb-5">{confirmDialog.message}</p>
-                            <div className="flex gap-3">
-                                <button
-                                    onClick={() => {
-                                        // For delete: "cancel" means delete for me only
-                                        if (confirmDialog.cancelLabel === 'For Me Only') {
-                                            const noteId = contextMenu?.noteId;
-                                            if (noteId) deleteNote(noteId, false).catch(() => showToast('Error', 'Failed to delete', 'error'));
-                                        }
-                                        setConfirmDialog(null);
-                                    }}
-                                    className="flex-1 py-2.5 rounded-xl bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-200 text-sm font-medium"
-                                >
-                                    {confirmDialog.cancelLabel || 'Cancel'}
-                                </button>
-                                <button
-                                    onClick={() => { confirmDialog.onConfirm(); setConfirmDialog(null); }}
-                                    className="on-brand flex-1 py-2.5 rounded-xl bg-red-500 text-white text-sm font-medium"
-                                >
-                                    {confirmDialog.confirmLabel || 'Confirm'}
-                                </button>
-                            </div>
-                        </motion.div>
-                    </motion.div></MotionPortal>
-                )}
-            </AnimatePresence>
+            {confirmDialog && <ConfirmAction title={confirmDialog.title} message={confirmDialog.message}
+                confirmLabel={confirmDialog.confirmLabel} cancelLabel={confirmDialog.cancelLabel}
+                onCancel={() => {
+                    if (confirmDialog.cancelLabel === 'For Me Only') {
+                        const noteId = contextMenu?.noteId;
+                        if (noteId) void deleteNote(noteId, false).catch(() => showToast('Error', 'Failed to delete', 'error'));
+                    }
+                    setConfirmDialog(null);
+                }}
+                onConfirm={() => { confirmDialog.onConfirm(); setConfirmDialog(null); }}/>}
 
             {/* Image Preview Modal */}
             <AnimatePresence>

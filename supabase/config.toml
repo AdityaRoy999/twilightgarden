@@ -20,3 +20,5 @@ verify_jwt = false
 verify_jwt = false
 [functions.couple-action]
 verify_jwt = false
+[functions.privacy-action]
+verify_jwt = false

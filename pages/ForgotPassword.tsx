@@ -1,5 +1,5 @@
 import { AppIcon } from '../components/ui/Icons';
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { supabase } from '../lib/supabase';
@@ -8,12 +8,13 @@ import { useAuth } from '../contexts/AuthContext';
 const ForgotPassword: React.FC = () => {
   const navigate = useNavigate();
   const { recoveringPassword, completePasswordRecovery } = useAuth();
-  const [step, setStep] = useState<1 | 2>(() => window.location.hash.includes('reset-password') ? 2 : 1);
+  const [step, setStep] = useState<1 | 2>(() => recoveringPassword || window.location.hash.includes('reset-password') ? 2 : 1);
   const [loading, setLoading] = useState(false);
   const [email, setEmail] = useState('');
   const [otp, setOtp] = useState('');
   const [newPassword, setNewPassword] = useState('');
   const [error, setError] = useState<string | null>(null);
+  useEffect(()=>{if(recoveringPassword)setStep(2);},[recoveringPassword]);
 
   const handleSendCode = async (e: React.FormEvent) => {
     e.preventDefault();

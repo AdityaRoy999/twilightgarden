@@ -1,3 +1,4 @@
+import {retryAccountDeletions} from '../_shared/accountDeletion.ts';
 import { GoogleAuth } from 'npm:google-auth-library@9.4.1';
 import { adminClient, corsHeaders, isInternal, json } from '../_shared/security.ts';
 import {retryChatCleanup} from '../_shared/chatCleanup.ts';
@@ -8,11 +9,16 @@ Deno.serve(async (req: Request) => {
   if (req.method!=='POST') return json({error:'Method not allowed'},405);
   if (!await isInternal(req)) return json({error:'Internal authentication required'},401);
   const db=adminClient();
-  await retryChatCleanup(db);
   try {
+    await retryAccountDeletions(db);
+    await retryChatCleanup(db);
     const {data:tokens,error:tokensError}=await db.from('user_fcm_tokens').select('id,user_id,token,device_type');
     if(tokensError)throw tokensError;
-    const userIds=[...new Set((tokens||[]).map(t=>t.user_id))];
+    const tokenUsers=[...new Set((tokens||[]).map(t=>t.user_id))];
+    if(!tokenUsers.length)return json({success:true,accepted:0});
+    const {data:consents,error:consentError}=await db.from('privacy_preferences').select('user_id').in('user_id',tokenUsers).eq('age_band','18+').eq('core_consent',true).eq('health_consent',true).eq('deleting',false).eq('notice_version','2026-10-30');
+    if(consentError)throw consentError;
+    const userIds=(consents||[]).map(p=>p.user_id);
     if(!userIds.length)return json({success:true,accepted:0});
     const {data:settings,error}=await db.from('user_settings').select('user_id,last_period_start,avg_cycle_length,irregular_cycle,notifications_enabled,period_notifications,reminder_notifications,time_zone').in('user_id',userIds);
     if(error)throw error;
@@ -53,7 +59,7 @@ Deno.serve(async (req: Request) => {
       }
       let userAccepted=0;
       for(const entry of (tokens||[]).filter(t=>t.user_id===setting.user_id)){
-        const payload:Record<string,unknown>={token:entry.token,notification:{title:'Twilight Garden',body:message},data:{url:'/dashboard',type}};
+        const payload:Record<string,unknown>={token:entry.token,notification:{title:'Twilight Garden',body:'You have a private reminder. Open the app to view it.'},data:{url:'/dashboard',type}};
         if(entry.device_type==='android')payload.android={priority:'high',notification:{sound:'default',channel_id:'PushNotifications'}};
         else if(entry.device_type==='web')payload.webpush={notification:{icon:SITE+'/twilight.png'},fcm_options:{link:SITE+'/#/dashboard'}};
         try{

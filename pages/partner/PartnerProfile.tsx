@@ -163,6 +163,7 @@ const PartnerProfile: React.FC = () => {
 
   return (
     <div className={`animate-slideIn font-display flex flex-col min-h-screen transition-colors duration-300 pb-24 relative overflow-x-hidden bg-background-dark`}>
+      <button className="reference-button secondary m-5" onClick={() => navigate('/privacy-controls')}>Privacy, safety & account deletion</button>
       {/* Header */}
       <header className={`sticky top-0 z-20 px-6 pt-6 pb-2 transition-colors duration-300 bg-background-dark/95`}>
          <div className="flex items-center justify-between mb-4">

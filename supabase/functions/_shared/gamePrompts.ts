@@ -1,3 +1,5 @@
+import {validateGamePrompts} from './gamePromptValidation.ts';
+import {requestGameCompletion} from './gameProvider.ts';
 import { games, type GameType, type Prompt } from "./gameEngine.ts";
 export async function generateGamePrompts(
   type: GameType,
@@ -32,7 +34,7 @@ export async function generateGamePrompts(
                   : choices
                     ? "Two appealing concise options; no correct answer."
                     : "Short original conversation prompts, no correct answer.";
-  const response = await fetch(
+  const response = await requestGameCompletion(
     "https://integrate.api.nvidia.com/v1/chat/completions",
     {
       method: "POST",
@@ -40,21 +42,21 @@ export async function generateGamePrompts(
         Authorization: `Bearer ${key}`,
         "Content-Type": "application/json",
       },
-      signal: AbortSignal.timeout(15000),
       body: JSON.stringify({
         model,
+        response_format: {type:'json_object'},
         messages: [
           {
             role: "system",
             content:
-              'Generate opt-in games for a couple. Output ONLY valid JSON {"prompts":[{"question":"...","options":["..."],"answer":"...","type":"..."}]}. Use eight distinct, short prompts. Never pressure disclosure or contact third parties. No dangerous activities, humiliating tasks, explicit sexual content, copyrighted lyrics or health advice. Every prompt can be skipped.',
+              'Generate opt-in games for a couple. Output ONLY valid JSON {"prompts":[{"question":"...","options":["..."],"answer":"...","type":"..."}]}. Use four distinct, short prompts. Never pressure disclosure or contact third parties. No dangerous activities, humiliating tasks, explicit sexual content, copyrighted lyrics or health advice. Every prompt can be skipped.',
           },
           {
             role: "user",
             content: `Game: ${games[type][0]}. Level: ${level} (${level === "bold" ? "more adventurous, flirty and emotionally candid, still non-explicit and respectful" : level === "playful" ? "funny and imaginative" : "warm, easy and low pressure"}). ${instructions}`,
           },
         ],
-        max_tokens: 1500,
+        max_tokens: 900,
         temperature: 0.95,
         ...(model.startsWith("nvidia/nemotron-")
           ? { chat_template_kwargs: { enable_thinking: false } }
@@ -73,62 +75,8 @@ export async function generateGamePrompts(
   }
   if (!Array.isArray(parsed.prompts))
     throw new Error("AI returned an invalid set");
-  const seen = new Set<string>();
-  const prompts: Prompt[] = parsed.prompts
-    .filter((p: Prompt) => {
-      if (
-        !p ||
-        typeof p.question !== "string" ||
-        p.question.length < 2 ||
-        p.question.length > 350 ||
-        seen.has(p.question)
-      )
-        return false;
-      if (
-        p.options !== undefined &&
-        (!Array.isArray(p.options) ||
-          p.options.length < 2 ||
-          p.options.length > 4 ||
-          !p.options.every(
-            (x) => typeof x === "string" && x.length > 0 && x.length <= 160,
-          ))
-      )
-        return false;
-      if ((choices || type === "song_lyrics") && !p.options?.length)
-        return false;
-      if (
-        ["love_trivia", "riddle_me", "song_lyrics", "emoji_charades"].includes(
-          type,
-        ) &&
-        (typeof p.answer !== "string" ||
-          !p.answer.trim() ||
-          p.answer.length > 180)
-      )
-        return false;
-      if (
-        ["love_trivia", "song_lyrics"].includes(type) &&
-        !p.options?.includes(p.answer!)
-      )
-        return false;
-      seen.add(p.question);
-      return true;
-    })
-    .slice(0, 8)
-    .map((p: Prompt) => ({
-      question: p.question,
-      options: choices || type === "song_lyrics" ? p.options : undefined,
-      answer: [
-        "love_trivia",
-        "riddle_me",
-        "song_lyrics",
-        "emoji_charades",
-      ].includes(type)
-        ? p.answer
-        : undefined,
-      type:
-        p.type === "Dare" ? "Dare" : p.type === "Truth" ? "Truth" : undefined,
-    }));
-  if (prompts.length < 4)
+  const prompts=validateGamePrompts(type,parsed.prompts);
+  if (prompts.length < 3)
     throw new Error("Not enough usable AI questions. Please retry.");
   return prompts;
 }

@@ -3,7 +3,7 @@ import React, { createContext, useCallback, useContext, useEffect, useRef, useSt
 import type { Session, User as AuthUser } from '@supabase/supabase-js';
 import { supabase } from '../lib/supabase';
 import { User } from '../types';
-import { registerPushNotifications, resetPushRegistration } from '../lib/notifications';
+import { resetPushRegistration } from '../lib/notifications';
 import { clearEncryptionCache } from '../lib/encryption';
 import {withinDeadline,requestError,retryTransientRead} from '../lib/requestTimeout';
 
@@ -100,7 +100,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       setDataEpoch(epoch);
       localStorage.setItem('twilight-cached-user',JSON.stringify(profile));
       setUser(profile); setSessionVerified(true); setProfileRefreshed(true); setError(null);
-      void registerPushNotifications(profile.id).catch(()=>{});
+
   };
 
   const verifySession = useCallback((resolve:()=>Promise<Session|null>, background=false) => {

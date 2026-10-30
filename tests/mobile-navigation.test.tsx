@@ -9,6 +9,14 @@ vi.mock('../contexts/ThemeContext', () => ({ useTheme: () => ({ solidNavBg: fals
 import AppShell from '../components/AppShell';
 afterEach(cleanup);
 
+it('lets ordinary pages grow and reserves fixed height for chat only',()=>{
+ const view=render(<MemoryRouter initialEntries={['/calendar']}><Routes><Route element={<AppShell/>}><Route path="*" element={<div style={{height:2200}}>Long calendar</div>}/></Route></Routes></MemoryRouter>);
+ expect(view.container.querySelector('.bloom-route')?.classList.contains('h-full')).toBe(false);
+ view.unmount();
+ const chat=render(<MemoryRouter initialEntries={['/notes']}><Routes><Route element={<AppShell/>}><Route path="*" element={<p>Conversation</p>}/></Route></Routes></MemoryRouter>);
+ expect(chat.container.querySelector('.bloom-route')?.classList.contains('h-full')).toBe(true);
+});
+
 for (const mode of ['tracker', 'partner'] as const) it(`shows every ${mode} destination directly on mobile`, () => {
   const prefix = mode === 'partner' ? '/partner' : '';
   render(<MemoryRouter initialEntries={[`${prefix}/dashboard`]}><Routes><Route element={<AppShell mode={mode}/>}><Route path="*" element={<p>Ready</p>}/></Route></Routes></MemoryRouter>);
