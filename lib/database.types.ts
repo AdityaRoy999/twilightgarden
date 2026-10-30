@@ -994,6 +994,41 @@ export type Database = {
           },
         ]
       }
+      vault_chat_backups: {
+        Row: {
+          ciphertext: Json
+          epoch: string
+          identity_generation: number
+          public_key: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          ciphertext: Json
+          epoch: string
+          identity_generation: number
+          public_key: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          ciphertext?: Json
+          epoch?: string
+          identity_generation?: number
+          public_key?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "vault_chat_backups_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: true
+            referencedRelation: "account_vaults"
+            referencedColumns: ["user_id"]
+          },
+        ]
+      }
     }
     Views: {
       [_ in never]: never
@@ -1007,6 +1042,10 @@ export type Database = {
         }[]
       }
       can_access_realtime_topic: { Args: never; Returns: boolean }
+      change_vault_backup: {
+        Args: { p_backup: Json; p_epoch: string; p_previous: Json }
+        Returns: undefined
+      }
       choose_initial_account_role: {
         Args: { p_role: string }
         Returns: undefined
@@ -1158,6 +1197,17 @@ export type Database = {
           p_id: string
           p_revision: number
           p_session: string
+        }
+        Returns: undefined
+      }
+      register_vault_chat_identity: {
+        Args: {
+          p_ciphertext: Json
+          p_device: string
+          p_device_name: string
+          p_epoch: string
+          p_generation: number
+          p_public_key: string
         }
         Returns: undefined
       }

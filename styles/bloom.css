@@ -449,3 +449,6 @@ html, body, #root { max-width:100%; overflow-x:clip; overscroll-behavior-x:none;
 .notification-item[data-unread='true'] { background:var(--bloom-tint); }
 .notification-item small { display:block; margin-top:6px; font-size:11px; color:var(--text-secondary); }
 .notification-empty { display:grid; justify-items:center; gap:15px; padding:32px; color:var(--text-secondary); }
+.vault-password-panel{width:min(100% - 2rem,30rem);padding:1.5rem;background:var(--bg-surface);color:var(--text-primary);border-radius:1.5rem}
+.vault-password-panel input{display:block;width:100%;margin-top:.5rem;padding:1rem;border:0;border-radius:1rem;background:rgb(var(--primary-light-rgb)/.45);color:var(--text-primary);font-size:16px}
+.vault-password-panel input:focus-visible{outline:0;background:rgb(var(--primary-light-rgb)/.75);text-decoration:underline}

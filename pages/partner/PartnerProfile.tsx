@@ -14,7 +14,7 @@ import { SyncHistoryModal } from '../../components/SyncHistoryModal';
 const PartnerProfile: React.FC = () => {
   const { user, signOut } = useAuth();
     const { theme, toggleTheme, primaryColor, updatePrimaryColor, animationsEnabled, updateAnimationsEnabled, solidNavBg, updateSolidNavBg } = useTheme();
-  const { hasCloudBackup } = useCouples();
+
   const navigate = useNavigate();
   const [showSyncModal, setShowSyncModal] = useState(false);
   const isDark = theme === 'dark';
@@ -441,7 +441,7 @@ const PartnerProfile: React.FC = () => {
                             <div
                                 className="flex items-center justify-between p-4 hover:bg-black/5 dark:hover:bg-white/5 transition-colors cursor-pointer group"
                                 onClick={() => setShowSyncModal(true)}
-                                role="button" tabIndex={0} aria-label="Chat backup"
+                                role="button" tabIndex={0} aria-label="Account backup password"
                                 onKeyDown={event=>{if(event.key==='Enter'||event.key===' '){event.preventDefault();setShowSyncModal(true);}}}
                             >
                                 <div className="flex items-center gap-3">
@@ -449,16 +449,14 @@ const PartnerProfile: React.FC = () => {
                                         <Shield className="w-5 h-5" />
                                     </div>
                                     <div>
-                                        <h4 className={`font-bold ${isDark ? 'text-white' : 'text-gray-900'}`}>Chat backup</h4>
+                                        <h4 className={`font-bold ${isDark ? 'text-white' : 'text-gray-900'}`}>Backup password</h4>
                                         <p className={`text-xs ${isDark ? 'text-gray-500' : 'text-gray-400'}`}>
-                                        {hasCloudBackup ? 'Backup on' : 'Optional · restore chats on a new device'}
+                                        One password for private records and chats
                                         </p>
                                     </div>
                                 </div>
                                 <div className="flex items-center gap-2">
-                                    {!hasCloudBackup && (
-                                        <span className="px-2 py-0.5 bg-primary/10 text-primary dark:text-pink-300 text-[10px] font-bold rounded-full">Set up</span>
-                                    )}
+                                    <span className="px-2 py-0.5 bg-primary/10 text-primary dark:text-pink-300 text-[10px] font-bold rounded-full">Manage</span>
                                     <span className="app-icon-glyph text-gray-400"><AppIcon name={"chevron_right"}/></span>
                                 </div>
                             </div>

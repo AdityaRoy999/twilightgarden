@@ -38,6 +38,10 @@ type Value = {
   refresh: () => Promise<void>;
   unlock: (password: string) => Promise<void>;
   create: (password: string, name?: string) => Promise<void>;
+  changePassword: (
+    currentPassword: string,
+    newPassword: string,
+  ) => Promise<void>;
 };
 const Context = createContext<Value | null>(null);
 export function VaultProvider({ children }: { children: React.ReactNode }) {
@@ -124,6 +128,44 @@ export function VaultProvider({ children }: { children: React.ReactNode }) {
       if (alive.current && revision === version.current) setLoading(false);
     }
   }, [user?.id, dataEpoch, admitted]);
+  const changePassword = async (
+    currentPassword: string,
+    newPassword: string,
+  ) => {
+    if (!user || !ready) throw new Error("Unlock your private space first.");
+    const revision = version.current;
+    const result = await rawSupabase
+      .from("account_vaults" as any)
+      .select("*")
+      .eq("user_id", user.id)
+      .single();
+    if (result.error) throw result.error;
+    const latest = result.data as unknown as VaultRow;
+    let verified: VaultBundle;
+    try {
+      verified = await restoreBundle(
+        latest.backup,
+        currentPassword,
+        user.id,
+        latest.epoch,
+      );
+    } catch {
+      throw new Error("The current backup password did not match.");
+    }
+    if (verified.master !== optionalVault()?.master)
+      throw new Error("Vault changed. Sign in again.");
+    const backup = await backupBundle(verified, newPassword);
+    if (!alive.current || revision !== version.current)
+      throw new Error("Account changed. Retry.");
+    const update = await (rawSupabase.rpc as any)("change_vault_backup", {
+      p_epoch: latest.epoch,
+      p_backup: backup,
+      p_previous: latest.backup,
+    });
+    if (update.error) throw update.error;
+    if (alive.current && revision === version.current)
+      setRow({ ...latest, backup });
+  };
   useEffect(() => {
     alive.current = true;
     void refresh();
@@ -256,6 +298,7 @@ export function VaultProvider({ children }: { children: React.ReactNode }) {
         refresh,
         unlock,
         create,
+        changePassword,
       }}
     >
       {children}

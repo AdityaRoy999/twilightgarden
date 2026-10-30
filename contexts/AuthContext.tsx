@@ -95,7 +95,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       const marker='app-dataset-epoch:'+session.user.id;
       if(localStorage.getItem(marker)!==epoch){
         clearPrivateCaches();
-        await Promise.all([Preferences.remove({key:session.user.id+'_private_key'}),Preferences.remove({key:session.user.id+'_public_key'})]);
+        await Promise.all([Preferences.remove({key:session.user.id+'_private_key'}),Preferences.remove({key:session.user.id+'_public_key'}),Preferences.remove({key:session.user.id+'_chat_identity_generation'}),Preferences.remove({key:session.user.id+'_chat_vault_scope'})]);
         if(!current())return;
         localStorage.setItem(marker,epoch);
       }

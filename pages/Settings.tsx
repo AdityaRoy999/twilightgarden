@@ -26,7 +26,7 @@ const Settings: React.FC = () => {
   const [devices, setDevices] = useState<any[]>([]);
   const [isLoadingDevices, setIsLoadingDevices] = useState(false);
   const [showSyncModal, setShowSyncModal] = useState(false);
-  const { hasCloudBackup } = useCouples();
+
 
 
 
@@ -407,7 +407,7 @@ const Settings: React.FC = () => {
                   <div
                       className="flex items-center justify-between p-4 border-b border-gray-100 dark:border-white/5 hover:bg-gray-50 dark:hover:bg-white/5 transition-colors cursor-pointer group"
                       onClick={() => setShowSyncModal(true)}
-                      role="button" tabIndex={0} aria-label="Chat backup"
+                      role="button" tabIndex={0} aria-label="Account backup password"
                       onKeyDown={event=>{if(event.key==='Enter'||event.key===' '){event.preventDefault();setShowSyncModal(true);}}}
                   >
                     <div className="flex items-center gap-3">
@@ -415,16 +415,14 @@ const Settings: React.FC = () => {
                         <Shield size={20} />
                       </div>
                       <div className="flex flex-col">
-                        <span className="font-medium text-[var(--text-primary)] dark:text-gray-200">Chat backup</span>
+                        <span className="font-medium text-[var(--text-primary)] dark:text-gray-200">Backup password</span>
                         <span className="text-xs text-gray-500">
-                          {hasCloudBackup ? 'Backup on' : 'Optional · restore chats on a new device'}
+                          One password for private records and chats
                         </span>
                       </div>
                     </div>
                     <div className="flex items-center gap-2">
-                      {!hasCloudBackup && (
-                        <span className="px-2 py-0.5 bg-primary/10 text-primary dark:text-pink-300 text-[10px] font-bold rounded-full">Set up</span>
-                      )}
+                      <span className="px-2 py-0.5 bg-primary/10 text-primary dark:text-pink-300 text-[10px] font-bold rounded-full">Manage</span>
                       <span className="app-icon-glyph text-gray-400 dark:text-gray-600 text-sm"><AppIcon name={"arrow_forward_ios"}/></span>
                     </div>
                   </div>
