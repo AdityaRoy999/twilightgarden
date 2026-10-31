@@ -1,11 +1,16 @@
 name: Build unsigned iOS app
 on:
   workflow_dispatch:
+  workflow_call:
+    inputs:
+      release_version:
+        type: string
+        default: ''
 permissions:
   contents: read
 concurrency:
-  group: ios-unsigned-${{ github.ref }}
-  cancel-in-progress: true
+  group: ios-unsigned-${{ github.ref }}-${{ inputs.release_version || 'manual' }}
+  cancel-in-progress: false
 jobs:
   ios:
     runs-on: macos-26
@@ -19,6 +24,11 @@ jobs:
           node-version: 22
           cache: npm
       - run: npm ci
+      - name: Stamp release version when called by release pipeline
+        run: node scripts/prepare-native-release.mjs
+        env:
+          RELEASE_VERSION: ${{ inputs.release_version }}
+          NATIVE_PLATFORM: ios
       - name: Build bundled web app
         run: |
           test -n "$VITE_SUPABASE_URL" && test -n "$VITE_SUPABASE_ANON_KEY"

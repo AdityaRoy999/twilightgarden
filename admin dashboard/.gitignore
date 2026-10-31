@@ -1,0 +1,7 @@
+node_modules/
+dist/
+cdk.out/
+*.local.json
+.env*
+!.env.example
+coverage/

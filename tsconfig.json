@@ -27,6 +27,7 @@
     "noEmit": true
   },
   "exclude": [
+    "admin dashboard",
     "supabase/functions",
     "remotion",
     "dist",
