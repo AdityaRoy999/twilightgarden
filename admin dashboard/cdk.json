@@ -1,0 +1,8 @@
+{
+  "app": "npx tsx infra/app.ts",
+  "context": {
+    "repo": "AdityaRoy999/twilightgarden",
+    "branch": "main",
+    "productionUrl": "https://twilight-mocha.vercel.app/"
+  }
+}

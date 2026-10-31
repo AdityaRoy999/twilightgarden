@@ -1,0 +1,22 @@
+/* Reference palette: low-contrast charcoal surfaces, orange activity accents. */
+.brand-mark {
+  background: linear-gradient(145deg, #ff9b58, #ff6838);
+}
+.console {
+  background:
+    radial-gradient(ellipse at 80% -30%, #23201655, transparent 55%), var(--bg);
+}
+.release-icon {
+  background: linear-gradient(145deg, #36251d, #251c17);
+}
+.stat strong {
+  font-feature-settings: "tnum";
+  font-variant-numeric: tabular-nums;
+}
+.line-chart circle {
+  opacity: 0;
+  transition: opacity 0.15s;
+}
+.line-chart:hover circle {
+  opacity: 1;
+}

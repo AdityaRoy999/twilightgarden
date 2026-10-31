@@ -1,0 +1,67 @@
+name: Build macOS test DMG
+on:
+  workflow_dispatch:
+  workflow_call:
+    inputs:
+      release_version:
+        type: string
+        default: ''
+permissions:
+  contents: read
+concurrency:
+  group: macos-dmg-${{ github.ref }}-${{ inputs.release_version || 'manual' }}
+  cancel-in-progress: false
+jobs:
+  dmg:
+    runs-on: macos-26
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - name: Install Rust toolchain
+        run: |
+          rustup toolchain install stable --profile minimal
+          rustup default stable
+          rustup target add aarch64-apple-darwin
+      - name: Prepare bundled desktop version
+        run: |
+          node scripts/prepare-native-release.mjs
+          node -e "const f=require('node:fs'); const p=JSON.parse(f.readFileSync('package.json','utf8')); f.writeFileSync('src-tauri/tauri.ci.json', JSON.stringify({version:p.version, build:{frontendDist:'../dist',beforeBuildCommand:''}, bundle:{targets:['dmg'],createUpdaterArtifacts:false,macOS:{signingIdentity:'-'}}})); f.writeFileSync('public/build-info.json',JSON.stringify({commit:process.env.GITHUB_SHA,run:process.env.GITHUB_RUN_ID,builtAt:new Date().toISOString()}));"
+        env:
+          RELEASE_VERSION: ${{ inputs.release_version }}
+          NATIVE_PLATFORM: dmg
+      - name: Build frontend
+        run: |
+          test -n "$VITE_SUPABASE_URL" && test -n "$VITE_SUPABASE_ANON_KEY"
+          npm run build
+        env:
+          VITE_SUPABASE_URL: ${{ vars.VITE_SUPABASE_URL }}
+          VITE_SUPABASE_ANON_KEY: ${{ vars.VITE_SUPABASE_ANON_KEY }}
+          VITE_GIPHY_API_KEY: ${{ vars.VITE_GIPHY_API_KEY }}
+          VITE_LEGAL_OPERATOR_NAME: ${{ vars.VITE_LEGAL_OPERATOR_NAME }}
+          VITE_LEGAL_SERVICE_ADDRESS: ${{ vars.VITE_LEGAL_SERVICE_ADDRESS }}
+          VITE_LEGAL_SUPPORT_EMAIL: ${{ vars.VITE_LEGAL_SUPPORT_EMAIL }}
+          VITE_GRIEVANCE_OFFICER_NAME: ${{ vars.VITE_GRIEVANCE_OFFICER_NAME }}
+          VITE_GRIEVANCE_OFFICER_EMAIL: ${{ vars.VITE_GRIEVANCE_OFFICER_EMAIL }}
+      - name: Build Apple Silicon DMG (ad-hoc signed, not notarized)
+        run: npx tauri build --config src-tauri/tauri.ci.json --target aarch64-apple-darwin --bundles dmg
+        env:
+          APPLE_SIGNING_IDENTITY: '-'
+      - name: Package
+        run: |
+          mkdir -p artifacts
+          cp src-tauri/target/aarch64-apple-darwin/release/bundle/dmg/*.dmg artifacts/
+          shasum -a 256 artifacts/*.dmg > artifacts/SHA256SUMS.txt
+          cp 'admin dashboard/RELEASES.md' artifacts/READ-ME.md
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        with:
+          name: TwilightGarden-macOS-DMG
+          path: artifacts/
+          retention-days: 7
+          if-no-files-found: error

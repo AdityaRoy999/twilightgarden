@@ -1,11 +1,16 @@
 name: Build Android test APK
 on:
   workflow_dispatch:
+  workflow_call:
+    inputs:
+      release_version:
+        type: string
+        default: ''
 permissions:
   contents: read
 concurrency:
-  group: android-test-${{ github.ref }}
-  cancel-in-progress: true
+  group: android-test-${{ github.ref }}-${{ inputs.release_version || 'manual' }}
+  cancel-in-progress: false
 jobs:
   android:
     runs-on: ubuntu-24.04
@@ -23,6 +28,11 @@ jobs:
           distribution: temurin
           java-version: "21"
       - run: npm ci
+      - name: Stamp release version
+        run: node scripts/prepare-native-release.mjs
+        env:
+          RELEASE_VERSION: ${{ inputs.release_version }}
+          NATIVE_PLATFORM: android
       - name: Build bundled web app
         run: |
           test -n "$VITE_SUPABASE_URL" && test -n "$VITE_SUPABASE_ANON_KEY"
@@ -41,7 +51,11 @@ jobs:
         run: |
           npx cap add android
           node scripts/prepare-android.mjs
+          node scripts/prepare-native-release.mjs
           npx cap sync android
+        env:
+          RELEASE_VERSION: ${{ inputs.release_version }}
+          NATIVE_PLATFORM: android
       - name: Build installable test APK
         working-directory: android
         run: |

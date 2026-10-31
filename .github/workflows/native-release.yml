@@ -1,0 +1,93 @@
+name: Build and ship native release
+run-name: Native release v${{ inputs.version }}
+on:
+  workflow_dispatch:
+    inputs:
+      version:
+        description: 'New numeric version, e.g. 0.1.0'
+        type: string
+        required: true
+      platforms:
+        description: 'JSON platform array: ["android","ios","dmg"]'
+        type: string
+        default: '["android","ios","dmg"]'
+      release_notes:
+        description: 'Release notes (Markdown)'
+        type: string
+        required: true
+      publish:
+        description: 'Publish download release after every selected build succeeds'
+        type: boolean
+        default: false
+permissions:
+  contents: read
+concurrency:
+  group: native-release-${{ inputs.version }}
+  cancel-in-progress: false
+jobs:
+  validate:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - name: Validate release and prevent overwriting an existing tag
+        run: node scripts/publish-native-release.mjs validate
+        env:
+          GH_TOKEN: ${{ github.token }}
+          RELEASE_VERSION: ${{ inputs.version }}
+          RELEASE_PLATFORMS: ${{ inputs.platforms }}
+          RELEASE_NOTES: ${{ inputs.release_notes }}
+  android:
+    needs: validate
+    if: contains(fromJSON(inputs.platforms), 'android')
+    uses: ./.github/workflows/android-apk.yml
+    with:
+      release_version: ${{ inputs.version }}
+    secrets: inherit
+  ios:
+    needs: validate
+    if: contains(fromJSON(inputs.platforms), 'ios')
+    uses: ./.github/workflows/ios-unsigned.yml
+    with:
+      release_version: ${{ inputs.version }}
+    secrets: inherit
+  dmg:
+    needs: validate
+    if: contains(fromJSON(inputs.platforms), 'dmg')
+    uses: ./.github/workflows/macos-dmg.yml
+    with:
+      release_version: ${{ inputs.version }}
+    secrets: inherit
+  ship:
+    needs: [validate, android, ios, dmg]
+    if: >-
+      always() && needs.validate.result == 'success' &&
+      (needs.android.result == 'success' || needs.android.result == 'skipped') &&
+      (needs.ios.result == 'success' || needs.ios.result == 'skipped') &&
+      (needs.dmg.result == 'success' || needs.dmg.result == 'skipped')
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    permissions:
+      contents: write
+      actions: read
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version: 22
+      - name: Download selected workflow artifacts
+        run: gh run download "$GITHUB_RUN_ID" --dir release-artifacts
+        env:
+          GH_TOKEN: ${{ github.token }}
+      - name: Create release with notes, build manifest, and checksums
+        run: node scripts/publish-native-release.mjs ship
+        env:
+          GH_TOKEN: ${{ github.token }}
+          RELEASE_VERSION: ${{ inputs.version }}
+          RELEASE_PLATFORMS: ${{ inputs.platforms }}
+          RELEASE_NOTES: ${{ inputs.release_notes }}
+          RELEASE_PUBLISH: ${{ inputs.publish }}
