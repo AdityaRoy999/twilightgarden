@@ -66,7 +66,7 @@ All routes require a scoped admin access token. JSON responses use `Cache-Contro
 | POST | `/deployments` | `{requestId: UUID}`; optional Vercel hook |
 | POST | `/settings` | `{paused: boolean}` |
 
-Snapshot data also includes the latest 10 GitHub releases/drafts and their public-facing notes. Local demo uses the same frontend interface without any network mutation. Production never exposes demo endpoints.
+Snapshot data also includes the latest 10 releases visible to the GitHub credential and their notes. GitHub restricts draft listings to identities with push access; the recommended read-only Contents permission may omit drafts. The UI links to GitHub for owner review instead of expanding the integration's source-code write access. Local demo uses the same frontend interface without any network mutation. Production never exposes demo endpoints.
 
 ## Latency and cost choices
 
