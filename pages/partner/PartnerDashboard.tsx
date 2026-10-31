@@ -3,23 +3,18 @@ import { DailyGuidance } from '../../components/wellness/DailyGuidance';
 import { AppIcon } from '../../components/ui/Icons';
 import { CycleHero } from '../../components/ui/CycleHero';
 import { CycleBloom, BotanicalSprig } from '../../components/ui/CycleBloom';
-import { localDateKey } from '../../lib/dates';
 import { useToday } from '../../hooks/useToday';
 import React from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
 import { useCouples } from '../../contexts/CouplesContext';
 import { useAuth } from '../../contexts/AuthContext';
 import { format } from 'date-fns';
 import { calculateCyclePhase } from '../../lib/cycleUtils';
 import LogDetailsModal from '../../components/LogDetailsModal';
 import NotificationBell from '../../components/NotificationBell';
-import PartnerInsightsView from '../../components/PartnerInsightsView';
-import { useTheme } from '../../contexts/ThemeContext';
 
 const PartnerDashboard: React.FC = () => {
     const { couple, partnerData, loading } = useCouples();
     const { user } = useAuth();
-    const { theme } = useTheme();
     const todayStr = useToday();
     const [selectedLogDate, setSelectedLogDate] = React.useState<string | null>(null);
     const [isModalOpen, setIsModalOpen] = React.useState(false);
@@ -58,7 +53,7 @@ const PartnerDashboard: React.FC = () => {
     // Partner dashboard should show "Partner hasn't logged today" or "View Today's Update".
 
     return (
-        <div className="bloom-partner pb-8 pt-6 px-5 max-w-md md:max-w-5xl mx-auto min-h-screen">
+        <div className="bloom-partner pb-8 pt-6 px-5 mx-auto min-h-screen">
             {/* Header */}
             <div className="flex items-center justify-between mb-6">
                 <div className="flex items-center gap-3">
@@ -85,15 +80,15 @@ const PartnerDashboard: React.FC = () => {
             </div>
 
             <div className="w-full">
-            <div className="md:grid md:grid-cols-2 md:gap-8 md:items-start">
-             <CycleHero className="mb-6 md:mb-0 md:col-span-2">
+            <div className="partner-dashboard-content">
+             <CycleHero className="mb-6">
                <BotanicalSprig className="bloom-hero-leaves"/>
                <div className="bloom-cycle-copy"><p>Your partner’s rhythm</p><h2>{cycleData.currentDay ? `Day ${cycleData.currentDay}` : 'One day at a time'}</h2><h3>{phaseLabel}</h3><p className="bloom-muted">A little understanding goes a long way.</p></div>
-               <CycleBloom periodLength={cycleSettings.avgPeriodLength} introKey={user?.id} day={cycleData.currentDay} length={cycleSettings.avgCycleLength} hasEstimate={cycleData.hasEstimate !== false}/>
+               <CycleBloom avatarUrl={profile?.avatar_url} avatarName={profile?.full_name||'Partner'} periodLength={cycleSettings.avgPeriodLength} introKey={user?.id} day={cycleData.currentDay} length={cycleSettings.avgCycleLength} hasEstimate={cycleData.hasEstimate !== false}/>
              </CycleHero>
 
              {/* Right Column: Stats & Updates */}
-             <div className="flex flex-col gap-6">
+             <div className="partner-dashboard-stack">
                  {/* Info Grid */}
                  <div className="grid grid-cols-2 gap-4">
                     {/* Next Period */}

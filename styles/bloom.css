@@ -520,3 +520,12 @@ html, body, #root { max-width:100%; overflow-x:clip; overscroll-behavior-x:none;
 .game-choices .game-confirm-answer{grid-column:1/-1;background:var(--color-primary-ink);color:var(--on-primary)}
 .game-choices button[aria-pressed=true]{background:var(--color-primary-light);color:var(--color-primary-ink)}
 .game-match-history{display:grid;gap:14px;text-align:left;width:100%;margin:22px 0}.game-match-history h3{font-size:20px;font-weight:700}.game-match-history article{padding:20px;border-radius:22px;background:var(--bloom-tint)}.game-match-history small,.game-match-history strong{display:block}.game-match-history small{font-size:11px;color:var(--text-secondary);margin-bottom:8px}.game-match-history p{font-size:14px;margin:8px 0;overflow-wrap:anywhere}.game-reveal>small{display:block;color:var(--text-secondary);margin-top:12px}
+
+/* Carer summaries span the same pane as their cycle hero. */
+.bloom-partner{width:100%;max-width:none;min-width:0}
+.partner-dashboard-content,.partner-dashboard-stack{width:100%;min-width:0}
+.partner-dashboard-stack{display:flex;flex-direction:column;gap:24px}
+.partner-dashboard-stack>*,.partner-dashboard-stack>div>*.partner-metric-card{min-width:0}
+.cycle-marker-avatar{transition:transform 1s linear}
+.disable-animations .cycle-marker-avatar{transition:none!important}
+@media(prefers-reduced-motion:reduce){.cycle-marker-avatar{transition:none!important}}
