@@ -30,7 +30,7 @@ Dashboard → **New build** → Android / iOS / macOS → Build. Open **Builds**
    - **Publish:** enable it and explicitly confirm publishing the notes and downloads. When all selected builds succeed, the workflow publishes the release. In a public repository the downloads and notes are public; in a private repository normal repository access rules apply.
 6. Click **Build and create draft** or **Build and publish release**. The request is durably recorded and the release workflow runs from the current main commit.
 7. In Builds, select the **Releases** filter and open `Native release v…` to see the validation/build/ship jobs. Compilation runs on GitHub's Linux and macOS machines. Your browser can be closed after acceptance.
-8. After success, return to Releases → Release history → Open release. A draft is reviewed/published through GitHub. To publish automatically from the dashboard in one operation, use the explicit publish option at step 5.
+8. After success, return to Releases → Release history. Published releases appear through the integration; draft visibility depends on GitHub permissions. Use **Review drafts on GitHub** while signed into your owner account to review/publish a draft. To publish automatically from the dashboard in one operation, use the explicit publish option at step 5.
 
 ### What the workflow does
 

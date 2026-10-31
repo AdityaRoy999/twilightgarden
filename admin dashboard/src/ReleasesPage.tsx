@@ -114,8 +114,9 @@ export function ReleasesPage({
       <section className="panel runs-panel">
         <div className="panel-heading">
           <h2>Release history</h2>
-          <span className="quiet-label">GitHub · latest 10</span>
+          <a className="text-button" href={`https://github.com/${snapshot?.repository||'AdityaRoy999/twilightgarden'}/releases`} {...external}>Review drafts on GitHub {icon('ArrowOut',16)}</a>
         </div>
+        <p className="muted">Latest 10 releases available to the integration. GitHub can hide drafts from read-only credentials; review drafts through your own GitHub account.</p>
         {snapshot?.releases?.length ? (
           snapshot.releases.map((r) => (
             <article className="native-release" key={r.id}>
@@ -138,8 +139,7 @@ export function ReleasesPage({
           ))
         ) : (
           <p className="empty">
-            No releases yet. Start a release pipeline to publish your first
-            downloads.
+            No releases are visible to this integration yet. Start a release pipeline, or open GitHub to check draft releases.
           </p>
         )}
       </section>

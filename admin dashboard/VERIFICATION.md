@@ -16,8 +16,15 @@ Bundle output is split into application, React, and motion chunks; combined Java
 
 `npm run audit:security` reports the exact known moderate CDK bundled-dependency exception in SECURITY.md and rejects other moderate/high/critical findings. A plain full `npm audit` is **not clean** because AWS's current CDK release bundles the affected minimatch version.
 
+## Server build and release acceptance
+
+- GitHub macOS run [41216997119](https://github.com/AdityaRoy999/twilightgarden/actions/runs/41216997119) built the Apple Silicon ad-hoc DMG successfully in approximately 7 minutes. The downloaded DMG checksum matched the workflow checksum file.
+- Native release run [41218151148](https://github.com/AdityaRoy999/twilightgarden/actions/runs/41218151148) built Android version 0.0.4 and successfully created an unpublished draft release with the debug APK, source manifest, SHA-256 checksums, and supplied release notes. Validation, the selected build, and the publishing job all passed. Source commit: `76288450bec6b0b370f852943fc2484f62ff1fa4`.
+- The draft is intentionally retained for the repository owner to review. No public release was published. These tests were dispatched using the authenticated GitHub CLI, not the undeployed AWS dashboard API.
+- The downloaded APK matched `SHA256SUMS.txt`: `e5d00dfdbe5fef76e07f85bf5477eeeeeef9d096b7ec96b39268f5dfe5d17dc9`.
+
 ## Not yet established
 
-No AWS account resources, Cognito users, integration secrets, or live release assets were created during implementation. AWS credentials, service availability/quotas, Cognito delivery/MFA, actual dispatches through the deployed API, macOS packaging, and release publication require the live deployment/acceptance steps. An unsigned IPA, debug APK, and ad-hoc DMG are test distribution; the pipeline does not establish production app signing, notarization, or silent installed-app updates.
+No AWS account resources, Cognito users, or integration secrets were created during implementation. AWS credentials, service availability/quotas, Cognito delivery/MFA, dispatches through the deployed API, and explicit public release publication require the live deployment/acceptance steps. The iOS workflow was checked but was not rerun in this admin-dashboard acceptance test. An unsigned IPA, debug APK, and ad-hoc DMG are test distribution; the pipeline does not establish production app signing, notarization, or silent installed-app updates.
 
 The default local preview uses labelled sample data and never submits a real build or publishes a real release.
