@@ -6,6 +6,10 @@ vi.mock("../lib/supabase", () => ({
 import { loadCallIce } from "../lib/callIce";
 beforeEach(() => mocks.invoke.mockReset());
 describe("short-lived Cloudflare TURN credentials", () => {
+  it("explains denied calling permissions rather than reporting a network outage", async () => {
+    mocks.invoke.mockResolvedValue({ data: null, error: { context: new Response(JSON.stringify({error:'Privacy consent required'}), {status:403}) } });
+    await expect(loadCallIce("pair")).rejects.toThrow(/Privacy & safety/);
+  });
   it("uses authenticated backend credentials and filters browser-blocked port 53", async () => {
     mocks.invoke.mockResolvedValue({
       data: {

@@ -9,6 +9,7 @@ const mocks = vi.hoisted(() => ({
   settings: vi.fn(),
   auditList: vi.fn(),
   metrics: vi.fn(),
+  monitoring: vi.fn(),
 }));
 vi.mock("../backend/github", () => ({
   github: mocks.github,
@@ -22,6 +23,7 @@ vi.mock("../backend/store", () => ({
   auditList: mocks.auditList,
 }));
 vi.mock("../backend/metrics", () => ({ metrics: mocks.metrics }));
+vi.mock("../backend/monitoring", () => ({ monitoring: mocks.monitoring }));
 import { handler } from "../backend/handler";
 function event(
   path: string,
@@ -59,6 +61,16 @@ beforeEach(() => {
   }));
 });
 describe("admin API routes", () => {
+  it("protects provider billing and database metrics with the admin scope", async () => {
+    const denied = event("/monitoring");
+    delete (denied.requestContext as any).authorizer;
+    expect((await handler(denied)).statusCode).toBe(403);
+    expect(mocks.monitoring).not.toHaveBeenCalled();
+    mocks.monitoring.mockResolvedValue({ at: "2026-11-06", sources: [] });
+    const result = await handler(event("/monitoring"));
+    expect(result.statusCode).toBe(200);
+    expect(result.headers["Cache-Control"]).toBe("no-store");
+  });
   it("rejects anonymous requests before touching integrations", async () => {
     const e = event("/snapshot");
     delete (e.requestContext as any).authorizer;

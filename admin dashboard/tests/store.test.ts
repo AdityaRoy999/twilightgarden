@@ -4,9 +4,32 @@ vi.mock("@aws-sdk/lib-dynamodb", async (original) => {
   const actual = await original<typeof import("@aws-sdk/lib-dynamodb")>();
   return { ...actual, DynamoDBDocumentClient: { from: () => ({ send }) } };
 });
-import { command } from "../backend/store";
+import { command, observation } from "../backend/store";
 beforeEach(() => send.mockReset());
 describe("durable dispatch protection", () => {
+  it("reuses billing observations across Lambda instances before making a paid query", async () => {
+    send.mockResolvedValueOnce({
+      Item: {
+        freshUntil: Math.floor(Date.now() / 1000) + 600,
+        data: { cost: 1 },
+      },
+    });
+    const paid = vi.fn();
+    expect(await observation("billing", 21600, paid)).toEqual({ cost: 1 });
+    expect(paid).not.toHaveBeenCalled();
+  });
+  it("leases a cold cache so simultaneous requests cannot duplicate a paid query", async () => {
+    send
+      .mockResolvedValueOnce({})
+      .mockRejectedValueOnce(
+        Object.assign(new Error(), { name: "ConditionalCheckFailedException" }),
+      );
+    const paid = vi.fn();
+    await expect(observation("billing", 21600, paid)).rejects.toThrow(
+      "being collected",
+    );
+    expect(paid).not.toHaveBeenCalled();
+  });
   it("does not repeat an accepted request", async () => {
     send.mockResolvedValueOnce({
       Item: { action: "build", detail: "ios", state: "accepted" },

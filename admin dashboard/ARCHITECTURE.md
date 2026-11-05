@@ -15,7 +15,11 @@ flowchart LR
   GH --> DMG[macOS DMG workflow]
   GH --> Release[Native release orchestrator]
   Release --> Downloads[GitHub release + notes + checksums]
-  Lambda --> CW[CloudWatch Lambda metrics]
+  Lambda --> CW[CloudWatch admin infrastructure metrics]
+  Lambda --> Costs[AWS Cost Explorer / quotas]
+  Lambda --> Monitoring[Read-only provider monitoring APIs]
+  Monitoring --> Supa[Supabase numeric log / database aggregates]
+  Monitoring --> Usage[Vercel / GitHub billing / Cloudflare TURN]
   Lambda -. optional main deploy hook .-> Vercel[Existing Vercel production]
   Admin -->|Temporary artifact URL| Artifacts[GitHub artifact ZIP]
 ```
@@ -30,7 +34,7 @@ CloudFront reads the private S3 bucket through OAC. Responses include CSP, click
 
 ## Integration credentials
 
-Only Lambda's role can read the stack's integration secret. It has table-scoped DynamoDB read/write permissions, log writing, and CloudWatch `GetMetricData` (AWS requires `Resource: *` for this action). The browser has no AWS IAM permissions. Publishing and admin invitation use your separate local deployment identity.
+Only Lambda's role can read the stack's integration secret. It has table-scoped DynamoDB read/write permissions, log writing, and CloudWatch `GetMetricData`, Cost Explorer `GetCostAndUsage`, and Lambda `GetAccountSettings` (AWS requires account-wide `Resource: *` for these read actions). The browser has no AWS IAM permissions. Publishing and admin invitation use your separate local deployment identity.
 
 The GitHub integration supports:
 
@@ -57,7 +61,8 @@ All routes require a scoped admin access token. JSON responses use `Cache-Contro
 | Method | Route | Input / output |
 |---|---|---|
 | GET | `/snapshot` | Latest 100 main runs, latest 100 audit records, pause/config metadata |
-| GET | `/metrics` | Last 24 completed UTC hours, displayed in browser local time |
+| GET | `/metrics` | Last 24 clock hours including the partial current hour, displayed in browser local time |
+| GET | `/monitoring` | Independent, cached provider reports with status, scope, timestamps, numeric readings and optional hourly series |
 | GET | `/runs/:id` | Run, jobs, step results, mobile artifacts |
 | POST | `/builds` | `{platform: "ios", "android", or "dmg", requestId: UUID}` |
 | POST | `/releases` | Validated version, notes, unique platform array, publish flag, request UUID |
@@ -72,10 +77,10 @@ Snapshot data also includes the latest 10 releases visible to the GitHub credent
 
 Parallel independent reads; bounded GitHub fetch timeouts; reused AWS clients; 10-second workflow cache; 60-second metric/secret cache per execution environment. Frontend polls every 15 seconds while visible, avoids overlapping refreshes, and loads no external fonts, analytics, or icon services. No VPC, NAT gateway, load balancer, RDS, EC2, or always-on builder is provisioned.
 
-Lambda is 256 MB ARM with a 25-second timeout and two reserved executions by default. API Gateway throttles to 2 requests/second with burst 5. These protect this small console but are not hard billing limits. The cache is per execution environment, not global; admin pause reads and idempotency use consistent DynamoDB reads/transactions.
+Lambda is 256 MB ARM with a 25-second timeout. Concurrency is unreserved by default because new learning accounts can lack reservation headroom; an optional `reservedConcurrency=2` context enables a reservation when the account supports it. API Gateway throttles to 2 requests/second with burst 5. These protect this small console but are not hard billing limits. Workflow/summary caches are per execution environment. Monitoring uses DynamoDB-backed five-minute operational/six-hour billing reports and refresh leases across environments. Admin pause reads and idempotency use consistent DynamoDB reads/transactions.
 
 Lambda metrics include this console's own polling requests. Duration is execution time, excluding client/network/API Gateway latency. Error count is Lambda's `Errors` metric; handled HTTP 4xx/5xx responses do not count as uncaught Lambda errors. Use request logs to diagnose them. A 3-errors-in-5-minutes alarm optionally sends SNS email. The $10 account-wide monthly budget excludes credits/refunds so it can warn about gross spending even while credits cover charges. Billing alerts can be delayed.
 
 ## Future extensions
 
-Add Android CodeBuild with a separate build role and stable signing key when needed. Add immutable release artifacts in S3 with an explicit retention policy and completion ingestion if GitHub retention is insufficient. Add consumer app telemetry only after defining privacy-safe events and consent; never decrypt user vaults in the admin console. Add a narrowly scoped workload shutdown orchestrator only after actual AWS workload resources exist and a precise shutdown/restore plan is defined.
+Add Android CodeBuild with a separate build role and stable signing key when needed. Add immutable release artifacts in S3 with an explicit retention policy and completion ingestion if GitHub retention is insufficient. For provider setup and exact monitoring limitations see [MONITORING.md](MONITORING.md). Add client-side consumer app telemetry only after defining privacy-safe events and consent; never decrypt user vaults in the admin console. Add a narrowly scoped workload shutdown orchestrator only after actual AWS workload resources exist and a precise shutdown/restore plan is defined.

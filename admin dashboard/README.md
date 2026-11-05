@@ -1,6 +1,6 @@
 # Twilight Control
 
-A separate, minimal operations dashboard for Twilight Garden. Charcoal surfaces, orange accents, local Solar icons, accessible controls, responsive layouts, and reduced-motion-aware springs. It does not import the consumer app's authentication or read its database.
+A separate, minimal operations dashboard for Twilight Garden. Charcoal surfaces, orange accents, local Solar icons, accessible controls, responsive layouts, and reduced-motion-aware springs. It keeps admin authentication separate and reads only operational aggregates when provider monitoring is configured.
 
 ## Try it locally
 
@@ -23,7 +23,7 @@ Production never silently falls back to demo. A missing/invalid `config.json` st
 | Overview | Workflow activity, success rate, execution duration, pipelines, and console traffic |
 | Builds | APK/IPA/DMG workflow dispatch, search, status filtering, job steps, cancellation, artifact ZIP downloads |
 | Releases | Server-side multi-platform builds, version/release notes, automatic draft/public GitHub release, optional Vercel deploy hook |
-| Metrics | CloudWatch measurements for this dashboard's Lambda, hourly over 24 completed hours |
+| Metrics | AWS infrastructure/costs, Supabase API/database aggregates, optional Vercel/GitHub billing and Cloudflare relay traffic; actual scopes and availability shown |
 | Activity | Persistent admin audit events and JSON export |
 | Settings | Integration status, pause/resume new build requests, animation preference |
 
@@ -39,6 +39,8 @@ npm run infra:synth
 Infrastructure is TypeScript AWS CDK. No cloud resources are created by `dev`, `build`, `test`, or `infra:synth` (CDK can consult AWS for environment information if an AWS profile is available). Deployment is a separate manual step.
 
 **Automated shipping:** [RELEASES.md](RELEASES.md) explains the one-click server build/release flow, merging the workflow files into main, release notes, checksums, and signing requirements. The browser requests the job; GitHub's servers keep building even after you close it.
+
+**Live monitoring setup:** [MONITORING.md](MONITORING.md) gives exact Supabase fine-grained token and AWS Secrets Manager steps, optional provider credentials, caching, scope and billing limitations.
 
 **Dependency review:** [SECURITY.md](SECURITY.md) records a known moderate advisory bundled inside the current AWS CDK development tooling. `npm run audit:security` reports that exception and blocks additional moderate/high/critical findings; it does not claim a clean full audit.
 
@@ -68,4 +70,4 @@ This folder uses the repository's reviewed `components/ui/Icons.tsx`, `MotionPor
 - APKs are debug builds; IPAs are unsigned; DMGs are Apple Silicon ad-hoc signed test builds without notarization. Android production signing and Apple distribution remain separate. A free Apple ID still needs Sideloadly signing/refresh.
 - Artifacts remain in GitHub under the workflows' existing retention. Downloads are authenticated, temporary GitHub ZIP URLs. There is no pretend S3 artifact archive.
 - “Pause new builds” blocks new requests through this console, not direct GitHub actions, already-running jobs, or AWS billing.
-- API metrics describe the admin Lambda, not consumer app usage, database latency, or monthly spend. The audit page reads the latest 100 events; TTL retention is 90 days and expiry is asynchronous.
+- The summary's Admin API chart describes the admin Lambda. The Metrics page adds separately scoped provider aggregates and costs; missing credentials or unsupported allowances are shown explicitly. The audit page reads the latest 100 events; TTL retention is 90 days and expiry is asynchronous.

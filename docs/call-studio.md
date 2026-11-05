@@ -89,3 +89,12 @@ camera routing and device-specific effects require checks on the installed app.
 Lifecycle and security regressions are covered in `tests/calls.test.tsx`,
 `tests/call-video.test.ts`, `tests/gif-picker.test.tsx` and
 `tests/request-signal.test.ts`.
+
+`scripts/verify-calls-live.mjs` additionally creates isolated synthetic linked
+accounts, checks live TURN credential access and private Realtime authorization,
+then cleans up its own fixtures. Run it only with the local test environment's
+Supabase administrative credentials; it never prints credentials or touches
+existing accounts. A privacy/consent rejection now retains HTTP 403 instead of
+being converted into a transient authentication HTTP 503, and the caller UI
+explains how to review Privacy & safety. This is separate from a full physical
+two-device camera/audio/cross-network acceptance test.

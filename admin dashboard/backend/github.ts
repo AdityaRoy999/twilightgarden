@@ -6,6 +6,13 @@ import {
 import { HttpError } from "./domain";
 const sm = new SecretsManagerClient({});
 type Integration = {
+  supabaseAccessToken?: string;
+  vercelToken?: string;
+  vercelTeamId?: string;
+  githubBillingToken?: string;
+  cloudflareAnalyticsToken?: string;
+  cloudflareAccountId?: string;
+  cloudflareTurnKeyId?: string;
   githubToken?: string;
   appId?: string;
   installationId?: string;

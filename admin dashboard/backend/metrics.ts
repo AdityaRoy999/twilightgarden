@@ -3,11 +3,12 @@ import {
   GetMetricDataCommand,
 } from "@aws-sdk/client-cloudwatch";
 import type { Metrics } from "../shared/types";
-const cw = new CloudWatchClient({});
+const cw = new CloudWatchClient({ maxAttempts: 1 });
 export async function metrics(): Promise<Metrics> {
   const end = new Date();
-  end.setUTCMinutes(0, 0, 0);
-  const start = new Date(end.getTime() - 24 * 3600000);
+  const start = new Date(end);
+  start.setUTCMinutes(0, 0, 0);
+  start.setUTCHours(start.getUTCHours() - 23);
   const result = await cw.send(
     new GetMetricDataCommand({
       StartTime: start,
@@ -36,7 +37,10 @@ export async function metrics(): Promise<Metrics> {
         ReturnData: true,
       })),
     }),
+    { abortSignal: AbortSignal.timeout(8000) },
   );
+  if (result.MetricDataResults?.some((row) => row.StatusCode !== "Complete"))
+    throw new Error("CloudWatch returned incomplete metric samples");
   const maps = Object.fromEntries(
     (result.MetricDataResults || []).map((m) => [
       m.Id,

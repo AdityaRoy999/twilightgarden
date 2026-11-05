@@ -1,6 +1,15 @@
 import type { Run, Metrics } from "../shared/types";
 import { date, duration, external } from "./format";
+import { useContext, useId } from "react";
+import { motion, useReducedMotion, MotionConfigContext } from "framer-motion";
+import { springs } from "../../lib/motion";
+function useChartMotion() {
+  const config = useContext(MotionConfigContext);
+  const os = useReducedMotion();
+  return os || config.reducedMotion === "always";
+}
 export function BarChart({ runs }: { runs: Run[] }) {
+  const reduced = useChartMotion();
   const recent = runs.slice(0, 20).reverse();
   return (
     <>
@@ -24,8 +33,12 @@ export function BarChart({ runs }: { runs: Run[] }) {
               aria-label={`${r.name}, ${date(r.createdAt)}, ${duration(r.duration)}`}
               title={`${date(r.createdAt)} · ${r.name} · ${duration(r.duration)}`}
             >
-              <span
+              <motion.span
+                initial={reduced ? false : { scaleY: 0 }}
+                animate={{ scaleY: 1 }}
+                transition={reduced ? { duration: 0 } : springs.section}
                 style={{
+                  transformOrigin: "bottom",
                   height: `${Math.max(4, Math.min(100, (r.duration / Math.max(...recent.map((v) => v.duration), 1)) * 100))}%`,
                 }}
               />
@@ -40,7 +53,17 @@ export function BarChart({ runs }: { runs: Run[] }) {
     </>
   );
 }
-export function MetricChart({ metrics }: { metrics: Metrics | null }) {
+export function MetricChart({
+  metrics,
+  label = "Admin API requests over the last 24 clock hours",
+  unit = "requests",
+}: {
+  metrics: Metrics | null;
+  label?: string;
+  unit?: string;
+}) {
+  const reduced = useChartMotion();
+  const wash = useId();
   const values = metrics?.series || [];
   const max = Math.max(1, ...values.map((x) => x.requests));
   const points = values
@@ -51,13 +74,9 @@ export function MetricChart({ metrics }: { metrics: Metrics | null }) {
     .join(" ");
   return (
     <div className="line-chart">
-      <svg
-        viewBox="0 0 600 180"
-        role="img"
-        aria-label="Admin API requests over the last 24 hours"
-      >
+      <svg viewBox="0 0 600 180" role="img" aria-label={label}>
         <defs>
-          <linearGradient id="chart-wash" x1="0" y1="0" x2="0" y2="1">
+          <linearGradient id={wash} x1="0" y1="0" x2="0" y2="1">
             <stop stopColor="var(--accent)" stopOpacity=".17" />
             <stop offset="1" stopColor="var(--accent)" stopOpacity="0" />
           </linearGradient>
@@ -67,11 +86,17 @@ export function MetricChart({ metrics }: { metrics: Metrics | null }) {
         ))}
         {values.length > 0 && (
           <>
-            <polygon
+            <motion.polygon
+              initial={reduced ? false : { opacity: 0 }}
+              animate={{ opacity: 1 }}
+              transition={reduced ? { duration: 0 } : springs.section}
               points={`8,160 ${points} 592,160`}
-              fill="url(#chart-wash)"
+              fill={`url(#${wash})`}
             />
-            <polyline
+            <motion.polyline
+              initial={reduced ? false : { pathLength: 0 }}
+              animate={{ pathLength: 1 }}
+              transition={reduced ? { duration: 0 } : springs.section}
               points={points}
               fill="none"
               stroke="var(--accent)"
@@ -87,8 +112,7 @@ export function MetricChart({ metrics }: { metrics: Metrics | null }) {
                 fill="var(--accent)"
               >
                 <title>
-                  {date(v.at)} · {v.requests} requests · {v.errors} errors ·{" "}
-                  {Math.round(v.ms)} ms average
+                  {date(v.at)} · {v.requests.toLocaleString()} {unit}
                 </title>
               </circle>
             ))}
@@ -97,12 +121,13 @@ export function MetricChart({ metrics }: { metrics: Metrics | null }) {
       </svg>
       <div className="chart-caption">
         <span>24 hours ago</span>
-        <span>Last completed hour · hover for details</span>
+        <span>Current hour partial · hover for details</span>
       </div>
     </div>
   );
 }
 export function ActivityGrid({ runs }: { runs: Run[] }) {
+  const reduced = useChartMotion();
   const cells = Array.from({ length: 105 }, (_, i) => {
     const start = new Date();
     start.setHours(0, 0, 0, 0);
@@ -120,7 +145,10 @@ export function ActivityGrid({ runs }: { runs: Run[] }) {
       aria-label="Workflow activity over the last 105 days, within the most recent 100 runs"
     >
       {cells.map((c) => (
-        <span
+        <motion.span
+          initial={reduced ? false : { opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={reduced ? { duration: 0 } : springs.section}
           key={c.day}
           className={c.count > 3 ? "hot" : c.count ? "warm" : ""}
           title={`${c.day} · ${c.count} runs in current sample`}
