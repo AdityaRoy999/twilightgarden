@@ -31,7 +31,7 @@ describe("AWS security configuration", () => {
       AuthorizationScopes: ["twilight-admin/control"],
     });
     t.hasResourceProperties("AWS::Lambda::Function", {
-      ReservedConcurrentExecutions: 2,
+      ReservedConcurrentExecutions: Match.absent(),
       Timeout: 25,
       Architectures: ["arm64"],
     });

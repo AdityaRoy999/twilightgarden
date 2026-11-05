@@ -31,9 +31,12 @@ import type {
   Run,
   RunDetail,
   Snapshot,
+  MonitoringReport,
 } from "../shared/types";
 import { AdminApi } from "./api";
 import { signIn, signOut, token } from "./auth";
+import { springs } from "../../lib/motion";
+import { useDialogFocus } from "../../hooks/useDialogFocus";
 
 const nav: { name: Page; icon: string }[] = [
   { name: "Overview", icon: "Grid2X2" },
@@ -48,6 +51,9 @@ export function App({ config }: { config: Config }) {
   const [page, setPage] = useState<Page>("Overview");
   const [snapshot, setSnapshot] = useState<Snapshot | null>(null);
   const [metrics, setMetrics] = useState<Metrics | null>(null);
+  const [monitoring, setMonitoring] = useState<MonitoringReport | null>(null);
+  const [monitorError, setMonitorError] = useState("");
+  const monitoringBusy = useRef(false);
   const [error, setError] = useState("");
   const [notice, setNotice] = useState("");
   const [busy, setBusy] = useState(false);
@@ -56,6 +62,54 @@ export function App({ config }: { config: Config }) {
     config.mode === "demo" || !!token(),
   );
   const [menu, setMenu] = useState(false);
+  const [narrow, setNarrow] = useState(
+    () => window.matchMedia("(max-width: 850px)").matches,
+  );
+  const [sidebarWidth, setSidebarWidth] = useState(() =>
+    window.matchMedia("(max-width: 1150px)").matches ? 195 : 228,
+  );
+  const [sidebarClosed, setSidebarClosed] = useState(
+    () => localStorage.getItem("admin-sidebar") === "closed",
+  );
+  const sidebarRef = useRef<HTMLElement>(null);
+  const sidebarVisible = narrow ? menu : !sidebarClosed;
+  useDialogFocus(sidebarRef, narrow && menu);
+  useEffect(() => {
+    const media = window.matchMedia("(max-width: 850px)");
+    const compact = window.matchMedia("(max-width: 1150px)");
+    const update = () => {
+      setNarrow(media.matches);
+      setMenu(false);
+    };
+    const resize = () => setSidebarWidth(compact.matches ? 195 : 228);
+    media.addEventListener("change", update);
+    compact.addEventListener("change", resize);
+    return () => {
+      media.removeEventListener("change", update);
+      compact.removeEventListener("change", resize);
+    };
+  }, []);
+  useEffect(() => {
+    if (!menu || !narrow) return;
+    const previous = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+    const escape = (event: KeyboardEvent) => {
+      if (event.key === "Escape") setMenu(false);
+    };
+    document.addEventListener("keydown", escape);
+    return () => {
+      document.body.style.overflow = previous;
+      document.removeEventListener("keydown", escape);
+    };
+  }, [menu, narrow]);
+  const toggleSidebar = () => {
+    if (narrow) setMenu((value) => !value);
+    else
+      setSidebarClosed((value) => {
+        localStorage.setItem("admin-sidebar", value ? "open" : "closed");
+        return !value;
+      });
+  };
   const [query, setQuery] = useState("");
   const [filter, setFilter] = useState("all");
   const [buildOpen, setBuildOpen] = useState(false);
@@ -67,6 +121,28 @@ export function App({ config }: { config: Config }) {
     localStorage.getItem("admin-animations") !== "off",
   );
   const reduced = useReducedMotion() === true || !animations;
+  const refreshMonitoring = useCallback(async () => {
+    if (!authenticated || monitoringBusy.current) return;
+    monitoringBusy.current = true;
+    try {
+      setMonitoring(await api.monitoring());
+      setMonitorError("");
+    } catch (error) {
+      setMonitorError(
+        error instanceof Error ? error.message : "Monitoring unavailable",
+      );
+    } finally {
+      monitoringBusy.current = false;
+    }
+  }, [api, authenticated]);
+  useEffect(() => {
+    if (page !== "Metrics") return;
+    void refreshMonitoring();
+    const timer = setInterval(() => {
+      if (!document.hidden) void refreshMonitoring();
+    }, 60000);
+    return () => clearInterval(timer);
+  }, [page, refreshMonitoring]);
   const refreshBusy = useRef(false);
   const openRunId = useRef<number | null>(null);
   useEffect(() => {
@@ -205,18 +281,38 @@ export function App({ config }: { config: Config }) {
         Skip to content
       </a>
       <div className="console">
-        <aside className={menu ? "sidebar open" : "sidebar"}>
-          <a
-            className="brand"
-            href="#"
-            onClick={(e) => {
-              e.preventDefault();
-              go("Overview");
-            }}
-          >
-            <span className="brand-mark">{icon("Flower2", 23)}</span>Twilight
-            <span className="brand-control">/ control</span>
-          </a>
+        <motion.aside
+          ref={sidebarRef}
+          id="console-navigation"
+          className="sidebar"
+          initial={false}
+          animate={{ x: sidebarVisible ? "0%" : "-100%" }}
+          transition={reduced ? { duration: 0 } : springs.section}
+          inert={!sidebarVisible}
+          aria-label="Console navigation"
+          role={narrow && menu ? "dialog" : undefined}
+          aria-modal={narrow && menu ? true : undefined}
+        >
+          <div className="sidebar-heading">
+            <a
+              className="brand"
+              href="#"
+              onClick={(e) => {
+                e.preventDefault();
+                go("Overview");
+              }}
+            >
+              <span className="brand-mark">{icon("Flower2", 23)}</span>Twilight
+              <span className="brand-control">/ control</span>
+            </a>
+            <button
+              className="icon-button"
+              aria-label="Close navigation"
+              onClick={toggleSidebar}
+            >
+              {icon("PanelLeftClose", 19)}
+            </button>
+          </div>
           <div className="workspace">
             <span className="workspace-avatar">TG</span>
             <div>
@@ -281,21 +377,31 @@ export function App({ config }: { config: Config }) {
               )}
             </div>
           </div>
-        </aside>
-        {menu && (
+        </motion.aside>
+        {narrow && menu && (
           <button
             className="sidebar-cover"
             aria-label="Close navigation"
             onClick={() => setMenu(false)}
           />
         )}
-        <div className="content">
+        <motion.div
+          className="content"
+          inert={narrow && menu}
+          initial={false}
+          animate={{ marginLeft: !narrow && sidebarVisible ? sidebarWidth : 0 }}
+          transition={reduced ? { duration: 0 } : springs.section}
+        >
           <header className="topbar">
             <div className="breadcrumb">
               <button
-                className="mobile-menu icon-button"
-                aria-label="Open navigation"
-                onClick={() => setMenu(!menu)}
+                className="icon-button"
+                aria-label={
+                  sidebarVisible ? "Close navigation" : "Open navigation"
+                }
+                aria-controls="console-navigation"
+                aria-expanded={sidebarVisible}
+                onClick={toggleSidebar}
               >
                 {icon("Menu")}
               </button>
@@ -313,7 +419,10 @@ export function App({ config }: { config: Config }) {
               <button
                 className="icon-button"
                 aria-label="Refresh data"
-                onClick={() => void refresh()}
+                onClick={() => {
+                  void refresh();
+                  if (page === "Metrics") void refreshMonitoring();
+                }}
                 disabled={busy}
               >
                 {icon("RefreshCw", 18)}
@@ -353,7 +462,7 @@ export function App({ config }: { config: Config }) {
                       : page === "Releases"
                         ? "Production status and deliberate deployments."
                         : page === "Metrics"
-                          ? "Real AWS Lambda measurements. Last 24 hours, in your local time."
+                          ? "App traffic, database health, infrastructure, and provider costs."
                           : page === "Activity"
                             ? "An admin audit trail, without private user content."
                             : "Connections, preferences, and cost-aware controls."}
@@ -383,6 +492,9 @@ export function App({ config }: { config: Config }) {
               <div className="alert error" role="alert">
                 {icon("AlertCircle", 18)}
                 <span>{error}</span>
+                <button className="secondary" onClick={() => go("Settings")}>
+                  Connection setup
+                </button>
                 <button
                   className="icon-button"
                   aria-label="Dismiss error"
@@ -420,13 +532,10 @@ export function App({ config }: { config: Config }) {
                         <em>Latest sample</em>
                       </span>
                       <strong>
-                        {fmt(runs.length)}
+                        {snapshot ? fmt(runs.length) : "—"}
                         <small>runs</small>
                       </strong>
-                      <p>
-                        Up to 100 recent GitHub runs
-                        <span className="spark-bars">▁▃▂▅▃▆▅▇</span>
-                      </p>
+                      <p>Up to 100 recent GitHub runs</p>
                     </div>
                     <div className="stat">
                       <span>
@@ -440,7 +549,9 @@ export function App({ config }: { config: Config }) {
                         <small>%</small>
                       </strong>
                       <p>
-                        {successes} successful / {completed.length} completed
+                        {snapshot
+                          ? `${successes} successful / ${completed.length} completed`
+                          : "GitHub data unavailable"}
                       </p>
                     </div>
                     <div className="stat">
@@ -503,6 +614,8 @@ export function App({ config }: { config: Config }) {
                 {page === "Metrics" && (
                   <MetricsPage
                     metrics={metrics}
+                    monitoring={monitoring}
+                    monitorError={monitorError}
                     active={active}
                     snapshot={snapshot}
                   />
@@ -532,7 +645,7 @@ export function App({ config }: { config: Config }) {
               <span>Built for a little more peace of mind.</span>
             </footer>
           </main>
-        </div>
+        </motion.div>
       </div>
       <AnimatePresence>
         {buildOpen && (

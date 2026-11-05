@@ -46,6 +46,25 @@ export type Metrics = {
   averageMs: number;
   series: { at: string; requests: number; errors: number; ms: number }[];
 };
+export type Reading = {
+  label: string;
+  value: number | null;
+  unit: string;
+  detail?: string;
+  limit?: number;
+};
+export type ProviderReport = {
+  id: string;
+  name: string;
+  status: "ready" | "partial" | "setup" | "unavailable";
+  at: string;
+  window: string;
+  message: string;
+  url: string;
+  readings: Reading[];
+  series?: { at: string; value: number }[];
+};
+export type MonitoringReport = { at: string; sources: ProviderReport[] };
 export type Snapshot = {
   runs: Run[];
   audit: Audit[];

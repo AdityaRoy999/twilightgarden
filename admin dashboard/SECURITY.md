@@ -14,12 +14,14 @@ Advisory: https://github.com/advisories/GHSA-g3hv-75wg-m249
 
 Automated tests validate authentication checks, restricted workflow dispatch, duplicate suppression, pause transactions, artifact URL restrictions, and synthesized AWS configuration. They use mocked provider responses and CloudFormation assertions. They cannot establish that your future account permissions, Cognito emails/MFA, GitHub credentials/allowance, or AWS quotas are configured correctly. Complete the live acceptance steps in DEPLOY.md after deployment.
 
-No AWS infrastructure has been deployed by the implementation task. Do not claim the live AWS deployment is verified until the acceptance steps have actually passed.
+The owner has deployed the AWS stack. Subsequent live verification and remaining acceptance limitations are recorded in VERIFICATION.md; local tests alone do not establish authenticated end-to-end build dispatch.
 
 ## Sensitive data
 
 - No Supabase service role, private user content, chat decryption, or vault key access.
-- GitHub credentials and deploy hooks only in Secrets Manager.
+- GitHub credentials, deploy hooks and optional read-only provider monitoring tokens only in Secrets Manager.
+- Supabase monitoring exports a fixed numeric allowlist; raw logs, request bodies, SQL text and labels never go to the browser. Monitoring PATs can read source logs and must be project-restricted.
+- Provider failures are isolated and redacted; missing metrics are not invented. AWS cost queries use a persistent cache/lease to limit paid monitoring calls.
 - Public frontend config only includes API/Cognito endpoints, client ID, region.
 - Access tokens in session storage, not persisted across tabs/browser sessions by the application.
 - Audit records contain opaque admin identifiers and operational actions; restrict/export them intentionally.

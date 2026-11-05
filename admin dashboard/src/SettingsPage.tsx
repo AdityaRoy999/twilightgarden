@@ -58,8 +58,87 @@ export function SettingsPage({
         >
           Open AWS console {icon("ArrowOut", 16)}
         </a>
+        <h3>Connect GitHub builds</h3>
+        <ol className="connection-steps">
+          <li>
+            Create a fine-grained GitHub token for only{" "}
+            <strong>AdityaRoy999/twilightgarden</strong>.
+          </li>
+          <li>
+            Grant <strong>Actions: read and write</strong> and{" "}
+            <strong>Contents: read-only</strong>.
+          </li>
+          <li>
+            In AWS Secrets Manager, edit the integration secret listed in your
+            deployment outputs. Save plaintext JSON with the field{" "}
+            <code>githubToken</code> containing the token.
+          </li>
+          <li>
+            Wait one minute for the secret cache, then refresh this dashboard.
+          </li>
+        </ol>
+        <p className="muted">
+          Enter credentials only in AWS. This dashboard never asks you to paste
+          a token into a browser form.
+        </p>
+        <div className="release-actions">
+          <a
+            className="secondary"
+            href="https://github.com/settings/personal-access-tokens/new"
+            {...external}
+          >
+            Create GitHub token {icon("ArrowOut", 16)}
+          </a>
+          <a
+            className="secondary"
+            href="https://ap-south-1.console.aws.amazon.com/secretsmanager/listsecrets?region=ap-south-1"
+            {...external}
+          >
+            Open Secrets Manager {icon("ArrowOut", 16)}
+          </a>
+        </div>
       </section>
       <div className="settings-stack">
+        <section className="panel">
+          <div className="panel-heading">
+            <h2>Connect app monitoring</h2>
+            {icon("ChartNoAxesCombined", 20)}
+          </div>
+          <ol className="connection-steps">
+            <li>
+              In Supabase Account → Access Tokens, create a fine-grained token
+              restricted to Twilight, project <code>awijrkxrhlisixufiukw</code>.
+            </li>
+            <li>
+              Grant <strong>Logs: Read</strong>. The monitoring scope may also
+              include Usage Analytics: Read and Project Settings: Read. No
+              database or write permissions are needed.
+            </li>
+            <li>
+              Add <code>supabaseAccessToken</code> to the existing AWS
+              integration secret. Preserve <code>githubToken</code> and all
+              other fields.
+            </li>
+            <li>
+              Wait one minute, then open Metrics and refresh. Unavailable
+              sources show their scope and setup status.
+            </li>
+          </ol>
+          <a
+            className="secondary"
+            href="https://supabase.com/dashboard/account/tokens"
+            {...external}
+          >
+            Supabase access tokens {icon("ArrowOut", 16)}
+          </a>
+          <p className="muted">
+            Optional monitoring fields: vercelToken + vercelTeamId;
+            githubBillingToken with Plan Read; cloudflareAnalyticsToken +
+            cloudflareAccountId + cloudflareTurnKeyId. Full instructions are in
+            the repository’s admin dashboard/MONITORING.md. Never use a Supabase
+            service-role key here.
+          </p>
+        </section>
         <section className="panel">
           <div className="panel-heading">
             <h2>Build controls</h2>

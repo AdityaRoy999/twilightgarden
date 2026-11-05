@@ -17,6 +17,7 @@ import {
 import { github, integrations } from "./github";
 import { audit, auditList, command, pause, settings } from "./store";
 import { metrics } from "./metrics";
+import { monitoring } from "./monitoring";
 const json = (statusCode: number, body: unknown) => ({
   statusCode,
   headers: {
@@ -95,6 +96,7 @@ export async function handler(event: APIGatewayProxyEventV2WithJWTAuthorizer) {
         metricsCache = { data: await metrics(), until: Date.now() + 60000 };
       return json(200, metricsCache.data);
     }
+    if (method === "GET" && path === "/monitoring") return json(200, await monitoring());
     if (method === "POST" && path === "/builds") {
       const input = parseBody(event.body, buildInput);
       const result = await command(

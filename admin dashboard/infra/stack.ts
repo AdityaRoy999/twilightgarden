@@ -187,8 +187,9 @@ export class ControlStack extends cdk.Stack {
       architecture: lambda.Architecture.ARM_64,
       memorySize: 256,
       timeout: cdk.Duration.seconds(25),
+      // New learning accounts can lack sufficient unreserved concurrency for a reservation.
       reservedConcurrentExecutions:
-        Number(this.node.tryGetContext("reservedConcurrency") ?? 2) ||
+        Number(this.node.tryGetContext("reservedConcurrency") ?? 0) ||
         undefined,
       logGroup,
       bundling: { minify: true, sourceMap: false, externalModules: [] },
@@ -208,6 +209,12 @@ export class ControlStack extends cdk.Stack {
     fn.addToRolePolicy(
       new iam.PolicyStatement({
         actions: ["cloudwatch:GetMetricData"],
+        resources: ["*"],
+      }),
+    );
+    fn.addToRolePolicy(
+      new iam.PolicyStatement({
+        actions: ["ce:GetCostAndUsage", "lambda:GetAccountSettings"],
         resources: ["*"],
       }),
     );
@@ -232,6 +239,7 @@ export class ControlStack extends cdk.Stack {
       authorizationScopes: ["twilight-admin/control"],
     });
     const stage = http.defaultStage!.node.defaultChild as api.CfnStage;
+    fn.addEnvironment("HTTP_API_ID", http.apiId);
     stage.defaultRouteSettings = {
       throttlingRateLimit: 2,
       throttlingBurstLimit: 5,

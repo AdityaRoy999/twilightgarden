@@ -29,6 +29,8 @@ The architecture is in [ARCHITECTURE.md](ARCHITECTURE.md). Choose **Mumbai, `ap-
 
 Learn: [browser-based AWS CLI login](https://docs.aws.amazon.com/cli/latest/userguide/cli-configure-sign-in.html), [Free Tier terms](https://aws.amazon.com/free/terms/).
 
+For live Supabase API/database monitoring, provider billing tokens and AWS cost permissions, follow [MONITORING.md](MONITORING.md) after deployment. No service-role key is needed.
+
 ## 3. Install local tools
 
 Install Node.js **22.12+** (Node 22 LTS is suitable), Git, and AWS CLI v2 from their official installers. Reopen PowerShell after installation.
@@ -103,7 +105,7 @@ Learn: [what CDK bootstrapping creates](https://docs.aws.amazon.com/cdk/v2/guide
 
 ```powershell
 npm run infra:synth
-npx cdk diff -c alertEmail=YOUR_EMAIL_ADDRESS
+node node_modules/aws-cdk/bin/cdk diff --context alertEmail=YOUR_EMAIL_ADDRESS
 ```
 
 Replace `YOUR_EMAIL_ADDRESS` with an inbox you control. The email becomes a CloudFormation parameter/context value and alert recipient, not a secret. It is used only for this deployment, not invented from another user's data.
@@ -113,7 +115,7 @@ Open `cdk.out/TwilightControl.template.json`. Find:
 - S3 public-access blocking and CloudFront origin access control.
 - Cognito self-signup disabled, MFA required, public app client with **code** flow.
 - API JWT authorizer and `twilight-admin/control` scope.
-- Lambda IAM permissions and bounded concurrency.
+- Lambda read permissions, runtime timeout and optional reserved concurrency.
 - DynamoDB on-demand capacity, transaction permissions, and TTL.
 - `$10` monthly account-wide gross spending budget (credits/refunds excluded), with email alerts at 50% and 100%.
 
@@ -122,20 +124,20 @@ This is a **notification budget**, not an enforced spend cap. AWS billing data a
 ## 8. Deploy the stack
 
 ```powershell
-npm run infra:deploy -- -c alertEmail=YOUR_EMAIL_ADDRESS
+node node_modules/aws-cdk/bin/cdk deploy --outputs-file deployment.local.json --context alertEmail=YOUR_EMAIL_ADDRESS
 ```
 
 Review the IAM changes, then approve in your terminal. CloudFront distribution creation can take several minutes. Keep `alertEmail` the same on subsequent deploys; omitting it removes the optional budget/alarm email resources from the next template.
 
 The command creates **`deployment.local.json`** (gitignored) containing resource names and public endpoint configuration. It contains no secret values. Keep this file for publishing and invitations.
 
-If your new account cannot reserve two Lambda executions because of its regional concurrency quota, use:
+Concurrency is unreserved by default for new-account compatibility. If overriding a previous reservation, explicitly use:
 
 ```powershell
-npm run infra:deploy -- -c alertEmail=YOUR_EMAIL_ADDRESS -c reservedConcurrency=0
+node node_modules/aws-cdk/bin/cdk deploy --outputs-file deployment.local.json --context alertEmail=YOUR_EMAIL_ADDRESS --context reservedConcurrency=0
 ```
 
-This leaves Lambda concurrency unreserved; API Gateway still throttles traffic, but it is not a hard concurrency or spending cap. Use the same context on future deploys. Alternatively, request a suitable Lambda concurrency quota and keep the default reserved limit of 2.
+This leaves Lambda concurrency unreserved; API Gateway still throttles traffic, but it is not a hard concurrency or spending cap. Use the same context on future deploys. After a suitable Lambda quota is available, `--context reservedConcurrency=2` opts into a limit of two. The default is unreserved, not two.
 
 **Checkpoint:** CloudFormation → `TwilightControl` → status `CREATE_COMPLETE`. Confirm the SNS subscription email so error alarms can reach you. Budget messages use their own AWS email delivery.
 
@@ -279,8 +281,8 @@ npm run site:publish
 Backend/infrastructure changes:
 
 ```powershell
-npx cdk diff -c alertEmail=YOUR_EMAIL_ADDRESS
-npm run infra:deploy -- -c alertEmail=YOUR_EMAIL_ADDRESS
+node node_modules/aws-cdk/bin/cdk diff --context alertEmail=YOUR_EMAIL_ADDRESS
+node node_modules/aws-cdk/bin/cdk deploy --outputs-file deployment.local.json --context alertEmail=YOUR_EMAIL_ADDRESS
 npm run build
 npm run site:publish
 ```
@@ -352,3 +354,7 @@ For a complete cleanup, use the AWS console to review/export retained data, then
 - [CloudFront private S3 access](https://docs.aws.amazon.com/AmazonCloudFront/latest/DeveloperGuide/private-content-restricting-access-to-s3.html)
 - [GitHub Actions artifact downloads](https://docs.github.com/en/rest/actions/artifacts)
 - [EC2 Mac minimum allocation](https://aws.amazon.com/ec2/instance-types/mac/) — why this dashboard keeps occasional iOS builds on GitHub macOS runners.
+
+## PowerShell npm EUSAGE fix
+
+The CDK app now starts with `node --import tsx infra/app.ts` rather than nested `npx`. This avoids npm interpreting a propagated `-c` as its own command argument. Use the direct `node node_modules/aws-cdk/bin/cdk ... --context ...` commands above. Preserve the same alert email/context on every deployment; no change to the GitHub build workflows is needed.

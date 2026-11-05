@@ -15,13 +15,16 @@ export async function loadCallIce(coupleId: string): Promise<CallIce> {
   });
   if (error) {
     let code: string | undefined;
+    let privacyDenied = false;
     if (error.context instanceof Response) {
       try {
         code = (await error.context.clone().json()).code;
+        privacyDenied = error.context.status === 403;
       } catch {
         /* No structured error. */
       }
     }
+    if (privacyDenied) throw new Error("Calling is unavailable. Review Privacy & safety and make sure your partner connection is active.");
     if (code === "TURN_NOT_CONFIGURED")
       return {
         iceServers: STUN_SERVERS,

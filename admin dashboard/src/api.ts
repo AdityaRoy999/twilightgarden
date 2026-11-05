@@ -5,6 +5,7 @@ import type {
   RunDetail,
   Snapshot,
   ReleaseRequest,
+  MonitoringReport,
 } from "../shared/types";
 import { clearSession, token } from "./auth";
 import { demoAction, demoDetail, demoMetrics, demoSnapshot } from "./demo";
@@ -41,6 +42,26 @@ export class AdminApi {
     return this.config.mode === "demo"
       ? Promise.resolve(demoMetrics())
       : this.request("/metrics");
+  }
+  monitoring(): Promise<MonitoringReport> {
+    return this.config.mode === "demo"
+      ? Promise.resolve({
+          at: new Date().toISOString(),
+          sources: [
+            {
+              id: "preview",
+              name: "Provider monitoring",
+              status: "setup",
+              at: new Date().toISOString(),
+              window: "Local demo",
+              url: "https://console.aws.amazon.com/",
+              readings: [],
+              message:
+                "This preview never requests real billing or database metrics. Deploy the API and connect provider monitoring credentials to see live data.",
+            },
+          ],
+        })
+      : this.request("/monitoring");
   }
   detail(id: number): Promise<RunDetail> {
     return this.config.mode === "demo"

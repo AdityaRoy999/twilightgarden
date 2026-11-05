@@ -1,5 +1,5 @@
 {
-  "app": "npx tsx infra/app.ts",
+  "app": "node --import tsx infra/app.ts",
   "context": {
     "repo": "AdityaRoy999/twilightgarden",
     "branch": "main",

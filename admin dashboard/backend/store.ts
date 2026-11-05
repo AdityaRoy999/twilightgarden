@@ -11,6 +11,63 @@ import {
 import { HttpError } from "./domain";
 const db = DynamoDBDocumentClient.from(new DynamoDBClient({}));
 const TableName = process.env.TABLE_NAME;
+/** Cross-instance cache with a short lease: billing is never fetched on every UI poll. */
+export async function observation<T>(
+  name: string,
+  seconds: number,
+  load: () => Promise<T>,
+): Promise<T> {
+  const key = { pk: "MONITORING", sk: name };
+  const now = Math.floor(Date.now() / 1000);
+  const old = (
+    await db.send(new GetCommand({ TableName, Key: key, ConsistentRead: true }))
+  ).Item;
+  if (old && old.freshUntil > now && old.data) return old.data as T;
+  try {
+    await db.send(
+      new UpdateCommand({
+        TableName,
+        Key: key,
+        UpdateExpression: "SET leaseUntil = :lease",
+        ConditionExpression:
+          "attribute_not_exists(leaseUntil) OR leaseUntil < :now",
+        ExpressionAttributeValues: { ":lease": now + 40, ":now": now },
+      }),
+    );
+  } catch (error) {
+    if ((error as Error).name !== "ConditionalCheckFailedException")
+      throw error;
+    if (old?.data) return old.data as T;
+    throw new HttpError(503, "Monitoring is being collected. Refresh shortly.");
+  }
+  try {
+    const data = await load();
+    const unavailable =
+      (data as any)?.status === "setup" ||
+      (data as any)?.status === "unavailable";
+    await db.send(
+      new PutCommand({
+        TableName,
+        Item: {
+          ...key,
+          data,
+          freshUntil: now + (unavailable ? 60 : seconds),
+          ttl: now + Math.max(seconds * 2, 86400),
+        },
+      }),
+    );
+    return data;
+  } catch (error) {
+    await db.send(
+      new UpdateCommand({
+        TableName,
+        Key: key,
+        UpdateExpression: "REMOVE leaseUntil",
+      }),
+    );
+    throw error;
+  }
+}
 export async function settings() {
   return (
     (
