@@ -3,6 +3,7 @@
 ## 6 November 2026 update
 
 - Frontend build and backend/infrastructure types passed. **50 tests in 9 files** passed, including provider isolation, missing credentials, redaction, billing normalization, UTC timestamps, monitoring route authorization and the cross-instance cache lease.
+- GitHub's full consumer verification also passed **332 tests in 74 files**, production build, secret/dependency checks and Deno function checks. The targeted 32-call-test run below is a subset of those tests, not an additional total.
 - Collapsible desktop navigation and the mobile drawer were inspected in the browser. At 1280×720 the account/settings footer is visible; at 390×844 content fits without document horizontal overflow. Mobile focus trapping, Escape dismissal and content inertness were checked. The screenshot proof is a labelled local demo, not a live billing screenshot.
 - CDK diff contained only the Lambda code/environment and the two read actions `ce:GetCostAndUsage` and `lambda:GetAccountSettings`. Deployed successfully to the existing TwilightControl stack, preserving its budget/SNS subscription, Cognito configuration and data stores. Published the updated frontend to the existing CloudFront site.
 - Privileged **direct Lambda invocations**, using a synthetic admin event from the deployment operator, returned HTTP 200 for `/snapshot`, `/metrics` and `/monitoring`. This verifies the deployed handler and provider integrations; it is not a substitute for signing into Cognito and dispatching a build through the browser.

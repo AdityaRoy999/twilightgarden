@@ -639,8 +639,8 @@ export async function monitoring(): Promise<MonitoringReport> {
       {
         ...report(
           "ai-billing",
-          "AI provider billing",
-          "https://console.groq.com/settings/billing",
+          "AI provider · NVIDIA",
+          "https://build.nvidia.com/",
           "Provider billing cycle",
         ),
         status: "partial",
