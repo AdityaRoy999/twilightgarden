@@ -12,6 +12,7 @@ import { ReferenceHeading } from '../components/ui/ReferenceArt';
 import { AppIcon } from '../components/ui/Icons';
 import { useToday } from '../hooks/useToday';
 import React, { useState, useEffect, useMemo } from 'react';
+import {Link} from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { useData } from '../contexts/DataContext';
 import { useTheme } from '../contexts/ThemeContext';
@@ -82,6 +83,7 @@ const Wellness: React.FC = () => {
     return (
         <div className="reference-page reference-wellness font-display flex flex-col">
             <ReferenceHeading title="Wellness" description="A little care, at your own pace." action={<NotificationBell/>}/>
+            <Link className="reference-card health-hub-link" to="/health"><AppIcon name="medical_services" size={28}/><span><strong>Your reproductive health</strong><small>Sexual health, contraception, fertility, pregnancy & recovery</small></span><AppIcon name="arrow_forward" size={22}/></Link>
             <section className="reference-card wellness-overview"><WellnessIllustration id={activeTab === 'sleep' ? 'sleep-chart' : activeTab === 'empathy' ? 'supportive-couple' : activeTab === 'shops' ? 'pharmacy' : 'gentle-stretch'} className="wellness-overview-art" decorative/><span className="reference-icon"><AppIcon name={activeTab === 'sleep' ? 'bedtime' : 'spa'} size={26}/></span><div><span className="bloom-eyebrow">Your daily rhythm</span><h2>{cycleData.phase === 'Unknown' ? 'One day at a time' : `${cycleData.phase} phase`}</h2><p>{cycleData.currentDay > 0 ? `Cycle day ${cycleData.currentDay}` : 'Start with a daily check-in'}{todayLog?.sleepHours !== undefined ? ` · ${todayLog.sleepHours}h of sleep logged` : ''}</p></div></section>
 
             {/* Tabs */}

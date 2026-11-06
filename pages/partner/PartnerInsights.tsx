@@ -1,5 +1,6 @@
 import { AppIcon } from '../../components/ui/Icons';
 import React from 'react';
+import {Link} from 'react-router-dom';
 import { useCouples } from '../../contexts/CouplesContext';
 import { useTheme } from '../../contexts/ThemeContext';
 import PartnerInsightsView from '../../components/PartnerInsightsView';
@@ -12,6 +13,7 @@ const PartnerInsights: React.FC = () => {
   const { profile, settings, logs } = partnerData;
 
   return (
+    <><Link className="reference-card health-hub-link" to="/partner/health"><AppIcon name="verified_user" size={26}/><span><strong>Shared reproductive health</strong><small>Additional journal entries your partner explicitly shares</small></span><AppIcon name="arrow_forward" size={20}/></Link>
     <div className={`pb-24 pt-6 px-4 max-w-md md:max-w-5xl lg:max-w-7xl mx-auto min-h-screen transition-colors duration-300 bg-background-dark`}>
       <div className="flex items-center justify-between mb-6">
         <div>
@@ -38,7 +40,7 @@ const PartnerInsights: React.FC = () => {
         </div>
       )}
     </div>
-  );
+    </>);
 };
 
 export default PartnerInsights;

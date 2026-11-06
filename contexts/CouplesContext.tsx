@@ -125,6 +125,7 @@ export const CouplesProvider: React.FC<{ children: React.ReactNode }> = ({ child
     if (!s) return null;
     return {
       avgCycleLength: s.avg_cycle_length || 28,
+      estimatesPaused: s.calendar_estimates_paused === true,
       avgPeriodLength: s.avg_period_length || 5,
       lastPeriodStart: s.last_period_start || '',
       onboardingCompleted: s.onboarding_completed || false,

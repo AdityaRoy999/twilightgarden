@@ -25,6 +25,16 @@ export type Mood =
 export type SymptomCategory = "physical" | "digestion" | "other";
 
 export interface DailyLog {
+  periodEnded?: boolean;
+  painSeverity?: number;
+  painLocation?: string;
+  painDuration?: string;
+  dailyImpact?: string;
+  relief?: string;
+  reliefEffect?: string;
+  clots?: string;
+  productChanges?: number;
+  intermenstrualBleeding?: boolean;
   periodStarted?: boolean;
   id: string;
   user_id: string;
@@ -41,6 +51,7 @@ export interface DailyLog {
 export type DailyLogInput = Omit<DailyLog, 'id' | 'user_id'>;
 
 export interface CycleSettings {
+  estimatesPaused?: boolean;
   avgCycleLength: number;
   avgPeriodLength: number;
   lastPeriodStart: string; // ISO date

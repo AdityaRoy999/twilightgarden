@@ -1,5 +1,6 @@
 // @vitest-environment jsdom
 import React from 'react';
+import {MemoryRouter} from 'react-router-dom';
 import { act, cleanup, fireEvent, render, screen, waitFor } from '@testing-library/react';
 import { afterEach, beforeEach, expect, it, vi } from 'vitest';
 const fixture = vi.hoisted(() => ({ tips: vi.fn(), empathy: vi.fn() }));
@@ -15,7 +16,7 @@ it('keeps cycle context visible during loading and prevents an earlier tab respo
   let finish!: (value: { text: string }) => void;
   fixture.tips.mockImplementation(() => new Promise(resolve => { finish = resolve; }));
   fixture.empathy.mockResolvedValue({ text: 'Some gentle support' });
-  render(<Wellness/>);
+  render(<MemoryRouter><Wellness/></MemoryRouter>);
   expect(screen.getByText('Luteal phase')).toBeTruthy();
   expect(await screen.findByRole('status')).toBeTruthy();
   fireEvent.click(screen.getByRole('button', { name: 'Empathy' }));
@@ -26,7 +27,7 @@ it('keeps cycle context visible during loading and prevents an earlier tab respo
 });
 it('ends a failed loading state with a retry action while retaining the overview', async () => {
   fixture.tips.mockRejectedValueOnce(new Error('Please retry')).mockResolvedValue({ text: 'Guidance ready' });
-  render(<Wellness/>);
+  render(<MemoryRouter><Wellness/></MemoryRouter>);
   fireEvent.click(await screen.findByRole('button', { name: 'Try Again' }));
   expect(await screen.findByText('Guidance ready')).toBeTruthy();
   expect(screen.getByText('Luteal phase')).toBeTruthy();
@@ -34,7 +35,7 @@ it('ends a failed loading state with a retry action while retaining the overview
 it('retains the visible advice and disables refresh while a replacement guide loads', async () => {
   let finish!: (value: { text: string }) => void;
   fixture.tips.mockResolvedValueOnce({text:'Existing gentle advice'}).mockImplementationOnce(()=>new Promise(resolve=>{finish=resolve;}));
-  render(<Wellness/>);
+  render(<MemoryRouter><Wellness/></MemoryRouter>);
   expect(await screen.findByText('Existing gentle advice')).toBeTruthy();
   fireEvent.click(screen.getByRole('button',{name:'Refresh'}));
   expect(screen.getByText('Existing gentle advice')).toBeTruthy();

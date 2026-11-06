@@ -1,3 +1,4 @@
+import {predictCycle} from '../../lib/cyclePrediction';
 import {ConnectionScreen} from '../../components/ConnectionScreen';
 import { DailyGuidance } from '../../components/wellness/DailyGuidance';
 import { AppIcon } from '../../components/ui/Icons';
@@ -42,6 +43,7 @@ const PartnerDashboard: React.FC = () => {
         irregularCycle: false
     };
 
+    const prediction=predictCycle(cycleSettings,logs,todayStr);
     const cycleData = calculateCyclePhase(todayStr, cycleSettings,logs);
 
     const phaseLabel = cycleData.phase === 'Unknown' ? 'Phase unavailable' : `${cycleData.phase} phase`;
@@ -84,7 +86,7 @@ const PartnerDashboard: React.FC = () => {
              <CycleHero className="mb-6">
                <BotanicalSprig className="bloom-hero-leaves"/>
                <div className="bloom-cycle-copy"><p>Your partner’s rhythm</p><h2>{cycleData.currentDay ? `Day ${cycleData.currentDay}` : 'One day at a time'}</h2><h3>{phaseLabel}</h3><p className="bloom-muted">A little understanding goes a long way.</p></div>
-               <CycleBloom avatarUrl={profile?.avatar_url} avatarName={profile?.full_name||'Partner'} periodLength={cycleSettings.avgPeriodLength} introKey={user?.id} day={cycleData.currentDay} length={cycleSettings.avgCycleLength} hasEstimate={cycleData.hasEstimate !== false}/>
+               <CycleBloom avatarUrl={profile?.avatar_url} avatarName={profile?.full_name||'Partner'} periodLength={prediction.periodLength} introKey={user?.id} day={cycleData.currentDay} length={prediction.length} hasEstimate={cycleData.hasEstimate !== false}/>
              </CycleHero>
 
              {/* Right Column: Stats & Updates */}
@@ -108,7 +110,7 @@ const PartnerDashboard: React.FC = () => {
                          <div className="w-full bg-gray-100 dark:bg-white/10 h-1.5 rounded-full mt-3 overflow-hidden">
                             <div
                                 className="h-full bg-primary rounded-full"
-                                style={{ width: `${cycleData.hasEstimate===false?0:Math.max(0,Math.min(100,((cycleData.currentDay-1)/cycleSettings.avgCycleLength)*100))}%` }} // Reverse logic approx
+                                style={{ width: `${cycleData.hasEstimate===false?0:Math.max(0,Math.min(100,((cycleData.currentDay-1)/prediction.length)*100))}%` }} // Reverse logic approx
                             ></div>
                          </div>
                     </div>

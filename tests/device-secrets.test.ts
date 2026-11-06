@@ -43,10 +43,17 @@ it('removes retired account vault keys without touching another account or the c
   await DeviceSecrets.set('personal-vault:data:alice:old', 'old vault');
   await DeviceSecrets.set('personal-vault:data:alice:new', 'new vault');
   await DeviceSecrets.set('personal-vault:data:bob:old', 'other account');
+  await DeviceSecrets.set('health-sync:alice:old:pending', 'old queue');
+  await DeviceSecrets.set('health-sync:alice:new:pending', 'current queue');
+  await DeviceSecrets.set('health-sync:bob:old:pending', 'other queue');
   await DeviceSecrets.forgetVaults('alice', 'new');
+  expect(await DeviceSecrets.get('health-sync:alice:old:pending')).toBeNull();
+  expect(await DeviceSecrets.get('health-sync:alice:new:pending')).toBe('current queue');
+  expect(await DeviceSecrets.get('health-sync:bob:old:pending')).toBe('other queue');
   expect(await DeviceSecrets.get('personal-vault:data:alice:old')).toBeNull();
   expect(await DeviceSecrets.get('personal-vault:data:alice:new')).toBe('new vault');
   expect(await DeviceSecrets.get('personal-vault:data:bob:old')).toBe('other account');
   await DeviceSecrets.forgetVaults('alice');
   expect(await DeviceSecrets.get('personal-vault:data:alice:new')).toBeNull();
+  expect(await DeviceSecrets.get('health-sync:alice:new:pending')).toBeNull();
 });

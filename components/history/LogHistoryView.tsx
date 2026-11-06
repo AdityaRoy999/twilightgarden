@@ -158,6 +158,7 @@ export function HistoryLogDetails({
                 <p>None logged</p>
               )}
             </section>
+            {(log.painSeverity!==undefined || log.painLocation || log.periodEnded || log.productChanges!==undefined) && <section><h3><AppIcon name="Medical" size={21}/>Pain & bleeding details</h3>{log.periodEnded&&<p>Last bleeding day of this period</p>}{log.painSeverity!==undefined&&<p>Pain: {log.painSeverity}/10</p>}{log.painLocation&&<p>Location: {log.painLocation}</p>}{log.painDuration&&<p>Duration: {log.painDuration}</p>}{log.dailyImpact&&<p>Daily impact: {log.dailyImpact}</p>}{log.productChanges!==undefined&&<p>Product changes: {log.productChanges}</p>}{log.clots&&<p>Clots: {log.clots}</p>}{log.relief&&<p>Relief: {log.relief} {log.reliefEffect?`· ${log.reliefEffect}`:''}</p>}</section>}
             {details.notes ? (
               <section className="history-note">
                 <h3>

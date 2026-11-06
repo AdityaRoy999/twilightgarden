@@ -12,6 +12,8 @@ import { loadHealthHistory } from '../lib/healthHistory';
 import { useToday } from '../hooks/useToday';
 import {schedulePrivateReminders} from '../lib/privateReminders';
 import {getPrivatePeer} from '../lib/privateData';
+import {predictCycle} from '../lib/cyclePrediction';
+import {useReproductive} from './ReproductiveContext';
 
 interface DataContextType {
   logs: DailyLog[];
@@ -56,6 +58,7 @@ const setCachedSettings = (_userId: string | null, _settings: CycleSettings) => 
 const setCachedLogs = (_userId: string | null, _logs: DailyLog[]) => {};
 
 export const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+  const reproductive=useReproductive();
   const todayKey = useToday();
   const { user, loading: authLoading, sessionVerified, profileRefreshed } = useAuth();
   const { broadcastUpdate, partnerPubKey, keyVersion } = useCouples();
@@ -166,6 +169,7 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children
               avgPeriodLength: s.avg_period_length || s.avgPeriodLength || 5,
               lastPeriodStart: s.last_period_start || s.lastPeriodStart || '',
               onboardingCompleted: s.onboarding_completed ?? s.onboardingCompleted ?? false,
+              estimatesPaused: s.calendar_estimates_paused === true,
               irregularCycle: s.irregular_cycle ?? s.irregularCycle ?? false
             });
           }
@@ -278,7 +282,8 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children
             avgPeriodLength: s.avg_period_length || s.avgPeriodLength || 5,
             lastPeriodStart: effectiveStart,
             onboardingCompleted: s.onboarding_completed ?? s.onboardingCompleted ?? false,
-            irregularCycle: s.irregular_cycle ?? s.irregularCycle ?? false
+            estimatesPaused: s.calendar_estimates_paused === true,
+              irregularCycle: s.irregular_cycle ?? s.irregularCycle ?? false
           };
           if (!cancelled) {
             setCycleSettings(newSettings);
@@ -327,14 +332,14 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
       const {data:result,error}=await supabase.rpc('save_daily_log',{
         p_date:newLog.date,p_period_start:!!newLog.periodStarted,p_encrypted:encryptedPayload,
-        p_values:{flow:newLog.flow??null,moods:newLog.moods||[],symptoms:[...new Set(newLog.symptoms||[])],notes:newLog.notes||null,energy_level:newLog.energyLevel??null,sleep_quality:newLog.sleepQuality??null,sleep_hours:newLog.sleepHours??null}
+        p_values:{flow:newLog.flow??null,moods:newLog.moods||[],symptoms:[...new Set(newLog.symptoms||[])],notes:newLog.notes||null,energy_level:newLog.energyLevel??null,sleep_quality:newLog.sleepQuality??null,sleep_hours:newLog.sleepHours??null,periodEnded:!!newLog.periodEnded,painSeverity:newLog.painSeverity,painLocation:newLog.painLocation,painDuration:newLog.painDuration,dailyImpact:newLog.dailyImpact,relief:newLog.relief,reliefEffect:newLog.reliefEffect,clots:newLog.clots,productChanges:newLog.productChanges,intermenstrualBleeding:!!newLog.intermenstrualBleeding}
       });
       const saved=result as unknown as {log:Record<string,unknown>;settings:Record<string,any>};
       const savedLog=saved?.log;
       if (error) throw error;
       const mappedLog = await mapLog(savedLog);
       const settings=saved.settings;
-      const nextSettings={avgCycleLength:settings.avg_cycle_length,avgPeriodLength:settings.avg_period_length,lastPeriodStart:settings.last_period_start||'',onboardingCompleted:settings.onboarding_completed,irregularCycle:settings.irregular_cycle};
+      const nextSettings={avgCycleLength:settings.avg_cycle_length,avgPeriodLength:settings.avg_period_length,lastPeriodStart:settings.last_period_start||'',onboardingCompleted:settings.onboarding_completed,irregularCycle:settings.irregular_cycle,estimatesPaused:settings.calendar_estimates_paused===true};
       setCycleSettings(nextSettings);setCachedSettings(user.id,nextSettings);
       setLogs(prev => {
         const next = [...prev.filter(l => l.date !== mappedLog.date), mappedLog].sort((a,b) => b.date.localeCompare(a.date));
@@ -387,7 +392,7 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
   };
 
-  useEffect(()=>{if(!user||user.role==='partner'||!cycleSettings.onboardingCompleted)return;const schedule=()=>{void schedulePrivateReminders(cycleSettings,logs).catch(()=>{});};schedule();window.addEventListener('twilight-private-preferences',schedule);return()=>window.removeEventListener('twilight-private-preferences',schedule);},[user?.id,cycleSettings,logs]);
+  useEffect(()=>{if(!user||user.role==='partner'||!cycleSettings.onboardingCompleted)return;const suppress=['pregnancy','postpartum','contraception','perimenopause'].includes(reproductive.settings.mode);const schedule=()=>{const predicted=predictCycle(cycleSettings,logs,todayKey);void schedulePrivateReminders({...cycleSettings,avgCycleLength:predicted.length,irregularCycle:cycleSettings.irregularCycle||suppress},logs).catch(()=>{});};schedule();window.addEventListener('twilight-private-preferences',schedule);return()=>window.removeEventListener('twilight-private-preferences',schedule);},[user?.id,cycleSettings,logs,reproductive.settings.mode]);
 
   const getLog = (date: string) => logs.find(l => l.date === date);
 
@@ -409,7 +414,7 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
         const { error } = await supabase.rpc('save_cycle_settings',{p_encrypted:encryptedPayload,p_values:{
           avg_cycle_length:newSettings.avgCycleLength,avg_period_length:newSettings.avgPeriodLength,
-          last_period_start:newSettings.lastPeriodStart||null,onboarding_completed:newSettings.onboardingCompleted,irregular_cycle:newSettings.irregularCycle
+          last_period_start:newSettings.lastPeriodStart||null,onboarding_completed:newSettings.onboardingCompleted,irregular_cycle:newSettings.irregularCycle,calendar_estimates_paused:newSettings.estimatesPaused===true
         }});
         if (error) throw error;
 
@@ -426,6 +431,7 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
 
   const getCyclePhase = (dateStr: string = todayKey): CyclePhase => {
+      if(['pregnancy','postpartum','contraception','perimenopause'].includes(reproductive.settings.mode))return {currentDay:0,phase:'Unknown',nextPeriodIn:0,isFertile:false,isOvulation:false,hasEstimate:false,overdueDays:0};
     return calculateCyclePhase(dateStr, cycleSettings,logs);
   };
 
