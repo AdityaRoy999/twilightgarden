@@ -663,3 +663,97 @@ html, body, #root { max-width:100%; overflow-x:clip; overscroll-behavior-x:none;
 @media(prefers-reduced-motion:reduce){.pregnancy-art *{animation:none!important;transition:none!important}}
 .health-log-detail{display:flex;flex-direction:column;gap:18px}.health-log-detail .health-check{display:flex;align-items:flex-start;gap:10px;font-size:.9rem}.health-log-detail input[type=checkbox]{width:21px;height:21px;accent-color:var(--color-primary-ink);flex-shrink:0}.health-log-detail .health-form-grid label{font-size:.85rem;display:flex;flex-direction:column;gap:8px}.health-log-detail input:not([type=checkbox]):not([type=range]),.health-log-detail select{width:100%;min-width:0;border:0;outline:0;box-shadow:none;background:var(--bloom-muted-surface);color:var(--text-primary);border-radius:14px;padding:13px;font-size:16px}.health-log-detail input[type=range]{width:100%;accent-color:var(--color-primary-ink);min-height:44px}.health-log-detail input:focus-visible,.health-log-detail select:focus-visible{background:var(--selection-bg);text-decoration:underline}
 .reference-page.reproductive-page{max-width:1320px}
+
+/* Garden form controls: local artwork, borderless surfaces and color-only selection. */
+.garden-field-label {display:flex;align-items:center;gap:8px;font-size:.86rem;font-weight:650;color:var(--text-secondary);line-height:1.5;margin-bottom:9px}
+.garden-field-stack {display:flex;flex-direction:column;gap:22px;min-width:0}
+.garden-select,.garden-date,.garden-time {min-width:0;align-self:start;width:100%}
+.garden-select>button,.garden-date-trigger {display:flex;align-items:center;gap:12px;width:100%;min-height:54px;border:0;border-radius:17px;padding:14px 16px;background:var(--bloom-muted-surface);color:var(--text-primary);font-size:16px;font-weight:550;text-align:left;line-height:1.4;transition:background-color .16s,color .16s}
+.garden-select>button>span,.garden-date-trigger>span {flex:1;min-width:0;overflow-wrap:anywhere}
+.garden-select>button>svg,.garden-date-trigger>svg {flex-shrink:0;color:var(--color-primary-ink)}
+.garden-select>button[aria-expanded=true],.garden-date-trigger[aria-expanded=true] {background:var(--selection-bg);color:var(--selection-ink)}
+.garden-select>button>svg:last-child {transition:rotate .16s}.garden-select>button[aria-expanded=true]>svg:last-child {rotate:180deg}
+.garden-select-list {display:flex;flex-direction:column;gap:5px;background:var(--bloom-muted-surface);border-radius:18px;padding:8px;margin-top:8px;max-height:330px;overflow-y:auto;scroll-padding:8px}
+.garden-select-list>button {display:flex;align-items:center;gap:12px;min-height:48px;flex-shrink:0;padding:12px;text-align:left;font-size:.9rem;border:0;border-radius:13px;color:var(--text-primary);background:transparent;transition:background-color .14s,color .14s}
+.garden-select-list>button>span {flex:1}.garden-select-list>button>svg {flex-shrink:0;color:var(--color-primary-ink)}
+.garden-select-list>button[data-active=true],.garden-select-list>button[aria-selected=true] {background:var(--selection-bg);color:var(--selection-ink)}
+.garden-choice-field,.health-modal .garden-choice-field {position:relative;display:block;align-self:stretch;min-width:0;margin:0;padding:18px;background:var(--bloom-muted-surface);border:0;border-radius:22px}
+.garden-choice-field>legend,.health-modal .garden-choice-field>legend {float:left;width:100%;margin:0 0 14px;font-size:.9rem;font-weight:650;color:var(--text-primary);line-height:1.45}
+.garden-choices {clear:both;display:grid;grid-template-columns:repeat(var(--choice-columns),minmax(0,1fr));gap:8px}
+.garden-choices>button {display:flex;align-items:center;gap:8px;min-height:62px;min-width:0;padding:9px;border:0;border-radius:16px;text-align:left;background:var(--bg-surface);color:var(--text-secondary);transition:background-color .16s,color .16s}
+.garden-choice-art {flex-shrink:0;display:grid;place-items:center;width:39px;height:39px;border-radius:13px;background:var(--bloom-tint);color:var(--color-primary-ink)}
+.garden-choice-art>svg {display:block;width:30px;height:30px;flex-shrink:0}
+.garden-choice-label {font-size:.76rem;font-weight:600;line-height:1.4;overflow-wrap:anywhere;min-width:0}
+.garden-choices>button[aria-checked=true] {background:var(--selection-bg);color:var(--selection-ink)}
+.garden-choices>button[aria-checked=true]>.garden-choice-art {background:transparent;color:var(--selection-ink)}
+.garden-choice-field[data-labels=false] .garden-choices {grid-template-columns:repeat(auto-fit,minmax(56px,1fr))}
+.garden-choice-field[data-labels=false] .garden-choices>button {justify-content:center;min-height:64px;padding:8px}
+.garden-choice-clear {display:flex;align-items:center;gap:5px;min-height:44px;margin:4px 0 -10px auto;padding:8px;color:var(--text-secondary);font-size:.75rem;border-radius:10px}
+.garden-check,.health-modal .garden-check,.health-log-detail .garden-check {position:relative;display:flex;flex-direction:row;align-items:flex-start;gap:13px;min-height:48px;cursor:pointer;font-size:.9rem;line-height:1.6;font-weight:500}
+.garden-check .garden-check-input {position:absolute!important;opacity:0!important;width:1px!important;height:1px!important;min-height:0!important;padding:0!important;margin:0!important;pointer-events:none;clip-path:inset(50%)}
+.garden-check-mark {display:grid;place-items:center;flex-shrink:0;width:28px;height:28px;margin-top:2px;border-radius:9px;background:var(--bg-surface);color:transparent;transition:background-color .16s,color .16s}
+.garden-check[data-checked=true]>.garden-check-mark {background:var(--selection-bg);color:var(--selection-ink)}
+.garden-check:has(input:focus-visible) {background:var(--selection-bg);border-radius:12px;text-decoration:underline;text-underline-offset:4px}
+.garden-check[data-disabled=true] {opacity:.65;cursor:default}.garden-check-copy {display:block;min-width:0}.garden-check-copy strong {display:block}.garden-check-copy small {display:block;font-weight:400;color:var(--text-secondary);line-height:1.65;margin-top:6px;font-size:.8rem}
+.garden-calendar,.garden-clock {background:var(--bloom-muted-surface);border-radius:22px;padding:14px;margin-top:10px;width:100%;max-width:400px;color:var(--text-primary)}
+.garden-calendar>header {display:flex;align-items:center;justify-content:space-between;gap:6px;margin:0 0 12px}.garden-calendar>header>button {display:flex;align-items:center;justify-content:center;min-width:44px;min-height:44px;border-radius:12px;color:var(--text-primary);background:var(--bg-surface);flex-shrink:0}
+.garden-calendar>header>.garden-calendar-caption {flex:1;font-size:.9rem;font-weight:700;gap:8px;background:transparent;min-width:0}
+.garden-calendar-week,.garden-calendar-days {display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:3px}.garden-calendar-week>span {text-align:center;padding:8px 0;font-size:.72rem;color:var(--text-secondary)}
+.garden-calendar-days>button {display:grid;place-items:center;aspect-ratio:1;min-height:36px;min-width:0;padding:0;border-radius:12px;font-size:.88rem;font-weight:550;position:relative;color:var(--text-primary);background:transparent}
+.garden-calendar-days>button[data-outside=true] {color:var(--text-secondary);opacity:.5}.garden-calendar-days>button[aria-pressed=true] {color:var(--selection-ink);background:var(--selection-bg);font-weight:750;opacity:1}
+.garden-calendar-days>button[aria-current=date]:after {content:'';width:4px;height:4px;position:absolute;bottom:3px;border-radius:50%;background:var(--color-primary-ink)}
+.garden-calendar-days>button:disabled {opacity:.28;cursor:default}.garden-calendar>footer {display:flex;gap:8px;justify-content:space-between;margin-top:12px}.garden-calendar>footer>button {min-height:44px;padding:8px 12px;border-radius:12px;font-size:.8rem;color:var(--color-primary-ink)}
+.garden-calendar-months {display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px}.garden-calendar-months>button {min-height:50px;border-radius:13px;background:var(--bg-surface);font-size:.85rem}
+.garden-clock-header {display:flex;align-items:center;gap:12px;margin-bottom:12px;color:var(--color-primary-ink)}.garden-clock-header>button {padding:12px;border-radius:12px;min-height:44px;font-size:.85rem;color:var(--text-secondary)}.garden-clock-header>button[aria-pressed=true] {background:var(--selection-bg);color:var(--selection-ink)}
+.garden-clock-values {display:grid;grid-template-columns:repeat(6,minmax(0,1fr));gap:6px;max-height:240px;overflow-y:auto}.garden-clock-values>button {min-height:44px;border-radius:12px;background:var(--bg-surface);font-size:.85rem}.garden-clock-values>button[aria-pressed=true] {background:var(--selection-bg);color:var(--selection-ink)}
+.garden-clock>.health-secondary {margin-top:12px;min-height:44px;width:100%;background:var(--bg-surface);border-radius:12px}
+:is(.garden-select,.garden-date,.garden-time,.garden-choice-field,.garden-pain) button:focus-visible {outline:0;background:var(--selection-bg);color:var(--selection-ink);text-decoration:underline;text-underline-offset:4px}
+:is(.garden-select,.garden-date,.garden-time,.garden-choice-field) button:disabled {cursor:default;opacity:.5}
+.garden-pain {padding:18px;border-radius:21px;background:var(--bloom-muted-surface)}.garden-pain-heading {display:flex;align-items:center;gap:12px}.garden-pain-heading>div {display:flex;flex-direction:column;gap:4px;flex:1}.garden-pain-heading>div>span {font-size:.8rem;color:var(--text-secondary)}.garden-pain-heading strong {font-size:1.1rem;color:var(--color-primary-ink)}.garden-pain-heading>button {width:44px;height:44px;border-radius:12px;display:grid;place-items:center}
+.garden-pain-track {display:flex;gap:7px;align-items:center;height:72px;touch-action:pan-y;cursor:ew-resize;margin-top:14px;border-radius:12px}.garden-pain-track>span {flex:1;min-width:0;border-radius:8px;background:var(--bg-surface);position:relative;transition:background-color .14s}.garden-pain-track>span[data-filled=true] {background:var(--selection-bg)}.garden-pain-track>span[data-current=true] {background:var(--color-primary-ink)}.garden-pain-track>span[data-current=true]>i {position:absolute;left:50%;top:50%;translate:-50% -50%;width:5px;height:5px;border-radius:50%;background:var(--bg-surface)}.garden-pain-labels {display:flex;justify-content:space-between;gap:12px;font-size:.7rem;color:var(--text-secondary)}.garden-pain-track:focus-visible {outline:0;background:var(--selection-bg)}
+.journal-page .journal-content {align-items:stretch;gap:24px}
+.journal-page .journal-card {display:flex;flex-direction:column;min-width:0;height:100%}
+.journal-page .symptom-options {grid-template-columns:repeat(2,minmax(0,1fr));gap:12px;margin-block:auto}
+.journal-page .symptom-option {display:flex;flex-direction:row;align-items:center;gap:10px;min-height:72px;padding:10px;border-radius:19px;background:var(--bloom-muted-surface);font-size:.85rem;color:var(--text-secondary);text-align:left;line-height:1.4;transition:background-color .16s,color .16s}
+.journal-page .symptom-option-symbol {width:48px;height:48px;flex-shrink:0;border-radius:16px;background:var(--bloom-tint);color:var(--color-primary-ink);scale:1;box-shadow:none}
+.journal-page .symptom-option-symbol>svg {width:30px;height:30px}
+.journal-page .symptom-option[aria-pressed=true] {background:var(--selection-bg);color:var(--selection-ink)}.journal-page .symptom-option[aria-pressed=true] .symptom-option-symbol {background:transparent;color:var(--selection-ink);scale:1}
+.journal-page .symptom-options[data-labels=false] {grid-template-columns:repeat(4,minmax(0,1fr))}.journal-page .symptom-options[data-labels=false]>.symptom-option {justify-content:center;padding:8px}
+.journal-page .journal-chips>button {display:flex;align-items:center;gap:8px;min-height:48px;padding:10px 13px;border-radius:16px;font-size:.8rem;background:var(--bloom-muted-surface);color:var(--text-secondary)}
+.journal-page .journal-chips>button>svg {flex-shrink:0;width:25px;height:25px;color:var(--color-primary-ink)}.journal-page .journal-chips>button[aria-pressed=true] {background:var(--selection-bg);color:var(--selection-ink)}.journal-page .journal-chips[data-labels=false]>button {justify-content:center;min-width:54px}
+.journal-page .journal-period.garden-check {padding:24px;min-height:115px}.journal-page .health-log-detail>label:not(.garden-check) {display:flex;flex-direction:column;gap:8px;font-size:.86rem}
+.journal-page .health-log-detail .garden-choices {grid-template-columns:repeat(3,minmax(0,1fr))}.journal-page .health-log-detail .garden-choices>button {flex-direction:column;text-align:center;justify-content:center;gap:7px}
+.journal-page .health-log-detail .health-muted {margin-top:auto;padding-top:10px;font-size:.8rem;line-height:1.65}
+.health-goals>button {display:flex;align-items:center;gap:12px}.health-goals>button>svg {flex-shrink:0;color:var(--color-primary-ink)}
+.health-hub-link {margin-bottom:22px}
+.gift-sort>.garden-select>.garden-field-label {position:absolute;width:1px;height:1px;overflow:hidden;clip-path:inset(50%)}.gift-sort .garden-select-list {min-width:0}
+@media(min-width:900px){.journal-page .journal-card>.symptom-options {padding-block:24px}.journal-page .journal-sleep-scale {margin-block:auto}.journal-page .journal-chips {align-content:start}.journal-page .journal-card {padding:28px}.journal-page .health-log-detail .garden-choices {gap:10px}}
+@media(max-width:600px){.garden-choice-field,.health-modal .garden-choice-field {padding:15px}.garden-choice-label {font-size:.75rem}.garden-choices {grid-template-columns:repeat(2,minmax(0,1fr))}.garden-choice-art {width:36px;height:36px}.garden-calendar {max-width:none}.garden-calendar-days>button {min-height:34px;border-radius:10px}.journal-page .journal-card {height:auto}.journal-page .symptom-option {font-size:.8rem;min-height:66px;padding:9px}.journal-page .journal-period.garden-check {padding:20px 17px}.journal-page .health-log-detail .garden-choices {grid-template-columns:repeat(3,minmax(0,1fr))}.journal-page .symptom-options[data-labels=false] .symptom-option-symbol {width:40px;height:40px}.garden-pain-track {gap:5px}.garden-select-list>button {font-size:.85rem}}
+@media(prefers-reduced-motion:reduce){.garden-select *, .garden-choice-field *, .garden-date *, .garden-time *, .garden-pain * {transition:none!important}}
+.disable-animations :is(.garden-select,.garden-choice-field,.garden-date,.garden-time,.garden-pain) * {transition:none!important}
+
+.garden-check>.garden-check-mark {background:var(--bloom-muted-surface)}
+.garden-check[data-checked=true]>.garden-check-mark {background:var(--selection-bg)}
+.health-modal .garden-choice-field {grid-column:1/-1}
+@media(min-width:900px){
+ .journal-page #log-pain,.journal-page #log-sleep {grid-column:1/-1}
+ .journal-page #log-pain {display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:20px;align-items:start}
+ .journal-page #log-pain>.journal-section-title,.journal-page #log-pain>.health-notice {grid-column:1/-1;margin-bottom:0}
+ .journal-page #log-pain>.health-form-grid {align-self:stretch;align-content:center}
+ .journal-page #log-sleep {display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:24px;align-items:center}
+ .journal-page #log-sleep>.journal-sleep-heading {margin:0}
+ .journal-page #log-sleep>.journal-sleep-scale {margin:0}
+}
+
+.garden-check>.garden-check-mark {background:color-mix(in srgb,var(--color-primary-ink) 18%,var(--bg-surface))}
+
+.journal-reading {display:flex;flex-direction:column;align-items:center;justify-content:center;gap:9px;flex:1;min-height:190px;padding:20px 0 25px;color:var(--color-primary-ink)}
+.journal-reading>span {width:106px;height:106px;display:grid;place-items:center;border-radius:35px;background:var(--bloom-muted-surface)}
+.journal-reading>span>svg {width:64px;height:64px}
+.journal-reading strong {font-size:1.05rem;font-weight:650}.journal-reading small {font-size:.75rem;color:var(--text-secondary)}
+.journal-page :is(#log-flow,#log-energy)>.symptom-options {margin-block:0;padding-block:0}
+.journal-page .health-log-detail>.journal-section-title {margin-bottom:0}
+@media(max-width:899px){.journal-reading {min-height:170px;padding-block:12px 20px}.journal-reading>span {width:82px;height:82px;border-radius:27px}.journal-reading>span>svg {width:52px;height:52px}}
+
+.garden-choice-art,.symptom-option-symbol {position:relative}
+:is(.garden-choices>button,.symptom-option):focus-visible :is(.garden-choice-art,.symptom-option-symbol):after {content:'';position:absolute;bottom:3px;left:50%;translate:-50% 0;width:16px;height:2px;border-radius:2px;background:currentColor}

@@ -79,3 +79,12 @@ node scripts/verify-reproductive-health.mjs
 ```
 
 The database migration is `supabase/migrations/20261106161759_reproductive_health_records.sql`; it was applied to Twilight's configured Supabase project for these tests. Existing app versions remain compatible with the added encrypted record kinds.
+
+
+## Illustrated logging controls
+
+Settings and the carer account appearance panel include **Show logging labels** (on by default). This device-local setting switches health choices between SVG + text and SVG-only; accessible names, form headings, consent and safety wording remain available. The existing encrypted records and enum strings are unchanged.
+
+Health entry forms use original `ChoiceSymbol` drawings, custom calendar/month/year navigation, a custom clock, and themed checkboxes. General menus use the local Solar adapter. No native HTML selects or date/time inputs remain in the app. Calendars retain local date keys, min/max constraints and keyboard navigation; blank pain and recorded zero remain distinct. Desktop daily logging uses aligned pairs, with full-width pain and sleep sections. Reduced motion and the in-app animation preference are respected.
+
+Validation: `tests/garden-controls.test.tsx` exercises calendar limits/leap days, keyboard focus, listbox Escape containment, consent defaults, label persistence, clock precision, SVG availability and the pain scale. `tests/reproductive-ui.test.tsx` checks saved values through the real health form controls. No native build is required for this change.

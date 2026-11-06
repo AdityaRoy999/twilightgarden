@@ -19,7 +19,7 @@ import { SyncHistoryModal } from '../components/SyncHistoryModal';
 
 const Settings: React.FC = () => {
   const { signOut, user } = useAuth();
-  const { theme, toggleTheme, primaryColor, animationsEnabled, updateAnimationsEnabled, solidNavBg, updateSolidNavBg } = useTheme();
+  const { theme, toggleTheme, primaryColor, animationsEnabled, updateAnimationsEnabled, solidNavBg, updateSolidNavBg, showLoggingLabels, updateShowLoggingLabels } = useTheme();
   const { cycleSettings, updateSettings, logs } = useData();
   const { deviceId,identityReady } = useCouples();
   const navigate = useNavigate();
@@ -265,6 +265,7 @@ const Settings: React.FC = () => {
               <div className="reference-card reference-preferences">
                 <div className="reference-setting-row"><div><span className="reference-icon"><Moon size={24}/></span><span><strong>Dark Mode</strong><small>{theme === 'dark' ? 'On' : 'Off · using white mode'}</small></span></div><PreferenceSwitch label="Dark Mode" checked={theme === 'dark'} onChange={toggleTheme}/></div>
                 <div className="reference-setting-row"><div><span className="reference-icon"><Sparkles size={24}/></span><span><strong>Enable Animations</strong><small>{animationsEnabled ? 'Flowing interactions' : 'Reduced motion'}</small></span></div><PreferenceSwitch label="Enable Animations" checked={animationsEnabled} onChange={handleToggleAnimations}/></div>
+                <div className="reference-setting-row"><div><span className="reference-icon"><AppIcon name="description" size={24}/></span><span><strong>Show logging labels</strong><small>{showLoggingLabels ? 'Icons and words, side by side' : 'Icons only; names stay accessible'}</small></span></div><PreferenceSwitch label="Show logging labels" checked={showLoggingLabels} onChange={() => updateShowLoggingLabels(!showLoggingLabels)}/></div>
                 <div className="reference-setting-row"><div><span className="reference-icon"><Waves size={24}/></span><span><strong>Solid Navbar Background</strong><small>{solidNavBg ? 'Opaque · solid color' : 'Soft glass · blur'}</small></span></div><PreferenceSwitch label="Solid Navbar Background" checked={solidNavBg} onChange={handleToggleSolidNav}/></div>
               </div>
               <button className="reference-card reference-theme-link" onClick={() => navigate('/settings/theme')}><ReferenceArt kind="leaves" className="reference-card-art"/><span className="reference-icon"><Palette size={25}/></span><span><strong>App Theme Color</strong><small>Customize appearance</small></span><ChevronRight size={20}/></button>

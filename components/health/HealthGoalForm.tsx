@@ -1,6 +1,9 @@
 import React, { useState } from "react";
 import { SpringModal } from "../ui/SpringModal";
 import { AppIcon } from "../ui/Icons";
+import { GardenDatePicker } from "../ui/GardenDatePicker";
+import { GardenSelect } from "../ui/GardenSelect";
+import { GardenChoiceField } from "../ui/GardenChoiceField";
 import {
   healthModes,
   modeLabels,
@@ -8,6 +11,14 @@ import {
   type HealthSettings,
 } from "../../lib/reproductiveHealth";
 import { localDateKey } from "../../lib/dates";
+const journeyIcons = {
+  cycle: "cycle",
+  contraception: "verified_user",
+  conceive: "eco",
+  pregnancy: "favorite",
+  postpartum: "medical_services",
+  perimenopause: "spa",
+};
 export function HealthGoalForm({
   settings,
   onSave,
@@ -23,6 +34,8 @@ export function HealthGoalForm({
   const pregnancy = s.pregnancy || { lmp: "", status: "active" as const };
   const submit = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (busy) return;
+    setError("");
     try {
       validateHealthSettings(s);
       setBusy(true);
@@ -34,6 +47,15 @@ export function HealthGoalForm({
       setBusy(false);
     }
   };
+  const pregnancyDate = (
+    key: "lmp" | "dueDate" | "outcomeDate",
+    value: string,
+  ) => set({ ...s, pregnancy: { ...pregnancy, [key]: value } });
+  const methodDate = (key: "started" | "review", value: string) =>
+    set({
+      ...s,
+      contraception: { method: "", ...s.contraception, [key]: value },
+    });
   return (
     <SpringModal
       open
@@ -54,6 +76,7 @@ export function HealthGoalForm({
           </p>
         </div>
         <button
+          type="button"
           aria-label="Close health goals"
           disabled={busy}
           onClick={onClose}
@@ -67,6 +90,7 @@ export function HealthGoalForm({
             <button
               key={mode}
               type="button"
+              disabled={busy}
               aria-pressed={s.mode === mode}
               onClick={() =>
                 set({
@@ -78,6 +102,7 @@ export function HealthGoalForm({
                 })
               }
             >
+              <AppIcon name={journeyIcons[mode]} size={25} />
               {modeLabels[mode]}
             </button>
           ))}
@@ -90,98 +115,62 @@ export function HealthGoalForm({
               the due date confirmed by your care team if available.
             </p>
             <div className="health-form-grid">
-              <label>
-                First day of last period
-                <input
-                  type="date"
-                  max={localDateKey()}
-                  value={pregnancy.lmp}
-                  onInput={(e) =>
-                    set({
-                      ...s,
-                      pregnancy: { ...pregnancy, lmp: e.currentTarget.value },
-                    })
-                  }
-                  onChange={(e) =>
-                    set({
-                      ...s,
-                      pregnancy: { ...pregnancy, lmp: e.target.value },
-                    })
-                  }
-                />
-              </label>
-              <label>
-                Clinician-adjusted due date, optional
-                <input
-                  type="date"
-                  value={pregnancy.dueDate || ""}
-                  onInput={(e) =>
-                    set({
-                      ...s,
-                      pregnancy: {
-                        ...pregnancy,
-                        dueDate: e.currentTarget.value,
-                      },
-                    })
-                  }
-                  onChange={(e) =>
-                    set({
-                      ...s,
-                      pregnancy: { ...pregnancy, dueDate: e.target.value },
-                    })
-                  }
-                />
-              </label>
-              <label>
-                Pregnancy status
-                <select
-                  value={pregnancy.status}
-                  onChange={(e) => {
-                    const status = e.target.value as typeof pregnancy.status;
-                    set({
-                      ...s,
-                      mode:
-                        status === "active" || status === "paused"
-                          ? "pregnancy"
-                          : "postpartum",
-                      pregnancy: { ...pregnancy, status },
-                    });
-                  }}
-                >
-                  <option value="active">Active pregnancy</option>
-                  <option value="paused">Pause pregnancy visuals</option>
-                  <option value="birth">Baby born</option>
-                  <option value="loss">Pregnancy loss</option>
-                  <option value="ended">Pregnancy ended</option>
-                </select>
-              </label>
+              <GardenDatePicker
+                label="First day of last period"
+                value={pregnancy.lmp}
+                max={localDateKey()}
+                disabled={busy}
+                onChange={(v) => pregnancyDate("lmp", v)}
+              />
+              <GardenDatePicker
+                label="Clinician-adjusted due date, optional"
+                value={pregnancy.dueDate || ""}
+                disabled={busy}
+                onChange={(v) => pregnancyDate("dueDate", v)}
+              />
+              <GardenSelect
+                label="Pregnancy status"
+                value={pregnancy.status}
+                disabled={busy}
+                onChange={(v) => {
+                  const status = v as typeof pregnancy.status;
+                  set({
+                    ...s,
+                    mode:
+                      status === "active" || status === "paused"
+                        ? "pregnancy"
+                        : "postpartum",
+                    pregnancy: { ...pregnancy, status },
+                  });
+                }}
+                options={[
+                  {
+                    value: "active",
+                    label: "Active pregnancy",
+                    icon: "favorite",
+                  },
+                  {
+                    value: "paused",
+                    label: "Pause pregnancy visuals",
+                    icon: "pause",
+                  },
+                  { value: "birth", label: "Baby born", icon: "person" },
+                  { value: "loss", label: "Pregnancy loss", icon: "spa" },
+                  {
+                    value: "ended",
+                    label: "Pregnancy ended",
+                    icon: "medical_services",
+                  },
+                ]}
+              />
               {["birth", "loss", "ended"].includes(pregnancy.status) && (
-                <label>
-                  Date, optional
-                  <input
-                    type="date"
-                    max={localDateKey()}
-                    value={pregnancy.outcomeDate || ""}
-                    onInput={(e) =>
-                      set({
-                        ...s,
-                        pregnancy: {
-                          ...pregnancy,
-                          outcomeDate: e.currentTarget.value,
-                        },
-                      })
-                    }
-                    onChange={(e) =>
-                      set({
-                        ...s,
-                        pregnancy: {
-                          ...pregnancy,
-                          outcomeDate: e.target.value,
-                        },
-                      })
-                    }
-                  />
-                </label>
+                <GardenDatePicker
+                  label="Date, optional"
+                  value={pregnancy.outcomeDate || ""}
+                  max={localDateKey()}
+                  disabled={busy}
+                  onChange={(v) => pregnancyDate("outcomeDate", v)}
+                />
               )}
             </div>
             <p className="health-muted">
@@ -196,91 +185,40 @@ export function HealthGoalForm({
           <fieldset>
             <legend>Your current method</legend>
             <div className="health-form-grid">
-              <label>
-                Method
-                <select
-                  value={s.contraception?.method || ""}
-                  onChange={(e) =>
-                    set({
-                      ...s,
-                      contraception: {
-                        ...s.contraception,
-                        method: e.target.value,
-                      },
-                    })
-                  }
-                >
-                  <option value="">Choose a method</option>
-                  {[
-                    "Condoms / barriers",
-                    "Combined pill",
-                    "Progestogen-only pill",
-                    "IUD / IUS",
-                    "Implant",
-                    "Injection",
-                    "Patch",
-                    "Vaginal ring",
-                    "Other",
-                    "None",
-                  ].map((x) => (
-                    <option key={x}>{x}</option>
-                  ))}
-                </select>
-              </label>
-              <label>
-                Started, optional
-                <input
-                  type="date"
+              <GardenChoiceField
+                label="Method"
+                value={s.contraception?.method || ""}
+                disabled={busy}
+                options={[
+                  "Condoms / barriers",
+                  "Combined pill",
+                  "Progestogen-only pill",
+                  "IUD / IUS",
+                  "Implant",
+                  "Injection",
+                  "Patch",
+                  "Vaginal ring",
+                  "Other",
+                  "None",
+                ]}
+                onChange={(method) =>
+                  set({ ...s, contraception: { ...s.contraception, method } })
+                }
+              />
+              <div className="garden-field-stack">
+                <GardenDatePicker
+                  label="Started, optional"
                   value={s.contraception?.started || ""}
-                  onInput={(e) =>
-                    set({
-                      ...s,
-                      contraception: {
-                        ...s.contraception,
-                        method: s.contraception?.method || "",
-                        started: e.currentTarget.value,
-                      },
-                    })
-                  }
-                  onChange={(e) =>
-                    set({
-                      ...s,
-                      contraception: {
-                        method: "",
-                        ...s.contraception,
-                        started: e.target.value,
-                      },
-                    })
-                  }
+                  disabled={busy}
+                  onChange={(v) => methodDate("started", v)}
                 />
-              </label>
-              <label>
-                Review / replacement date, as advised
-                <input
-                  type="date"
+                <GardenDatePicker
+                  label="Review / replacement date, as advised"
                   value={s.contraception?.review || ""}
-                  onInput={(e) =>
-                    set({
-                      ...s,
-                      contraception: {
-                        ...s.contraception,
-                        method: s.contraception?.method || "",
-                        review: e.currentTarget.value,
-                      },
-                    })
-                  }
-                  onChange={(e) =>
-                    set({
-                      ...s,
-                      contraception: {
-                        method: "",
-                        ...s.contraception,
-                        review: e.target.value,
-                      },
-                    })
-                  }
+                  disabled={busy}
+                  onChange={(v) => methodDate("review", v)}
                 />
-              </label>
+              </div>
             </div>
             <p className="health-muted">
               Set a private reminder separately. Do not use a calendar
@@ -294,7 +232,7 @@ export function HealthGoalForm({
           </p>
         )}
         <button type="submit" className="reference-button" disabled={busy}>
-          {busy ? "Saving…" : "Save my journey"}
+          {busy ? "Saving..." : "Save my journey"}
           <AppIcon name="check" size={20} />
         </button>
       </form>
