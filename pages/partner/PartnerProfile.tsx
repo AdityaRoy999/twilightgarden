@@ -1,3 +1,4 @@
+import {SymbolStyleSetting} from '../../components/ui/SymbolStyleSetting';
 import {PreferenceSwitch} from '../../components/ui/PreferenceSwitch';
 import { AppIcon } from '../../components/ui/Icons';
 import { uploadAvatar } from '../../lib/media';
@@ -412,6 +413,7 @@ const PartnerProfile: React.FC = () => {
                         </div>
 
                         <div className="reference-setting-row"><div><span className="reference-icon"><AppIcon name="description" size={24}/></span><span><strong>Show logging labels</strong><small>{showLoggingLabels ? 'Icons and words, side by side' : 'Icons only; names stay accessible'}</small></span></div><PreferenceSwitch label="Show logging labels" checked={showLoggingLabels} onChange={() => updateShowLoggingLabels(!showLoggingLabels)}/></div>
+                <SymbolStyleSetting/>
                         {/* Accent Color */}
                          <div className={`p-5 rounded-2xl shadow-sm border ${isDark ? 'bg-surface-dark border-white/5' : 'bg-white border-gray-100'}`}>
                             <h4 className={`font-bold mb-4 ${isDark ? 'text-white' : 'text-gray-900'}`}>Accent Color</h4>

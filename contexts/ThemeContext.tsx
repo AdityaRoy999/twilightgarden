@@ -4,6 +4,7 @@ import { MotionConfig, useReducedMotion } from 'framer-motion';
 import { accentAppearance } from '../lib/colorUtils';
 
 type Theme = 'dark' | 'light';
+export type HealthSymbolStyle = 'filled' | 'line';
 
 interface ThemeContextType {
   theme: Theme;
@@ -13,6 +14,8 @@ interface ThemeContextType {
   resetTheme: () => void;
   animationsEnabled: boolean;
   updateAnimationsEnabled: (enabled: boolean) => void;
+  healthSymbolStyle: HealthSymbolStyle;
+  updateHealthSymbolStyle: (style: HealthSymbolStyle) => void;
   showLoggingLabels: boolean;
   updateShowLoggingLabels: (show: boolean) => void;
   solidNavBg: boolean;
@@ -34,6 +37,8 @@ export const useTheme = () => {
         resetTheme: () => {},
         animationsEnabled: true,
         updateAnimationsEnabled: (e: boolean) => {},
+        healthSymbolStyle: 'filled' as HealthSymbolStyle,
+        updateHealthSymbolStyle: (_style: HealthSymbolStyle) => {},
         showLoggingLabels: true,
         updateShowLoggingLabels: (_show: boolean) => {},
         solidNavBg: false,
@@ -69,6 +74,15 @@ export const ThemeProvider: React.FC<{ children: React.ReactNode }> = ({ childre
       try { return localStorage.getItem('theme-animations') !== 'false'; }
       catch { return true; }
   });
+
+  const [healthSymbolStyle, setHealthSymbolStyle] = useState<HealthSymbolStyle>(() => {
+    try { return localStorage.getItem('theme-health-symbol-style') === 'line' ? 'line' : 'filled'; }
+    catch { return 'filled'; }
+  });
+  const updateHealthSymbolStyle = (style: HealthSymbolStyle) => {
+    setHealthSymbolStyle(style);
+    try { localStorage.setItem('theme-health-symbol-style', style); } catch {}
+  };
 
   const [showLoggingLabels, setShowLoggingLabels] = useState(() => {
     try { return localStorage.getItem('theme-logging-labels') !== 'false'; }
@@ -160,12 +174,13 @@ export const ThemeProvider: React.FC<{ children: React.ReactNode }> = ({ childre
       updateAnimationsEnabled(true);
       updateSolidNavBg(false);
       updateShowLoggingLabels(true);
+      updateHealthSymbolStyle('filled');
   };
 
   return (
     <ThemeContext.Provider value={{
       theme, toggleTheme, primaryColor, updatePrimaryColor, resetTheme,
-      animationsEnabled, updateAnimationsEnabled, solidNavBg, updateSolidNavBg, showLoggingLabels, updateShowLoggingLabels
+      animationsEnabled, updateAnimationsEnabled, solidNavBg, updateSolidNavBg, showLoggingLabels, updateShowLoggingLabels, healthSymbolStyle, updateHealthSymbolStyle
     }}>
       <MotionConfig reducedMotion={animationsEnabled ? "user" : "always"} skipAnimations={!animationsEnabled || systemReduced === true} transition={{ ...springs.modal, opacity: { duration: animationsEnabled && !systemReduced ? .14 : 0 } }}>
         {children}
