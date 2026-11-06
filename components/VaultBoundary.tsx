@@ -2,7 +2,7 @@ import React, { useState } from "react";
 import { useAuth } from "../contexts/AuthContext";
 import { useVault } from "../contexts/VaultContext";
 import { AppIcon } from "./ui/Icons";
-import {OnboardingArt} from './ui/OnboardingArt';
+import { WelcomeIllustration } from './WelcomeIllustration';
 const VaultRecoveryModal = React.lazy(() => import('./VaultRecoveryModal').then(module => ({ default: module.VaultRecoveryModal })));
 export function VaultBoundary({ children }: { children: React.ReactNode }) {
   const { user, signOut } = useAuth(),
@@ -42,8 +42,9 @@ export function VaultBoundary({ children }: { children: React.ReactNode }) {
   };
   return (
     <main className="privacy-center vault-onboarding safe-screen">
-      <section className="reference-card mx-auto w-full max-w-lg p-6 sm:p-9">
-        <OnboardingArt variant="vault"/>
+      <section className="reference-card vault-entry-card mx-auto w-full max-w-lg p-6 sm:p-9">
+        <WelcomeIllustration kind="vault" priority className="vault-entry-art"/>
+        <p className="vault-entry-eyebrow">YOUR PRIVATE GARDEN</p>
         <h1 className="mt-5 text-3xl font-bold">
           {vault.exists
             ? "Unlock your private space"
@@ -83,6 +84,7 @@ export function VaultBoundary({ children }: { children: React.ReactNode }) {
               onChange={(e) => setPassword(e.target.value)}
             />
           </label>
+          {vault.exists && <button type="button" className="vault-recovery-entry" disabled={busy} onClick={() => setRecovery(true)}><AppIcon name="key" size={19}/>Forgot backup password?<AppIcon name="arrow_forward" size={18}/></button>}
           {!vault.exists && (
             <>
               <label>
@@ -121,8 +123,8 @@ export function VaultBoundary({ children }: { children: React.ReactNode }) {
                 : "Create encrypted vault"}
           </button>
         </form>
-        {vault.exists && <button className="mt-4 min-h-11 underline" onClick={() => setRecovery(true)}>Forgot backup password?</button>}
-        <div className="mt-5 flex flex-wrap gap-5">
+        {vault.exists && <p className="vault-recovery-hint">Use an unlocked device to keep your records, or verify your email to start fresh.</p>}
+        <div className="vault-entry-footer mt-5 flex flex-wrap gap-5">
           <a href="#/privacy-controls">Privacy choices</a>
           <button onClick={() => void vault.refresh()}>Retry</button>
           <button onClick={() => void signOut()}>Sign out</button>

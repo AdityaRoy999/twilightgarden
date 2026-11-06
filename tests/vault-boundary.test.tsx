@@ -19,6 +19,9 @@ const value = vi.hoisted(() => ({
   create: vi.fn(),
 }));
 vi.mock("../contexts/VaultContext", () => ({ useVault: () => value }));
+vi.mock("../components/VaultRecoveryModal", () => ({
+  VaultRecoveryModal: () => <div role="dialog" aria-label="Recover your private space">Recovery choices</div>,
+}));
 vi.mock("../contexts/AuthContext", () => ({
   useAuth: () => ({ user: { id: "owner" }, signOut: vi.fn() }),
 }));
@@ -102,4 +105,7 @@ it("an existing vault offers restore only and preserves a wrong-password error",
   );
   expect(value.create).not.toHaveBeenCalled();
   expect(screen.queryByText("Private history")).toBeNull();
+  fireEvent.click(screen.getByRole('button', { name: 'Forgot backup password?' }));
+  expect(await screen.findByRole('dialog', { name: 'Recover your private space' })).toBeTruthy();
+  expect(value.create).not.toHaveBeenCalled();
 });

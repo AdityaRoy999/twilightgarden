@@ -13,6 +13,7 @@ export const springs = {
   sheet: physicalSpring(.38, .92),
   section: physicalSpring(.32, 1),
   selection: physicalSpring(.3, .88),
+  onboarding: physicalSpring(.44, .9),
 };
 export function motionTransition(spring: Transition, reduce: boolean): Transition { return reduce ? { duration: 0 } : spring; }
 

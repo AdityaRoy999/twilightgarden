@@ -8,7 +8,6 @@ vi.mock('../contexts/DataContext',()=>({useData:()=>({updateSettings:mocks.updat
 vi.mock('../contexts/AuthContext',()=>({useAuth:()=>({user:{role:'user'}})}));
 vi.mock('../hooks/useAppMotion',()=>({useAppMotion:()=>({reduced:true})}));
 vi.mock('../hooks/useToday',()=>({useToday:()=> '2026-10-26'}));
-vi.mock('framer-motion',()=>({AnimatePresence:({children}:{children:React.ReactNode})=><>{children}</>,motion:{div:({children}:{children:React.ReactNode})=><div>{children}</div>}}));
 import Onboarding from '../pages/Onboarding';
 const show=()=>render(<MemoryRouter initialEntries={['/onboarding']}><Routes><Route path="/onboarding" element={<Onboarding/>}/><Route path="/" element={<p>Setup complete</p>}/></Routes></MemoryRouter>);
 beforeEach(()=>{vi.useFakeTimers();vi.setSystemTime(new Date('2026-10-26T12:00:00Z'));mocks.updateSettings.mockReset().mockResolvedValue(undefined);});
