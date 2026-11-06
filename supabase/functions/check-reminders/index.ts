@@ -1,4 +1,5 @@
 import {retryAccountDeletions} from '../_shared/accountDeletion.ts';
+import {retryVaultResets} from '../_shared/vaultReset.ts';
 import { adminClient, corsHeaders, isInternal, json } from '../_shared/security.ts';
 import {retryChatCleanup} from '../_shared/chatCleanup.ts';
 
@@ -9,6 +10,7 @@ Deno.serve(async (req: Request) => {
   const db=adminClient();
   try {
     await retryAccountDeletions(db);
+    await retryVaultResets(db);
     await retryChatCleanup(db);
     // Health dates and preferences are E2EE. Scheduling happens on the owner's
     // device; the service must never decrypt or infer a personal period reminder.

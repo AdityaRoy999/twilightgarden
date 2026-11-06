@@ -38,7 +38,32 @@ this does not protect an unlocked application against malicious same-origin
 code, browser extensions or an attacker controlling the device. Logout clears
 unlocked keys and decrypted avatar URLs. Remembered keys remain device-protected
 for later login, bound to account/data/vault epochs. A new device needs the backup
-password. There is no administrator decryption or forgotten-password recovery.
+password or approval from an already unlocked same-account device. There is no
+administrator decryption or email-only recovery of existing encrypted data.
+
+The new device displays a random 16-character (80-bit) pairing secret for five
+minutes. Only its SHA-256 hash, ephemeral public key and request metadata reach
+the service. Entering that secret on the unlocked device authorizes a P-256
+ECDH/HKDF-SHA-256/AES-GCM transfer of the entire vault, bound to the account,
+epoch and request ID. The server never receives the plaintext pairing secret or
+vault keys. Requests cannot approve themselves, cross accounts, survive reset,
+or be consumed twice. Both devices must be signed in; the trusted device must
+have the vault unlocked. This is foreground device approval, not SMS or a
+closed-app push approval. An unlocked device can rewrap the same keys with a
+new backup password without knowing the forgotten one; the old password stops
+opening the current server backup. Copies of an older backup are not recalled.
+
+Without an unlocked device, a separately confirmed email OTP permits an
+irreversible encrypted-data reset, not decryption. The server verifies the OTP
+against the authenticated account, checks the expected epoch, revokes all
+sessions, disconnects the relationship and retries physical storage cleanup
+before completing reset. Personal encrypted records, backups and keys and shared
+chat/media/games are removed; the peer's independent vault remains. Login,
+age/consent evidence and rights requests survive. Completed reset jobs expire
+after seven days. A fresh sign-in creates a fresh vault/password. Retired local
+vault bundles are removed when the app next loads the account's current epoch;
+offline or exported copies cannot be remotely recalled. Email delivery requires
+the Supabase Magic Link template to include `{{ .Token }}` and a working sender.
 
 Each account has one backup password for private records and chat. Chat recovery
 keys are wrapped with the personal master key in an owner-only envelope, bound to

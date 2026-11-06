@@ -39,3 +39,14 @@ it("wraps browser credentials with a non-extractable key, without using localSto
   await DeviceSecrets.remove("account-secret-a");
   expect(await DeviceSecrets.get("account-secret-a")).toBeNull();
 });
+it('removes retired account vault keys without touching another account or the current epoch', async () => {
+  await DeviceSecrets.set('personal-vault:data:alice:old', 'old vault');
+  await DeviceSecrets.set('personal-vault:data:alice:new', 'new vault');
+  await DeviceSecrets.set('personal-vault:data:bob:old', 'other account');
+  await DeviceSecrets.forgetVaults('alice', 'new');
+  expect(await DeviceSecrets.get('personal-vault:data:alice:old')).toBeNull();
+  expect(await DeviceSecrets.get('personal-vault:data:alice:new')).toBe('new vault');
+  expect(await DeviceSecrets.get('personal-vault:data:bob:old')).toBe('other account');
+  await DeviceSecrets.forgetVaults('alice');
+  expect(await DeviceSecrets.get('personal-vault:data:alice:new')).toBeNull();
+});

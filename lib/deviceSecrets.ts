@@ -73,6 +73,21 @@ async function deviceKey() {
   }));
 }
 export const DeviceSecrets = {
+  async forgetVaults(userId: string, keepEpoch?: string) {
+    const belongs = (key: string) => key.startsWith('personal-vault:') && key.includes(`:${userId}:`) && (!keepEpoch || !key.endsWith(`:${keepEpoch}`));
+    if (Capacitor.isNativePlatform()) {
+      for (const key of (await SecureStoragePlugin.keys()).value) if (belongs(key)) await SecureStoragePlugin.remove({ key });
+      return;
+    }
+    const db = await database();
+    try {
+      await new Promise<void>((resolve, reject) => {
+        const tx = db.transaction('secrets', 'readwrite'), store = tx.objectStore('secrets'), request = store.openCursor();
+        request.onsuccess = () => { const cursor = request.result; if (cursor) { if (typeof cursor.key === 'string' && belongs(cursor.key)) cursor.delete(); cursor.continue(); } };
+        tx.oncomplete = () => resolve(); tx.onerror = () => reject(tx.error); tx.onabort = () => reject(tx.error);
+      });
+    } finally { db.close(); }
+  },
   async get(key: string): Promise<string | null> {
     if (Capacitor.isNativePlatform()) {
       try {

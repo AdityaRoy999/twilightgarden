@@ -3,6 +3,7 @@ import { useAuth } from "../contexts/AuthContext";
 import { useVault } from "../contexts/VaultContext";
 import { AppIcon } from "./ui/Icons";
 import {OnboardingArt} from './ui/OnboardingArt';
+const VaultRecoveryModal = React.lazy(() => import('./VaultRecoveryModal').then(module => ({ default: module.VaultRecoveryModal })));
 export function VaultBoundary({ children }: { children: React.ReactNode }) {
   const { user, signOut } = useAuth(),
     vault = useVault();
@@ -12,6 +13,7 @@ export function VaultBoundary({ children }: { children: React.ReactNode }) {
     [saved, setSaved] = useState(false),
     [busy, setBusy] = useState(false),
     [error, setError] = useState("");
+  const [recovery, setRecovery] = useState(false);
   if (!user || vault.ready) return <>{children}</>;
   if (vault.loading)
     return (
@@ -119,12 +121,14 @@ export function VaultBoundary({ children }: { children: React.ReactNode }) {
                 : "Create encrypted vault"}
           </button>
         </form>
+        {vault.exists && <button className="mt-4 min-h-11 underline" onClick={() => setRecovery(true)}>Forgot backup password?</button>}
         <div className="mt-5 flex flex-wrap gap-5">
           <a href="#/privacy-controls">Privacy choices</a>
           <button onClick={() => void vault.refresh()}>Retry</button>
           <button onClick={() => void signOut()}>Sign out</button>
         </div>
       </section>
+      {recovery && <React.Suspense fallback={null}><VaultRecoveryModal open onClose={() => setRecovery(false)}/></React.Suspense>}
     </main>
   );
 }
