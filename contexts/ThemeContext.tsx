@@ -13,6 +13,8 @@ interface ThemeContextType {
   resetTheme: () => void;
   animationsEnabled: boolean;
   updateAnimationsEnabled: (enabled: boolean) => void;
+  showLoggingLabels: boolean;
+  updateShowLoggingLabels: (show: boolean) => void;
   solidNavBg: boolean;
   updateSolidNavBg: (solid: boolean) => void;
 }
@@ -32,6 +34,8 @@ export const useTheme = () => {
         resetTheme: () => {},
         animationsEnabled: true,
         updateAnimationsEnabled: (e: boolean) => {},
+        showLoggingLabels: true,
+        updateShowLoggingLabels: (_show: boolean) => {},
         solidNavBg: false,
         updateSolidNavBg: (s: boolean) => {}
     };
@@ -65,6 +69,15 @@ export const ThemeProvider: React.FC<{ children: React.ReactNode }> = ({ childre
       try { return localStorage.getItem('theme-animations') !== 'false'; }
       catch { return true; }
   });
+
+  const [showLoggingLabels, setShowLoggingLabels] = useState(() => {
+    try { return localStorage.getItem('theme-logging-labels') !== 'false'; }
+    catch { return true; }
+  });
+  const updateShowLoggingLabels = (show: boolean) => {
+    setShowLoggingLabels(show);
+    try { localStorage.setItem('theme-logging-labels', String(show)); } catch {}
+  };
 
   const [solidNavBg, setSolidNavBg] = useState<boolean>(() => {
       try { return localStorage.getItem('theme-solid-nav') === 'true'; }
@@ -146,12 +159,13 @@ export const ThemeProvider: React.FC<{ children: React.ReactNode }> = ({ childre
       setTheme('light');
       updateAnimationsEnabled(true);
       updateSolidNavBg(false);
+      updateShowLoggingLabels(true);
   };
 
   return (
     <ThemeContext.Provider value={{
       theme, toggleTheme, primaryColor, updatePrimaryColor, resetTheme,
-      animationsEnabled, updateAnimationsEnabled, solidNavBg, updateSolidNavBg
+      animationsEnabled, updateAnimationsEnabled, solidNavBg, updateSolidNavBg, showLoggingLabels, updateShowLoggingLabels
     }}>
       <MotionConfig reducedMotion={animationsEnabled ? "user" : "always"} skipAnimations={!animationsEnabled || systemReduced === true} transition={{ ...springs.modal, opacity: { duration: animationsEnabled && !systemReduced ? .14 : 0 } }}>
         {children}

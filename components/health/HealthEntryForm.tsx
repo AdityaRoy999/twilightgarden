@@ -1,3 +1,7 @@
+import { GardenCheckbox } from "../ui/GardenCheckbox";
+import { GardenChoiceField } from "../ui/GardenChoiceField";
+import { GardenDatePicker } from "../ui/GardenDatePicker";
+import { GardenTimePicker } from "../ui/GardenTimePicker";
 import React, { useState } from "react";
 import { AppIcon } from "../ui/Icons";
 import { SpringModal } from "../ui/SpringModal";
@@ -95,62 +99,77 @@ export function HealthEntryForm({
       </header>
       <form onSubmit={submit}>
         <div className="health-form-grid">
-          <label>
-            Journal date
-            <input
-              type="date"
-              required
-              max={localDateKey()}
-              value={value.date}
-              onInput={(e) => {
-                const date = e.currentTarget.value;
-                setValue((old) => ({ ...old, date }));
-              }}
-              onChange={(e) => setValue({ ...value, date: e.target.value })}
-            />
-          </label>
+          <GardenDatePicker
+            label="Journal date"
+            value={value.date}
+            max={localDateKey()}
+            disabled={busy}
+            onChange={(date) => setValue((old) => ({ ...old, date }))}
+          />
           <label>
             Title, optional
             <input
+              disabled={busy}
               value={value.title}
               maxLength={120}
               onChange={(e) => setValue({ ...value, title: e.target.value })}
             />
           </label>
-          {spec.fields.map((f) => (
-            <label key={f.key}>
-              {f.label}
-              {f.type === "select" ? (
-                <select
-                  value={String(value.values[f.key] ?? "")}
-                  onChange={(e) => field(f.key, e.target.value, f.type)}
-                >
-                  <option value="">Choose, or leave unrecorded</option>
-                  {f.options!.map((o) => (
-                    <option key={o}>{o}</option>
-                  ))}
-                </select>
-              ) : (
+          {spec.fields.map((f) => {
+            const current = String(value.values[f.key] ?? "");
+            const change = (input: string) => field(f.key, input, f.type);
+            if (f.type === "select")
+              return (
+                <GardenChoiceField
+                  key={f.key}
+                  label={f.label}
+                  value={current}
+                  options={f.options!}
+                  onChange={change}
+                  context={f.key}
+                  disabled={busy}
+                />
+              );
+            if (f.type === "date")
+              return (
+                <GardenDatePicker
+                  key={f.key}
+                  label={f.label}
+                  value={current}
+                  onChange={change}
+                  disabled={busy}
+                />
+              );
+            if (f.type === "time")
+              return (
+                <GardenTimePicker
+                  key={f.key}
+                  label={f.label}
+                  value={current}
+                  onChange={change}
+                  disabled={busy}
+                />
+              );
+            return (
+              <label key={f.key}>
+                {f.label}
                 <input
+                  disabled={busy}
                   type={f.type}
                   min={f.min}
                   max={f.max}
                   step={f.step}
                   maxLength={500}
-                  value={String(value.values[f.key] ?? "")}
-                  onInput={
-                    f.type === "date" || f.type === "time"
-                      ? (e) => field(f.key, e.currentTarget.value, f.type)
-                      : undefined
-                  }
-                  onChange={(e) => field(f.key, e.target.value, f.type)}
+                  value={current}
+                  onChange={(e) => change(e.target.value)}
                 />
-              )}
-            </label>
-          ))}
+              </label>
+            );
+          })}
           <label className="health-full">
             Private notes
             <textarea
+              disabled={busy}
               maxLength={2000}
               rows={3}
               value={value.notes}
@@ -158,29 +177,26 @@ export function HealthEntryForm({
             />
           </label>
         </div>
-        <label className="health-check">
-          <input
-            type="checkbox"
-            checked={value.shareWithPartner}
-            disabled={!canShare && !value.shareWithPartner}
-            onChange={(e) =>
-              setValue({
-                ...value,
-                shareWithPartner: e.target.checked,
-                shareCoupleId: e.target.checked ? coupleId : undefined,
-              })
-            }
-          />
-          <span>
-            <strong>Share this entry with my linked partner</strong>
-            <small>
-              {canShare
-                ? "Only this entry, for this connection. Existing health-sharing consent must remain enabled."
-                : "Private by default. Enable health sharing in Privacy & safety and connect to share."}{" "}
-              Previously viewed copies cannot be recalled.
-            </small>
-          </span>
-        </label>
+        <GardenCheckbox
+          className="health-check"
+          checked={value.shareWithPartner}
+          disabled={busy || (!canShare && !value.shareWithPartner)}
+          onChange={(checked) =>
+            setValue({
+              ...value,
+              shareWithPartner: checked,
+              shareCoupleId: checked ? coupleId : undefined,
+            })
+          }
+        >
+          <strong>Share this entry with my linked partner</strong>
+          <small>
+            {canShare
+              ? "Only this entry, for this connection. Existing health-sharing consent must remain enabled."
+              : "Private by default. Enable health sharing in Privacy & safety and connect to share."}{" "}
+            Previously viewed copies cannot be recalled.
+          </small>
+        </GardenCheckbox>
         {alerts.map((a) => (
           <aside
             key={a.text}

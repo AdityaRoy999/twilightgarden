@@ -1,4 +1,5 @@
 import React from 'react';
+import {useTheme} from '../../contexts/ThemeContext';
 
 export interface SymptomOption {
   id: string;
@@ -19,6 +20,7 @@ export const SymptomSelector: React.FC<SymptomSelectorProps> = ({
   onChange, 
   multiSelect = true 
 }) => {
+  const {showLoggingLabels=true}=useTheme();
   const toggleSelection = (id: string) => {
     if (multiSelect) {
       if (selected.includes(id)) {
@@ -32,10 +34,10 @@ export const SymptomSelector: React.FC<SymptomSelectorProps> = ({
   };
 
   return (
-    <div className="symptom-options">
+    <div className="symptom-options" data-labels={showLoggingLabels}>
       {options.map(option => {
         const isSelected = selected.includes(option.id);
-        return <button key={option.id} type="button" aria-pressed={isSelected} onClick={() => toggleSelection(option.id)} className="symptom-option"><span className="symptom-option-symbol" aria-hidden="true">{option.icon}</span><span>{option.label}</span></button>;
+        return <button key={option.id} type="button" aria-pressed={isSelected} aria-label={option.label} title={showLoggingLabels?undefined:option.label} onClick={() => toggleSelection(option.id)} className="symptom-option"><span className="symptom-option-symbol" aria-hidden="true">{option.icon}</span>{showLoggingLabels&&<span>{option.label}</span>}</button>;
       })}
     </div>
   );

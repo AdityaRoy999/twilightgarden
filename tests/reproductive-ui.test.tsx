@@ -1,3 +1,4 @@
+import { parseDateKey } from "../lib/dates";
 // @vitest-environment jsdom
 import React from "react";
 import {
@@ -6,6 +7,7 @@ import {
   fireEvent,
   waitFor,
   cleanup,
+  within,
 } from "@testing-library/react";
 import { afterEach, it, expect, vi } from "vitest";
 import { MemoryRouter } from "react-router-dom";
@@ -101,9 +103,10 @@ it("pausing pregnancy hides visuals while retaining the pregnancy mode and histo
       onClose={() => {}}
     />,
   );
-  fireEvent.change(screen.getByLabelText("Pregnancy status"), {
-    target: { value: "paused" },
-  });
+  fireEvent.click(screen.getByRole("combobox", { name: /Pregnancy status/ }));
+  fireEvent.click(
+    screen.getByRole("option", { name: "Pause pregnancy visuals" }),
+  );
   fireEvent.click(screen.getByRole("button", { name: "Save my journey" }));
   await waitFor(() => expect(save).toHaveBeenCalledOnce());
   expect(save.mock.calls[0][0]).toMatchObject({
@@ -112,7 +115,7 @@ it("pausing pregnancy hides visuals while retaining the pregnancy mode and histo
   });
 });
 
-it("retains native date and time input when submitting a reminder", async () => {
+it("retains custom calendar and time choices when submitting a reminder", async () => {
   const save = vi.fn().mockResolvedValue(undefined);
   render(
     <HealthEntryForm
@@ -122,12 +125,35 @@ it("retains native date and time input when submitting a reminder", async () => 
       canShare={false}
     />,
   );
-  fireEvent.input(screen.getByLabelText("Next date"), {
-    target: { value: "2027-01-15" },
-  });
-  fireEvent.input(screen.getByLabelText("Local time"), {
-    target: { value: "09:30" },
-  });
+  fireEvent.click(screen.getByRole("button", { name: /Next date/ }));
+  const calendar = screen.getByRole("region", { name: "Next date calendar" });
+  fireEvent.click(calendar.querySelector(".garden-calendar-caption")!);
+  fireEvent.click(calendar.querySelector(".garden-calendar-caption")!);
+  fireEvent.click(within(calendar).getByRole("button", { name: "2027" }));
+  fireEvent.click(within(calendar).getByRole("button", { name: "Jan" }));
+  fireEvent.click(
+    within(calendar).getByRole("button", {
+      name: parseDateKey("2027-01-15").toLocaleDateString(undefined, {
+        weekday: "long",
+        month: "long",
+        day: "numeric",
+        year: "numeric",
+      }),
+    }),
+  );
+  fireEvent.click(screen.getByRole("button", { name: /Local time/ }));
+  fireEvent.click(
+    within(screen.getByRole("group", { name: "Choose hour" })).getByRole(
+      "button",
+      { name: "09" },
+    ),
+  );
+  fireEvent.click(
+    within(screen.getByRole("group", { name: "Choose minute" })).getByRole(
+      "button",
+      { name: "30" },
+    ),
+  );
   fireEvent.click(screen.getByRole("button", { name: "Save encrypted entry" }));
   await waitFor(() => expect(save).toHaveBeenCalledOnce());
   expect(save.mock.calls[0][0].values).toMatchObject({
