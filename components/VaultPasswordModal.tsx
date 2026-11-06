@@ -2,6 +2,7 @@ import React, { useEffect, useState } from "react";
 import { useVault } from "../contexts/VaultContext";
 import { SpringModal } from "./ui/SpringModal";
 import { AppIcon } from "./ui/Icons";
+const VaultDeviceApprovalModal = React.lazy(() => import('./VaultDeviceApproval').then(module => ({ default: module.VaultDeviceApprovalModal })));
 export function VaultPasswordModal({
   isOpen,
   onClose,
@@ -11,7 +12,8 @@ export function VaultPasswordModal({
   onClose: () => void;
   onApproveDevice?: (code: string) => Promise<void>;
 }) {
-  const { changePassword } = useVault();
+  const { changePassword, recoverPassword } = useVault();
+  const [forgot, setForgot] = useState(false), [approveAccount, setApproveAccount] = useState(false);
   const [current, setCurrent] = useState(""),
     [password, setPassword] = useState(""),
     [confirmation, setConfirmation] = useState("");
@@ -30,6 +32,7 @@ export function VaultPasswordModal({
     setShowLink(false);
     setCode("");
     setLinked(false);
+    setForgot(false); setApproveAccount(false);
   }, [isOpen]);
   const approve = async () => {
     if (busy || !onApproveDevice) return;
@@ -64,7 +67,8 @@ export function VaultPasswordModal({
     }
     setBusy(true);
     try {
-      await changePassword(current, password);
+      if (forgot) await recoverPassword(password);
+      else await changePassword(current, password);
       setDone(true);
       setCurrent("");
       setPassword("");
@@ -89,7 +93,7 @@ export function VaultPasswordModal({
       <button
         type="button"
         aria-label="Close"
-        className="reference-circle ml-auto"
+        className="vault-panel-close"
         onClick={onClose}
         disabled={busy}
       >
@@ -121,7 +125,7 @@ export function VaultPasswordModal({
           onSubmit={(event) => void submit(event)}
           className="flex flex-col gap-4"
         >
-          <label>
+          {!forgot && <label>
             Current backup password
             <input
               required
@@ -130,7 +134,9 @@ export function VaultPasswordModal({
               value={current}
               onChange={(e) => setCurrent(e.target.value)}
             />
-          </label>
+          </label>}
+          <button type="button" className="min-h-11 underline text-left" disabled={busy} onClick={() => { setForgot(!forgot); setError(''); setCurrent(''); }}>{forgot ? 'Use my current backup password' : 'I forgot my current password'}</button>
+          {forgot && <p>This unlocked device holds your keys. You can replace the backup password here without deleting your records. Anyone with access to this unlocked device can do this.</p>}
           <label>
             New backup password
             <input
@@ -161,6 +167,8 @@ export function VaultPasswordModal({
           </button>
         </form>
       )}
+      {!done && <button type="button" className="mt-5 min-h-11 underline" disabled={busy} onClick={() => setApproveAccount(true)}>Approve another device</button>}
+      {approveAccount && <React.Suspense fallback={null}><VaultDeviceApprovalModal open onClose={() => setApproveAccount(false)}/></React.Suspense>}
       {!done && onApproveDevice && (
         <div className="mt-5">
           <button

@@ -31,6 +31,7 @@ import ErrorBoundary from './components/ErrorBoundary';
 // KeySyncWrapper removed in favor of Signal-style multi-device sync
 
 // Lazy-loaded components for code splitting
+const VaultDeviceApprovalNotice = React.lazy(() => import('./components/VaultDeviceApproval').then(module => ({default: module.VaultDeviceApprovalNotice})));
 const Welcome = React.lazy(() => import('./pages/Welcome'));
 const Login = React.lazy(() => import('./pages/Login'));
 const SignUp = React.lazy(() => import('./pages/SignUp'));
@@ -457,6 +458,7 @@ const App: React.FC = () => {
           <VaultProvider>
           <PrivacyBoundary>
           <VaultBoundary>
+          <React.Suspense fallback={null}><VaultDeviceApprovalNotice/></React.Suspense>
           <CouplesProvider>
             <NotificationProvider>
           <CallProvider>

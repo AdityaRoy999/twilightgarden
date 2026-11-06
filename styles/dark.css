@@ -127,3 +127,7 @@
 :root.dark .journal-sleep-ticks i[data-filled='true'] { background: #f56da5; }
 :root.dark .journal-chips button { background: #35243e; color: #c0b8db; }
 :root.dark .journal-chips button[aria-pressed='true'] { background: #743653; color: #ffd3e7; }
+
+:root.dark .welcome-art { background: radial-gradient(ellipse at 50% 60%,#51304755,transparent 75%),var(--dark-card); }
+:root.dark .vault-entry-card { background: radial-gradient(ellipse at 50% 0%,#63364a24,transparent 60%),var(--dark-card); }
+:root.dark :is(.vault-recovery-entry, .onboarding-eyebrow) { color: var(--selection-ink); }

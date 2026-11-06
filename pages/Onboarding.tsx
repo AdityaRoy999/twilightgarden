@@ -1,9 +1,8 @@
-import React, { useState } from "react";
+import React, { useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
 import { AppIcon } from "../components/ui/Icons";
 import {
-  OnboardingArt,
   OnboardingBotanicals,
 } from "../components/ui/OnboardingArt";
 import { CycleDial } from "../components/ui/CycleDial";
@@ -13,6 +12,7 @@ import { useData } from "../contexts/DataContext";
 import { useAuth } from "../contexts/AuthContext";
 import { useAppMotion } from "../hooks/useAppMotion";
 import { springs, motionTransition } from "../lib/motion";
+import { WelcomeIllustration } from "../components/WelcomeIllustration";
 
 export default function Onboarding() {
   const navigate = useNavigate(),
@@ -27,6 +27,10 @@ export default function Onboarding() {
     [loading, setLoading] = useState(false),
     [saveError, setSaveError] = useState(""),
     [viewDate, setViewDate] = useState(new Date());
+  const headingRef = useRef<HTMLHeadingElement>(null);
+  React.useEffect(() => {
+    if (step > 0) headingRef.current?.focus({ preventScroll: true });
+  }, [step]);
   React.useEffect(() => {
     if (user?.role === "partner")
       navigate("/partner/dashboard", { replace: true });
@@ -86,26 +90,26 @@ export default function Onboarding() {
           <AppIcon name="arrow_back" size={24} />
         </button>
         <span>YOUR RHYTHM, YOUR PACE</span>
+        <small>{step === 0 ? 'Personal setup' : `${step} of 3`}</small>
       </header>
+      <div className="onboarding-step-track" aria-hidden="true">
+        {[1,2,3].map(n => <span key={n} data-complete={step >= n}/>)}
+      </div>
       <motion.div
         key={step}
         className="onboarding-stage"
-        initial={reduced ? false : { opacity: 0, y: 10 }}
+        data-step={step}
+        initial={reduced ? false : { opacity: .35, y: 14 }}
         animate={{ opacity: 1, y: 0 }}
-        transition={motionTransition(springs.section, reduced)}
+        transition={motionTransition(springs.onboarding, reduced)}
       >
-        <OnboardingArt
-          variant={
-            step === 0
-              ? "welcome"
-              : step === 2
-                ? "cycle"
-                : step === 3
-                  ? "period"
-                  : "privacy"
-          }
-        />
-        <h1>{heading}</h1>
+        <div className="onboarding-visual">
+          <WelcomeIllustration kind={step === 0 ? 'care' : 'cycle'} priority/>
+          <p>{step === 0 ? 'A space to feel like yourself.' : 'Every body has its own rhythm.'}</p>
+        </div>
+        <div className="onboarding-details">
+        <span className="onboarding-eyebrow">{step === 0 ? 'WELCOME TO YOUR GARDEN' : step === 1 ? 'A LITTLE HISTORY' : step === 2 ? 'YOUR CYCLE' : 'YOUR PERIOD'}</span>
+        <h1 ref={headingRef} tabIndex={-1}>{heading}</h1>
         <p className="onboarding-intro">{subtitle}</p>
         {step === 1 && (
           <section
@@ -186,8 +190,10 @@ export default function Onboarding() {
             {saveError}
           </p>
         )}
-        <button
+        <motion.button
           className="reference-button onboarding-continue"
+          whileTap={reduced ? undefined : { scale: .98 }}
+          transition={motionTransition(springs.selection, reduced)}
           disabled={loading || (step === 1 && !lastPeriodDate)}
           onClick={() => (step === 3 ? void finish() : setStep((s) => s + 1))}
         >
@@ -202,7 +208,7 @@ export default function Onboarding() {
             name={loading ? "progress_activity" : "arrow_forward"}
             size={23}
           />
-        </button>
+        </motion.button>
         <div
           className="onboarding-progress"
           aria-label={step === 0 ? "Getting started" : `Step ${step} of 3`}
@@ -216,6 +222,7 @@ export default function Onboarding() {
           <p>
             {step === 0 ? "A little more in tune with you" : `${step} of 3`}
           </p>
+        </div>
         </div>
       </motion.div>
     </main>

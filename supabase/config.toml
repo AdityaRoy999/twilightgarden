@@ -1,5 +1,9 @@
 project_id = "twilightgarden"
 
+[auth.email.template.magic_link]
+subject = "Your Twilight verification code"
+content_path = "./supabase/templates/magic-link.html"
+
 # Each handler validates the user JWT or internal webhook credential itself.
 # The platform's legacy JWT gateway cannot validate the internal Vault secret.
 [functions.ai-generate]
@@ -21,4 +25,6 @@ verify_jwt = false
 [functions.couple-action]
 verify_jwt = false
 [functions.privacy-action]
+verify_jwt = false
+[functions.vault-recovery]
 verify_jwt = false

@@ -42,6 +42,9 @@ type Value = {
     currentPassword: string,
     newPassword: string,
   ) => Promise<void>;
+  recoverPassword: (newPassword: string) => Promise<void>;
+  acceptDevice: (bundle: VaultBundle) => Promise<void>;
+  epoch: string | null;
 };
 const Context = createContext<Value | null>(null);
 export function VaultProvider({ children }: { children: React.ReactNode }) {
@@ -95,6 +98,8 @@ export function VaultProvider({ children }: { children: React.ReactNode }) {
       if (error) throw error;
       if (!alive.current || revision !== version.current) return;
       const value = data as unknown as VaultRow | null;
+      await DeviceSecrets.forgetVaults(user.id, value?.epoch);
+      if (!alive.current || revision !== version.current) return;
       setRow(value);
       if (value) {
         const saved = await DeviceSecrets.get(rememberKey(value.epoch));
@@ -165,6 +170,28 @@ export function VaultProvider({ children }: { children: React.ReactNode }) {
     if (update.error) throw update.error;
     if (alive.current && revision === version.current)
       setRow({ ...latest, backup });
+  };
+  const recoverPassword = async (newPassword: string) => {
+    const bundle = optionalVault();
+    if (!user || !ready || bundle?.userId !== user.id) throw new Error('Use an already unlocked device.');
+    const revision = version.current;
+    const latest = await rawSupabase.from('account_vaults' as any).select('*').eq('user_id', user.id).single();
+    if (latest.error) throw latest.error;
+    const value = latest.data as unknown as VaultRow;
+    if (value.epoch !== bundle.epoch || value.public_key.x !== bundle.publicKey.x || value.public_key.y !== bundle.publicKey.y) throw new Error('Vault changed. Sign in again.');
+    const backup = await backupBundle(bundle, newPassword);
+    if (!alive.current || revision !== version.current) throw new DOMException('Account changed', 'AbortError');
+    const result = await (rawSupabase.rpc as any)('change_vault_backup', { p_epoch: bundle.epoch, p_backup: backup, p_previous: value.backup });
+    if (result.error) throw result.error;
+    if (alive.current && revision === version.current) setRow({ ...value, backup });
+  };
+  const acceptDevice = async (bundle: VaultBundle) => {
+    if (!row || !user || bundle.userId !== user.id || bundle.epoch !== row.epoch || bundle.publicKey.x !== row.public_key.x || bundle.publicKey.y !== row.public_key.y) throw new Error('Vault changed. Generate another device code.');
+    // Recheck server epoch after the transfer, so a reset during approval cannot
+    // reinstall retired keys, even when the response was already in flight.
+    const latest = await rawSupabase.from('account_vaults' as any).select('epoch').eq('user_id', user.id).single();
+    if (latest.error || (latest.data as any)?.epoch !== bundle.epoch) throw new Error('Vault changed. Sign in again.');
+    await activate(bundle);
   };
   useEffect(() => {
     alive.current = true;
@@ -299,6 +326,9 @@ export function VaultProvider({ children }: { children: React.ReactNode }) {
         unlock,
         create,
         changePassword,
+        recoverPassword,
+        acceptDevice,
+        epoch: row?.epoch ?? null,
       }}
     >
       {children}
