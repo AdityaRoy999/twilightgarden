@@ -757,3 +757,36 @@ html, body, #root { max-width:100%; overflow-x:clip; overscroll-behavior-x:none;
 
 .garden-choice-art,.symptom-option-symbol {position:relative}
 :is(.garden-choices>button,.symptom-option):focus-visible :is(.garden-choice-art,.symptom-option-symbol):after {content:'';position:absolute;bottom:3px;left:50%;translate:-50% 0;width:16px;height:2px;border-radius:2px;background:currentColor}
+
+/* Health artwork preference affects original symbols only, never Solar or message emoji. */
+.choice-symbol[data-symbol-style=line] [fill="currentColor"] {fill:none;stroke:currentColor;stroke-width:1.8}
+.choice-symbol[data-symbol-style=line] [fill-opacity] {fill-opacity:0}
+.symbol-style-setting {gap:20px;flex-wrap:wrap}
+.symbol-style-options {display:grid!important;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;min-width:220px;flex-shrink:0}
+.symbol-style-options>button {display:flex;align-items:center;justify-content:center;gap:9px;min-height:58px;min-width:0;padding:10px 15px;border:0;border-radius:17px;background:var(--bloom-muted-surface);color:var(--text-secondary);font-size:.86rem;font-weight:650;transition:background-color .16s,color .16s}
+.symbol-style-options>button>.log-symbol {width:30px;height:30px;flex-shrink:0}
+.symbol-style-options>button[aria-checked=true] {background:var(--selection-bg);color:var(--selection-ink)}
+.symbol-style-options>button:focus-visible {outline:0;background:var(--selection-bg);text-decoration:underline;text-underline-offset:4px}
+.journal-page .journal-chips {gap:12px}
+.journal-page .journal-chips>button {gap:10px;padding:12px 15px;min-height:54px;font-size:.85rem}
+.journal-page .journal-chips>button>svg {width:28px;height:28px}
+.journal-page .journal-symptoms>.journal-chips {display:grid;grid-template-columns:repeat(2,minmax(0,1fr))}
+.journal-page .journal-symptoms>.journal-chips>button {width:100%;text-align:left;line-height:1.4}
+.journal-page .journal-symptoms>.journal-chips[data-labels=false] {grid-template-columns:repeat(auto-fit,minmax(58px,1fr))}
+.journal-page .garden-choices {gap:12px}
+.journal-page .health-log-detail .garden-choices>button {padding:14px 10px;gap:10px;min-height:106px}
+.journal-page .health-log-detail .garden-choice-label {font-size:.82rem;line-height:1.45}
+.health-modal .garden-choices {gap:12px}
+.journal-page #log-sleep .journal-sleep-scale>p {margin:18px 0 14px}
+.journal-page #log-sleep .journal-chips {display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px}
+.journal-page #log-sleep .journal-chips>button {justify-content:center;gap:8px;width:100%;padding:12px 8px;min-height:58px}
+@media(max-width:600px){.symbol-style-options {width:100%;min-width:0}.symbol-style-setting {align-items:stretch!important;gap:14px!important}.journal-page .journal-chips {gap:10px}.journal-page .journal-chips>button {padding:12px 10px;font-size:.8rem;gap:8px}.journal-page .garden-choices,.health-modal .garden-choices {gap:10px}.journal-page .health-log-detail .garden-choices>button {padding:12px 7px}.journal-page .health-log-detail .garden-choice-label {font-size:.78rem}.journal-page #log-sleep .journal-chips {gap:10px}.journal-page #log-sleep .journal-chips>button {font-size:.8rem;gap:6px;padding:10px 6px}.journal-page #log-sleep .journal-chips>button>svg {width:24px;height:24px}}
+@media(max-width:359px){.journal-page #log-sleep .journal-chips>button {flex-direction:column;min-height:76px;gap:8px}.journal-page .health-log-detail .garden-choices {grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media(prefers-reduced-motion:reduce){.symbol-style-options>button {transition:none}}
+.disable-animations .symbol-style-options>button {transition:none}
+
+.choice-symbol {color:var(--icon-ink,var(--color-primary-ink))}
+.journal-page .journal-chips>button>svg {color:var(--icon-ink,var(--color-primary-ink))}
+
+.journal-page .symptom-option>span:last-child:not(.symptom-option-symbol) {min-width:0;overflow-wrap:anywhere}
+@media(max-width:359px){.journal-page .symptom-option {padding:8px;gap:8px;font-size:.76rem}.journal-page .symptom-option-symbol {width:40px;height:40px}}

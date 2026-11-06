@@ -88,3 +88,8 @@ Settings and the carer account appearance panel include **Show logging labels** 
 Health entry forms use original `ChoiceSymbol` drawings, custom calendar/month/year navigation, a custom clock, and themed checkboxes. General menus use the local Solar adapter. No native HTML selects or date/time inputs remain in the app. Calendars retain local date keys, min/max constraints and keyboard navigation; blank pain and recorded zero remain distinct. Desktop daily logging uses aligned pairs, with full-width pain and sleep sections. Reduced motion and the in-app animation preference are respected.
 
 Validation: `tests/garden-controls.test.tsx` exercises calendar limits/leap days, keyboard focus, listbox Escape containment, consent defaults, label persistence, clock precision, SVG availability and the pain scale. `tests/reproductive-ui.test.tsx` checks saved values through the real health form controls. No native build is required for this change.
+
+
+### Custom symbol style
+
+Settings and carer appearance now include **Custom symbol style: Filled / Line**. Filled is the default; the device-local preference persists as `theme-health-symbol-style` and is reset with appearance defaults. Both `LogSymbol` and `ChoiceSymbol` use it, including daily check-ins, journal choices, sleep ratings and history wherever original health symbols appear. Solar controls, provider logos, message content and reaction emoji are not restyled. The filled set uses original two-tone silhouettes; the line set retains outlined shapes. Labels and selected values are independent of the artwork preference.
