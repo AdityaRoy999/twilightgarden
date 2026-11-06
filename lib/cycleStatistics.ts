@@ -1,4 +1,5 @@
-import {calendarDayDifference,parseDateKey} from './dates';
+import {calendarDayDifference,parseDateKey,localDateKey} from './dates';
+import {predictCycle} from './cyclePrediction';
 
 /** Shared by both Insights views so the same log history yields the same result.
  * Explicit period starts take precedence over the legacy flow-gap inference. */
@@ -13,6 +14,6 @@ export function cycleStatistics(logs:any[],settings?:{avgCycleLength?:number;avg
  }
  const starts=explicit.length?explicit:episodes.map(episode=>episode.start);
  const intervals=starts.slice(1).map((next,index)=>({value:calendarDayDifference(next,starts[index]),label:parseDateKey(starts[index]).toLocaleString('default',{month:'short'}),date:starts[index],endDate:next})).filter(row=>row.value>0);
- const durations=episodes.filter(episode=>episode.flowDates.size>0).map(episode=>episode.flowDates.size);
- return {historyData:intervals.slice(-6),stats:{avgCycle:intervals.length?Math.round(intervals.reduce((total,row)=>total+row.value,0)/intervals.length):settings?.avgCycleLength||28,avgPeriod:durations.length?Math.round(durations.reduce((total,value)=>total+value,0)/durations.length):settings?.avgPeriodLength||5}};
+ const prediction=predictCycle({avgCycleLength:settings?.avgCycleLength||28,avgPeriodLength:settings?.avgPeriodLength||5,lastPeriodStart:'',onboardingCompleted:true,irregularCycle:false},logs,localDateKey());
+ return {historyData:intervals.filter(row=>row.value>=20&&row.value<=90).slice(-6),recordedFlowDays:episodes.map(episode=>episode.flowDates.size),closedPeriods:prediction.closedPeriods,stats:{avgCycle:prediction.length,avgPeriod:prediction.periodLength}};
 }

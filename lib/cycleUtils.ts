@@ -1,5 +1,6 @@
 import { CycleSettings, CyclePhase } from "../types";
 import { calendarDayDifference } from "./dates";
+import {predictCycle} from './cyclePrediction';
 
 export function calculateCyclePhase(
   date: string,
@@ -19,6 +20,7 @@ export function calculateCyclePhase(
     hasEstimate: false,
     overdueDays: 0,
   };
+  if(settings.estimatesPaused)return unknown;
   const start = [
     settings.lastPeriodStart,
     ...logs
@@ -37,11 +39,12 @@ export function calculateCyclePhase(
   const elapsed = calendarDayDifference(date, start);
   if (!Number.isFinite(elapsed) || elapsed < 0) return unknown;
   const day = elapsed + 1;
-  const length = Number.isFinite(settings.avgCycleLength)
-    ? Math.max(20, Math.min(90, settings.avgCycleLength))
+  const prediction = predictCycle(settings, logs, date);
+  const length = Number.isFinite(prediction.length)
+    ? Math.max(20, Math.min(90, prediction.length))
     : 28;
-  const period = Number.isFinite(settings.avgPeriodLength)
-    ? Math.max(1, Math.min(20, settings.avgPeriodLength))
+  const period = Number.isFinite(prediction.periodLength)
+    ? Math.max(1, Math.min(20, prediction.periodLength))
     : 5;
   if (settings.irregularCycle)
     return {

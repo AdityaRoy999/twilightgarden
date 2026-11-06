@@ -26,5 +26,5 @@ it('keeps a reset draft empty when server data refreshes', () => {
   fixture.log = { ...fixture.log, notes: 'Updated on another device' };
   view.rerender(<LogDetails/>);
   expect((screen.getByRole('textbox', { name: 'Daily notes' }) as HTMLTextAreaElement).value).toBe('');
-  expect((screen.getByRole('checkbox') as HTMLInputElement).checked).toBe(false);
+  expect((screen.getByRole('checkbox', {name:/a new period started/i}) as HTMLInputElement).checked).toBe(false);
 });

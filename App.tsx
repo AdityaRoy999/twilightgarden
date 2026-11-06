@@ -1,5 +1,8 @@
 import { GameInvitationBanner } from './components/GameInvitationBanner';
 import { AppIcon } from './components/ui/Icons';
+import {ReproductiveProvider} from './contexts/ReproductiveContext';
+const Health = React.lazy(()=>import('./pages/Health'));
+const SharedReproductiveHealth=React.lazy(()=>import('./pages/partner/SharedReproductiveHealth'));
 import { PrivacyProvider } from './contexts/PrivacyContext';
 import { PrivacyBoundary } from './components/PrivacyBoundary';
 import {VaultProvider} from './contexts/VaultContext';
@@ -462,7 +465,7 @@ const App: React.FC = () => {
           <CouplesProvider>
             <NotificationProvider>
           <CallProvider>
-              <DataProvider>
+              <ReproductiveProvider><DataProvider>
                 <TutorialProvider>
                   <AuthStatusBoundary>
                   <RestorationOverlay />
@@ -510,6 +513,7 @@ const App: React.FC = () => {
                       <Route path="/partner/calendar" element={<PartnerCalendar />} />
                       <Route path="/partner/insights" element={<PartnerInsights />} />
                       <Route path="/partner/logs" element={<PartnerLogs />} />
+                      <Route path="/partner/health" element={<SharedReproductiveHealth />} />
                       <Route path="/partner/wellness" element={<PartnerWellness />} />
                       <Route path="/partner/notes" element={<LoveLock />} />
                       <Route path="/partner/games" element={<Games />} />
@@ -546,6 +550,7 @@ const App: React.FC = () => {
                       <Route path="/notes" element={<ProtectedRoute><LoveLock /></ProtectedRoute>} />
                       <Route path="/games" element={<ProtectedRoute><Games /></ProtectedRoute>} />
                       <Route path="/wellness" element={<MenstruatorRoute><Wellness /></MenstruatorRoute>} />
+                      <Route path="/health" element={<MenstruatorRoute><Health /></MenstruatorRoute>} />
                       <Route path="/breathing" element={<Navigate to="/exercise" replace/>} />
                       <Route path="/exercise" element={<MenstruatorRoute><Exercise /></MenstruatorRoute>} />
                       <Route path="/partner/exercise" element={<PartnerRoute><Exercise partner/></PartnerRoute>} />
@@ -621,7 +626,7 @@ const App: React.FC = () => {
                   </React.Suspense>
                   </AuthStatusBoundary>
             </TutorialProvider>
-          </DataProvider>
+          </DataProvider></ReproductiveProvider>
           </CallProvider>
           </NotificationProvider>
           </CouplesProvider>

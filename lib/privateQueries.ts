@@ -257,6 +257,9 @@ async function healthTransaction(
       )
         throw new Error("Choose a valid date, up to today.");
       const values = args.p_values || {};
+      if((values.painSeverity!=null&&(!Number.isInteger(values.painSeverity)||values.painSeverity<0||values.painSeverity>10)) ||
+        (values.productChanges!=null&&(!Number.isInteger(values.productChanges)||values.productChanges<0||values.productChanges>100)) ||
+        ['painLocation','painDuration','dailyImpact','relief','reliefEffect','clots'].some(key=>typeof values[key]==='string'&&values[key].length>200))throw new Error('Check pain and bleeding details.');
       if (
         (values.notes?.length || 0) > 500 ||
         !["", null, undefined, "spotting", "light", "medium", "heavy"].includes(

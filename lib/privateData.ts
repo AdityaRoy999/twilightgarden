@@ -13,7 +13,7 @@ import { DeviceSecrets } from "./deviceSecrets";
 import { CiphertextCache } from "./ciphertextCache";
 
 export type RecordKind =
-  "daily_logs" | "health_settings" | "preferences" | "profile" | "request";
+  "daily_logs" | "health_settings" | "preferences" | "profile" | "request" | "reproductive_settings" | "reproductive_entries";
 export type PrivateRecord = {
   id: string;
   owner_id: string;
@@ -265,7 +265,8 @@ export async function preparePrivateRecord(
   const other = sharing === undefined ? await getPrivatePeer() : sharing;
   if (
     other &&
-    (kind === "profile" || (healthKinds.has(kind) && other.shareHealth))
+    (kind === "profile" || (healthKinds.has(kind) && other.shareHealth) ||
+      (kind === "reproductive_entries" && value.shareWithPartner === true && value.shareCoupleId === other.coupleId && !value.deleted && other.shareHealth))
   ) {
     record.recipient_id = other.userId;
     record.couple_id = other.coupleId;
@@ -303,11 +304,13 @@ export async function refreshPrivateShares() {
   const bundle = unlockedVault(),
     other = await getPrivatePeer();
   if (!other) return false;
-  for (const kind of ["profile", "health_settings", "daily_logs"] as const) {
+  for (const kind of ["profile", "health_settings", "daily_logs", "reproductive_entries"] as const) {
     const records = await encryptedRecords(bundle.userId, kind);
     const changes: PrivateRecord[] = [];
     for (const record of records) {
-      const shouldShare = kind === "profile" || other.shareHealth;
+      const value = await decryptRecord(record);
+      const shouldShare = kind === "profile" || (other.shareHealth &&
+        (kind !== "reproductive_entries" || (value.shareWithPartner === true && value.shareCoupleId === other.coupleId && !value.deleted)));
       if (
         shouldShare &&
         record.recipient_id === other.userId &&
@@ -316,8 +319,7 @@ export async function refreshPrivateShares() {
         continue;
       if (!shouldShare && !record.recipient_key) continue;
       // Rotate the content key on a sharing change. No personal master key is shared.
-      const value = await decryptRecord(record);
-      const logicalId = kind === "daily_logs" ? value.date : kind;
+      const logicalId = kind === "daily_logs" ? value.date : kind === "reproductive_entries" ? value.id : kind;
       changes.push(
         await preparePrivateRecord(
           kind,

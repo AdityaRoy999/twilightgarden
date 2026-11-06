@@ -15,6 +15,7 @@ vi.mock('../components/TodayReportModal', () => ({ default: () => null }));
 vi.mock('../components/ui/AnimatedIcons', () => ({ ShareIcon: React.forwardRef(() => <span/>) }));
 vi.mock('framer-motion', () => ({ motion: { span: ({children}:any)=><span>{children}</span>, div: ({ children, ...props }: any) => <div>{children}</div>, main: ({ children }: any) => <main>{children}</main> }, AnimatePresence: ({ children }: any) => children, useIsPresent: () => true, useReducedMotion: () => true }));
 vi.mock('recharts', () => Object.fromEntries(['BarChart', 'Bar', 'Cell', 'XAxis', 'YAxis', 'Tooltip', 'ResponsiveContainer', 'AreaChart', 'Area', 'CartesianGrid', 'ReferenceLine', 'PieChart', 'Pie', 'Legend'].map(name => [name, () => <div data-testid="chart"/>])));
+vi.mock('../contexts/ReproductiveContext',()=>({useReproductive:()=>({settings:{mode:'cycle'},loading:false})}));
 import Dashboard from '../pages/Dashboard';
 import Insights from '../pages/Insights';
 import LogDetails from '../pages/LogDetails';

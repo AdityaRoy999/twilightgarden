@@ -7,6 +7,7 @@ import { useData } from '../contexts/DataContext';
 import { DailyLog, CyclePhase, CycleSettings } from '../types';
 import LogDetailsModal from '../components/LogDetailsModal';
 import { ReferenceArt, ReferenceHeading } from '../components/ui/ReferenceArt';
+import {predictCycle} from '../lib/cyclePrediction';
 import {caregiverGuidance} from '../lib/caregiverGuidance';
 
 const weekdays = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
@@ -20,6 +21,7 @@ export function CalendarScreen({ logs, cycleSettings, getCyclePhase, readOnly = 
   const days = new Date(year, month + 1, 0).getDate();
   const cells = Math.ceil((offset + days) / 7) * 7;
   const phase = getCyclePhase(today);
+  const prediction=predictCycle(cycleSettings,logs,today);
   const care = readOnly ? caregiverGuidance(logs,today) : null;
   const phaseDescriptions: Record<string, string> = { Menstrual: 'Make room for rest and self-care. It’s okay to take things slowly and listen to what you need.', Follicular: 'A new chapter in your cycle. Check in with your energy and move at your own pace.', Ovulation: 'Notice how you feel today. Your experience is personal, and estimates can change.', Luteal: 'A little extra kindness goes a long way. Make time for meals, rest, and the things that feel good.' };
   const openDate = (date: string) => {
@@ -42,7 +44,7 @@ export function CalendarScreen({ logs, cycleSettings, getCyclePhase, readOnly = 
           const state = getCyclePhase(date);
           const period = !!log?.flow || !!log?.periodStarted || date === cycleSettings.lastPeriodStart;
           const ahead = calendarDayDifference(date, today);
-          const futurePeriod = ahead > 0 && phase.hasEstimate !== false && phase.nextPeriodIn >= 0 && ahead >= phase.nextPeriodIn && (ahead - phase.nextPeriodIn) % cycleSettings.avgCycleLength < cycleSettings.avgPeriodLength;
+          const futurePeriod = ahead > 0 && phase.hasEstimate !== false && phase.nextPeriodIn >= 0 && ahead >= phase.nextPeriodIn && (ahead - phase.nextPeriodIn) % prediction.length < prediction.periodLength;
           const predicted = !period && ((state.hasEstimate !== false && state.phase === 'Menstrual') || futurePeriod);
           const label = [date, period ? 'Period logged' : predicted ? 'Predicted period' : state.isOvulation ? 'Estimated ovulation' : state.isFertile ? 'Estimated fertile window' : '', log ? 'Has a journal entry' : '', date > today ? 'Future date' : ''].filter(Boolean).join(', ');
           return <button key={date} type="button" aria-label={label} aria-current={date === today ? 'date' : undefined} disabled={date > today || outside || (readOnly && !log)} onClick={() => openDate(date)} className={`reference-day ${outside ? 'outside' : ''}`} data-period={period} data-predicted={predicted} data-ovulation={state.isOvulation} data-today={date === today}>
@@ -53,7 +55,7 @@ export function CalendarScreen({ logs, cycleSettings, getCyclePhase, readOnly = 
         <div className="reference-legend"><span><Droplet size={15} fill="currentColor"/>Period</span><span><Heart size={13} fill="#f58fb1" stroke="#f58fb1"/>Fertile estimate</span><span><i className="ovulation"/>Ovulation estimate</span><span><i className="predicted"/>Predicted</span></div>
       </section>
       <section className="reference-card"><ReferenceArt kind="leaves" className="reference-card-art"/><div className="reference-phase-heading"><span className="reference-icon"><Droplet size={27} fill="currentColor"/></span><div><h2>Current phase</h2><strong>{phase.phase === 'Unknown' ? readOnly?'Their own rhythm':'Your own rhythm' : phase.phase}</strong>{phase.currentDay > 0 && <small>· Day {phase.currentDay}</small>}</div></div><p className="reference-description">{care?.body || phaseDescriptions[phase.phase] || 'Log a period start and your daily symptoms to get to know your own patterns.'}</p>{care?<small className="caregiver-basis">{care.basis}</small>:null}<div className="reference-phase-footer"><CalendarDays size={17}/>{phase.hasEstimate === false ? 'No period estimate available' : phase.nextPeriodIn < 0 ? <>Period estimate passed <strong>{Math.abs(phase.nextPeriodIn)} days ago</strong></> : <>Next period in <strong>{phase.nextPeriodIn} days</strong></>}</div></section>
-      <section className="reference-card"><div className="reference-glance-heading"><h2>Cycle at a glance</h2><button onClick={() => navigate(readOnly ? '/partner/insights' : '/insights')}>View details <ChevronRight size={14} className="inline"/></button></div><div className="reference-glance-stats"><div><strong>{cycleSettings.avgCycleLength}</strong><span>Typical cycle length</span></div><div><strong>{cycleSettings.avgPeriodLength}</strong><span>Typical period duration</span></div></div></section>
+      <section className="reference-card"><div className="reference-glance-heading"><h2>Cycle at a glance</h2><button onClick={() => navigate(readOnly ? '/partner/insights' : '/insights')}>View details <ChevronRight size={14} className="inline"/></button></div><div className="reference-glance-stats"><div><strong>{prediction.length}</strong><span>Typical cycle length</span></div><div><strong>{prediction.periodLength}</strong><span>Typical period duration</span></div></div></section>
       {logs.some(log => log.date === today) && <button className="reference-card text-left" onClick={() => openDate(today)}><strong>Today’s check-in</strong><p className="reference-description mt-2">{readOnly?'Review the symptoms and feelings your partner shared.':'Review your symptoms and how you’re feeling.'}</p></button>}
     </main>
   </div>;

@@ -21,6 +21,7 @@ export default function PartnerCalendar() {
         avgPeriodLength: cycleSettings.avgPeriodLength || cycleSettings.avg_period_length || 5,
         lastPeriodStart: cycleSettings.lastPeriodStart || cycleSettings.last_period_start || '',
         onboardingCompleted: true,
+        estimatesPaused: cycleSettings.estimatesPaused === true || cycleSettings.calendar_estimates_paused === true,
         irregularCycle: cycleSettings.irregularCycle || cycleSettings.irregular_cycle || false
     };
 

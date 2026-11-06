@@ -243,6 +243,7 @@ const Settings: React.FC = () => {
       </SpringModal>
 
       <ReferenceHeading title="Settings"/>
+      <button className="reference-card health-hub-link mb-5" onClick={()=>navigate('/health')}><AppIcon name="medical_services" size={27}/><span><strong>Your reproductive health</strong><small>Goals, private journals, contraception, pregnancy and recovery</small></span><AppIcon name="arrow_forward" size={20}/></button>
       <button className="reference-button secondary mb-5" onClick={()=>navigate('/privacy-controls')}>Privacy, safety & account deletion</button>
       <section className="reference-card reference-profile">
         <ReferenceArt kind="leaves" className="reference-card-art"/>

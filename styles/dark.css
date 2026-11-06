@@ -131,3 +131,8 @@
 :root.dark .welcome-art { background: radial-gradient(ellipse at 50% 60%,#51304755,transparent 75%),var(--dark-card); }
 :root.dark .vault-entry-card { background: radial-gradient(ellipse at 50% 0%,#63364a24,transparent 60%),var(--dark-card); }
 :root.dark :is(.vault-recovery-entry, .onboarding-eyebrow) { color: var(--selection-ink); }
+/* Pair the pregnancy scene with the garden's plum palette. */
+.dark{--pregnancy-nest:#402638;--pregnancy-nest-edge:#271c30}
+.dark .pregnancy-hero,.dark .dashboard-pregnancy{background:linear-gradient(130deg,#2c2036,#321d32 60%,#442338)!important}
+/* Health controls retain readable contrast on the plum surfaces. */
+.dark .reproductive-page,.dark .health-modal{--color-primary-ink:var(--selection-ink)}

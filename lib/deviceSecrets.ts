@@ -74,7 +74,7 @@ async function deviceKey() {
 }
 export const DeviceSecrets = {
   async forgetVaults(userId: string, keepEpoch?: string) {
-    const belongs = (key: string) => key.startsWith('personal-vault:') && key.includes(`:${userId}:`) && (!keepEpoch || !key.endsWith(`:${keepEpoch}`));
+    const belongs = (key: string) => (key.startsWith('personal-vault:') && key.includes(`:${userId}:`) && (!keepEpoch || !key.endsWith(`:${keepEpoch}`))) || (key.startsWith(`health-sync:${userId}:`) && (!keepEpoch || !key.startsWith(`health-sync:${userId}:${keepEpoch}:`)));
     if (Capacitor.isNativePlatform()) {
       for (const key of (await SecureStoragePlugin.keys()).value) if (belongs(key)) await SecureStoragePlugin.remove({ key });
       return;
