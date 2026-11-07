@@ -36,12 +36,17 @@ def prepare_simulator():
     return phone['udid']
 
 
-def main():
-    app = Path(sys.argv[1]).resolve()
+def verify_bundle(app):
     info = plistlib.loads((app / 'Info.plist').read_bytes())
     configuration = info.get('UIApplicationSceneManifest', {}).get('UISceneConfigurations', {}).get('UIWindowSceneSessionRoleApplication', [])
     if not configuration or not configuration[0].get('UISceneDelegateClassName', '').endswith('.SceneDelegate'):
         raise RuntimeError('Built app has no scene delegate configuration and cannot launch with the iOS 27 SDK.')
+    print('PASS: built app declares its UIKit scene delegate.', flush=True)
+
+
+def main():
+    app = Path(sys.argv[1]).resolve()
+    verify_bundle(app)
     output = Path(sys.argv[2]).resolve()
     output.mkdir(parents=True, exist_ok=True)
     started = time.time()
@@ -77,5 +82,7 @@ def main():
 if __name__ == '__main__':
     if len(sys.argv) > 1 and sys.argv[1] == '--prepare':
         prepare_simulator()
+    elif len(sys.argv) > 2 and sys.argv[1] == '--check-bundle':
+        verify_bundle(Path(sys.argv[2]).resolve())
     else:
         main()

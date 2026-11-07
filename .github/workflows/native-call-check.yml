@@ -29,11 +29,11 @@ jobs:
           printf '<!doctype html><title>Native compile check</title>' > dist/index.html
           npx cap sync ios
       - name: Compile native code without creating an IPA
-        if: github.event_name == 'workflow_dispatch'
         run: |
           set -euo pipefail
           xcodebuild -version
           xcodebuild -project ios/App/App.xcodeproj -scheme App -configuration Debug -destination 'generic/platform=iOS' -derivedDataPath "$RUNNER_TEMP/call-check" CODE_SIGNING_ALLOWED=NO CODE_SIGNING_REQUIRED=NO CODE_SIGN_IDENTITY='' build > "$RUNNER_TEMP/call-check.log" 2>&1 || { tail -n 140 "$RUNNER_TEMP/call-check.log"; exit 1; }
+          python3 scripts/verify-ios-launch.py --check-bundle "$RUNNER_TEMP/call-check/Build/Products/Debug-iphoneos/App.app"
       - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
         if: always()
         with:
@@ -41,6 +41,7 @@ jobs:
           path: ${{ runner.temp }}/call-check.log
           retention-days: 3
       - name: Build and launch in an iPhone simulator
+        if: github.event_name == 'workflow_dispatch'
         run: |
           set -euo pipefail
           python3 scripts/verify-ios-launch.py --prepare

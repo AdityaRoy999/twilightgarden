@@ -8,8 +8,10 @@ provisioning profile in GitHub. The artifact includes a SHA-256 checksum.
 The iOS 27 startup crash in the 7 November build was caused by the missing
 UIKit scene lifecycle (`UIApplicationEvaluateRuntimeIssueForNoSceneLifecycleAdoption`).
 The app now creates its Capacitor window through `SceneDelegate` and forwards
-both cold/warm links through `SceneDelegateProxy`. Build workflows install and
-launch a simulator app and require it to stay alive before producing an IPA.
+both cold/warm links through `SceneDelegateProxy`. The IPA workflow rejects a
+built bundle without the required scene configuration. The manual **Verify
+native call integration** workflow also offers a simulator launch check;
+simulator infrastructure availability is separate from device signing/launch.
 
 Run it from Actions → Build unsigned iOS app → Run workflow. Download the
 TwilightGarden-unsigned-iOS artifact after the run succeeds. The repository

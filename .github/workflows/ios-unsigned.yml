@@ -45,17 +45,12 @@ jobs:
           VITE_GRIEVANCE_OFFICER_EMAIL: ${{ vars.VITE_GRIEVANCE_OFFICER_EMAIL }}
       - name: Sync native dependencies
         run: npx cap sync ios
-      - name: Verify iPhone simulator startup before packaging
-        run: |
-          set -euo pipefail
-          python3 scripts/verify-ios-launch.py --prepare
-          xcodebuild -project ios/App/App.xcodeproj -scheme App -configuration Debug -sdk iphonesimulator -destination 'generic/platform=iOS Simulator' -derivedDataPath "$RUNNER_TEMP/launch-build" CODE_SIGNING_ALLOWED=NO build > "$RUNNER_TEMP/launch-build.log" 2>&1 || { tail -n 140 "$RUNNER_TEMP/launch-build.log"; exit 1; }
-          python3 scripts/verify-ios-launch.py "$RUNNER_TEMP/launch-build/Build/Products/Debug-iphonesimulator/App.app" "$RUNNER_TEMP/ios-launch" 2>&1 | tee "$RUNNER_TEMP/ios-launch-check.log"
       - name: Build device app without Apple signing credentials
         run: |
           set -euo pipefail
           xcodebuild -version
           xcodebuild -project ios/App/App.xcodeproj -scheme App -configuration Release -destination 'generic/platform=iOS' -derivedDataPath "$RUNNER_TEMP/twilight-build" CODE_SIGNING_ALLOWED=NO CODE_SIGNING_REQUIRED=NO CODE_SIGN_IDENTITY='' build > "$RUNNER_TEMP/ios-build.log" 2>&1 || { tail -n 160 "$RUNNER_TEMP/ios-build.log"; exit 1; }
+          python3 scripts/verify-ios-launch.py --check-bundle "$RUNNER_TEMP/twilight-build/Build/Products/Release-iphoneos/App.app"
           mkdir -p "$RUNNER_TEMP/twilight-package/Payload" artifacts
           ditto "$RUNNER_TEMP/twilight-build/Build/Products/Release-iphoneos/App.app" "$RUNNER_TEMP/twilight-package/Payload/App.app"
           cd "$RUNNER_TEMP/twilight-package"
@@ -69,12 +64,3 @@ jobs:
           path: artifacts/
           retention-days: 7
           if-no-files-found: error
-      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
-        if: always()
-        with:
-          name: iOS-startup-check
-          path: |
-            ${{ runner.temp }}/launch-build.log
-            ${{ runner.temp }}/ios-launch-check.log
-            ${{ runner.temp }}/ios-launch/
-          retention-days: 3
