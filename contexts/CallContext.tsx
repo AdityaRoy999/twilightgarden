@@ -1,3 +1,8 @@
+import { applyDesktopInput, desktopControlAvailable, enableDesktopControl, revokeDesktopControl, validRemoteInput, type RemoteInput } from '../lib/remoteControl';
+import { connectMediaRoom, roomConfigured, type MediaRoom, type RoomState } from '../lib/callRoom';
+import { NativeCalls, hasNativeCalls } from '../lib/nativeCalls';
+import { base64 } from '../lib/vaultCrypto';
+import { persistCall, type ActiveCallRecord, type CallRecord } from '../lib/callHistory';
 import {applyCallQuality,CallStatsSampler,nextCallQuality,recommendedCallQuality,preferSpeechCodec,type CallQuality,type CallNetwork} from '../lib/callQuality';
 import { encryptMessage, decryptMessage } from "../lib/encryption";
 import { loadCallIce, type CallIce } from "../lib/callIce";
@@ -24,6 +29,7 @@ interface CallContextType {
   callStatus: CallStatus;
   localStream: MediaStream | null;
   remoteStream: MediaStream | null;
+  attachRemoteVideo?: (element: HTMLVideoElement) => (() => void) | undefined;
   isIncomingCall: boolean;
   callerName: string;
   isVideoCall: boolean;
@@ -34,7 +40,14 @@ interface CallContextType {
   toggleMute: () => void;
   toggleVideo: () => void;
   switchCamera: () => Promise<void>;
-  toggleScreenShare: () => Promise<void>;
+  toggleScreenShare: (audio?: boolean) => Promise<void>;
+  nativeMedia: boolean;
+  remoteControl: 'idle' | 'requested' | 'granting' | 'controlling' | 'sharing';
+  requestRemoteControl: () => Promise<void>;
+  grantRemoteControl: () => Promise<void>;
+  stopRemoteControl: () => void;
+  sendRemoteInput: (input: RemoteInput) => void;
+  mediaTransport: 'p2p' | 'sfu';
   setCameraEffect: (effect: CameraEffect) => Promise<void>;
   cameraEffect: CameraEffect;
   isSharingScreen: boolean;
@@ -54,6 +67,11 @@ interface CallContextType {
   callNetwork: (CallNetwork&{quality:CallQuality;videoPaused:boolean}) | null;
 }
 interface Signal {
+  transport?: 'sfu';
+  control?: 'request' | 'grant' | 'revoke' | 'input';
+  controlToken?: string;
+  input?: RemoteInput;
+  roomKey?: string;
   callId: string;
   senderId: string;
   offer?: RTCSessionDescriptionInit;
@@ -79,6 +97,14 @@ export const CallProvider: React.FC<{ children: React.ReactNode }> = ({
     isSyncRequired,
     identityReady,
   } = useCouples();
+  const [remoteControl, setRemoteControl] = useState<'idle' | 'requested' | 'granting' | 'controlling' | 'sharing'>('idle');
+  const controlToken = useRef<string | null>(null), controlUntil = useRef(0), controlLast = useRef(0);
+  const controlQueue = useRef<Promise<unknown>>(Promise.resolve());
+  const roomRef = useRef<MediaRoom | null>(null);
+  const roomKeyRef = useRef<string | null>(null);
+  const roomPending = useRef(false);
+  const [nativeMedia, setNativeMedia] = useState(false);
+  const [mediaTransport, setMediaTransport] = useState<'p2p' | 'sfu'>('p2p');
   const [callError, setCallError] = useState<string | null>(null);
   const [callLatencyMs, setCallLatencyMs] = useState<number | null>(null);
   const [callNetwork,setCallNetwork]=useState<(CallNetwork&{quality:CallQuality;videoPaused:boolean})|null>(null);
@@ -136,13 +162,28 @@ export const CallProvider: React.FC<{ children: React.ReactNode }> = ({
       ? couple?.partner_2_id
       : couple?.partner_1_id;
 
+  const historyRecord = useRef<ActiveCallRecord | null>(null);
+  const finishHistory = (outcome?: CallRecord['outcome']) => {
+    const record = historyRecord.current; historyRecord.current = null;
+    if (record) void persistCall(record, outcome).catch(() => {
+      setCallError('The call ended, but its history could not be saved.');
+    });
+  };
   const updateStatus = (next: CallStatus) => {
+    if (next === 'connected' && historyRecord.current && !historyRecord.current.answeredAt)
+      historyRecord.current.answeredAt = new Date().toISOString();
     status.current = next;
     setCallStatus(next);
   };
   const cleanup = useCallback(() => {
+    finishHistory();
+    controlToken.current = null; controlUntil.current = 0; setRemoteControl('idle'); void revokeDesktopControl().catch(() => {});
     generation.current++;
     restarting.current = false;
+    roomKeyRef.current = null; roomPending.current = false;
+    const room = roomRef.current; roomRef.current = null;
+    if (room) void room.close().catch(() => {});
+    setNativeMedia(false); setMediaTransport('p2p');
     clearTimeout(timeout.current);
     clearTimeout(credentialTimer.current);
     clearInterval(statsTimer.current);
@@ -404,8 +445,7 @@ export const CallProvider: React.FC<{ children: React.ReactNode }> = ({
         onSignal(({ payload }: { payload: Signal }) => {
           if (
             !valid(payload) ||
-            payload.offer?.type !== "offer" ||
-            !payload.offer.sdp
+            (payload.transport === 'sfu' ? typeof payload.roomKey !== 'string' || !/^[A-Za-z0-9+/]{43}=$/.test(payload.roomKey) : payload.offer?.type !== "offer" || !payload.offer.sdp)
           )
             return;
           const simultaneous =
@@ -416,7 +456,10 @@ export const CallProvider: React.FC<{ children: React.ReactNode }> = ({
           initiated.current = false;
           setCallError(null);
           callId.current = payload.callId;
-          offerRef.current = payload.offer;
+          historyRecord.current = { id: payload.callId, ownerId: user.id, coupleId: couple.id, direction: 'incoming', video: !!payload.isVideo, startedAt: new Date().toISOString() };
+          offerRef.current = payload.transport === 'sfu' ? { type: 'offer', sdp: 'native-room' } : payload.offer!;
+          roomKeyRef.current = payload.transport === 'sfu' ? payload.roomKey! : null;
+          setMediaTransport(payload.transport === 'sfu' ? 'sfu' : 'p2p');
           videoRef.current = !!payload.isVideo;
           setIsVideoCall(!!payload.isVideo);
           updateStatus("incoming");
@@ -431,6 +474,9 @@ export const CallProvider: React.FC<{ children: React.ReactNode }> = ({
         "broadcast",
         { event: "call:answer" },
         onSignal(async ({ payload }: { payload: Signal }) => {
+          if (valid(payload) && payload.callId === callId.current && payload.transport === 'sfu' && roomKeyRef.current && status.current === 'calling') {
+            updateStatus('connecting'); return;
+          }
           if (
             !valid(payload) ||
             payload.callId !== callId.current ||
@@ -492,6 +538,22 @@ export const CallProvider: React.FC<{ children: React.ReactNode }> = ({
           setReactions(previous => appendCallReaction(previous, { id: payload.reactionId!, name: payload.reaction as CallReactionName, mine: false, at: now }));
         }),
       )
+      .on('broadcast', { event: 'call:control' }, onSignal(async ({ payload }) => {
+        if (!valid(payload) || payload.callId !== callId.current || status.current !== 'connected') return;
+        if (payload.control === 'request') {
+          if (sharingScreenRef.current && desktopControlAvailable()) setRemoteControl('requested');
+          else { await signal('call:control', {control:'revoke'}); setCallError('Remote control is available only while sharing a primary display from the installed desktop app.'); }
+          return;
+        }
+        if (payload.control === 'revoke') { controlToken.current = null; controlUntil.current = 0; setRemoteControl('idle'); void revokeDesktopControl().catch(() => {}); return; }
+        if (payload.control === 'grant' && payload.controlToken && payload.controlToken.length === 36 && controlToken.current === 'pending') {
+          controlToken.current = payload.controlToken; controlUntil.current = Date.now() + 300000; setRemoteControl('controlling'); return;
+        }
+        if (payload.control === 'input' && sharingScreenRef.current && payload.controlToken === controlToken.current && controlToken.current && Date.now() < controlUntil.current && validRemoteInput(payload.input)) {
+          try { await applyDesktopInput(payload.callId, controlToken.current, payload.input); }
+          catch { stopRemoteControl(); }
+        }
+      }))
       .on(
         "broadcast",
         { event: "call:hangup" },
@@ -587,6 +649,25 @@ export const CallProvider: React.FC<{ children: React.ReactNode }> = ({
     cleanup,
   ]);
 
+  const joinRoom = async (revision: number) => {
+    if (!couple || !callId.current || !roomKeyRef.current) throw new Error('Encrypted room is unavailable.');
+    roomPending.current = true;
+    setMediaTransport('sfu'); setNativeMedia(hasNativeCalls());
+    const update = (value: RoomState) => {
+      if (revision !== generation.current) return;
+      if (value.error) { setCallError(value.error); stopCall(); return; }
+      if (value.ended) { cleanup(); return; }
+      if (value.local) setLocalStream(value.local);
+      if (value.remote) setRemoteStream(value.remote);
+      if (typeof value.sharing === 'boolean') { sharingScreenRef.current = value.sharing; setIsSharingScreen(value.sharing); }
+      if (typeof value.remoteSharing === 'boolean') setRemoteSharingScreen(value.remoteSharing);
+      if (typeof value.remoteVideoOff === 'boolean') setRemoteVideoOff(value.remoteVideoOff);
+      if (value.remotePresent) { clearTimeout(timeout.current); updateStatus('connected'); }
+    };
+    const room = await connectMediaRoom(couple.id, callId.current, roomKeyRef.current, videoRef.current, update);
+    if (revision !== generation.current) { await room.close(); return; }
+    roomRef.current = room; roomPending.current = false;
+  };
   const acquireMedia = async (video: boolean, revision: number) => {
     if (!navigator.mediaDevices?.getUserMedia)
       throw new Error(
@@ -619,11 +700,12 @@ export const CallProvider: React.FC<{ children: React.ReactNode }> = ({
           if (revision !== generation.current) return;
           capturePausedRef.current = paused; setCapturePaused(paused);
           void signal('call:media', { sharingScreen: sharingScreenRef.current, videoPaused: paused, videoOff: videoOffRef.current }).catch(() => {});
-        });
+        }, () => pcRef.current?.getSenders().find(sender => sender.track?.kind === 'audio'), () => stream.getAudioTracks()[0]);
     }
     return stream;
   };
   const reportError = (error: unknown) => {
+    finishHistory('failed');
     stopCall();
     setCallError(
       error instanceof Error
@@ -650,12 +732,21 @@ export const CallProvider: React.FC<{ children: React.ReactNode }> = ({
     setCallError(null);
     initiated.current = true;
     callId.current = crypto.randomUUID();
+    historyRecord.current = { id: callId.current, ownerId: user!.id, coupleId: couple!.id, direction: 'outgoing', video, startedAt: new Date().toISOString() };
     videoRef.current = video;
     setIsVideoCall(video);
     updateStatus("calling");
     armTimeout();
     const revision = generation.current;
     try {
+      const configured = await roomConfigured(couple!.id);
+      if (revision !== generation.current) return;
+      if (configured) {
+        roomKeyRef.current = base64(crypto.getRandomValues(new Uint8Array(32)));
+        await joinRoom(revision);
+        if (revision === generation.current) await signal('call:offer', { transport: 'sfu', roomKey: roomKeyRef.current!, isVideo: video });
+        return;
+      }
       const [stream,pc]=await Promise.all([acquireMedia(video,revision),makePeer(revision)]);
       if(!stream||!pc)return;
       stream.getTracks().forEach((track) => pc.addTrack(track, stream));
@@ -683,6 +774,11 @@ export const CallProvider: React.FC<{ children: React.ReactNode }> = ({
     updateStatus("connecting");
     const revision = generation.current;
     try {
+      if (roomKeyRef.current) {
+        await joinRoom(revision);
+        if (revision === generation.current) await signal('call:answer', { transport: 'sfu' });
+        return;
+      }
       const [stream,pc]=await Promise.all([acquireMedia(videoRef.current,revision),makePeer(revision)]);
       if(!stream||!pc)return;
       await pc.setRemoteDescription(offer);
@@ -700,7 +796,16 @@ export const CallProvider: React.FC<{ children: React.ReactNode }> = ({
       if (revision === generation.current) reportError(error);
     }
   };
+  const roomOperation = async (operation: (room: MediaRoom) => Promise<void>) => {
+    const room = roomRef.current, revision = generation.current;
+    if (!room || changingMedia.current || status.current !== 'connected') return;
+    changingMedia.current = true; setMediaBusy(true);
+    try { await operation(room); }
+    catch (error) { if (revision === generation.current) setCallError(error instanceof Error ? error.message : 'Could not change call media.'); }
+    finally { if (revision === generation.current) { changingMedia.current = false; setMediaBusy(false); } }
+  };
   const toggleMute = () => {
+    if (roomRef.current) { void roomOperation(async room => { await room.microphone(isMuted); if (roomRef.current === room) setIsMuted(!isMuted); }); return; }
     const tracks = streamRef.current?.getAudioTracks() || [];
     const muted = tracks[0]?.enabled ?? false;
     tracks.forEach((track) => {
@@ -709,6 +814,7 @@ export const CallProvider: React.FC<{ children: React.ReactNode }> = ({
     setIsMuted(muted);
   };
   const toggleVideo = () => {
+    if (roomRef.current) { void roomOperation(async room => { await room.camera(isVideoOff); if (roomRef.current === room) setIsVideoOff(!isVideoOff); }); return; }
     if (videoController.current) {
       const off = videoController.current.toggleCamera();
       videoOffRef.current = off; setIsVideoOff(off);
@@ -734,11 +840,53 @@ export const CallProvider: React.FC<{ children: React.ReactNode }> = ({
       if (revision === generation.current) { changingMedia.current = false; setMediaBusy(false); }
     }
   };
-  const switchCamera = () => changeVideo(async controller => { await controller.switchCamera(); if (videoController.current === controller) updateCameraEffect(naturalEffect); });
-  const toggleScreenShare = () => changeVideo(controller => isSharingScreen ? controller.stopScreen() : controller.startScreen());
+  const switchCamera = () => roomRef.current ? roomOperation(async room => { await room.switchCamera(); if (roomRef.current === room) setIsFrontCamera(value => !value); }) : changeVideo(async controller => { await controller.switchCamera(); if (videoController.current === controller) updateCameraEffect(naturalEffect); });
+  const toggleScreenShare = (audio = false) => roomRef.current ? roomOperation(room => room.screen(!isSharingScreen, audio)) : changeVideo(controller => isSharingScreen ? controller.stopScreen() : controller.startScreen(audio));
   const setCameraEffect = (effect: CameraEffect) => changeVideo(async controller => {
     await controller.setEffect(effect); if (videoController.current === controller) updateCameraEffect(effect);
   });
+  const stopRemoteControl = () => {
+    controlToken.current = null; controlUntil.current = 0; setRemoteControl('idle');
+    void revokeDesktopControl().catch(() => {});
+    void signal('call:control', { control: 'revoke' }).catch(() => {});
+  };
+  const requestRemoteControl = async () => {
+    if (!remoteSharingScreen || status.current !== 'connected' || controlToken.current) return;
+    controlToken.current = 'pending'; setRemoteControl('granting');
+    try { await signal('call:control', { control: 'request' }); }
+    catch { stopRemoteControl(); }
+  };
+  const grantRemoteControl = async () => {
+    if (!sharingScreenRef.current || !desktopControlAvailable() || !callId.current) return;
+    const id = callId.current, revision = generation.current;
+    // Coordinates are valid only for a full display, not an arbitrary shared window.
+    const track = localStream?.getVideoTracks()[0];
+    if (track?.getSettings().displaySurface !== 'monitor') { setCallError('Remote control requires sharing your entire primary display from the desktop app.'); return; }
+    setRemoteControl('granting');
+    const token = crypto.randomUUID();
+    try {
+      await enableDesktopControl(id, token);
+      if (revision !== generation.current || !sharingScreenRef.current) { await revokeDesktopControl(); return; }
+      controlToken.current = token; controlUntil.current = Date.now() + 300000;
+      await signal('call:control', { control: 'grant', controlToken: token }); if (revision === generation.current && controlToken.current === token) setRemoteControl('sharing');
+    } catch { stopRemoteControl(); }
+  };
+  const sendRemoteInput = (input: RemoteInput) => {
+    if (remoteControl !== 'controlling' || !remoteSharingScreen || !controlToken.current || controlToken.current === 'pending' || Date.now() >= controlUntil.current || !validRemoteInput(input)) return;
+    const now = Date.now(); if (input.kind === 'move' && now - controlLast.current < 120) return;
+    controlLast.current = now;
+    const token = controlToken.current, id = callId.current;
+    controlQueue.current = controlQueue.current.catch(() => {}).then(async () => {
+      if (id !== callId.current || token !== controlToken.current || Date.now() >= controlUntil.current) return;
+      await signal('call:control', { control: 'input', controlToken: token, input });
+    }).catch(() => { if (id === callId.current && token === controlToken.current) stopRemoteControl(); });
+  };
+  useEffect(() => {
+    if (remoteControl === 'idle') return;
+    const timer = setTimeout(stopRemoteControl, remoteControl === 'requested' || remoteControl === 'granting' ? 30000 : 300000);
+    return () => clearTimeout(timer);
+  }, [remoteControl]);
+  useEffect(() => { if (!isSharingScreen && remoteControl === 'sharing' || !remoteSharingScreen && remoteControl === 'controlling') stopRemoteControl(); }, [isSharingScreen, remoteSharingScreen]);
   const sendReaction = async (name: CallReactionName) => {
     const now = Date.now();
     if (status.current !== 'connected' || !isCallReaction(name) || now - lastReaction.current < 600) return;
@@ -755,7 +903,8 @@ export const CallProvider: React.FC<{ children: React.ReactNode }> = ({
         callError,
         dismissCallError: () => setCallError(null),
         callLatencyMs,
-        callNetwork,
+        callNetwork, nativeMedia, mediaTransport, remoteControl, requestRemoteControl, grantRemoteControl, stopRemoteControl, sendRemoteInput,
+        attachRemoteVideo: element => roomRef.current?.attachVideo?.(element),
         callStatus,
         localStream,
         remoteStream,
@@ -764,7 +913,7 @@ export const CallProvider: React.FC<{ children: React.ReactNode }> = ({
         isVideoCall,
         initiateCall,
         acceptCall,
-        rejectCall: stopCall,
+        rejectCall: () => { finishHistory('declined'); stopCall(); },
         endCall: stopCall,
         toggleMute,
         toggleVideo,

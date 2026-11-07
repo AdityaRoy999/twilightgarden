@@ -14,8 +14,25 @@ function fixture() {
   const controller = new CallVideo(camera, () => ({ replaceTrack }) as unknown as RTCRtpSender, preview, report, captureState);
   return { camera, controller, replaceTrack, preview, report, captureState };
 }
-afterEach(() => vi.restoreAllMocks());
+afterEach(() => { vi.restoreAllMocks(); vi.unstubAllGlobals(); });
 describe('video source lifecycle', () => {
+  it('mixes device audio with the microphone and restores the original sender on stop', async () => {
+    const camera = track(), screen = track(), mic = track(), device = track(), mixed = track();
+    const replaceVideo = vi.fn().mockResolvedValue(undefined), replaceAudio = vi.fn().mockResolvedValue(undefined);
+    const close = vi.fn().mockResolvedValue(undefined), connect = vi.fn();
+    vi.stubGlobal('MediaStream', class { constructor(public tracks:MediaStreamTrack[]) {} getAudioTracks() { return this.tracks; } });
+    vi.stubGlobal('AudioContext', class { resume = vi.fn().mockResolvedValue(undefined); close = close; createMediaStreamDestination() { return {stream:{getAudioTracks:()=>[mixed]}}; } createMediaStreamSource() { return {connect}; } });
+    const captured = {getVideoTracks:()=>[screen],getAudioTracks:()=>[device],getTracks:()=>[screen,device]} as MediaStream;
+    const capture = vi.fn().mockResolvedValue(captured);
+    Object.defineProperty(navigator,'mediaDevices',{configurable:true,value:{getDisplayMedia:capture}});
+    const controller = new CallVideo(camera,()=>({replaceTrack:replaceVideo}) as unknown as RTCRtpSender,vi.fn(),vi.fn(),vi.fn(),()=>({replaceTrack:replaceAudio}) as unknown as RTCRtpSender,()=>mic);
+    await controller.startScreen(true);
+    expect(capture.mock.calls[0][0].audio).toBe(true); expect(connect).toHaveBeenCalledTimes(2);
+    expect(replaceAudio).toHaveBeenLastCalledWith(mixed);
+    await controller.stopScreen();
+    expect(replaceAudio).toHaveBeenLastCalledWith(mic); expect(mic.stop).not.toHaveBeenCalled();
+    expect(screen.stop).toHaveBeenCalledOnce(); expect(device.stop).toHaveBeenCalledOnce(); expect(mixed.stop).toHaveBeenCalledOnce(); expect(close).toHaveBeenCalledOnce(); controller.dispose();
+  });
   it('rejects native WebView sharing even when a display-capture stub exists', async () => {
     vi.spyOn(Capacitor, 'isNativePlatform').mockReturnValue(true);
     const f = fixture(), capture = vi.fn();

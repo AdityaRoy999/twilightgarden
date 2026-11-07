@@ -1,3 +1,5 @@
+import { ChatDetails } from '../components/ChatDetails';
+import { loadChatSettings, type ChatTheme } from '../lib/chatSettings';
 import {ConnectionScreen} from '../components/ConnectionScreen';
 import { ConfirmAction } from '../components/ConfirmAction';
 import { ReactionChips } from '../components/ReactionChips';
@@ -50,6 +52,16 @@ const LoveLock: React.FC = () => {
     const { reduced } = useAppMotion();
     const { initiateCall } = useCall();
 
+    const [detailsOpen, setDetailsOpen] = useState(false);
+    const [chatTheme, setChatTheme] = useState<ChatTheme>('garden');
+    useEffect(() => {
+        if (!couple?.id || !identityReady) { setChatTheme('garden'); return; }
+        let live = true;
+        void loadChatSettings(couple.id).then(value => { if (live) setChatTheme(value.theme); }).catch(() => {});
+        const change = (event: Event) => { const value = (event as CustomEvent).detail; if (value?.coupleId === couple.id) setChatTheme(value.theme); };
+        window.addEventListener('twilight-chat-settings', change);
+        return () => { live = false; window.removeEventListener('twilight-chat-settings', change); };
+    }, [couple?.id, identityReady]);
     const [noteContent, setNoteContent] = useState('');
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [emojiPickerNoteId, setEmojiPickerNoteId] = useState<string | null>(null);
@@ -634,11 +646,12 @@ const LoveLock: React.FC = () => {
 
     // STATE: Active (Chat Interface) — couple is paired and active, show chat directly
     return (
-        <div className="reference-chat bloom-chat flex flex-col h-full max-h-full relative overflow-hidden bg-background-dark">
+        <div className="reference-chat bloom-chat flex flex-col h-full max-h-full relative overflow-hidden bg-background-dark" data-chat-theme={chatTheme}>
+            <ChatDetails open={detailsOpen} onClose={() => setDetailsOpen(false)} verify={() => setShowSecurity(true)} disconnect={handleDisconnect}/>
              {/* Header - Fixed at top */}
             <div className="bloom-chat-header relative z-30 shrink-0 bg-white/80 dark:bg-background-dark/80 backdrop-blur-xl border-b dark:border-white/5 px-4 h-16 flex items-center justify-between">
                 <div className="flex items-center gap-3">
-                    <div className="w-10 h-10 rounded-full bg-pink-100 dark:bg-pink-900/20 overflow-hidden border-2 border-primary/20">
+                    <button aria-label="Open partner and chat details" onClick={() => setDetailsOpen(true)} className="w-10 h-10 rounded-full bg-pink-100 dark:bg-pink-900/20 overflow-hidden border-2 border-primary/20">
                         {partnerProfile?.avatar_url ? (
                             <img src={partnerProfile.avatar_url} alt="Partner" className="w-full h-full object-cover" />
                         ) : (
@@ -646,11 +659,9 @@ const LoveLock: React.FC = () => {
                                 {partnerProfile?.full_name?.charAt(0) || 'P'}
                             </div>
                         )}
-                    </div>
+                    </button>
                     <div className="flex min-w-0 flex-col">
-                        <h3 className="text-sm font-bold truncate max-w-[120px]">
-                            {partnerProfile?.full_name || 'Partner'}
-                        </h3>
+                        <button onClick={() => setDetailsOpen(true)} className="text-left text-sm font-bold truncate max-w-[160px]" aria-label="Open chat details">{partnerProfile?.full_name || 'Partner'}</button>
                         <div className="flex items-center gap-1">
                             {isSyncRequired || notes.some(n => n.content?.includes('🔐 Message locked')) ? (
                                 <>
@@ -711,18 +722,12 @@ const LoveLock: React.FC = () => {
                     >
                         <span className="app-icon-glyph text-[20px]"><AppIcon name={"link_off"}/></span>
                     </button>
+                    <button aria-label="Chat details and call history" title="Media, links, call history and chat settings" onClick={() => setDetailsOpen(true)} className="flex h-11 items-center gap-2 rounded-full px-3 text-primary hover:bg-primary/10"><AppIcon name="EllipsisVertical" size={22}/><span className="text-sm font-semibold">Details</span></button>
                 </div>
                 <div className="flex items-center gap-1 md:hidden">
                     <button aria-label="Voice call" onClick={() => initiateCall(false)} className="flex h-11 w-11 items-center justify-center rounded-full text-primary hover:bg-primary/10"><Phone size={19}/></button>
                     <button aria-label="Video call" onClick={() => initiateCall(true)} className="flex h-11 w-11 items-center justify-center rounded-full text-primary hover:bg-primary/10"><Video size={21}/></button>
-                    <details className="bloom-chat-menu relative">
-                        <summary aria-label="Chat options" className="flex h-11 w-11 cursor-pointer list-none items-center justify-center rounded-full text-gray-500 hover:bg-primary/10"><EllipsisVertical size={20}/></summary>
-                        <div onClick={event => event.currentTarget.closest('details')?.removeAttribute('open')} className="absolute right-0 top-12 z-50 w-56 overflow-hidden rounded-2xl border border-[var(--border-color)] bg-surface-dark p-2 shadow-medium">
-                            <button onClick={() => setViewFilter(viewFilter === 'starred' ? 'all' : 'starred')} className="flex min-h-11 w-full items-center rounded-xl px-3 text-left text-sm hover:bg-primary/10">{viewFilter === 'starred' ? 'All messages' : 'Starred messages'}</button>
-                            <button onClick={() => setShowSecurity(true)} className="flex min-h-11 w-full items-center rounded-xl px-3 text-left text-sm hover:bg-primary/10">Verify encryption</button>
-                            <button onClick={handleDisconnect} className="flex min-h-11 w-full items-center rounded-xl px-3 text-left text-sm text-red-600 hover:bg-red-500/10">Disconnect partner</button>
-                        </div>
-                    </details>
+                    <button aria-label="Chat options" onClick={() => setDetailsOpen(true)} className="flex h-11 w-11 items-center justify-center rounded-full text-primary"><EllipsisVertical size={20}/></button>
                 </div>
             </div>
 

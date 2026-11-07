@@ -1,11 +1,12 @@
 import { Capacitor } from '@capacitor/core';
+import { hasNativeCalls } from './nativeCalls';
 
 /** A WebView method is not a native ReplayKit broadcast integration. Keep this
  * check shared by the action and its UI so unsupported capture is never offered. */
 export function screenCaptureAvailability(): { available: boolean; reason: string } {
   if (Capacitor.isNativePlatform()) return {
     available: false,
-    reason: 'Screen sharing in the installed app needs a native screen-capture integration. You can share from a supported desktop browser and view it here.',
+    reason: hasNativeCalls() ? 'Native screen sharing needs the self-hosted media server configuration. Configure it and start a new call.' : 'Screen sharing in the installed app needs a native screen-capture integration. You can share from a supported desktop browser and view it here.',
   };
   if (typeof navigator === 'undefined' || typeof navigator.mediaDevices?.getDisplayMedia !== 'function') return {
     available: false,

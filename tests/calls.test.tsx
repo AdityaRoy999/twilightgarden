@@ -1,3 +1,4 @@
+vi.mock("../lib/callRoom", () => ({ roomConfigured: vi.fn(async () => false) }));
 vi.mock("../lib/encryption", () => ({
   encryptMessage: vi.fn(async (value) => value),
   decryptMessage: vi.fn(async (value) => value),
@@ -192,6 +193,7 @@ describe("call lifecycle", () => {
     );
     fireEvent.click(screen.getByText("Call"));
     expect(screen.getByText("calling")).toBeTruthy();
+    await waitFor(() => expect(getMedia).toHaveBeenCalled());
     fireEvent.click(screen.getByText("End"));
     await act(async () => grant(stream()));
     expect(stop).toHaveBeenCalledTimes(1);

@@ -13,7 +13,7 @@ import { DeviceSecrets } from "./deviceSecrets";
 import { CiphertextCache } from "./ciphertextCache";
 
 export type RecordKind =
-  "daily_logs" | "health_settings" | "preferences" | "profile" | "request" | "reproductive_settings" | "reproductive_entries";
+  "daily_logs" | "health_settings" | "preferences" | "profile" | "request" | "reproductive_settings" | "reproductive_entries" | "call_history" | "chat_settings";
 export type PrivateRecord = {
   id: string;
   owner_id: string;

@@ -1,6 +1,8 @@
 import fs from "node:fs";
 const path = "android/app/src/main/AndroidManifest.xml";
 let xml = fs.readFileSync(path, "utf8");
+if (!xml.includes('android:supportsPictureInPicture="true"'))
+  xml = xml.replace('android:name=".MainActivity"', 'android:name=".MainActivity" android:supportsPictureInPicture="true"');
 for (const permission of [
   "CAMERA",
   "RECORD_AUDIO",

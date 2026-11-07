@@ -1,3 +1,4 @@
+import './styles/chat-details.css';
 import './index.css';
 import './styles/bloom.css';
 import './styles/reference.css';

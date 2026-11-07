@@ -1,0 +1,40 @@
+name: Verify native call integration
+on:
+  workflow_dispatch:
+  push:
+    branches: [codex/native-calls-and-chat-details]
+    paths:
+      - 'native/calls/**'
+      - 'ios/**'
+      - '.github/workflows/native-call-check.yml'
+permissions:
+  contents: read
+jobs:
+  ios-compile:
+    runs-on: xcode-27
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - name: Prepare bundled assets and native registration
+        run: |
+          mkdir -p dist
+          printf '<!doctype html><title>Native compile check</title>' > dist/index.html
+          npx cap sync ios
+      - name: Compile native code without creating an IPA
+        run: |
+          set -euo pipefail
+          xcodebuild -version
+          xcodebuild -project ios/App/App.xcodeproj -scheme App -configuration Debug -destination 'generic/platform=iOS' -derivedDataPath "$RUNNER_TEMP/call-check" CODE_SIGNING_ALLOWED=NO CODE_SIGNING_REQUIRED=NO CODE_SIGN_IDENTITY='' build > "$RUNNER_TEMP/call-check.log" 2>&1 || { tail -n 140 "$RUNNER_TEMP/call-check.log"; exit 1; }
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        if: always()
+        with:
+          name: native-call-compile-log
+          path: ${{ runner.temp }}/call-check.log
+          retention-days: 3

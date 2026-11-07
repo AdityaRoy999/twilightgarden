@@ -17,11 +17,16 @@ export class CallVideo {
   private backgrounded = false;
   private unwatch: () => void = () => {};
   private lastPaused = false;
+  private screenStream?: MediaStream;
+  private audioMix?: AudioContext;
+  private mixedAudio?: MediaStreamTrack;
   constructor(camera: MediaStreamTrack,
     private sender: () => RTCRtpSender | undefined,
     private preview: (track: MediaStreamTrack, sharing: boolean, front: boolean) => void,
     private report: (error: unknown) => void,
-    private captureState: (paused: boolean) => void = () => {}) {
+    private captureState: (paused: boolean) => void = () => {},
+    private audioSender: () => RTCRtpSender | undefined = () => undefined,
+    private microphone: () => MediaStreamTrack | undefined = () => undefined) {
     this.camera = camera; this.watch(camera);
   }
   private publishState = () => {
@@ -131,12 +136,12 @@ export class CallVideo {
     this.watch(this.camera);
   }); }
   // Must call getDisplayMedia inside the initiating click, before any awaits.
-  startScreen() {
+  startScreen(shareAudio = false) {
     const availability = screenCaptureAvailability();
     if (!availability.available) return Promise.reject(new Error(availability.reason));
     if (this.stopped || this.screen) return Promise.reject(new Error('Screen sharing is already active or the call has ended.'));
     const revision = this.revision;
-    const capture = navigator.mediaDevices.getDisplayMedia({ video: { width: { max: 1920 }, height: { max: 1080 }, frameRate: { max: 24 } }, audio: false })
+    const capture = navigator.mediaDevices.getDisplayMedia({ video: { width: { max: 1920 }, height: { max: 1080 }, frameRate: { max: 24 } }, audio: shareAudio })
       .then(stream => {
         if (this.stopped || revision !== this.revision) stream.getTracks().forEach(track => track.stop());
         return { stream, error: undefined };
@@ -149,17 +154,33 @@ export class CallVideo {
       try {
         if (!track || this.stopped || revision !== this.revision) throw new Error('Call ended');
         track.contentHint = 'detail';
+        const deviceAudio = stream.getAudioTracks?.()[0];
+        if (shareAudio && deviceAudio) {
+          const sender = this.audioSender(), mic = this.microphone();
+          if (!sender || !mic) throw new Error('Screen audio is unavailable for this call.');
+          const context = new AudioContext(); this.audioMix = context;
+          const destination = context.createMediaStreamDestination();
+          context.createMediaStreamSource(new MediaStream([mic])).connect(destination);
+          context.createMediaStreamSource(new MediaStream([deviceAudio])).connect(destination);
+          await context.resume();
+          if (this.stopped || revision !== this.revision) throw new Error('Call ended');
+          this.mixedAudio = destination.stream.getAudioTracks()[0];
+          await sender.replaceTrack(this.mixedAudio);
+        } else if (shareAudio) this.report(new Error('The selected source did not provide device audio. Your microphone is still available.'));
         await this.replace(track, true);
+        this.screenStream = stream;
         this.screen = track;
         this.watch(track);
         track.onended = () => { void this.stopScreen().catch(this.report); };
-      } catch (error) { stream.getTracks().forEach(track => track.stop()); throw error; }
+      } catch (error) { await this.restoreAudio(); stream.getTracks().forEach(track => track.stop()); throw error; }
     });
   }
   stopScreen() { return this.queue(async () => {
     if (!this.screen) return;
     await this.replace(this.processed?.track || this.camera, false);
-    this.screen.onended = null; this.screen.stop(); this.screen = undefined;
+    await this.restoreAudio();
+    this.screen.onended = null; this.screen = undefined;
+    this.screenStream?.getTracks().forEach(track => track.stop()); this.screenStream = undefined;
     this.watch(this.camera);
   }); }
   toggleCamera() {
@@ -168,11 +189,17 @@ export class CallVideo {
     if (this.processed) this.processed.track.enabled = enabled;
     return !enabled;
   }
+  private async restoreAudio() {
+    try { if (this.mixedAudio && !this.stopped) await this.audioSender()?.replaceTrack(this.microphone() || null); }
+    finally { this.mixedAudio?.stop(); this.mixedAudio = undefined; await this.audioMix?.close().catch(() => {}); this.audioMix = undefined; }
+  }
   dispose() {
     this.stopped = true; this.revision++;
     this.unwatch();
     this.effectsAbort.abort();
-    if (this.screen) { this.screen.onended = null; this.screen.stop(); }
+    if (this.screen) this.screen.onended = null;
+    this.screenStream?.getTracks().forEach(track => track.stop()); this.screenStream = undefined;
+    void this.restoreAudio();
     this.processed?.dispose(); this.camera.stop();
   }
 }
