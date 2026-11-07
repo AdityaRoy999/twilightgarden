@@ -11,6 +11,7 @@ const options={auth:{persistSession:false,autoRefreshToken:false}};
 const admin=createClient(url,process.env.SUPABASE_SERVICE_ROLE_KEY!,options);
 const people:Array<{id:string;client:SupabaseClient}>=[];
 const contexts:BrowserContext[]=[];
+const pages:import('@playwright/test').Page[]=[];
 let coupleId:string|undefined,browser:Browser|undefined;
 const checked=(result:any)=>{if(result.error) throw new Error(result.error.message);return result.data;};
 try {
@@ -32,11 +33,15 @@ try {
   const credentials=await Promise.all(people.map(async person=>checked(await person.client.functions.invoke('call-room',{body:{coupleId,callId}}))));
   assert.equal(new URL(credentials[0].url).protocol,'wss:');
   browser=await chromium.launch({channel:'msedge',headless:true,args:['--use-fake-ui-for-media-stream','--use-fake-device-for-media-stream','--autoplay-policy=no-user-gesture-required']});
-  const pages=[];
   for(const item of credentials) {
     const context=await browser.newContext({permissions:['camera','microphone']});contexts.push(context);
     // Only short-lived membership tokens enter these isolated browser contexts.
-    await context.addInitScript(value=>{(window as any).__twilightCloudMedia=value;},{url:item.url,token:item.token,key});
+    await context.addInitScript(value=>{
+      (window as any).__twilightCloudMedia=value;
+      const peers:RTCPeerConnection[]=[];(window as any).__testPeers=peers;
+      const NativePeer=window.RTCPeerConnection;
+      window.RTCPeerConnection=class extends NativePeer {constructor(configuration?:RTCConfiguration){super(configuration);peers.push(this);}};
+    },{url:item.url,token:item.token,key});
     const page=await context.newPage();await page.goto('http://127.0.0.1:3000/tests/browser/sfu.html?cloud=1');pages.push(page);
   }
   await pages[0].getByRole('button',{name:'Join',exact:true}).click();
@@ -50,6 +55,13 @@ try {
   console.log('PASS two real browser clients decoded encrypted video and audio through the configured cloud server.');
   await pages[1].getByRole('button',{name:'Leave',exact:true}).click();await expect(pages[1].locator('#status')).toHaveText('Ended');
   console.log('PASS media disconnect.');
+} catch(error) {
+  for(const page of pages) console.log('Synthetic media diagnostics',await page.evaluate(async()=>({
+    status:document.querySelector('#status')?.textContent,
+    video:[...document.querySelectorAll('video')].map(video=>({ready:video.readyState,width:video.videoWidth,height:video.videoHeight,paused:video.paused,tracks:(video.srcObject as MediaStream|null)?.getTracks().map(track=>({kind:track.kind,enabled:track.enabled,muted:track.muted,state:track.readyState}))})),
+    transport:await Promise.all(((window as any).__testPeers as RTCPeerConnection[]).map(async peer=>({connection:peer.connectionState,stats:[...(await peer.getStats()).values()].filter(stat=>['inbound-rtp','outbound-rtp'].includes(stat.type)).map(stat=>({type:stat.type,kind:stat.kind,bytesReceived:stat.bytesReceived,bytesSent:stat.bytesSent,framesDecoded:stat.framesDecoded,framesEncoded:stat.framesEncoded,packetsLost:stat.packetsLost}))})))
+  })));
+  throw error;
 } finally {
   for(const context of contexts) await context.close();await browser?.close();
   if(coupleId) checked(await admin.from('couples').delete().eq('id',coupleId));

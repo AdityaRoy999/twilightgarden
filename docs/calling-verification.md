@@ -14,9 +14,13 @@ that every phone/OS combination has passed physical-device testing.
   authenticated endpoint, requests short-lived tokens, and checks decoded
   encrypted audio/video through the configured server. It removes its accounts
   and relationship afterward and never reads real users' content.
-- The configured endpoint is recognized, but the cloud test currently receives
-  **invalid API key** from LiveKit signaling. A matching URL/key/secret from one
-  LiveKit project is required before cloud calls can be marked verified.
+- After the owner replaced the mismatched API credentials, the cloud test passed:
+  both browser clients decoded encrypted video and non-silent audio through the
+  configured LiveKit server, and disconnect completed. Synthetic accounts and
+  their relationship were removed. Physical phone behavior is still unverified.
+- Production deployment `8b06b798` is live at `twilight-mocha.vercel.app`.
+  Its served chat chunk was checked for Details, Shared media, Call history and
+  Chat theme. Native apps need a rebuild to include the new plugin.
 - TypeScript, production web build and 15 focused chat/call tests passed.
 
 ## Implemented

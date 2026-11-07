@@ -13,6 +13,7 @@ let analyser: AnalyserNode | undefined;
   return samples.reduce((sum,value) => sum + value * value,0) / samples.length;
 };
 const query = new URLSearchParams(location.search), identity = query.get('identity') || 'alice';
+let currentState: {remotePresent?:boolean;connected?:boolean;ended?:boolean;error?:string} = {};
 document.getElementById('join')!.onclick = async () => {
   const status = document.getElementById('status')!;
   try {
@@ -21,7 +22,8 @@ document.getElementById('join')!.onclick = async () => {
     const credentials = cloud || {url:'ws://127.0.0.1:7880', token:await signCallRoomToken('devkey','secret',identity,'twilight-local-test')};
     room = await connectWebMediaRoom(credentials,cloud?.key || query.get('key') || 'test-key-same-for-both-participants',true,value => {
       if (value.remote) { remote = value.remote; const video = document.querySelector('video')!; video.srcObject = value.remote; attachVideo(); void video.play(); }
-      status.textContent = value.error || (value.remotePresent ? 'Partner connected' : value.connected ? 'Connected' : value.ended ? 'Ended' : status.textContent);
+      currentState = {...currentState,...value};
+      status.textContent = currentState.error || (currentState.ended ? 'Ended' : currentState.remotePresent ? 'Partner connected' : currentState.connected ? 'Connected' : status.textContent);
     });
     (window as any).testRoom = room;
     attachVideo();
