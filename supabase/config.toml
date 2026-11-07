@@ -28,3 +28,5 @@ verify_jwt = false
 verify_jwt = false
 [functions.vault-recovery]
 verify_jwt = false
+[functions.call-room]
+verify_jwt = false

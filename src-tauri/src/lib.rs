@@ -1,6 +1,9 @@
+mod remote_control;
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
   tauri::Builder::default()
+    .manage(remote_control::ControlState::default())
+    .invoke_handler(tauri::generate_handler![remote_control::enable_remote_control, remote_control::revoke_remote_control, remote_control::apply_remote_input])
     .plugin(tauri_plugin_single_instance::init(|_app, _args, _cwd| {
       // The deep-link feature on single-instance automatically forwards
       // deep link URLs to the running instance via onOpenUrl events.

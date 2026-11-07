@@ -1,4 +1,5 @@
 import {adminClient} from './security.ts';
+import {closeCallRooms} from './call-room-cleanup.ts';
 
 /** Use Storage's API: deleting storage.objects rows alone leaves physical files. */
 export async function cleanChatMedia(coupleId:string,db=adminClient()) {
@@ -19,6 +20,7 @@ export async function cleanChatMedia(coupleId:string,db=adminClient()) {
     throw new Error('Media cleanup needs another pass');
   };
   await removeFolder(coupleId);
+  await closeCallRooms(coupleId);
   const {error}=await db.from('chat_cleanup_jobs').update({cleaned_at:new Date().toISOString()}).eq('couple_id',coupleId);
   if(error)throw error;
 }

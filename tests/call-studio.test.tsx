@@ -11,7 +11,7 @@ vi.mock('../hooks/useCallRingtone', () => ({ useCallRingtone: () => ({ blocked: 
 
 function call(overrides: Partial<ReturnType<typeof useCall>> = {}): ReturnType<typeof useCall> {
   return {
-    callStatus: 'connected', callerName: 'Synthetic partner', localStream: null, remoteStream: null,
+    nativeMedia: false, mediaTransport: 'p2p', remoteControl: 'idle', requestRemoteControl: async () => {}, grantRemoteControl: async () => {}, stopRemoteControl: () => {}, sendRemoteInput: () => {}, callStatus: 'connected', callerName: 'Synthetic partner', localStream: null, remoteStream: null,
     isIncomingCall: false, isVideoCall: true, isMuted: false, isVideoOff: false,
     initiateCall: vi.fn(), acceptCall: vi.fn(), rejectCall: vi.fn(), endCall: vi.fn(),
     toggleMute: vi.fn(), toggleVideo: vi.fn(), switchCamera: vi.fn(), toggleScreenShare: vi.fn(),

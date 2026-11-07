@@ -25,7 +25,7 @@ import io.livekit.android.room.track.screencapture.ScreenCaptureParams
 import kotlinx.coroutines.*
 import livekit.org.webrtc.audio.JavaAudioDeviceModule
 
-@CapacitorPlugin(name = "TwilightCalls", permissions = [Permission(alias = "media", strings = [Manifest.permission.CAMERA, Manifest.permission.RECORD_AUDIO])])
+@CapacitorPlugin(name = "TwilightCalls", permissions = [Permission(alias = "microphone", strings = [Manifest.permission.RECORD_AUDIO]), Permission(alias = "camera", strings = [Manifest.permission.CAMERA])])
 class TwilightCallsPlugin : Plugin() {
     private val scope = CoroutineScope(SupervisorJob() + Dispatchers.Main.immediate)
     private var room: Room? = null
@@ -41,11 +41,12 @@ class TwilightCallsPlugin : Plugin() {
     @PluginMethod fun capabilities(call: PluginCall) = call.resolve(JSObject().put("available", true).put("screen", true).put("audio", Build.VERSION.SDK_INT >= 29))
     private fun run(call: PluginCall, work: suspend () -> Unit) { scope.launch { try { work(); call.resolve() } catch (e: Exception) { call.reject(e.message ?: "Native call operation failed.") } } }
     @PluginMethod fun connect(call: PluginCall) {
-        if (getPermissionState("media") != PermissionState.GRANTED) { requestPermissionForAlias("media", call, "mediaPermission"); return }
+        if (!hasMediaPermission(call)) { requestPermissionForAliases(if (call.getBoolean("video", false) == true) arrayOf("microphone", "camera") else arrayOf("microphone"), call, "mediaPermission"); return }
         join(call)
     }
+    private fun hasMediaPermission(call: PluginCall) = getPermissionState("microphone") == PermissionState.GRANTED && (call.getBoolean("video", false) != true || getPermissionState("camera") == PermissionState.GRANTED)
     @PermissionCallback private fun mediaPermission(call: PluginCall) {
-        if (getPermissionState("media") == PermissionState.GRANTED) join(call) else call.reject("Camera and microphone permission is needed for this call.")
+        if (hasMediaPermission(call)) join(call) else call.reject("Allow the requested microphone/camera permission for this call.")
     }
     private fun join(call: PluginCall) = run(call) {
         val url = call.getString("url") ?: throw IllegalArgumentException("Media server is missing.")
