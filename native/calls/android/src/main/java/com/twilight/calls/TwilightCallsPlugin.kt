@@ -2,11 +2,15 @@ package com.twilight.calls
 
 import android.Manifest
 import android.app.Activity
+import android.app.PictureInPictureParams
+import android.content.res.Configuration
+import android.content.pm.PackageManager
 import android.content.Context
 import android.content.Intent
 import android.graphics.Color
 import android.media.projection.MediaProjectionManager
 import android.os.Build
+import android.util.Rational
 import android.view.View
 import android.view.ViewGroup
 import com.getcapacitor.*
@@ -38,7 +42,7 @@ class TwilightCallsPlugin : Plugin() {
     private var generation = 0
     private var sessionId: String? = null
     private var events: Job? = null
-    @PluginMethod fun capabilities(call: PluginCall) = call.resolve(JSObject().put("available", true).put("screen", true).put("audio", Build.VERSION.SDK_INT >= 29))
+    @PluginMethod fun capabilities(call: PluginCall) = call.resolve(JSObject().put("available", true).put("screen", true).put("audio", Build.VERSION.SDK_INT >= 29).put("pip", context.packageManager.hasSystemFeature(PackageManager.FEATURE_PICTURE_IN_PICTURE)))
     private fun run(call: PluginCall, work: suspend () -> Unit) { scope.launch { try { work(); call.resolve() } catch (e: Exception) { call.reject(e.message ?: "Native call operation failed.") } } }
     @PluginMethod fun connect(call: PluginCall) {
         if (!hasMediaPermission(call)) { requestPermissionForAliases(if (call.getBoolean("video", false) == true) arrayOf("microphone", "camera") else arrayOf("microphone"), call, "mediaPermission"); return }
@@ -104,6 +108,7 @@ class TwilightCallsPlugin : Plugin() {
         remoteView?.let { remoteTrack?.removeRenderer(it); (it.parent as? ViewGroup)?.removeView(it); it.release() }
         localView = null; remoteView = null; localTrack = null; remoteTrack = null
         context.stopService(Intent(context, CallAudioService::class.java))
+        bridge.webView.visibility = View.VISIBLE
     }
     @PluginMethod fun disconnect(call: PluginCall) = run(call) { if (sessionId == call.getString("sessionId")) { generation += 1; sessionId = null; closeRoom() } }
     @PluginMethod fun microphone(call: PluginCall) = run(call) {
@@ -145,6 +150,7 @@ class TwilightCallsPlugin : Plugin() {
     }
     @PluginMethod fun layout(call: PluginCall) {
         activity.runOnUiThread {
+            if (activity.isInPictureInPictureMode) { showPipVideo(); call.resolve(); return@runOnUiThread }
             val density = context.resources.displayMetrics.density
             fun place(view: View?, name: String) {
                 val value = call.getObject(name) ?: return
@@ -156,5 +162,25 @@ class TwilightCallsPlugin : Plugin() {
             place(remoteView, "remote"); place(localView, "local"); call.resolve()
         }
     }
+    private fun showPipVideo() {
+        bridge.webView.visibility = View.INVISIBLE
+        localView?.visibility = View.INVISIBLE
+        remoteView?.let { view -> view.x = 0f; view.y = 0f; view.visibility = View.VISIBLE; view.layoutParams = ViewGroup.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT) }
+    }
+    @PluginMethod fun pictureInPicture(call: PluginCall) {
+        activity.runOnUiThread {
+            if (room == null || remoteTrack == null || !context.packageManager.hasSystemFeature(PackageManager.FEATURE_PICTURE_IN_PICTURE)) { call.reject("Picture-in-picture needs an active remote video."); return@runOnUiThread }
+            try {
+                val params = PictureInPictureParams.Builder().setAspectRatio(Rational(3,4)).build()
+                if (!activity.enterPictureInPictureMode(params)) { call.reject("Picture-in-picture is disabled in system settings."); return@runOnUiThread }
+                showPipVideo(); call.resolve()
+            } catch (error: Exception) { bridge.webView.visibility = View.VISIBLE; call.reject("Picture-in-picture could not open. Check system permissions.") }
+        }
+    }
+    override fun handleOnConfigurationChanged(newConfig: Configuration) {
+        if (activity.isInPictureInPictureMode && room != null) showPipVideo()
+        else { bridge.webView.visibility = View.VISIBLE; room?.let { refresh(it) } }
+    }
+    override fun handleOnResume() { if (!activity.isInPictureInPictureMode) bridge.webView.visibility = View.VISIBLE }
     override fun handleOnDestroy() { scope.launch { closeRoom(); scope.cancel() } }
 }

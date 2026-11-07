@@ -2,12 +2,13 @@ import Capacitor
 import LiveKit
 import AVFoundation
 import UIKit
+import AVKit
 
 @objc(TwilightCallsPlugin)
-public final class TwilightCallsPlugin: CAPPlugin, CAPBridgedPlugin, RoomDelegate, @unchecked Sendable {
+public final class TwilightCallsPlugin: CAPPlugin, CAPBridgedPlugin, RoomDelegate, AVPictureInPictureControllerDelegate, @unchecked Sendable {
     public let identifier = "TwilightCallsPlugin"
     public let jsName = "TwilightCalls"
-    public let pluginMethods: [CAPPluginMethod] = ["capabilities", "connect", "disconnect", "microphone", "camera", "switchCamera", "screen", "layout"].map { CAPPluginMethod(name: $0, returnType: CAPPluginReturnPromise) }
+    public let pluginMethods: [CAPPluginMethod] = ["capabilities", "connect", "disconnect", "microphone", "camera", "switchCamera", "screen", "layout", "pictureInPicture"].map { CAPPluginMethod(name: $0, returnType: CAPPluginReturnPromise) }
     private var room: Room?
     private var revision = 0
     private var sessionId: String?
@@ -15,10 +16,13 @@ public final class TwilightCallsPlugin: CAPPlugin, CAPBridgedPlugin, RoomDelegat
     private var audioSharing = false
     private var localView: VideoView?
     private var remoteView: VideoView?
+    private var pip: AVPictureInPictureController?
+    private var pipView: VideoView?
+    private var pipContent: AVPictureInPictureVideoCallViewController?
 
     @objc func capabilities(_ call: CAPPluginCall) {
-        if #available(iOS 27.0, *) { call.resolve(["available": true, "screen": true, "audio": true]) }
-        else { call.resolve(["available": true, "screen": false, "audio": false, "reason": "System-wide sharing requires iOS 27 or the signed ReplayKit extension setup."]) }
+        if #available(iOS 27.0, *) { call.resolve(["available": true, "screen": true, "audio": true, "pip": AVPictureInPictureController.isPictureInPictureSupported()]) }
+        else { call.resolve(["available": true, "screen": false, "audio": false, "pip": AVPictureInPictureController.isPictureInPictureSupported(), "reason": "System-wide sharing requires iOS 27 or the signed ReplayKit extension setup."]) }
     }
     private func run(_ call: CAPPluginCall, operation: @escaping @MainActor () async throws -> Void) {
         Task { @MainActor in
@@ -32,7 +36,7 @@ public final class TwilightCallsPlugin: CAPPlugin, CAPBridgedPlugin, RoomDelegat
             sessionId = call.getString("sessionId")
             revision += 1; let current = revision
             let previous = room; room = nil
-            await previous?.disconnect()
+            stopPip(); await previous?.disconnect()
             let provider = BaseKeyProvider(isSharedKey: true, sharedKey: key)
             let options = RoomOptions(defaultScreenShareCaptureOptions: ScreenShareCaptureOptions(appAudio: true), adaptiveStream: true, dynacast: true, e2eeOptions: E2EEOptions(keyProvider: provider))
             let next = Room(delegate: self, roomOptions: options); room = next
@@ -59,6 +63,16 @@ public final class TwilightCallsPlugin: CAPPlugin, CAPBridgedPlugin, RoomDelegat
         let screen = remotePublications.first { $0.source == .screenShareVideo }?.track as? VideoTrack
         let camera = remotePublications.first { $0.source == .camera }?.track as? VideoTrack
         remoteView?.track = screen ?? camera
+        if let track = screen ?? camera, let remoteView, pip == nil, AVPictureInPictureController.isPictureInPictureSupported() {
+            let content = AVPictureInPictureVideoCallViewController()
+            content.preferredContentSize = CGSize(width: 360, height: 480)
+            let video = VideoView(); video.renderMode = .sampleBuffer; video.layoutMode = .fit
+            video.frame = content.view.bounds; video.autoresizingMask = [.flexibleWidth, .flexibleHeight]; content.view.addSubview(video)
+            video.track = track; pipView = video; pipContent = content
+            pip = AVPictureInPictureController(contentSource: .init(activeVideoCallSourceView: remoteView, contentViewController: content))
+            pip?.delegate = self; pip?.canStartPictureInPictureAutomaticallyFromInline = false
+        }
+        pipView?.track = screen ?? camera
         remoteView?.layoutMode = screen == nil ? .fill : .fit
         localView?.track = active.localParticipant.trackPublications.values.first { $0.source == .camera && !$0.isMuted }?.track as? VideoTrack
         emit(["connected": active.connectionState == .connected, "remotePresent": !active.remoteParticipants.isEmpty, "sharing": active.localParticipant.isScreenShareEnabled(), "remoteSharing": screen != nil, "remoteVideoOff": screen == nil && camera == nil])
@@ -68,6 +82,7 @@ public final class TwilightCallsPlugin: CAPPlugin, CAPBridgedPlugin, RoomDelegat
         run(call) { [self] in
             guard sessionId == call.getString("sessionId") else { return }
             sessionId = nil
+            stopPip()
             revision += 1; let previous = room; room = nil
             await previous?.disconnect(); localView?.removeFromSuperview(); remoteView?.removeFromSuperview(); localView = nil; remoteView = nil
             audioSharing = false
@@ -82,6 +97,16 @@ public final class TwilightCallsPlugin: CAPPlugin, CAPBridgedPlugin, RoomDelegat
             try await room.localParticipant.setMicrophone(enabled: microphoneEnabled || audioSharing)
         }
     }
+    @MainActor private func stopPip() {
+        pip?.stopPictureInPicture(); pip?.delegate = nil; pip = nil; pipView?.track = nil; pipView = nil; pipContent = nil
+    }
+    @objc func pictureInPicture(_ call: CAPPluginCall) {
+        run(call) { [self] in
+            guard let pip, pip.isPictureInPicturePossible else { throw NSError(domain: "TwilightCalls", code: 4, userInfo: [NSLocalizedDescriptionKey: "Picture-in-picture is not ready. Wait for your partner’s video, then retry."]) }
+            pip.startPictureInPicture()
+        }
+    }
+    public func pictureInPictureController(_ pictureInPictureController: AVPictureInPictureController, restoreUserInterfaceForPictureInPictureStopWithCompletionHandler completionHandler: @escaping (Bool) -> Void) { completionHandler(true) }
     @objc func camera(_ call: CAPPluginCall) { run(call) { [self] in try await room?.localParticipant.setCamera(enabled: call.getBool("enabled") == true); if let room { refresh(room) } } }
     @objc func switchCamera(_ call: CAPPluginCall) {
         run(call) { [self] in
@@ -118,7 +143,7 @@ public final class TwilightCallsPlugin: CAPPlugin, CAPBridgedPlugin, RoomDelegat
     public func room(_ room: Room, participantDidDisconnect participant: RemoteParticipant) {
         Task { @MainActor in
             guard self.room === room else { return }
-            emit(["ended": true]); self.room = nil
+            emit(["ended": true]); self.room = nil; stopPip()
             await room.disconnect()
             localView?.removeFromSuperview(); remoteView?.removeFromSuperview(); localView = nil; remoteView = nil
         }

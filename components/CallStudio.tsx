@@ -51,6 +51,7 @@ export function CallStudioView({ call }: { call: ReturnType<typeof useCall> }) {
   const dockedRef = useRef<DockSide>(null); dockedRef.current = docked;
   const [nativeCapture, setNativeCapture] = useState(false);
   const [nativeAudio, setNativeAudio] = useState(false);
+  const [nativePip, setNativePip] = useState(false);
   const [stalled, setStalled] = useState(false);
   const ringtone = useCallRingtone(call.callStatus === 'incoming');
   const [seconds, setSeconds] = useState(0), [reactionClock, setReactionClock] = useState(Date.now());
@@ -61,7 +62,7 @@ export function CallStudioView({ call }: { call: ReturnType<typeof useCall> }) {
   const capture = screenCaptureAvailability();
   useEffect(() => {
     let live = true;
-    if (call.nativeMedia) void NativeCalls.capabilities().then(value => { if (live) { setNativeCapture(value.screen); setNativeAudio(value.audio); } }).catch(() => { if (live) { setNativeCapture(false); setNativeAudio(false); } });
+    if (call.nativeMedia) void NativeCalls.capabilities().then(value => { if (live) { setNativeCapture(value.screen); setNativeAudio(value.audio); setNativePip(!!value.pip); } }).catch(() => { if (live) { setNativeCapture(false); setNativeAudio(false); setNativePip(false); } });
     return () => { live = false; };
   }, [call.nativeMedia]);
   useEffect(() => {
@@ -217,6 +218,7 @@ export function CallStudioView({ call }: { call: ReturnType<typeof useCall> }) {
   };
   const enterPip = async () => {
     try {
+      if (call.nativeMedia) { await NativeCalls.pictureInPicture(); setPanel(null); return; }
       const video = remoteVideo.current;
       if (!video || !call.remoteStream) return;
       if (document.pictureInPictureElement) await document.exitPictureInPicture();
@@ -289,7 +291,7 @@ export function CallStudioView({ call }: { call: ReturnType<typeof useCall> }) {
             {call.isVideoCall && <CallButton icon="CameraSwitch" label="Switch camera" disabled={call.mediaBusy || call.isSharingScreen} onClick={() => void call.switchCamera()}/>}
             {call.isVideoCall && <CallButton icon="ScreenShare" label={call.isSharingScreen ? 'Stop sharing' : 'Share screen'} disabled={call.mediaBusy} onClick={() => (call.nativeMedia ? nativeCapture : capture.available) || call.isSharingScreen ? void call.toggleScreenShare(shareAudio) : setNotice(call.nativeMedia ? 'System-wide sharing requires iOS 27 or a configured native broadcast extension.' : capture.reason)}/>}
             {call.isVideoCall && call.mediaTransport === 'p2p' && cameraEffectsSupported() && <CallButton icon="Palette" label="Effects" onClick={() => setPanel('effects')}/>}
-            {call.isVideoCall && pipAvailable && call.remoteStream && <CallButton icon="PictureInPicture" label="Picture-in-picture" onClick={() => void enterPip()}/>}
+            {call.isVideoCall && (call.nativeMedia ? nativePip : pipAvailable && call.remoteStream) && <CallButton icon="PictureInPicture" label="Picture-in-picture" onClick={() => void enterPip()}/>}
             {fullscreenAvailable && <CallButton icon={fullscreen ? 'Minimize' : 'Maximize'} label={fullscreen ? 'Exit browser fullscreen' : 'Browser fullscreen'} onClick={() => void enterFullscreen()}/>}
             {call.remoteSharingScreen && !call.nativeMedia && call.remoteControl === 'idle' && <CallButton icon="Monitor" label="Request remote control" onClick={() => void call.requestRemoteControl()}/>}
           </div><button className="call-blur-toggle" aria-pressed={shareAudio} disabled={call.isSharingScreen || call.nativeMedia && !nativeAudio} onClick={() => setShareAudio(value => !value)}><AppIcon name={shareAudio ? 'CheckCircle' : 'Mic'}/>{call.nativeMedia && !nativeAudio ? 'Device audio unavailable on this OS' : shareAudio ? 'Share device audio: on' : 'Share device audio: off'}</button><p>Choose audio before starting screen sharing. Some apps protect their audio. Microphone controls remain separate.</p>{call.callNetwork && <p className="call-connection-info">{call.isVideoCall ? qualityProfiles[call.callNetwork.quality].label : 'Adaptive speech'}{call.callNetwork.videoPaused ? ' · Video paused to protect audio' : ''}{call.callLatencyMs !== null ? ` · ${call.callLatencyMs} ms round-trip` : ''}</p>}</>}
