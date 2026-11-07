@@ -683,7 +683,6 @@ const LoveLock: React.FC = () => {
                     </div>
                 </div>
 
-                <button aria-label="Chat details and call history" onClick={() => setDetailsOpen(true)} className="hidden md:grid h-11 w-11 place-items-center rounded-full text-primary"><AppIcon name="EllipsisVertical" size={22}/></button>
                 <div className="hidden md:flex items-center gap-1 bg-gray-100 dark:bg-white/5 p-1 rounded-full border dark:border-white/5">
                     <button
                         onClick={() => setViewFilter(viewFilter === 'starred' ? 'all' : 'starred')}
@@ -723,6 +722,7 @@ const LoveLock: React.FC = () => {
                     >
                         <span className="app-icon-glyph text-[20px]"><AppIcon name={"link_off"}/></span>
                     </button>
+                    <button aria-label="Chat details and call history" title="Media, links, call history and chat settings" onClick={() => setDetailsOpen(true)} className="flex h-11 items-center gap-2 rounded-full px-3 text-primary hover:bg-primary/10"><AppIcon name="EllipsisVertical" size={22}/><span className="text-sm font-semibold">Details</span></button>
                 </div>
                 <div className="flex items-center gap-1 md:hidden">
                     <button aria-label="Voice call" onClick={() => initiateCall(false)} className="flex h-11 w-11 items-center justify-center rounded-full text-primary hover:bg-primary/10"><Phone size={19}/></button>

@@ -16,8 +16,10 @@ const query = new URLSearchParams(location.search), identity = query.get('identi
 document.getElementById('join')!.onclick = async () => {
   const status = document.getElementById('status')!;
   try {
-    const token = await signCallRoomToken('devkey','secret',identity,'twilight-local-test');
-    room = await connectWebMediaRoom({url:'ws://127.0.0.1:7880',token},query.get('key') || 'test-key-same-for-both-participants',true,value => {
+    const cloud = (window as any).__twilightCloudMedia as {url:string;token:string;key:string} | undefined;
+    if (query.has('cloud') && !cloud) throw new Error('Synthetic cloud credentials are missing.');
+    const credentials = cloud || {url:'ws://127.0.0.1:7880', token:await signCallRoomToken('devkey','secret',identity,'twilight-local-test')};
+    room = await connectWebMediaRoom(credentials,cloud?.key || query.get('key') || 'test-key-same-for-both-participants',true,value => {
       if (value.remote) { remote = value.remote; const video = document.querySelector('video')!; video.srcObject = value.remote; attachVideo(); void video.play(); }
       status.textContent = value.error || (value.remotePresent ? 'Partner connected' : value.connected ? 'Connected' : value.ended ? 'Ended' : status.textContent);
     });

@@ -3,6 +3,22 @@
 Updated 7 November 2026. This is an implementation and test record, not a claim
 that every phone/OS combination has passed physical-device testing.
 
+## Live deployment check, 7 November
+
+- The production site was still on `4dfd78a`; the new media/details interface
+  existed only in PR #47. Desktop chat now labels its entry point **Details**;
+  mobile users can use the three-dot menu or the contact name.
+- Applied `allow_call_room_budget`: the server-only budget now permits
+  `call-room` joins. Unknown actions and invalid limits remain blocked.
+- `scripts/verify-cloud-calls.ts` creates two disposable accounts, checks the
+  authenticated endpoint, requests short-lived tokens, and checks decoded
+  encrypted audio/video through the configured server. It removes its accounts
+  and relationship afterward and never reads real users' content.
+- The configured endpoint is recognized, but the cloud test currently receives
+  **invalid API key** from LiveKit signaling. A matching URL/key/secret from one
+  LiveKit project is required before cloud calls can be marked verified.
+- TypeScript, production web build and 15 focused chat/call tests passed.
+
 ## Implemented
 
 - Optional, self-hosted LiveKit media transport. P2P remains the default until
