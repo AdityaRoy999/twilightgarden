@@ -75,9 +75,10 @@ https://docs.livekit.io/transport/encryption/
 
 The native plugin is in `native/calls`. Run `npm ci`, build the web bundle, then
 `npx cap sync ios` / generate and sync Android using the existing workflow.
-iOS 27 capture requires an Xcode 27 SDK and the signed screen-recording
-entitlement. Free-Apple-ID signing must be tested for entitlement preservation;
-an unsigned compilation cannot prove that a sideloaded screen broadcast works.
+iOS 27 capture requires an Xcode 27 SDK, the system content-sharing picker, and
+the `screen-capture`/`audio` background modes. No additional screen-recording
+entitlement is requested. Free-Apple-ID signing and background capture still
+need device testing; unsigned compilation cannot prove sideloaded capture works.
 Earlier iOS versions currently support native calls but not full-device capture
 in this plugin. They require the additional signed ReplayKit extension target.
 

@@ -1,6 +1,7 @@
 """Install and launch a simulator app; compile success is not launch verification."""
 import json
 import os
+import plistlib
 from pathlib import Path
 import re
 import shutil
@@ -18,6 +19,10 @@ def run(*args, check=True):
 
 def main():
     app = Path(sys.argv[1]).resolve()
+    info = plistlib.loads((app / 'Info.plist').read_bytes())
+    configuration = info.get('UIApplicationSceneManifest', {}).get('UISceneConfigurations', {}).get('UIWindowSceneSessionRoleApplication', [])
+    if not configuration or not configuration[0].get('UISceneDelegateClassName', '').endswith('.SceneDelegate'):
+        raise RuntimeError('Built app has no scene delegate configuration and cannot launch with the iOS 27 SDK.')
     output = Path(sys.argv[2]).resolve()
     output.mkdir(parents=True, exist_ok=True)
     devices = json.loads(run('xcrun', 'simctl', 'list', 'devices', 'available', '-j'))['devices']
