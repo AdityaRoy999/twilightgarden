@@ -1,0 +1,21 @@
+buildscript {
+    repositories { google(); mavenCentral() }
+    dependencies { classpath 'org.jetbrains.kotlin:kotlin-gradle-plugin:2.2.20' }
+}
+apply plugin: 'com.android.library'
+apply plugin: 'org.jetbrains.kotlin.android'
+android {
+    namespace 'com.twilight.calls'
+    compileSdk 36
+    defaultConfig { minSdk 26; targetSdk 36 }
+    compileOptions { sourceCompatibility JavaVersion.VERSION_21; targetCompatibility JavaVersion.VERSION_21 }
+    kotlinOptions { jvmTarget = '21' }
+}
+repositories { google(); mavenCentral(); maven { url 'https://jitpack.io'; content { includeGroup 'com.github.davidliu' } } }
+dependencies {
+    implementation project(':capacitor-android')
+    implementation 'androidx.appcompat:appcompat:1.7.1'
+    implementation 'androidx.activity:activity:1.10.1'
+    implementation 'io.livekit:livekit-android:2.30.0'
+    implementation 'org.jetbrains.kotlinx:kotlinx-coroutines-android:1.10.2'
+}

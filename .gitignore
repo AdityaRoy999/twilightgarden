@@ -41,5 +41,5 @@ src-tauri/tauri.ci.json
 *.sln
 *.sw?
 
-android
+/android/
 .android

@@ -1,0 +1,8 @@
+{
+  "name": "@twilight/native-calls",
+  "version": "1.0.0",
+  "description": "Native encrypted call media and system screen capture for Twilight",
+  "main": "index.js",
+  "files": ["Package.swift", "ios", "android", "index.js"],
+  "capacitor": { "ios": { "src": "ios" }, "android": { "src": "android" } }
+}
