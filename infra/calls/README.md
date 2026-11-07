@@ -84,6 +84,8 @@ in this plugin. They require the additional signed ReplayKit extension target.
 Test on physical devices: camera/mic permissions, cancel picker, screen with and
 without audio, mute microphone while sharing device audio, rotate, switch apps,
 stop through the system capture control, network handoff, remote hangup, unlink,
-lock/unlock and new-device vault restore. Force-quitting is not backgrounding.
+lock/unlock, native picture-in-picture and restoration, and new-device vault
+restore. Android PiP must be enabled for the app in system settings.
+Force-quitting is not backgrounding.
 Protected apps may supply silence/blank frames. Never report these as successful
 audio or screen sharing just because a capture track exists.

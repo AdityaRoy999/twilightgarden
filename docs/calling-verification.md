@@ -15,6 +15,9 @@ that every phone/OS combination has passed physical-device testing.
   suspended. Late screen-picker results cannot attach to a different call.
 - A draggable preview, edge docking/restoration and one app size toggle. The
   call controls follow light/dark themes, spring and reduced-motion preferences.
+- Native picture-in-picture integration uses an iOS sample-buffer video-call
+  surface and Android activity PiP. The button is capability gated; actual
+  background playback and restoration still require device verification.
 - Desktop remote input, requiring the installed Tauri app, full primary-display
   sharing, an in-app review and a separate native consent dialog. The session
   lasts at most five minutes; stopping sharing, revoking, unlinking or ending
@@ -34,7 +37,7 @@ that every phone/OS combination has passed physical-device testing.
 | Check | Result |
 | --- | --- |
 | TypeScript and production web bundle | Passed |
-| Full Vitest suite | 392 tests across 84 files passed |
+| Full Vitest suite | 392 tests across 84 files passed, followed by focused checks for the native PiP UI |
 | Two separate browser clients through real local LiveKit | Both decoded encrypted video and non-silent audio |
 | Different media keys | Encryption error; neither client decoded video |
 | Actual CallStudio at 390×844 and 1440×900 | Controls fit, preview hides/restores, device-audio toggle works |
@@ -71,10 +74,10 @@ real iPhone/Android call.
 6. Test desktop input on a consented primary display, including letterboxing,
    revocation, timeout, remote hangup and OS accessibility permissions.
 
-Browser picture-in-picture remains available where supported. Native
-cross-app PiP, incoming-call ringing with the app terminated, background camera
-video on every OS, and native beauty/background filters are not established by
-this implementation. The existing browser effects are available on P2P calls;
+Browser picture-in-picture remains available where supported. Native cross-app
+PiP is implemented but not physically verified. Incoming-call ringing with the
+app terminated, background camera video on every OS, and native beauty/background
+filters are not established by this implementation. The existing browser effects are available on P2P calls;
 native SFU calls do not claim those filters. An SFU also does not create extra
 bandwidth or guarantee a sharper two-person call than a good direct connection.
 

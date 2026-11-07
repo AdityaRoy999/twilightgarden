@@ -4,6 +4,8 @@ import { act, cleanup, fireEvent, render, screen } from '@testing-library/react'
 import { afterEach, beforeEach, expect, it, vi } from 'vitest';
 import { CallStudioView } from '../components/CallStudio';
 import type { useCall } from '../contexts/CallContext';
+import { NativeCalls } from '../lib/nativeCalls';
+vi.mock('../lib/nativeCalls', () => ({ NativeCalls: {capabilities:vi.fn().mockResolvedValue({screen:true,audio:true,pip:true}),layout:vi.fn().mockResolvedValue(undefined),pictureInPicture:vi.fn().mockResolvedValue(undefined)} }));
 vi.mock('../contexts/CallContext', () => ({ useCall: vi.fn() }));
 vi.mock('../hooks/useAppMotion', () => ({ useAppMotion: () => ({ reduced: true }) }));
 vi.mock('../hooks/useDialogFocus', () => ({ useDialogFocus: () => {} }));
@@ -27,6 +29,17 @@ beforeEach(() => {
   vi.spyOn(HTMLMediaElement.prototype, 'play').mockResolvedValue(undefined);
 });
 afterEach(() => { cleanup(); vi.useRealTimers(); vi.restoreAllMocks(); });
+
+it('uses native picture-in-picture and does not offer inactive web camera effects in an SFU call', async () => {
+  vi.stubGlobal('ResizeObserver', class { observe() {} disconnect() {} });
+  try {
+    await act(async()=> { render(<CallStudioView call={call({nativeMedia:true,mediaTransport:'sfu'})}/>); });
+    fireEvent.click(screen.getByRole('button',{name:'More'}));
+    expect(screen.queryByRole('button',{name:'Effects'})).toBeNull();
+    await act(async()=>fireEvent.click(screen.getByRole('button',{name:'Picture-in-picture'})));
+    expect(NativeCalls.pictureInPicture).toHaveBeenCalledOnce();
+  } finally { vi.unstubAllGlobals(); }
+});
 
 it('retains both incoming actions while compact, using one size toggle', async () => {
   const value = call({ callStatus: 'incoming', isIncomingCall: true });
