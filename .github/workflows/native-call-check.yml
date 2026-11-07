@@ -2,11 +2,12 @@ name: Verify native call integration
 on:
   workflow_dispatch:
   push:
-    branches: [codex/native-calls-and-chat-details]
+    branches: [codex/native-calls-and-chat-details, codex/ios-launch-diagnostics]
     paths:
       - 'native/calls/**'
       - 'ios/**'
       - '.github/workflows/native-call-check.yml'
+      - 'scripts/verify-ios-launch.py'
 permissions:
   contents: read
 jobs:
@@ -32,9 +33,26 @@ jobs:
           set -euo pipefail
           xcodebuild -version
           xcodebuild -project ios/App/App.xcodeproj -scheme App -configuration Debug -destination 'generic/platform=iOS' -derivedDataPath "$RUNNER_TEMP/call-check" CODE_SIGNING_ALLOWED=NO CODE_SIGNING_REQUIRED=NO CODE_SIGN_IDENTITY='' build > "$RUNNER_TEMP/call-check.log" 2>&1 || { tail -n 140 "$RUNNER_TEMP/call-check.log"; exit 1; }
+          python3 scripts/verify-ios-launch.py --check-bundle "$RUNNER_TEMP/call-check/Build/Products/Debug-iphoneos/App.app"
       - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
         if: always()
         with:
           name: native-call-compile-log
           path: ${{ runner.temp }}/call-check.log
+          retention-days: 3
+      - name: Build and launch in an iPhone simulator
+        if: github.event_name == 'workflow_dispatch'
+        run: |
+          set -euo pipefail
+          python3 scripts/verify-ios-launch.py --prepare
+          xcodebuild -project ios/App/App.xcodeproj -scheme App -configuration Debug -sdk iphonesimulator -destination 'generic/platform=iOS Simulator' -derivedDataPath "$RUNNER_TEMP/call-simulator" CODE_SIGNING_ALLOWED=NO build > "$RUNNER_TEMP/call-simulator.log" 2>&1 || { tail -n 140 "$RUNNER_TEMP/call-simulator.log"; exit 1; }
+          python3 scripts/verify-ios-launch.py "$RUNNER_TEMP/call-simulator/Build/Products/Debug-iphonesimulator/App.app" "$RUNNER_TEMP/ios-launch" 2>&1 | tee "$RUNNER_TEMP/ios-launch-check.log"
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        if: always()
+        with:
+          name: ios-launch-diagnostics
+          path: |
+            ${{ runner.temp }}/call-simulator.log
+            ${{ runner.temp }}/ios-launch-check.log
+            ${{ runner.temp }}/ios-launch/
           retention-days: 3

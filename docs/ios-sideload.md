@@ -1,9 +1,17 @@
 # iPhone build with a free Apple ID
 
 The **Build unsigned iOS app** GitHub Actions workflow builds a device IPA on a
-macOS runner with Xcode 26. It bundles the web app, syncs Capacitor 8 plugins with
+macOS runner with Xcode 27. It bundles the web app, syncs Capacitor 8 plugins with
 Swift Package Manager, and builds without any Apple password, certificate or
 provisioning profile in GitHub. The artifact includes a SHA-256 checksum.
+
+The iOS 27 startup crash in the 7 November build was caused by the missing
+UIKit scene lifecycle (`UIApplicationEvaluateRuntimeIssueForNoSceneLifecycleAdoption`).
+The app now creates its Capacitor window through `SceneDelegate` and forwards
+both cold/warm links through `SceneDelegateProxy`. The IPA workflow rejects a
+built bundle without the required scene configuration. The manual **Verify
+native call integration** workflow also offers a simulator launch check;
+simulator infrastructure availability is separate from device signing/launch.
 
 Run it from Actions → Build unsigned iOS app → Run workflow. Download the
 TwilightGarden-unsigned-iOS artifact after the run succeeds. The repository
@@ -24,9 +32,11 @@ Apple's free Personal Team profiles expire after **7 days**, so the installed ap
 needs re-signing/reinstallation. A free account does not provide TestFlight,
 App Store distribution, or the paid program's push notification capability.
 
-This initial iOS wrapper supports foreground web features. Native background
-calling/CallKit and APNs are separate integrations and are not enabled by this
-unsigned build. Camera, microphone, photos and on-demand location permission
+This build includes the native LiveKit calling plugin, with iOS 27 system-picker
+screen capture and opt-in shared audio. Background capture and PiP still require
+physical-device verification. CallKit and APNs are not enabled by this unsigned
+build. No additional screen-recording entitlement is requested. Camera,
+microphone, photos and on-demand location permission
 descriptions and the com.twilight.garden/twilight-garden URL schemes are included. Native Google sign-in uses the system browser and PKCE callback exchange; the
 Supabase redirect allowlist must permit com.twilight.garden://google-auth. Test permissions,
 login redirects and calls on an actual iPhone after signing. Local encryption

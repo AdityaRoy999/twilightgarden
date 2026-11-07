@@ -82,8 +82,9 @@ real iPhone/Android call.
    secrets. No paid AWS resources were provisioned for this work.
 2. Install a build containing `@twilight/native-calls`. Existing installed apps
    cannot gain this plugin from a web-only update.
-3. Confirm iPhone signing retains the screen-recording entitlement. Free Apple
-   ID signing is not proven by an unsigned compile. Earlier iOS versions need a
+3. Confirm iPhone signing and launch with the installed build. No additional
+   screen-recording entitlement is requested; capture uses the system picker
+   and background modes. Earlier iOS versions need a
    ReplayKit broadcast extension, which is not included here.
 4. Test iOS↔Android, native↔browser, and desktop↔phone on different networks.
    Check camera/mic denial, picker cancellation, sharing with/without device
