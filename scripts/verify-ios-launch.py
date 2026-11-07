@@ -23,6 +23,19 @@ def run(*args, check=True, timeout=120):
     return output.strip()
 
 
+def prepare_simulator():
+    devices = json.loads(run('xcrun', 'simctl', 'list', 'devices', 'available', '-j'))['devices']
+    phones = [device for runtime in sorted(devices, reverse=True) if '.iOS-' in runtime
+              for device in devices[runtime] if 'iPhone' in device['name'] and device['isAvailable']]
+    phone = next((device for device in phones if 'Pro' in device['name']), phones[0] if phones else None)
+    if not phone:
+        raise RuntimeError('No available iPhone simulator runtime; launch was not verified.')
+    print(f"Checking launch on {phone['name']}", flush=True)
+    if phone['state'] != 'Booted':
+        run('xcrun', 'simctl', 'boot', phone['udid'])
+    return phone['udid']
+
+
 def main():
     app = Path(sys.argv[1]).resolve()
     info = plistlib.loads((app / 'Info.plist').read_bytes())
@@ -31,19 +44,10 @@ def main():
         raise RuntimeError('Built app has no scene delegate configuration and cannot launch with the iOS 27 SDK.')
     output = Path(sys.argv[2]).resolve()
     output.mkdir(parents=True, exist_ok=True)
-    devices = json.loads(run('xcrun', 'simctl', 'list', 'devices', 'available', '-j'))['devices']
-    phones = [device for runtime in sorted(devices, reverse=True) if '.iOS-' in runtime
-              for device in devices[runtime] if 'iPhone' in device['name'] and device['isAvailable']]
-    phone = next((device for device in phones if device['name'] == 'iPhone 17 Pro'), phones[0] if phones else None)
-    if not phone:
-        raise RuntimeError('No available iPhone simulator runtime; launch was not verified.')
-    udid = phone['udid']
     started = time.time()
-    print(f"Checking launch on {phone['name']}", flush=True)
-    if phone['state'] != 'Booted':
-        run('xcrun', 'simctl', 'boot', udid)
-    run('xcrun', 'simctl', 'bootstatus', udid, '-b', timeout=180)
-    run('xcrun', 'simctl', 'install', udid, str(app))
+    udid = prepare_simulator()
+    run('xcrun', 'simctl', 'bootstatus', udid, '-b', timeout=420)
+    run('xcrun', 'simctl', 'install', udid, str(app), timeout=420)
     result = run('xcrun', 'simctl', 'launch', '--terminate-running-process',
                  f'--stdout={output / "stdout.log"}', f'--stderr={output / "stderr.log"}', udid, 'com.twilight.garden')
     print(result, flush=True)
@@ -57,8 +61,11 @@ def main():
             command = run('ps', '-p', pid, '-o', 'comm=', check=False)
             if '/App.app/App' not in command:
                 raise RuntimeError('App exited during the startup observation window.')
-        run('xcrun', 'simctl', 'io', udid, 'screenshot', str(output / 'launch.png'))
         print('PASS: app stayed alive for 20 seconds after launch.', flush=True)
+        try:
+            run('xcrun', 'simctl', 'io', udid, 'screenshot', str(output / 'launch.png'), check=False, timeout=30)
+        except subprocess.TimeoutExpired:
+            print('Startup passed; simulator screenshot timed out.', flush=True)
     finally:
         reports = Path.home() / 'Library/Logs/DiagnosticReports'
         if reports.exists():
@@ -68,4 +75,7 @@ def main():
 
 
 if __name__ == '__main__':
-    main()
+    if len(sys.argv) > 1 and sys.argv[1] == '--prepare':
+        prepare_simulator()
+    else:
+        main()

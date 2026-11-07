@@ -48,8 +48,9 @@ jobs:
       - name: Verify iPhone simulator startup before packaging
         run: |
           set -euo pipefail
+          python3 scripts/verify-ios-launch.py --prepare
           xcodebuild -project ios/App/App.xcodeproj -scheme App -configuration Debug -sdk iphonesimulator -destination 'generic/platform=iOS Simulator' -derivedDataPath "$RUNNER_TEMP/launch-build" CODE_SIGNING_ALLOWED=NO build > "$RUNNER_TEMP/launch-build.log" 2>&1 || { tail -n 140 "$RUNNER_TEMP/launch-build.log"; exit 1; }
-          python3 scripts/verify-ios-launch.py "$RUNNER_TEMP/launch-build/Build/Products/Debug-iphonesimulator/App.app" "$RUNNER_TEMP/ios-launch"
+          python3 scripts/verify-ios-launch.py "$RUNNER_TEMP/launch-build/Build/Products/Debug-iphonesimulator/App.app" "$RUNNER_TEMP/ios-launch" 2>&1 | tee "$RUNNER_TEMP/ios-launch-check.log"
       - name: Build device app without Apple signing credentials
         run: |
           set -euo pipefail
@@ -74,5 +75,6 @@ jobs:
           name: iOS-startup-check
           path: |
             ${{ runner.temp }}/launch-build.log
+            ${{ runner.temp }}/ios-launch-check.log
             ${{ runner.temp }}/ios-launch/
           retention-days: 3
