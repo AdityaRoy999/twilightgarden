@@ -1,20 +1,26 @@
 """Install and launch a simulator app; compile success is not launch verification."""
 import json
-import os
 import plistlib
 from pathlib import Path
 import re
 import shutil
 import subprocess
 import sys
+import tempfile
 import time
 
 
-def run(*args, check=True):
-    result = subprocess.run(args, text=True, capture_output=True)
+def run(*args, check=True, timeout=120):
+    print('Running: ' + ' '.join(args), flush=True)
+    # CoreSimulator launches child services. A captured pipe can stay open after
+    # simctl exits; regular files avoid waiting for inherited pipe handles.
+    with tempfile.TemporaryFile(mode='w+t') as log:
+        result = subprocess.run(args, text=True, stdout=log, stderr=subprocess.STDOUT, timeout=timeout)
+        log.seek(0)
+        output = log.read()
     if check and result.returncode:
-        raise RuntimeError(f'{args[0:3]} failed: {result.stdout}\n{result.stderr}')
-    return result.stdout.strip()
+        raise RuntimeError(f'{args[0:3]} failed: {output}')
+    return output.strip()
 
 
 def main():
@@ -26,8 +32,9 @@ def main():
     output = Path(sys.argv[2]).resolve()
     output.mkdir(parents=True, exist_ok=True)
     devices = json.loads(run('xcrun', 'simctl', 'list', 'devices', 'available', '-j'))['devices']
-    phone = next((device for runtime in sorted(devices, reverse=True) if '.iOS-' in runtime
-                  for device in devices[runtime] if 'iPhone' in device['name'] and device['isAvailable']), None)
+    phones = [device for runtime in sorted(devices, reverse=True) if '.iOS-' in runtime
+              for device in devices[runtime] if 'iPhone' in device['name'] and device['isAvailable']]
+    phone = next((device for device in phones if device['name'] == 'iPhone 17 Pro'), phones[0] if phones else None)
     if not phone:
         raise RuntimeError('No available iPhone simulator runtime; launch was not verified.')
     udid = phone['udid']
@@ -35,7 +42,7 @@ def main():
     print(f"Checking launch on {phone['name']}", flush=True)
     if phone['state'] != 'Booted':
         run('xcrun', 'simctl', 'boot', udid)
-    run('xcrun', 'simctl', 'bootstatus', udid, '-b')
+    run('xcrun', 'simctl', 'bootstatus', udid, '-b', timeout=180)
     run('xcrun', 'simctl', 'install', udid, str(app))
     result = run('xcrun', 'simctl', 'launch', '--terminate-running-process',
                  f'--stdout={output / "stdout.log"}', f'--stderr={output / "stderr.log"}', udid, 'com.twilight.garden')
@@ -55,11 +62,9 @@ def main():
     finally:
         reports = Path.home() / 'Library/Logs/DiagnosticReports'
         if reports.exists():
-            for report in reports.glob('App*'):
+            for report in reports.glob('App-*.ips'):
                 if report.is_file() and report.stat().st_mtime >= started:
                     shutil.copy2(report, output / report.name)
-        run('xcrun', 'simctl', 'spawn', udid, 'log', 'show', '--last', '2m', '--style', 'compact',
-            '--predicate', 'process == "App"', check=False)
 
 
 if __name__ == '__main__':

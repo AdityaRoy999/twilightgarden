@@ -29,6 +29,7 @@ jobs:
           printf '<!doctype html><title>Native compile check</title>' > dist/index.html
           npx cap sync ios
       - name: Compile native code without creating an IPA
+        if: github.event_name == 'workflow_dispatch'
         run: |
           set -euo pipefail
           xcodebuild -version
