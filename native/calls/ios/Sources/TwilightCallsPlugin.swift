@@ -61,7 +61,7 @@ public final class TwilightCallsPlugin: CAPPlugin, CAPBridgedPlugin, RoomDelegat
         remoteView?.track = screen ?? camera
         remoteView?.layoutMode = screen == nil ? .fill : .fit
         localView?.track = active.localParticipant.trackPublications.values.first { $0.source == .camera && !$0.isMuted }?.track as? VideoTrack
-        emit(["connected": active.connectionState == .connected, "remotePresent": !active.remoteParticipants.isEmpty, "sharing": active.localParticipant.isScreenShareEnabled, "remoteSharing": screen != nil, "remoteVideoOff": screen == nil && camera == nil])
+        emit(["connected": active.connectionState == .connected, "remotePresent": !active.remoteParticipants.isEmpty, "sharing": active.localParticipant.isScreenShareEnabled(), "remoteSharing": screen != nil, "remoteVideoOff": screen == nil && camera == nil])
     }
     private func emit(_ value: JSObject) { var data = value; data["sessionId"] = sessionId; notifyListeners("state", data: data) }
     @objc func disconnect(_ call: CAPPluginCall) {
@@ -115,12 +115,22 @@ public final class TwilightCallsPlugin: CAPPlugin, CAPBridgedPlugin, RoomDelegat
     }
     public func room(_ room: Room, didUpdateConnectionState state: ConnectionState, from old: ConnectionState) { Task { @MainActor in self.refresh(room) } }
     public func room(_ room: Room, participantDidConnect participant: RemoteParticipant) { Task { @MainActor in self.refresh(room) } }
-    public func room(_ room: Room, participantDidDisconnect participant: RemoteParticipant) { Task { @MainActor in self.refresh(room) } }
+    public func room(_ room: Room, participantDidDisconnect participant: RemoteParticipant) {
+        Task { @MainActor in
+            guard self.room === room else { return }
+            emit(["ended": true]); self.room = nil
+            await room.disconnect()
+            localView?.removeFromSuperview(); remoteView?.removeFromSuperview(); localView = nil; remoteView = nil
+        }
+    }
     public func room(_ room: Room, participant: RemoteParticipant, didSubscribeTrack publication: RemoteTrackPublication) { Task { @MainActor in self.refresh(room) } }
     public func room(_ room: Room, participant: RemoteParticipant, didUnsubscribeTrack publication: RemoteTrackPublication) { Task { @MainActor in self.refresh(room) } }
     public func room(_ room: Room, participant: Participant, trackPublication: TrackPublication, didUpdateIsMuted: Bool) { Task { @MainActor in self.refresh(room) } }
     public func room(_ room: Room, didDisconnectWithError error: LiveKitError?) { if self.room === room { emit(["ended": true]) } }
     public func room(_ room: Room, trackPublication: TrackPublication, didUpdateE2EEState state: E2EEState) {
-        if self.room === room && (state == .decryptionFailed || state == .encryptionFailed) { emit(["error": "Media encryption failed. End the call and retry."]) }
+        if self.room === room && (state == .decryption_failed || state == .encryption_failed || state == .internal_error) {
+            emit(["error": "Media encryption failed. End the call and retry."])
+            Task { @MainActor in if self.room === room { await room.disconnect() } }
+        }
     }
 }

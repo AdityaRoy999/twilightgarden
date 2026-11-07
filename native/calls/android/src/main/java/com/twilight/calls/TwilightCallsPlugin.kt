@@ -60,8 +60,15 @@ class TwilightCallsPlugin : Plugin() {
         events = scope.launch { next.events.collect { event ->
             if (room !== next) return@collect
             when (event) {
-                is RoomEvent.Disconnected -> emit(JSObject().put("ended", true))
-                is RoomEvent.TrackE2EEStateEvent -> if (event.state in listOf(E2EEState.ENCRYPTION_FAILED, E2EEState.DECRYPTION_FAILED, E2EEState.INTERNAL_ERROR)) emit(JSObject().put("error", "Media encryption failed. End the call and retry."))
+                is RoomEvent.Disconnected, is RoomEvent.ParticipantDisconnected -> {
+                    emit(JSObject().put("ended", true))
+                    // Stop capture natively even when the WebView is suspended.
+                    scope.launch { if (room === next) closeRoom() }
+                }
+                is RoomEvent.TrackE2EEStateEvent -> if (event.state in listOf(E2EEState.ENCRYPTION_FAILED, E2EEState.DECRYPTION_FAILED, E2EEState.INTERNAL_ERROR)) {
+                    emit(JSObject().put("error", "Media encryption failed. End the call and retry."))
+                    scope.launch { if (room === next) closeRoom() }
+                }
                 else -> refresh(next)
             }
         } }
@@ -108,14 +115,16 @@ class TwilightCallsPlugin : Plugin() {
     @PluginMethod fun screen(call: PluginCall) {
         if (call.getBoolean("enabled", false) != true) { run(call) { stopAudioCapture(); room?.localParticipant?.setScreenShareEnabled(false); room?.localParticipant?.setMicrophoneEnabled(!muted); room?.let { refresh(it) } }; return }
         val manager = context.getSystemService(Context.MEDIA_PROJECTION_SERVICE) as MediaProjectionManager
+        call.data.put("captureSession", sessionId)
         startActivityForResult(call, manager.createScreenCaptureIntent(), "screenPermission")
     }
     @ActivityCallback private fun screenPermission(call: PluginCall, result: androidx.activity.result.ActivityResult) {
         val data = result.data
         if (result.resultCode != Activity.RESULT_OK || data == null) { call.reject("Screen sharing was cancelled."); return }
         run(call) {
+            require(sessionId != null && sessionId == call.getString("captureSession")) { "The call ended while screen permission was open." }
             val active = room ?: throw IllegalStateException("The call ended.")
-            active.localParticipant.setScreenShareEnabled(true, ScreenCaptureParams(data, onStop = { scope.launch { stopAudioCapture(); active.localParticipant.setScreenShareEnabled(false); refresh(active) } }))
+            active.localParticipant.setScreenShareEnabled(true, ScreenCaptureParams(data, onStop = { scope.launch { if (room === active) { stopAudioCapture(); active.localParticipant.setScreenShareEnabled(false); active.localParticipant.setMicrophoneEnabled(!muted); refresh(active) } } }))
             if (call.getBoolean("audio", false) == true && Build.VERSION.SDK_INT >= 29) {
                 val track = active.localParticipant.getTrackPublication(Track.Source.SCREEN_SHARE)?.track as? LocalVideoTrack ?: throw IllegalStateException("Screen capture unavailable.")
                 active.localParticipant.setMicrophoneEnabled(true)
